@@ -1,16 +1,48 @@
-# vita
+# Lightweight (Arbeitstitel)
 
-A new Flutter project.
+Eine einfache App zum [hier kurz beschreiben, was deine App macht].
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## Features
+- [Feature 1]
+- [Feature 2]
+- [Feature 3]
 
-A few resources to get you started if this is your first Flutter project:
+---
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Installation
+[Kurze Infos, wie man die App startet oder installiert]
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+---
+
+## Lizenz
+Der Quellcode dieses Projekts steht – soweit nicht anders angegeben – unter der [MIT-Lizenz](https://opensource.org/licenses/MIT).  
+(siehe Datei `LICENSE` im Projektordner)
+
+---
+
+## Credits / Danksagungen
+
+Dieses Projekt nutzt externe Daten und Dienste:
+
+- **[Open Food Facts](https://openfoodfacts.org/)**  
+  Datenbank lizenziert unter der [Open Database License (ODbL)](https://opendatacommons.org/licenses/odbl/1-0/).  
+  Die Daten wurden möglicherweise verarbeitet und angepasst.  
+
+- **[wger Workout Manager](https://wger.de/)**  
+  API und Projekt lizenziert unter der [GNU Affero General Public License v3 (AGPLv3)](https://www.gnu.org/licenses/agpl-3.0.html).  
+  Es werden ausschließlich die API-Daten genutzt. (Falls später Code von wger eingebunden wird, gilt für dieses Projekt ebenfalls die AGPLv3.)  
+
+---
+
+## Haftungsausschluss
+
+Dieses Projekt befindet sich in der Entwicklung und wird aktuell nicht kommerziell betrieben.  
+Ein Impressum ist daher nicht erforderlich. Sobald die App veröffentlicht wird (z. B. in App Stores), werden Impressum und Datenschutzerklärung ergänzt.
+
+---
+
+## Kontakt
+
+Fragen oder Feedback? → [Dein GitHub-Username oder E-Mail hier einfügen]
