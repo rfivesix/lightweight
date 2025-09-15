@@ -1,0 +1,700 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for German (`de`).
+class AppLocalizationsDe extends AppLocalizations {
+  AppLocalizationsDe([String locale = 'de']) : super(locale);
+
+  @override
+  String get appTitle => 'Vita';
+
+  @override
+  String get bannerText => 'Empfehlung / Aktuelles Workout';
+
+  @override
+  String get calories => 'Kalorien';
+
+  @override
+  String get water => 'Wasser';
+
+  @override
+  String get protein => 'Protein';
+
+  @override
+  String get carbs => 'Kohlenhydrate';
+
+  @override
+  String get fat => 'Fett';
+
+  @override
+  String get daily => 'Täglich';
+
+  @override
+  String get today => 'Heute';
+
+  @override
+  String get workoutSection => 'Workout-Bereich - noch nicht implementiert';
+
+  @override
+  String get addMenuTitle => 'Was möchtest du hinzufügen?';
+
+  @override
+  String get addFoodOption => 'Lebensmittel';
+
+  @override
+  String get addLiquidOption => 'Flüssigkeit';
+
+  @override
+  String get searchHintText => 'Suchen...';
+
+  @override
+  String get mealtypeBreakfast => 'Frühstück';
+
+  @override
+  String get mealtypeLunch => 'Mittagessen';
+
+  @override
+  String get mealtypeDinner => 'Abendessen';
+
+  @override
+  String get mealtypeSnack => 'Snack';
+
+  @override
+  String get waterHeader => 'Wasser & Getränke';
+
+  @override
+  String get openFoodFactsSource => 'Daten von Open Food Facts';
+
+  @override
+  String get tabRecent => 'Zuletzt';
+
+  @override
+  String get tabSearch => 'Suchen';
+
+  @override
+  String get tabFavorites => 'Favoriten';
+
+  @override
+  String get fabCreateOwnFood => 'Eigenes Lebensmittel';
+
+  @override
+  String get recentEmptyState =>
+      'Deine zuletzt verwendeten Lebensmittel\nerscheinen hier.';
+
+  @override
+  String get favoritesEmptyState =>
+      'Du hast noch keine Favoriten.\nMarkiere ein Lebensmittel mit dem Herz-Icon, um es hier zu sehen.';
+
+  @override
+  String get searchInitialHint => 'Bitte gib einen Suchbegriff ein.';
+
+  @override
+  String get searchNoResults => 'Keine Ergebnisse gefunden.';
+
+  @override
+  String get createFoodScreenTitle => 'Eigenes Lebensmittel erstellen';
+
+  @override
+  String get formFieldName => 'Name des Lebensmittels';
+
+  @override
+  String get formFieldBrand => 'Marke (optional)';
+
+  @override
+  String get formSectionMainNutrients => 'Haupt-Nährwerte (pro 100g)';
+
+  @override
+  String get formFieldCalories => 'Kalorien (kcal)';
+
+  @override
+  String get formFieldProtein => 'Protein (g)';
+
+  @override
+  String get formFieldCarbs => 'Kohlenhydrate (g)';
+
+  @override
+  String get formFieldFat => 'Fett (g)';
+
+  @override
+  String get formSectionOptionalNutrients =>
+      'Weitere Nährwerte (optional, pro 100g)';
+
+  @override
+  String get formFieldSugar => 'Davon Zucker (g)';
+
+  @override
+  String get formFieldFiber => 'Ballaststoffe (g)';
+
+  @override
+  String get formFieldKj => 'Kilojoule (kJ)';
+
+  @override
+  String get formFieldSalt => 'Salz (g)';
+
+  @override
+  String get formFieldSodium => 'Natrium (mg)';
+
+  @override
+  String get formFieldCalcium => 'Kalzium (mg)';
+
+  @override
+  String get buttonSave => 'Speichern';
+
+  @override
+  String get validatorPleaseEnterName => 'Bitte gib einen Namen ein.';
+
+  @override
+  String get validatorPleaseEnterNumber => 'Bitte gib eine gültige Zahl ein.';
+
+  @override
+  String snackbarSaveSuccess(String foodName) {
+    return '$foodName wurde erfolgreich gespeichert.';
+  }
+
+  @override
+  String get foodDetailSegmentPortion => 'Portion';
+
+  @override
+  String get foodDetailSegment100g => '100g';
+
+  @override
+  String get sugar => 'Zucker';
+
+  @override
+  String get fiber => 'Ballaststoffe';
+
+  @override
+  String get salt => 'Salz';
+
+  @override
+  String get explorerScreenTitle => 'Lebensmittel-Explorer';
+
+  @override
+  String get nutritionScreenTitle => 'Ernährungsanalyse';
+
+  @override
+  String get entriesForDateRangeLabel => 'Einträge für';
+
+  @override
+  String get noEntriesForPeriod => 'Noch keine Einträge für diesen Zeitraum.';
+
+  @override
+  String get waterEntryTitle => 'Wasser';
+
+  @override
+  String get profileScreenTitle => 'Profil & Ziele';
+
+  @override
+  String get profileDailyGoals => 'Tägliche Ziele';
+
+  @override
+  String get snackbarGoalsSaved => 'Ziele erfolgreich gespeichert!';
+
+  @override
+  String get measurementsScreenTitle => 'Messwerte';
+
+  @override
+  String get measurementsEmptyState =>
+      'Noch keine Messwerte erfasst.\nBeginne mit dem \'+\' Button.';
+
+  @override
+  String get addMeasurementDialogTitle => 'Neuen Messwert hinzufügen';
+
+  @override
+  String get formFieldMeasurementType => 'Art der Messung';
+
+  @override
+  String formFieldMeasurementValue(Object unit) {
+    return 'Wert ($unit)';
+  }
+
+  @override
+  String get validatorPleaseEnterValue => 'Bitte Wert eingeben';
+
+  @override
+  String get measurementWeight => 'Körpergewicht';
+
+  @override
+  String get measurementFatPercent => 'Körperfett';
+
+  @override
+  String get measurementNeck => 'Nacken';
+
+  @override
+  String get measurementShoulder => 'Schulter';
+
+  @override
+  String get measurementChest => 'Brust';
+
+  @override
+  String get measurementLeftBicep => 'Linker Bizeps';
+
+  @override
+  String get measurementRightBicep => 'Rechter Bizeps';
+
+  @override
+  String get measurementLeftForearm => 'Linker Unterarm';
+
+  @override
+  String get measurementRightForearm => 'Rechter Unterarm';
+
+  @override
+  String get measurementAbdomen => 'Bauch';
+
+  @override
+  String get measurementWaist => 'Taille';
+
+  @override
+  String get measurementHips => 'Hüfte';
+
+  @override
+  String get measurementLeftThigh => 'Linker Oberschenkel';
+
+  @override
+  String get measurementRightThigh => 'Rechter Oberschenkel';
+
+  @override
+  String get measurementLeftCalf => 'Linke Wade';
+
+  @override
+  String get measurementRightCalf => 'Rechte Wade';
+
+  @override
+  String get drawerMenuTitle => 'Vita Menü';
+
+  @override
+  String get drawerDashboard => 'Dashboard';
+
+  @override
+  String get drawerFoodExplorer => 'Lebensmittel-Explorer';
+
+  @override
+  String get drawerDataManagement => 'Datensicherung';
+
+  @override
+  String get drawerMeasurements => 'Messwerte';
+
+  @override
+  String get dataManagementTitle => 'Datensicherung';
+
+  @override
+  String get exportCardTitle => 'Daten exportieren';
+
+  @override
+  String get exportCardDescription =>
+      'Sichert alle deine Tagebucheinträge, Favoriten und eigenen Lebensmittel in einer einzigen Backup-Datei.';
+
+  @override
+  String get exportCardButton => 'Backup erstellen';
+
+  @override
+  String get importCardTitle => 'Daten importieren';
+
+  @override
+  String get importCardDescription =>
+      'Stellt deine Daten aus einer zuvor erstellten Backup-Datei wieder her. ACHTUNG: Alle aktuell in der App gespeicherten Daten werden dabei überschrieben!';
+
+  @override
+  String get importCardButton => 'Backup wiederherstellen';
+
+  @override
+  String get recommendationDefault => 'Tracke deine erste Mahlzeit!';
+
+  @override
+  String recommendationOverTarget(Object count, Object difference) {
+    return 'Letzte $count Tage: +$difference kcal über dem Ziel';
+  }
+
+  @override
+  String recommendationUnderTarget(Object count, Object difference) {
+    return 'Letzte $count Tage: $difference kcal unter dem Ziel';
+  }
+
+  @override
+  String recommendationOnTarget(Object count) {
+    return 'Letzte $count Tage: Ziel erreicht ✅';
+  }
+
+  @override
+  String get recommendationFirstEntry =>
+      'Super, dein erster Eintrag ist gemacht!';
+
+  @override
+  String get dialogConfirmTitle => 'Bestätigung erforderlich';
+
+  @override
+  String get dialogConfirmImportContent =>
+      'Möchtest du wirklich die Daten aus diesem Backup wiederherstellen?\n\nACHTUNG: Alle deine aktuellen Einträge, Favoriten und eigenen Lebensmittel werden unwiderruflich gelöscht und ersetzt.';
+
+  @override
+  String get dialogButtonCancel => 'Abbrechen';
+
+  @override
+  String get dialogButtonOverwrite => 'Ja, alles überschreiben';
+
+  @override
+  String get snackbarNoFileSelected => 'Keine Datei ausgewählt.';
+
+  @override
+  String get snackbarImportSuccessTitle => 'Import erfolgreich!';
+
+  @override
+  String get snackbarImportSuccessContent =>
+      'Deine Daten wurden wiederhergestellt. Für eine korrekte Anzeige wird empfohlen, die App jetzt neu zu starten.';
+
+  @override
+  String get snackbarButtonOK => 'OK';
+
+  @override
+  String get snackbarImportError => 'Fehler beim Importieren der Daten.';
+
+  @override
+  String get snackbarExportSuccess =>
+      'Backup-Datei wurde an das System übergeben. Bitte wähle einen Speicherort.';
+
+  @override
+  String get snackbarExportFailed => 'Export abgebrochen oder fehlgeschlagen.';
+
+  @override
+  String get profileUserHeight => 'Körpergröße (cm)';
+
+  @override
+  String get workoutRoutinesTitle => 'Trainingspläne';
+
+  @override
+  String get workoutHistoryTitle => 'Workout-Verlauf';
+
+  @override
+  String get workoutHistoryButton => 'Verlauf';
+
+  @override
+  String get emptyRoutinesTitle => 'Keine Trainingspläne gefunden';
+
+  @override
+  String get emptyRoutinesSubtitle =>
+      'Erstelle deinen ersten Trainingsplan oder starte ein freies Training.';
+
+  @override
+  String get createFirstRoutineButton => 'Ersten Plan erstellen';
+
+  @override
+  String get startEmptyWorkoutButton => 'Freies Training';
+
+  @override
+  String get editRoutineSubtitle =>
+      'Tippen zum Bearbeiten, oder starte das Training.';
+
+  @override
+  String get startButton => 'Start';
+
+  @override
+  String get addRoutineButton => 'Neue Routine';
+
+  @override
+  String get freeWorkoutTitle => 'Freies Training';
+
+  @override
+  String get finishWorkoutButton => 'Beenden';
+
+  @override
+  String get addSetButton => 'Satz hinzufügen';
+
+  @override
+  String get addExerciseToWorkoutButton => 'Übung zum Workout hinzufügen';
+
+  @override
+  String get lastTimeLabel => 'Letztes Mal';
+
+  @override
+  String get setLabel => 'Satz';
+
+  @override
+  String get kgLabel => 'Gewicht (kg)';
+
+  @override
+  String get repsLabel => 'Wdh';
+
+  @override
+  String get restTimerLabel => 'Pause';
+
+  @override
+  String get skipButton => 'Überspringen';
+
+  @override
+  String get emptyHistory => 'Noch keine Workouts abgeschlossen.';
+
+  @override
+  String get workoutDetailsTitle => 'Workout-Details';
+
+  @override
+  String get workoutNotFound => 'Workout nicht gefunden.';
+
+  @override
+  String get totalVolumeLabel => 'Gesamtvolumen';
+
+  @override
+  String get notesLabel => 'Notizen';
+
+  @override
+  String get hevyImportTitle => 'Hevy Import';
+
+  @override
+  String get hevyImportDescription =>
+      'Importiere deine gesamte Trainings-Historie aus einer Hevy CSV-Exportdatei.';
+
+  @override
+  String get hevyImportButton => 'Hevy-Daten importieren';
+
+  @override
+  String hevyImportSuccess(Object count) {
+    return '$count Workouts erfolgreich importiert!';
+  }
+
+  @override
+  String get hevyImportFailed =>
+      'Import fehlgeschlagen. Bitte überprüfe die Datei.';
+
+  @override
+  String get startWorkout => 'Workout starten';
+
+  @override
+  String get addMeasurement => 'Messwert hinzufügen';
+
+  @override
+  String get filterToday => 'Heute';
+
+  @override
+  String get filter7Days => '7 Tage';
+
+  @override
+  String get filter30Days => '30 Tage';
+
+  @override
+  String get filterAll => 'Alle';
+
+  @override
+  String get showLess => 'Weniger anzeigen';
+
+  @override
+  String get showMoreDetails => 'Mehr Details anzeigen';
+
+  @override
+  String get deleteConfirmTitle => 'Löschen bestätigen';
+
+  @override
+  String get deleteConfirmContent =>
+      'Möchtest du diesen Eintrag wirklich löschen?';
+
+  @override
+  String get cancel => 'Abbrechen';
+
+  @override
+  String get delete => 'Löschen';
+
+  @override
+  String get save => 'Speichern';
+
+  @override
+  String get tabBaseFoods => 'Grundnahrungsmittel';
+
+  @override
+  String get baseFoodsEmptyState =>
+      'Dieser Bereich wird bald mit einer kuratierten Liste von Grundnahrungsmitteln wie Obst, Gemüse und mehr gefüllt sein.';
+
+  @override
+  String get noBrand => 'Keine Marke';
+
+  @override
+  String get unknown => 'Unbekannt';
+
+  @override
+  String backupFileSubject(String timestamp) {
+    return 'Vita App Backup - $timestamp';
+  }
+
+  @override
+  String foodItemSubtitle(String brand, int calories) {
+    return '$brand - $calories kcal / 100g';
+  }
+
+  @override
+  String foodListSubtitle(int grams, String time) {
+    return '${grams}g - $time';
+  }
+
+  @override
+  String foodListTrailingKcal(int calories) {
+    return '$calories kcal';
+  }
+
+  @override
+  String waterListTrailingMl(int milliliters) {
+    return '$milliliters ml';
+  }
+
+  @override
+  String get exerciseCatalogTitle => 'Übungskatalog';
+
+  @override
+  String get filterByMuscle => 'Nach Muskelgruppe filtern';
+
+  @override
+  String get noExercisesFound => 'Keine Übungen gefunden.';
+
+  @override
+  String get noDescriptionAvailable => 'Keine Beschreibung verfügbar.';
+
+  @override
+  String get filterByCategory => 'Nach Kategorie filtern';
+
+  @override
+  String get edit => 'Bearbeiten';
+
+  @override
+  String get repsLabelShort => 'Wdh';
+
+  @override
+  String get titleNewRoutine => 'Neue Routine';
+
+  @override
+  String get titleEditRoutine => 'Routine bearbeiten';
+
+  @override
+  String get validatorPleaseEnterRoutineName =>
+      'Bitte gib der Routine einen Namen.';
+
+  @override
+  String get snackbarRoutineCreated =>
+      'Routine erstellt. Füge nun Übungen hinzu.';
+
+  @override
+  String get snackbarRoutineSaved => 'Routine gespeichert.';
+
+  @override
+  String get formFieldRoutineName => 'Name der Routine';
+
+  @override
+  String get emptyStateAddFirstExercise => 'Füge deine erste Übung hinzu.';
+
+  @override
+  String setCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Sätze',
+      one: '1 Satz',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fabAddExercise => 'Übung hinzufügen';
+
+  @override
+  String get kgLabelShort => 'kg';
+
+  @override
+  String get drawerExerciseCatalog => 'Übungskatalog';
+
+  @override
+  String get lastWorkoutTitle => 'Letztes Workout';
+
+  @override
+  String get repeatButton => 'Wiederholen';
+
+  @override
+  String get weightHistoryTitle => 'Gewichtsverlauf';
+
+  @override
+  String get hideSummary => 'Übersicht ausblenden';
+
+  @override
+  String get showSummary => 'Übersicht einblenden';
+
+  @override
+  String get exerciseDataAttribution => 'Übungsdaten von';
+
+  @override
+  String get duplicate => 'Duplizieren';
+
+  @override
+  String deleteRoutineConfirmContent(String routineName) {
+    return 'Möchtest du den Trainingsplan \'$routineName\' wirklich unwiderruflich löschen?';
+  }
+
+  @override
+  String get editPauseTimeTitle => 'Pausendauer bearbeiten';
+
+  @override
+  String get pauseInSeconds => 'Pause in Sekunden';
+
+  @override
+  String get editPauseTime => 'Pause bearbeiten';
+
+  @override
+  String pauseDuration(int seconds) {
+    return '$seconds Sekunden Pause';
+  }
+
+  @override
+  String maxPauseDuration(int seconds) {
+    return 'Pausen bis zu ${seconds}s';
+  }
+
+  @override
+  String get deleteWorkoutConfirmContent =>
+      'Möchtest du dieses protokollierte Workout wirklich unwiderruflich löschen?';
+
+  @override
+  String get removeExercise => 'Übung entfernen';
+
+  @override
+  String get deleteExerciseConfirmTitle => 'Übung entfernen?';
+
+  @override
+  String deleteExerciseConfirmContent(String exerciseName) {
+    return 'Möchtest du \'$exerciseName\' wirklich aus diesem Trainingsplan entfernen?';
+  }
+
+  @override
+  String get doneButtonLabel => 'Fertig';
+
+  @override
+  String get setRestTimeButton => 'Pause einstellen';
+
+  @override
+  String get deleteExerciseButton => 'Übung löschen';
+
+  @override
+  String get restOverLabel => 'Pause vorbei';
+
+  @override
+  String get workoutRunningLabel => 'Workout läuft …';
+
+  @override
+  String get continueButton => 'Weiter';
+
+  @override
+  String get discardButton => 'Verwerfen';
+
+  @override
+  String get workoutStatsTitle => 'Training (7 Tage)';
+
+  @override
+  String get workoutsLabel => 'Workouts';
+
+  @override
+  String get durationLabel => 'Dauer';
+
+  @override
+  String get volumeLabel => 'Volumen';
+
+  @override
+  String get setsLabel => 'Sätze';
+
+  @override
+  String get muscleSplitLabel => 'Muskel-Split';
+}

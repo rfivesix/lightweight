@@ -1,0 +1,48 @@
+name: lightweight
+description: "A new Flutter project!!"
+publish_to: 'none' 
+version: 0.0.1+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0' # Angepasst für moderne SDKs
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # DOC: Hinzugefügt für die Lokalisierung (Mehrsprachigkeit)
+  flutter_localizations:
+    sdk: flutter
+  intl: 0.20.2 # Stets die neueste Version prüfen mit `flutter pub outdated`
+
+  # DOC: Hinzugefügt für die SQLite-Datenbank
+  sqflite: ^2.3.0 
+  path: ^1.8.3
+
+  cupertino_icons: ^1.0.8
+  flutter_gen: ^5.11.0
+  shared_preferences: ^2.2.3
+  dynamic_color: ^1.7.0 
+  url_launcher: ^6.3.2
+  path_provider: ^2.1.5
+  file_picker: ^10.3.2
+  share_plus: ^11.1.0
+  fl_chart: ^1.1.0
+  vibration: ^3.1.3
+  csv: ^6.0.0
+  provider: ^6.1.5+1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  # DOC: Dieser Schalter ist entscheidend. Er weist Flutter an, den Code
+  # für die Lokalisierung automatisch zu generieren.
+  generate: true
+  uses-material-design: true
+  
+  assets:
+    - assets/images/max_mustermann.png
+    - assets/db/

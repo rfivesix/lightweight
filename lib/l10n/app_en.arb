@@ -1,0 +1,301 @@
+{
+    "@@locale": "en",
+    "appTitle": "Vita",
+    "bannerText": "Recommendation / Current Workout",
+    "calories": "Calories",
+    "water": "Water",
+    "protein": "Protein",
+    "carbs": "Carbs",
+    "fat": "Fat",
+    "daily": "Daily",
+    "today": "Today",
+    "workoutSection": "Workout section - not yet implemented",
+    "addMenuTitle": "What do you want to add?",
+    "addFoodOption": "Food",
+    "addLiquidOption": "Liquid",
+    "searchHintText": "Search...",
+    "mealtypeBreakfast": "Breakfast",
+    "mealtypeLunch": "Lunch",
+    "mealtypeDinner": "Dinner",
+    "mealtypeSnack": "Snack",
+    "waterHeader": "Water & Drinks",
+    "openFoodFactsSource": "Data from Open Food Facts",
+    "tabRecent": "Recent",
+    "tabSearch": "Search",
+    "tabFavorites": "Favorites",
+    "fabCreateOwnFood": "Custom Food",
+    "recentEmptyState": "Your recently used food items\nwill appear here.",
+    "favoritesEmptyState": "You don't have any favorites yet.\nMark a food with the heart icon to see it here.",
+    "searchInitialHint": "Please enter a search term.",
+    "searchNoResults": "No results found.",
+    "createFoodScreenTitle": "Create Custom Food",
+    "formFieldName": "Name of the food",
+    "formFieldBrand": "Brand (optional)",
+    "formSectionMainNutrients": "Main Nutrients (per 100g)",
+    "formFieldCalories": "Calories (kcal)",
+    "formFieldProtein": "Protein (g)",
+    "formFieldCarbs": "Carbohydrates (g)",
+    "formFieldFat": "Fat (g)",
+    "formSectionOptionalNutrients": "Additional Nutrients (optional, per 100g)",
+    "formFieldSugar": "Of which sugars (g)",
+    "formFieldFiber": "Fiber (g)",
+    "formFieldKj": "Kilojoules (kJ)",
+    "formFieldSalt": "Salt (g)",
+    "formFieldSodium": "Sodium (mg)",
+    "formFieldCalcium": "Calcium (mg)",
+    "buttonSave": "Save",
+    "validatorPleaseEnterName": "Please enter a name.",
+    "validatorPleaseEnterNumber": "Please enter a valid number.",
+    "snackbarSaveSuccess": "{foodName} was saved successfully.",
+    "@snackbarSaveSuccess": {
+        "placeholders": {
+            "foodName": {
+                "type": "String"
+            }
+        }
+    },
+    "foodDetailSegmentPortion": "Portion",
+    "foodDetailSegment100g": "100g",
+    "sugar": "Sugar",
+    "fiber": "Fiber",
+    "salt": "Salt",
+    "explorerScreenTitle": "Food Explorer",
+    "nutritionScreenTitle": "Nutrition Analysis",
+    "entriesForDateRangeLabel": "Entries for",
+    "noEntriesForPeriod": "No entries for this period yet.",
+    "waterEntryTitle": "Water",
+    "profileScreenTitle": "Profile & Goals",
+    "profileDailyGoals": "Daily Goals",
+    "snackbarGoalsSaved": "Goals saved successfully!",
+    "measurementsScreenTitle": "Measurements",
+    "measurementsEmptyState": "No measurements recorded yet.\nStart with the '+' button.",
+    "addMeasurementDialogTitle": "Add New Measurement",
+    "formFieldMeasurementType": "Type of Measurement",
+    "formFieldMeasurementValue": "Value ({unit})",
+    "validatorPleaseEnterValue": "Please enter a value",
+    "measurementWeight": "Body Weight",
+    "measurementFatPercent": "Body Fat",
+    "measurementNeck": "Neck",
+    "measurementShoulder": "Shoulder",
+    "measurementChest": "Chest",
+    "measurementLeftBicep": "Left Bicep",
+    "measurementRightBicep": "Right Bicep",
+    "measurementLeftForearm": "Left Forearm",
+    "measurementRightForearm": "Right Forearm",
+    "measurementAbdomen": "Abdomen",
+    "measurementWaist": "Waist",
+    "measurementHips": "Hips",
+    "measurementLeftThigh": "Left Thigh",
+    "measurementRightThigh": "Right Thigh",
+    "measurementLeftCalf": "Left Calf",
+    "measurementRightCalf": "Right Calf",
+    "drawerMenuTitle": "Vita Menu",
+    "drawerDashboard": "Dashboard",
+    "drawerFoodExplorer": "Food Explorer",
+    "drawerDataManagement": "Data Backup",
+    "drawerMeasurements": "Measurements",
+    "dataManagementTitle": "Data Backup",
+    "exportCardTitle": "Export Data",
+    "exportCardDescription": "Saves all your journal entries, favorites, and custom foods into a single backup file.",
+    "exportCardButton": "Create Backup",
+    "importCardTitle": "Import Data",
+    "importCardDescription": "Restores your data from a previously created backup file. WARNING: All data currently stored in the app will be overwritten!",
+    "importCardButton": "Restore Backup",
+    "recommendationDefault": "Track your first meal!",
+    "recommendationOverTarget": "Last {count} days: +{difference} kcal over target",
+    "@recommendationOverTarget": { "placeholders": { "count": {}, "difference": {} } },
+    "recommendationUnderTarget": "Last {count} days: {difference} kcal under target",
+    "@recommendationUnderTarget": { "placeholders": { "count": {} } },
+    "recommendationOnTarget": "Last {count} days: Target achieved ✅",
+    "@recommendationOnTarget": { "placeholders": { "count": {} } },
+    "recommendationFirstEntry": "Great, your first entry is logged!",
+    "dialogConfirmTitle": "Confirmation Required",
+    "dialogConfirmImportContent": "Do you really want to restore data from this backup?\n\nWARNING: All your current entries, favorites, and custom foods will be permanently deleted and replaced.",
+    "dialogButtonCancel": "Cancel",
+    "dialogButtonOverwrite": "Yes, overwrite all",
+    "snackbarNoFileSelected": "No file selected.",
+    "snackbarImportSuccessTitle": "Import successful!",
+    "snackbarImportSuccessContent": "Your data has been restored. It is recommended to restart the app for a correct display.",
+    "snackbarButtonOK": "OK",
+    "snackbarImportError": "Error while importing data.",
+    "snackbarExportSuccess": "Backup file has been passed to the system. Please choose a location to save.",
+    "snackbarExportFailed": "Export canceled or failed.",
+    "profileUserHeight": "Height (cm)",
+    "workoutRoutinesTitle": "Routines",
+    "workoutHistoryTitle": "Workout History",
+    "workoutHistoryButton": "History",
+    "emptyRoutinesTitle": "No Routines Found",
+    "emptyRoutinesSubtitle": "Create your first routine or start a blank workout.",
+    "createFirstRoutineButton": "Create First Routine",
+    "startEmptyWorkoutButton": "Free Workout",
+    "editRoutineSubtitle": "Tap to edit, or start the workout.",
+    "startButton": "Start",
+    "addRoutineButton": "New Routine",
+    "freeWorkoutTitle": "Free Workout",
+    "finishWorkoutButton": "Finish",
+    "addSetButton": "Add Set",
+    "addExerciseToWorkoutButton": "Add Exercise to Workout",
+    "lastTimeLabel": "Last Time",
+    "setLabel": "Set",
+    "kgLabel": "Weight (kg)",
+    "repsLabel": "Reps",
+    "restTimerLabel": "Rest",
+    "skipButton": "Skip",
+    "emptyHistory": "No completed workouts yet.",
+    "workoutDetailsTitle": "Workout Details",
+    "workoutNotFound": "Workout not found.",
+    "totalVolumeLabel": "Total Volume",
+    "notesLabel": "Notes",
+    "hevyImportTitle": "Hevy Import",
+    "hevyImportDescription": "Import your entire training history from a Hevy CSV export file.",
+    "hevyImportButton": "Import Hevy Data",
+    "hevyImportSuccess": "Successfully imported {count} workouts!",
+    "@hevyImportSuccess": { "placeholders": { "count": {} } },
+    "hevyImportFailed": "Import failed. Please check the file.",
+    "startWorkout": "Start Workout",
+    "addMeasurement": "Add Measurement",
+    "filterToday": "Today",
+    "filter7Days": "7 Days",
+    "filter30Days": "30 Days",
+    "filterAll": "All",
+    "showLess": "Show less",
+    "showMoreDetails": "Show more details",
+    "deleteConfirmTitle": "Confirm Deletion",
+    "deleteConfirmContent": "Do you really want to delete this entry?",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "save": "Save",
+    "tabBaseFoods": "Base Foods",
+    "baseFoodsEmptyState": "This section will soon be filled with a curated list of base foods like fruits, vegetables, and more.",
+    "noBrand": "No Brand",
+    "unknown": "Unknown",
+    "backupFileSubject": "Vita App Backup - {timestamp}",
+    "@backupFileSubject": {
+        "placeholders": {
+            "timestamp": {
+                "type": "String"
+            }
+        }
+    },
+    "foodItemSubtitle": "{brand} - {calories} kcal / 100g",
+    "@foodItemSubtitle": {
+        "placeholders": {
+            "brand": { "type": "String" },
+            "calories": { "type": "int" }
+        }
+    },
+    "foodListSubtitle": "{grams}g - {time}",
+    "@foodListSubtitle": {
+        "placeholders": {
+            "grams": { "type": "int" },
+            "time": { "type": "String" }
+        }
+    },
+    "foodListTrailingKcal": "{calories} kcal",
+    "@foodListTrailingKcal": {
+        "placeholders": {
+            "calories": { "type": "int" }
+        }
+    },
+    "waterListTrailingMl": "{milliliters} ml",
+    "@waterListTrailingMl": {
+        "placeholders": {
+            "milliliters": { "type": "int" }
+        }
+    },
+    "exerciseCatalogTitle": "Exercise Catalog",
+    "filterByMuscle": "Filter by muscle group",
+    "noExercisesFound": "No exercises found.",
+    "noDescriptionAvailable": "No description available.",
+    "filterByMuscle": "Filter by muscle group",
+    "filterByCategory": "Filter by category",
+    "edit": "Edit",
+    "repsLabelShort": "reps",
+    "titleNewRoutine": "New Routine",
+    "titleEditRoutine": "Edit Routine",
+    "validatorPleaseEnterRoutineName": "Please enter a name for the routine.",
+    "snackbarRoutineCreated": "Routine created. Now add some exercises.",
+    "snackbarRoutineSaved": "Routine saved.",
+    "formFieldRoutineName": "Name of the routine",
+    "emptyStateAddFirstExercise": "Add your first exercise.",
+    "setCount": "{count,plural, =1{1 set}other{{count} sets}}",
+    "@setCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "fabAddExercise": "Add Exercise",
+    "kgLabelShort": "kg",
+    "drawerExerciseCatalog": "Exercise Catalog",
+    "lastWorkoutTitle": "Last Workout",
+    "repeatButton": "Repeat",
+    "weightHistoryTitle": "Weight History",
+    "hideSummary": "Hide Summary",
+    "showSummary": "Show Summary",
+    "exerciseDataAttribution": "Exercise data from",
+    "duplicate": "Duplicate",
+    "deleteRoutineConfirmContent": "Are you sure you want to permanently delete the routine '{routineName}'?",
+    "@deleteRoutineConfirmContent": {
+        "placeholders": {
+            "routineName": {
+                "type": "String"
+            }
+        }
+    },
+    "editPauseTimeTitle": "Edit Pause Duration",
+    "pauseInSeconds": "Pause in seconds",
+    "editPauseTime": "Edit Pause",
+    "pauseDuration": "{seconds} second pause",
+    "@pauseDuration": {
+        "placeholders": {
+            "seconds": {
+                "type": "int"
+            }
+        }
+    },
+    "maxPauseDuration": "Pauses up to {seconds}s",
+    "@maxPauseDuration": {
+        "placeholders": {
+            "seconds": {
+                "type": "int"
+            }
+        }
+    },
+    "deleteWorkoutConfirmContent": "Are you sure you want to permanently delete this workout log?",
+    "removeExercise": "Remove Exercise",
+    "deleteExerciseConfirmTitle": "Remove Exercise?",
+    "deleteExerciseConfirmContent": "Are you sure you want to remove '{exerciseName}' from this routine?",
+    "@deleteExerciseConfirmContent": {
+        "placeholders": {
+            "exerciseName": {
+                "type": "String"
+            }
+        }
+    },
+    "doneButtonLabel": "Done",
+    "setRestTimeButton": "Set rest time",
+    "deleteExerciseButton": "Delete exercise",
+    "restOverLabel": "Pause is over",
+    "workoutRunningLabel": "Workout is active …",
+    "continueButton": "Continue",
+    "discardButton": "Discard",
+    "workoutStatsTitle": "Training (7 days)",
+    "workoutsLabel": "Workouts",
+    "durationLabel": "Duration",
+    "volumeLabel": "Volume",
+    "@durationLabel": {
+        "description": "Label for workout duration summary"
+    },
+    "durationLabel": "Duration",
+
+    "@setsLabel": {
+        "description": "Label for number of sets summary"
+    },
+    "setsLabel": "Sets",
+    "@muscleSplitLabel": {
+        "description": "Label for muscle split bar chart"
+    },
+    "muscleSplitLabel": "Muscle Split"
+}

@@ -1,0 +1,168 @@
+// lib/widgets/nutrition_summary_widget.dart
+
+import 'package:flutter/material.dart';
+import 'package:lightweight/generated/app_localizations.dart';
+import 'package:lightweight/models/daily_nutrition.dart';
+import 'package:lightweight/widgets/summary_card.dart';
+
+class _NutrientSpec {
+  final String label;
+  final String unit;
+  final double value;
+  final double target;
+  final Color color;
+
+  _NutrientSpec({
+    required this.label,
+    required this.unit,
+    required this.value,
+    required this.target,
+    required this.color,
+  });
+}
+
+class NutritionSummaryWidget extends StatelessWidget {
+  final DailyNutrition nutritionData;
+  final bool isExpandedView;
+  final AppLocalizations l10n;
+
+  const NutritionSummaryWidget({
+    super.key,
+    required this.nutritionData,
+    this.isExpandedView = false,
+    required this.l10n,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final specs = <String, _NutrientSpec>{
+      'calories': _NutrientSpec(label: l10n.calories, unit: 'kcal', value: nutritionData.calories.toDouble(), target: nutritionData.targetCalories.toDouble(), color: Colors.orange),
+      'water': _NutrientSpec(label: l10n.water, unit: 'ml', value: nutritionData.water.toDouble(), target: nutritionData.targetWater.toDouble(), color: Colors.blue),
+      'protein': _NutrientSpec(label: l10n.protein, unit: 'g', value: nutritionData.protein.toDouble(), target: nutritionData.targetProtein.toDouble(), color: Colors.red.shade400),
+      'carbs': _NutrientSpec(label: l10n.carbs, unit: 'g', value: nutritionData.carbs.toDouble(), target: nutritionData.targetCarbs.toDouble(), color: Colors.green.shade400),
+      'fat': _NutrientSpec(label: l10n.fat, unit: 'g', value: nutritionData.fat.toDouble(), target: nutritionData.targetFat.toDouble(), color: Colors.purple.shade300),
+      'sugar': _NutrientSpec(label: l10n.sugar, unit: 'g', value: nutritionData.sugar, target: nutritionData.targetSugar.toDouble(), color: Colors.pink.shade200),
+      'fiber': _NutrientSpec(label: l10n.fiber, unit: 'g', value: nutritionData.fiber, target: nutritionData.targetFiber.toDouble(), color: Colors.brown.shade400),
+      'salt': _NutrientSpec(label: l10n.salt, unit: 'g', value: nutritionData.salt, target: nutritionData.targetSalt.toDouble(), color: Colors.grey.shade500),
+    };
+
+    return SummaryCard(
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                flex: 2,
+                child: Column(
+                  children: [
+                    Expanded(child: _InfoBox(spec: specs['calories']!)),
+                    const SizedBox(height: 8),
+                    Expanded(child: _InfoBox(spec: specs['water']!)),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 2,
+                child: Column(
+                  children: [
+                    Expanded(child: _InfoBox(spec: specs['protein']!)),
+                    const SizedBox(height: 8),
+                    Expanded(child: _InfoBox(spec: specs['carbs']!)),
+                    const SizedBox(height: 8),
+                    Expanded(child: _InfoBox(spec: specs['fat']!)),
+                  ],
+                ),
+              ),
+              if (isExpandedView) ...[
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    children: [
+                      Expanded(child: _InfoBox(spec: specs['sugar']!)),
+                      const SizedBox(height: 8),
+                      Expanded(child: _InfoBox(spec: specs['fiber']!)),
+                      const SizedBox(height: 8),
+                      Expanded(child: _InfoBox(spec: specs['salt']!)),
+                    ],
+                  ),
+                ),
+              ]
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoBox extends StatelessWidget {
+  final _NutrientSpec spec;
+  const _InfoBox({required this.spec});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final hasTarget = spec.target > 0;
+    final rawProgress = hasTarget ? (spec.value / spec.target) : 0.0;
+    final progress = rawProgress.clamp(0.0, 1.0);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.surface.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(9),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(9),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // BUGFIX 5: Opazität für besseren Kontrast erhöht
+            Container(color: colorScheme.onSurface.withOpacity(0.12)),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: progress),
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.easeOutCubic,
+                builder: (context, p, child) => FractionallySizedBox(widthFactor: p, child: child),
+                child: Container(color: spec.color),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      spec.label,
+                      maxLines: 1,
+                      style: TextStyle(color: colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    hasTarget
+                        ? '${spec.value.toStringAsFixed(1)} / ${spec.target.toStringAsFixed(0)} ${spec.unit}'
+                        : '${spec.value.toStringAsFixed(1)} ${spec.unit}',
+                    style: TextStyle(
+                      color: colorScheme.onSurface.withOpacity(0.8),
+                      fontSize: 14,
+                      shadows: [Shadow(blurRadius: 1.0, color: colorScheme.surface.withOpacity(0.7), offset: const Offset(1.0, 1.0))],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

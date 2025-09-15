@@ -1,0 +1,479 @@
+// lib/screens/nutrition_screen.dart
+
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:lightweight/data/database_helper.dart';
+import 'package:lightweight/data/product_database_helper.dart';
+import 'package:lightweight/models/daily_nutrition.dart';
+import 'package:lightweight/models/food_entry.dart';
+import 'package:lightweight/models/tracked_food_item.dart';
+import 'package:lightweight/widgets/nutrition_summary_widget.dart';
+import './food_detail_screen.dart';
+import '../models/timeline_entry.dart';
+import 'package:lightweight/generated/app_localizations.dart';
+import 'package:lightweight/dialogs/quantity_dialog_content.dart';
+import 'package:lightweight/services/ui_state_service.dart';
+
+class NutritionScreen extends StatefulWidget {
+  const NutritionScreen({super.key});
+
+  @override
+  State<NutritionScreen> createState() => _NutritionScreenState();
+}
+
+class _NutritionScreenState extends State<NutritionScreen> {
+  DailyNutrition? _nutritionData;
+  List<dynamic> _displayItems = [];
+  bool _isLoading = true;
+  DateTimeRange _selectedDateRange = DateTimeRange(start: DateTime.now(), end: DateTime.now());
+  bool _isSummaryExpanded = UiStateService.instance.isNutritionSummaryExpanded;
+  String _selectedRangeKey = '1D';
+  bool _isHeaderVisible = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadEntriesForDateRange(_selectedDateRange);
+  }
+  Future<void> _loadEntriesForDateRange(DateTimeRange range) async {
+    if (!mounted) return;
+    setState(() { _isLoading = true; });
+
+    // Lade globale Ziele
+    final prefs = await SharedPreferences.getInstance();
+    final targetCalories = prefs.getInt('targetCalories') ?? 2500;
+    final targetProtein = prefs.getInt('targetProtein') ?? 180;
+    final targetCarbs = prefs.getInt('targetCarbs') ?? 250;
+    final targetFat = prefs.getInt('targetFat') ?? 80;
+    final targetWater = prefs.getInt('targetWater') ?? 3000;
+    final targetSugar = prefs.getInt('targetSugar') ?? 50;
+    final targetFiber = prefs.getInt('targetFiber') ?? 30;
+    final targetSalt = prefs.getInt('targetSalt') ?? 6;
+
+    // Lade Einträge aus der Datenbank
+    final foodEntries = await DatabaseHelper.instance.getEntriesForDateRange(range.start, range.end);
+    final waterEntries = await DatabaseHelper.instance.getWaterEntriesForDateRange(range.start, range.end);
+    
+    final numberOfDays = range.duration.inDays + 1;
+    final nutritionSummary = DailyNutrition(
+      targetCalories: targetCalories * numberOfDays,
+      targetProtein: targetProtein * numberOfDays,
+      targetCarbs: targetCarbs * numberOfDays,
+      targetFat: targetFat * numberOfDays,
+      targetWater: targetWater * numberOfDays,
+      targetSugar: targetSugar * numberOfDays,
+      targetFiber: targetFiber * numberOfDays,
+      targetSalt: targetSalt * numberOfDays,
+    );
+    
+    // Berechne Nährwert-Summe und erstelle Timeline-Einträge
+    final List<FoodTimelineEntry> foodTimeline = [];
+    for (final entry in foodEntries) {
+      final foodItem = await ProductDatabaseHelper.instance.getProductByBarcode(entry.barcode);
+      if (foodItem != null) {
+        nutritionSummary.calories += (foodItem.calories / 100 * entry.quantityInGrams).round();
+        nutritionSummary.protein += (foodItem.protein / 100 * entry.quantityInGrams).round();
+        nutritionSummary.carbs += (foodItem.carbs / 100 * entry.quantityInGrams).round();
+        nutritionSummary.fat += (foodItem.fat / 100 * entry.quantityInGrams).round();
+        nutritionSummary.sugar += (foodItem.sugar ?? 0) / 100 * entry.quantityInGrams;
+        nutritionSummary.fiber += (foodItem.fiber ?? 0) / 100 * entry.quantityInGrams;
+        nutritionSummary.salt += (foodItem.salt ?? 0) / 100 * entry.quantityInGrams;
+        foodTimeline.add(FoodTimelineEntry(TrackedFoodItem(entry: entry, item: foodItem)));
+      }
+    }
+    
+    final waterTimeline = waterEntries.map((e) => WaterTimelineEntry(e)).toList();
+    nutritionSummary.water = waterEntries.fold(0, (sum, entry) => sum + entry.quantityInMl);
+
+    final List<dynamic> finalDisplayList = [];
+    
+    // ### NEUE LOGIK: Ansicht basierend auf der Dauer anpassen ###
+    if (range.duration.inDays == 0) {
+      // --- LOGIK FÜR EINZELTAG-ANSICHT (Gruppiert nach Mahlzeit) ---
+      final Map<String, List<FoodTimelineEntry>> groupedFood = {};
+      for (final entry in foodTimeline) {
+        final mealType = entry.trackedItem.entry.mealType;
+        if (groupedFood.containsKey(mealType)) {
+          groupedFood[mealType]!.add(entry);
+        } else {
+          groupedFood[mealType] = [entry];
+        }
+      }
+      
+      const mealOrder = ["mealtypeBreakfast", "mealtypeLunch", "mealtypeDinner", "mealtypeSnack"];
+      for (final mealKey in mealOrder) {
+        if (groupedFood.containsKey(mealKey)) {
+          finalDisplayList.add(mealKey);
+          groupedFood[mealKey]!.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+          finalDisplayList.addAll(groupedFood[mealKey]!);
+        }
+      }
+      
+      if (waterTimeline.isNotEmpty) {
+        finalDisplayList.add("waterHeader");
+        waterTimeline.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+        finalDisplayList.addAll(waterTimeline);
+      }
+    } else {
+      // --- LOGIK FÜR MEHRTAGES-ANSICHT (Chronologische Liste mit Datums-Trennern) ---
+      final List<TimelineEntry> combinedList = [...foodTimeline, ...waterTimeline];
+      combinedList.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      
+      DateTime? lastDate;
+      for (final entry in combinedList) {
+        final entryDate = entry.timestamp;
+        if (lastDate == null || !entryDate.isSameDate(lastDate)) {
+          finalDisplayList.add(entryDate); // Füge DateTime-Objekt als Trenner hinzu
+          lastDate = entryDate;
+        }
+        finalDisplayList.add(entry);
+      }
+    }
+
+    if(mounted) {
+      setState(() {
+        _nutritionData = nutritionSummary;
+        _displayItems = finalDisplayList;
+        _isLoading = false;
+      });
+    }
+  }
+  
+  void _navigateDay(bool forward) {
+    final currentDay = _selectedDateRange.start;
+    final newDay = currentDay.add(Duration(days: forward ? 1 : -1));
+    // Navigation über den heutigen Tag hinaus verhindern
+    if (forward && newDay.isAfter(DateTime.now())) return;
+    
+    setState(() {
+      _selectedDateRange = DateTimeRange(start: newDay, end: newDay);
+      _selectedRangeKey = 'custom'; // De-selektiert die Filter-Chips
+    });
+    _loadEntriesForDateRange(_selectedDateRange);
+  }
+
+  Future<void> _setTimeRange(String key) async {
+    setState(() => _selectedRangeKey = key);
+    final now = DateTime.now();
+    DateTime start;
+    DateTime end = DateTime(now.year, now.month, now.day, 23, 59, 59);
+
+    switch (key) {
+      case '1W':
+        start = now.subtract(const Duration(days: 6));
+        break;
+      case '1M':
+        start = now.subtract(const Duration(days: 29));
+        break;
+      case 'All':
+        final earliest = await DatabaseHelper.instance.getEarliestFoodEntryDate();
+        start = earliest ?? now;
+        break;
+      case '1D':
+      default:
+        start = now;
+    }
+    
+    final normalizedStart = DateTime(start.year, start.month, start.day);
+    setState(() => _selectedDateRange = DateTimeRange(start: normalizedStart, end: end));
+    _loadEntriesForDateRange(_selectedDateRange);
+  }
+
+  Future<void> _deleteFoodEntry(int id) async {
+    await DatabaseHelper.instance.deleteFoodEntry(id);
+    _loadEntriesForDateRange(_selectedDateRange);
+  }
+  
+  Future<void> _deleteWaterEntry(int id) async {
+    await DatabaseHelper.instance.deleteWaterEntry(id);
+    _loadEntriesForDateRange(_selectedDateRange);
+  }
+
+  Future<void> _editFoodEntry(TrackedFoodItem trackedItem) async {
+    final l10n = AppLocalizations.of(context)!;
+    final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
+    
+    final result = await showDialog<(int, DateTime, bool, String)?>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(trackedItem.item.name, maxLines: 2, overflow: TextOverflow.ellipsis),
+          content: QuantityDialogContent(
+            key: dialogStateKey,
+            item: trackedItem.item,
+            initialQuantity: trackedItem.entry.quantityInGrams,
+            initialTimestamp: trackedItem.entry.timestamp,
+            initialMealType: trackedItem.entry.mealType,
+          ),
+          actions: [
+            TextButton(child: Text(l10n.cancel), onPressed: () => Navigator.of(context).pop()),
+            FilledButton(child: Text(l10n.save), onPressed: () {
+              final state = dialogStateKey.currentState;
+              if (state != null) {
+                final quantity = int.tryParse(state.quantityText);
+                if (quantity != null && quantity > 0) {
+                  Navigator.of(context).pop((quantity, state.selectedDateTime, state.countAsWater, state.selectedMealType));
+                }
+              }
+            }),
+          ],
+        );
+      },
+    );
+
+    if (result != null) {
+      final updatedEntry = FoodEntry(
+        id: trackedItem.entry.id,
+        barcode: trackedItem.item.barcode,
+        quantityInGrams: result.$1,
+        timestamp: result.$2,
+        mealType: result.$4,
+      );
+      await DatabaseHelper.instance.updateFoodEntry(updatedEntry);
+      _loadEntriesForDateRange(_selectedDateRange);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final locale = Localizations.localeOf(context).toString();
+
+    final rangeText = _selectedDateRange.duration.inDays == 0
+        ? DateFormat.yMMMMd(locale).format(_selectedDateRange.start)
+        : "${DateFormat.yMMMMd(locale).format(_selectedDateRange.start)} - ${DateFormat.yMMMMd(locale).format(_selectedDateRange.end)}";
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.nutritionScreenTitle),
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
+      ),
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              // KORREKTUR: Datums-Navigation und Filter sind jetzt außerhalb der Animation
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                child: Row(
+                  children: [
+                    IconButton(icon: const Icon(Icons.chevron_left), onPressed: () => _navigateDay(false)),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () async {
+                          final picked = await showDateRangePicker(context: context, initialDateRange: _selectedDateRange, firstDate: DateTime(2020), lastDate: DateTime.now());
+                          if (picked != null) {
+                            setState(() {
+                              _selectedDateRange = picked;
+                              _selectedRangeKey = 'custom';
+                            });
+                            _loadEntriesForDateRange(picked);
+                          }
+                        },
+                        child: Text(
+                          rangeText, 
+                          style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                    IconButton(icon: const Icon(Icons.chevron_right), onPressed: _selectedDateRange.end.isSameDate(DateTime.now()) ? null : () => _navigateDay(true)),
+                  ],
+                ),
+              ),
+              Wrap(
+                spacing: 8.0,
+                children: [
+                  FilterChip(label: Text(l10n.filterToday), selected: _selectedRangeKey == '1D', onSelected: (_) => _setTimeRange('1D')),
+                  FilterChip(label: Text(l10n.filter7Days), selected: _selectedRangeKey == '1W', onSelected: (_) => _setTimeRange('1W')),
+                  FilterChip(label: Text(l10n.filter30Days), selected: _selectedRangeKey == '1M', onSelected: (_) => _setTimeRange('1M')),
+                  FilterChip(label: Text(l10n.filterAll), selected: _selectedRangeKey == 'All', onSelected: (_) => _setTimeRange('All')),
+                ],
+              ),
+              // KORREKTUR: AnimatedSize umschließt jetzt nur noch den relevanten Teil
+              AnimatedSize(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                child: _isHeaderVisible
+                    ? Column(
+                        children: [
+                          if (_nutritionData != null)
+                            Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                                  child: NutritionSummaryWidget(nutritionData: _nutritionData!, isExpandedView: _isSummaryExpanded, l10n: l10n),
+                                ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    TextButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          _isSummaryExpanded = !_isSummaryExpanded;
+                                          UiStateService.instance.isNutritionSummaryExpanded = _isSummaryExpanded;
+                                        });
+                                      },
+                                      child: Text(_isSummaryExpanded ? l10n.showLess : l10n.showMoreDetails),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => setState(() => _isHeaderVisible = false),
+                                      child: Text(l10n.hideSummary),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                        ],
+                      )
+                    : Align(
+                        alignment: Alignment.centerRight,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: TextButton(
+                            onPressed: () => setState(() => _isHeaderVisible = true),
+                            child: Text(l10n.showSummary),
+                          ),
+                        ),
+                      ),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: _displayItems.isEmpty
+                    ? Center(child: Text(l10n.noEntriesForPeriod))
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        itemCount: _displayItems.length,
+                        itemBuilder: (context, index) {
+                          final item = _displayItems[index];
+
+                          String getLocalizedMealName(String key) {
+                            switch (key) {
+                              case "mealtypeBreakfast": return l10n.mealtypeBreakfast;
+                              case "mealtypeLunch": return l10n.mealtypeLunch;
+                              case "mealtypeDinner": return l10n.mealtypeDinner;
+                              case "mealtypeSnack": return l10n.mealtypeSnack;
+                              case "waterHeader": return l10n.waterHeader;
+                              default: return key;
+                            }
+                          }
+
+                          if (item is DateTime) {
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 24.0, bottom: 8.0, left: 8.0),
+                              child: Text(
+                                DateFormat.yMMMMEEEEd(locale).format(item),
+                                style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.primary),
+                              ),
+                            );
+                          }
+
+                          if (item is String) {
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 24.0, bottom: 8.0, left: 8.0),
+                              child: Text(getLocalizedMealName(item), style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                            );
+                          }
+
+                          if (item is FoodTimelineEntry) {
+                            final trackedItem = item.trackedItem;
+                            return Dismissible(
+                              key: Key('food_${trackedItem.entry.id}'),
+                              background: Container(
+                                color: Colors.blueAccent,
+                                alignment: Alignment.centerLeft,
+                                padding: const EdgeInsets.symmetric(horizontal: 20),
+                                child: const Icon(Icons.edit, color: Colors.white),
+                              ),
+                              secondaryBackground: Container(
+                                color: Colors.redAccent,
+                                alignment: Alignment.centerRight,
+                                padding: const EdgeInsets.symmetric(horizontal: 20),
+                                child: const Icon(Icons.delete, color: Colors.white),
+                              ),
+                              confirmDismiss: (direction) async {
+                                if (direction == DismissDirection.startToEnd) {
+                                  _editFoodEntry(trackedItem);
+                                  return false; 
+                                } else {
+                                  return await showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        title: Text(l10n.deleteConfirmTitle),
+                                        content: Text(l10n.deleteConfirmContent),
+                                        actions: <Widget>[
+                                          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+                                          TextButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.delete)),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                }
+                              },
+                              onDismissed: (direction) {
+                                if (direction == DismissDirection.endToStart) {
+                                  _deleteFoodEntry(trackedItem.entry.id!);
+                                }
+                              },
+                               child: Card(
+                                child: ListTile(
+                                  leading: const Icon(Icons.restaurant),
+                                  title: Text(trackedItem.item.name),
+                                  subtitle: Text(l10n.foodListSubtitle(trackedItem.entry.quantityInGrams, DateFormat.Hm(locale).format(trackedItem.entry.timestamp))),
+                                  trailing: Text(l10n.foodListTrailingKcal(trackedItem.calculatedCalories)),
+                                  onTap: () => Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (context) => FoodDetailScreen(trackedItem: trackedItem))
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+
+                          if (item is WaterTimelineEntry) {
+                            final waterEntry = item.waterEntry;
+                            return Dismissible(
+                              key: Key('water_${waterEntry.id}'),
+                              direction: DismissDirection.endToStart,
+                              onDismissed: (direction) => _deleteWaterEntry(waterEntry.id!),
+                              background: Container(color: Colors.red, alignment: Alignment.centerRight, padding: const EdgeInsets.symmetric(horizontal: 20), child: const Icon(Icons.delete, color: Colors.white)),
+                              child: Card(
+                                child: ListTile(
+                                  leading: Icon(Icons.local_drink, color: colorScheme.primary),
+                                  title: Text(l10n.waterEntryTitle),
+                                  subtitle: Text(DateFormat.Hm(locale).format(waterEntry.timestamp)),
+                                  trailing: Text(l10n.waterListTrailingMl(waterEntry.quantityInMl), style: const TextStyle(fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+              ),
+            ],
+          ),
+           // Das Lade-Overlay bleibt auf der obersten Ebene des Stacks
+          if (_isLoading)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.5),
+                child: const Center(child: CircularProgressIndicator()),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+extension DateOnlyCompare on DateTime {
+  bool isSameDate(DateTime other) {
+    return year == other.year && month == other.month && day == other.day;
+  }
+}

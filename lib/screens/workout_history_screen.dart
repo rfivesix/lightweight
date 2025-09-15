@@ -1,0 +1,117 @@
+// lib/screens/workout_history_screen.dart
+
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:lightweight/data/workout_database_helper.dart';
+import 'package:lightweight/generated/app_localizations.dart';
+import 'package:lightweight/models/workout_log.dart';
+import 'workout_log_detail_screen.dart';
+
+class WorkoutHistoryScreen extends StatefulWidget {
+  const WorkoutHistoryScreen({super.key});
+  @override
+  State<WorkoutHistoryScreen> createState() => _WorkoutHistoryScreenState();
+}
+
+class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
+  bool _isLoading = true;
+  List<WorkoutLog> _logs = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+  }
+
+  Future<void> _loadHistory() async {
+    setState(() => _isLoading = true);
+    final data = await WorkoutDatabaseHelper.instance.getWorkoutLogs();
+    if (mounted) setState(() { _logs = data; _isLoading = false; });
+  }
+
+  Future<void> _deleteLog(int logId) async {
+    await WorkoutDatabaseHelper.instance.deleteWorkoutLog(logId);
+    _loadHistory();
+  }
+
+  String _formatDuration(Duration d) {
+    var seconds = d.inSeconds;
+    final hours = seconds ~/ Duration.secondsPerHour;
+    seconds -= hours * Duration.secondsPerHour;
+    final minutes = seconds ~/ Duration.secondsPerMinute;
+    seconds -= minutes * Duration.secondsPerMinute;
+
+    final hoursString = hours > 0 ? '$hours:' : '';
+    final minutesString = minutes.toString().padLeft(2, '0');
+    final secondsString = seconds.toString().padLeft(2, '0');
+    
+    return '$hoursString$minutesString:$secondsString';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString(); // KORREKTUR: Locale hier definieren
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.workoutHistoryTitle),
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _logs.isEmpty
+              ? Center(child: Text(l10n.emptyHistory, style: const TextStyle(fontSize: 18, color: Colors.grey)))
+              : ListView.builder(
+                  padding: const EdgeInsets.all(8.0),
+                  itemCount: _logs.length,
+                  itemBuilder: (context, index) {
+                    final log = _logs[index];
+                    final duration = log.endTime?.difference(log.startTime);
+                    return Dismissible(
+                      key: Key('log_${log.id}'),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        color: Colors.redAccent,
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: const Icon(Icons.delete, color: Colors.white),
+                      ),
+                      confirmDismiss: (direction) async {
+                        return await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: Text(l10n.deleteConfirmTitle),
+                            content: Text(l10n.deleteWorkoutConfirmContent),
+                            actions: [
+                              TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: Text(l10n.cancel)),
+                              TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: Text(l10n.delete)),
+                            ],
+                          ),
+                        ) ?? false;
+                      },
+                      onDismissed: (direction) {
+                        _deleteLog(log.id!);
+                      },
+                      child: Card(
+                        child: ListTile(
+                          leading: const Icon(Icons.event_note, size: 40),
+                          title: Text(log.routineName ?? l10n.freeWorkoutTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          // KORREKTUR: Hartcodierte Locale entfernt und durch die dynamische Variable ersetzt
+                          subtitle: Text(DateFormat.yMMMMd(locale).add_Hm().format(log.startTime)),
+                          trailing: duration != null 
+                              ? Text(_formatDuration(duration), style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.w500)) 
+                              : null,
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) => WorkoutLogDetailScreen(logId: log.id!))
+                          ).then((_) => _loadHistory()),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+    );
+  }
+}
