@@ -1,12 +1,12 @@
-// lib/screens/exercise_catalog_screen.dart
+// lib/screens/exercise_catalog_screen.dart (Final & De-Materialisiert)
 
 import 'package:flutter/material.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/exercise.dart';
-import 'create_exercise_screen.dart';
-import 'exercise_detail_screen.dart';
-import 'package:lightweight/widgets/wger_attribution_widget.dart';
+import 'package:lightweight/screens/exercise_detail_screen.dart';
+import 'package:lightweight/widgets/summary_card.dart';
+import 'package:lightweight/widgets/wger_attribution_widget.dart'; // HINZUGEFÜGT
 
 class ExerciseCatalogScreen extends StatefulWidget {
   final bool isSelectionMode;
@@ -17,17 +17,17 @@ class ExerciseCatalogScreen extends StatefulWidget {
 }
 
 class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
-  bool _isLoading = true;
   List<Exercise> _foundExercises = [];
+  bool _isLoading = true;
   final _searchController = TextEditingController();
-
   List<String> _allCategories = [];
-  final Set<String> _selectedCategories = {};
+  List<String> _selectedCategories = [];
 
   @override
   void initState() {
     super.initState();
-    _loadInitialData();
+    _searchController.addListener(() => _runFilter(_searchController.text));
+    _loadCategories();
   }
 
   @override
@@ -36,220 +36,247 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
     super.dispose();
   }
 
-  Future<void> _loadInitialData() async {
-    setState(() => _isLoading = true);
-    final categoriesFuture = WorkoutDatabaseHelper.instance.getAllCategories();
-    final exercisesFuture = WorkoutDatabaseHelper.instance.searchExercises();
-
-    final results = await Future.wait([categoriesFuture, exercisesFuture]);
-    
-    if (mounted) {
-      setState(() {
-        _allCategories = results[0] as List<String>;
-        _foundExercises = results[1] as List<Exercise>;
-        _isLoading = false;
-      });
-    }
+  Future<void> _loadCategories() async {
+    final categories = await WorkoutDatabaseHelper.instance.getAllCategories();
+    setState(() {
+      _allCategories = categories;
+      _isLoading = false;
+    });
+    _runFilter(_searchController.text); // Erste Ladung oder Filter
   }
 
-  Future<void> _reloadExercises() async {
-    setState(() => _isLoading = true);
-    final data = await WorkoutDatabaseHelper.instance.searchExercises(
-      query: _searchController.text,
-      selectedCategories: _selectedCategories.toList(),
+  void _runFilter(String enteredKeyword) async {
+    final results = await WorkoutDatabaseHelper.instance.searchExercises(
+      query: enteredKeyword,
+      selectedCategories: _selectedCategories,
     );
     if (mounted) {
       setState(() {
-        _foundExercises = data;
-        _isLoading = false;
+        _foundExercises = results;
       });
     }
   }
-  
-  void _showFilterSheet() {
-    final l10n = AppLocalizations.of(context)!;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setModalState) {
-            return DraggableScrollableSheet(
-              expand: false,
-              initialChildSize: 0.6,
-              maxChildSize: 0.9,
-              builder: (_, scrollController) {
-                return Container(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16.0),
-                        child: Text(l10n.filterByCategory,
-                            style: Theme.of(context).textTheme.titleLarge),
-                      ),
-                      Expanded(
-                        child: SingleChildScrollView(
-                          controller: scrollController,
-                          child: Wrap(
-                            spacing: 8.0,
-                            runSpacing: 4.0,
-                            children: _allCategories.map((category) {
-                              return FilterChip(
-                                label: Text(category),
-                                selected: _selectedCategories.contains(category),
-                                onSelected: (isSelected) {
-                                  setModalState(() {
-                                    if (isSelected) {
-                                      _selectedCategories.add(category);
-                                    } else {
-                                      _selectedCategories.remove(category);
-                                    }
-                                  });
-                                },
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          icon: const Icon(Icons.check),
-                          label: Text(l10n.doneButtonLabel), // z.B. "Fertig"
-                        ),
-                      )
-                    ],
-                  ),
-                );
 
-              }
+  void _showFilterDialog(BuildContext context, AppLocalizations l10n) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        // Lokaler State für die Auswahl im Dialog
+        List<String> tempSelectedCategories = List.from(_selectedCategories);
+        return StatefulBuilder(
+          builder: (context, setStateSB) {
+            return AlertDialog(
+              // Nutzt globales DialogTheme
+              title: Text(l10n.filterByCategory),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: _allCategories.map((category) {
+                    final isSelected =
+                        tempSelectedCategories.contains(category);
+                    return ListTile(
+                      title: Text(category),
+                      leading: Checkbox(
+                        value: isSelected,
+                        onChanged: (bool? value) {
+                          setStateSB(() {
+                            // State des Dialogs aktualisieren
+                            if (value == true) {
+                              tempSelectedCategories.add(category);
+                            } else {
+                              tempSelectedCategories.remove(category);
+                            }
+                          });
+                        },
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(l10n.cancel)),
+                ElevatedButton(
+                  // Nutzt globales Theme
+                  onPressed: () {
+                    setState(() {
+                      // State des Haupt-Screens aktualisieren
+                      _selectedCategories = tempSelectedCategories;
+                    });
+                    _runFilter(_searchController.text);
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(l10n.doneButtonLabel),
+                ),
+              ],
             );
           },
         );
       },
-    ).then((_) {
-      _reloadExercises();
-    });
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.exerciseCatalogTitle),
-        actions: [
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.filter_list),
-                onPressed: _showFilterSheet,
-              ),
-              if (_selectedCategories.isNotEmpty)
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: CircleAvatar(
-                    radius: 8,
-                    backgroundColor: Theme.of(context).colorScheme.tertiary,
-                    child: Text(
-                      _selectedCategories.length.toString(),
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onTertiary,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(kToolbarHeight),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (value) => _reloadExercises(),
-              decoration: InputDecoration(
-                hintText: l10n.searchHintText,
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(icon: const Icon(Icons.clear), onPressed: () {
-                        _searchController.clear();
-                        _reloadExercises();
-                      })
-                    : null,
-              ),
-            ),
-          ),
-        ),
-      ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      // KORREKTUR 1: AppBar entfernt, Titel und Aktionen im Body
       body: Column(
         children: [
+          // Header-Bereich mit Titel, Suche und Filter-Button
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(l10n.exerciseCatalogTitle,
+                        style: textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w900, fontSize: 28)),
+                    if (widget.isSelectionMode)
+                      ElevatedButton(
+                        // Nutzt globales Theme
+                        onPressed: () => Navigator.of(context)
+                            .pop(), // Pop mit null, falls keine Auswahl
+                        child: Text(l10n.doneButtonLabel),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  // Nutzt globales Theme
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: l10n.searchHintText,
+                    prefixIcon: Icon(Icons.search,
+                        color: colorScheme.onSurfaceVariant, size: 20),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: Icon(Icons.clear,
+                                color: colorScheme.onSurfaceVariant),
+                            onPressed: () => _searchController.clear(),
+                          )
+                        : null,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // KORREKTUR 2: Filter-Button
+                _buildFilterButton(context, l10n),
+              ],
+            ),
+          ),
+          // Trennlinie
+          Divider(
+              height: 1,
+              thickness: 1,
+              color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : _foundExercises.isEmpty 
-                    ? Center(child: Text(l10n.noExercisesFound))
-                    : _foundExercises.isEmpty 
-                      ? Center(child: Text(l10n.noExercisesFound))
-                      : ListView(
-                          children: _allCategories.map((category) {
-                            final exercisesInCategory = _foundExercises
-                                .where((ex) => ex.categoryName == category)
-                                .toList();
-
-                            if (exercisesInCategory.isEmpty) return const SizedBox.shrink();
-
-                            return ExpansionTile(
-                              title: Text(category, style: Theme.of(context).textTheme.titleMedium),
-                              children: exercisesInCategory.map((exercise) {
-                                return ListTile(
-                                  title: Text(exercise.getLocalizedName(context)),
-                                  subtitle: Text(
-                                    exercise.primaryMuscles.join(', '),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  onTap: () {
-                                    if (widget.isSelectionMode) {
-                                      Navigator.of(context).pop(exercise);
-                                    } else {
-                                      Navigator.of(context).push(MaterialPageRoute(
-                                        builder: (context) => ExerciseDetailScreen(exercise: exercise),
-                                      ));
-                                    }
-                                  },
-                                );
-                              }).toList(),
-                            );
-                          }).toList(),
-                        ),
+                : _foundExercises.isEmpty
+                    ? Center(
+                        child: Text(l10n.noExercisesFound,
+                            style: textTheme.titleMedium))
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16.0),
+                        itemCount: _foundExercises.length,
+                        itemBuilder: (context, index) {
+                          final exercise = _foundExercises[index];
+                          return SummaryCard(
+                            // KORREKTUR 3: Übungs-Card
+                            child: ListTile(
+                              leading: const Icon(Icons.fitness_center),
+                              title: Text(exercise.getLocalizedName(context),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold)),
+                              subtitle: Text(exercise.categoryName),
+                              trailing: widget.isSelectionMode
+                                  ? IconButton(
+                                      // Auswahl-Modus: Hinzufügen-Icon
+                                      icon: Icon(Icons.add_circle_outline,
+                                          color: colorScheme.primary),
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(exercise),
+                                    )
+                                  : const Icon(Icons
+                                      .chevron_right), // Anzeige-Modus: Pfeil
+                              onTap: () {
+                                if (widget.isSelectionMode) {
+                                  // Im Auswahl-Modus: Bei Klick auch auswählen
+                                  Navigator.of(context).pop(exercise);
+                                } else {
+                                  // Im Anzeige-Modus: Detail-Screen öffnen
+                                  Navigator.of(context).push(MaterialPageRoute(
+                                      builder: (context) =>
+                                          ExerciseDetailScreen(
+                                              exercise: exercise)));
+                                }
+                              },
+                            ),
+                          );
+                        },
+                      ),
           ),
-          const WgerAttributionWidget(),
+          // KORREKTUR 4: WgerAttributionWidget am Ende
+          Padding(
+            padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
+            child: WgerAttributionWidget(
+              textStyle: textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+            ),
+          ),
         ],
       ),
-      floatingActionButton: widget.isSelectionMode
-          ? null
-          : FloatingActionButton(
-              onPressed: () {
-                Navigator.of(context).push<bool>(MaterialPageRoute(builder: (context) => const CreateExerciseScreen())).then((success) {
-                  if (success == true) _loadInitialData();
-                });
-              },
-              child: const Icon(Icons.add),
-            ),
+    );
+  }
+
+  // KORREKTUR 5: Helfer-Widget für den Filter-Button
+  Widget _buildFilterButton(BuildContext context, AppLocalizations l10n) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8.0),
+      child: GestureDetector(
+        onTap: () => _showFilterDialog(context, l10n),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+          decoration: BoxDecoration(
+            color: _selectedCategories.isNotEmpty
+                ? colorScheme.primary
+                : colorScheme.surfaceContainerHighest.withOpacity(0.5),
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.filter_list,
+                  size: 20,
+                  color: _selectedCategories.isNotEmpty
+                      ? colorScheme.onPrimary
+                      : colorScheme.onSurfaceVariant),
+              const SizedBox(width: 8),
+              Text(
+                l10n.filterByCategory,
+                style: textTheme.labelLarge?.copyWith(
+                  color: _selectedCategories.isNotEmpty
+                      ? colorScheme.onPrimary
+                      : colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

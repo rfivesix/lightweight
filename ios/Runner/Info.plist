@@ -45,5 +45,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Diese App benötigt Zugriff auf Ihre Fotobibliothek, um ein Profilbild auswählen zu können.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Diese App benötigt Zugriff auf Ihre Kamera, um ein Profilbild aufnehmen zu können.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Diese App benötigt keinen Zugriff auf Ihr Mikrofon.</string>
 </dict>
 </plist>

@@ -1,19 +1,20 @@
-// lib/screens/nutrition_screen.dart
+// lib/screens/nutrition_screen.dart (Final & Korrigiert)
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/data/product_database_helper.dart';
+import 'package:lightweight/generated/app_localizations.dart';
+import 'package:lightweight/dialogs/quantity_dialog_content.dart';
 import 'package:lightweight/models/daily_nutrition.dart';
 import 'package:lightweight/models/food_entry.dart';
 import 'package:lightweight/models/tracked_food_item.dart';
-import 'package:lightweight/widgets/nutrition_summary_widget.dart';
-import './food_detail_screen.dart';
-import '../models/timeline_entry.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/dialogs/quantity_dialog_content.dart';
+import 'package:lightweight/models/timeline_entry.dart';
 import 'package:lightweight/services/ui_state_service.dart';
+import 'package:lightweight/widgets/nutrition_summary_widget.dart';
+import 'package:lightweight/widgets/summary_card.dart';
+import './food_detail_screen.dart';
 
 class NutritionScreen extends StatefulWidget {
   const NutritionScreen({super.key});
@@ -26,9 +27,13 @@ class _NutritionScreenState extends State<NutritionScreen> {
   DailyNutrition? _nutritionData;
   List<dynamic> _displayItems = [];
   bool _isLoading = true;
-  DateTimeRange _selectedDateRange = DateTimeRange(start: DateTime.now(), end: DateTime.now());
+  DateTimeRange _selectedDateRange =
+      DateTimeRange(start: DateTime.now(), end: DateTime.now());
   bool _isSummaryExpanded = UiStateService.instance.isNutritionSummaryExpanded;
+
+  // KORREKTUR: _selectedRangeKey wird wieder als State-Variable definiert.
   String _selectedRangeKey = '1D';
+
   bool _isHeaderVisible = true;
 
   @override
@@ -36,9 +41,12 @@ class _NutritionScreenState extends State<NutritionScreen> {
     super.initState();
     _loadEntriesForDateRange(_selectedDateRange);
   }
+
   Future<void> _loadEntriesForDateRange(DateTimeRange range) async {
     if (!mounted) return;
-    setState(() { _isLoading = true; });
+    setState(() {
+      _isLoading = true;
+    });
 
     // Lade globale Ziele
     final prefs = await SharedPreferences.getInstance();
@@ -52,9 +60,11 @@ class _NutritionScreenState extends State<NutritionScreen> {
     final targetSalt = prefs.getInt('targetSalt') ?? 6;
 
     // Lade Einträge aus der Datenbank
-    final foodEntries = await DatabaseHelper.instance.getEntriesForDateRange(range.start, range.end);
-    final waterEntries = await DatabaseHelper.instance.getWaterEntriesForDateRange(range.start, range.end);
-    
+    final foodEntries = await DatabaseHelper.instance
+        .getEntriesForDateRange(range.start, range.end);
+    final waterEntries = await DatabaseHelper.instance
+        .getWaterEntriesForDateRange(range.start, range.end);
+
     final numberOfDays = range.duration.inDays + 1;
     final nutritionSummary = DailyNutrition(
       targetCalories: targetCalories * numberOfDays,
@@ -66,28 +76,39 @@ class _NutritionScreenState extends State<NutritionScreen> {
       targetFiber: targetFiber * numberOfDays,
       targetSalt: targetSalt * numberOfDays,
     );
-    
+
     // Berechne Nährwert-Summe und erstelle Timeline-Einträge
     final List<FoodTimelineEntry> foodTimeline = [];
     for (final entry in foodEntries) {
-      final foodItem = await ProductDatabaseHelper.instance.getProductByBarcode(entry.barcode);
+      final foodItem = await ProductDatabaseHelper.instance
+          .getProductByBarcode(entry.barcode);
       if (foodItem != null) {
-        nutritionSummary.calories += (foodItem.calories / 100 * entry.quantityInGrams).round();
-        nutritionSummary.protein += (foodItem.protein / 100 * entry.quantityInGrams).round();
-        nutritionSummary.carbs += (foodItem.carbs / 100 * entry.quantityInGrams).round();
-        nutritionSummary.fat += (foodItem.fat / 100 * entry.quantityInGrams).round();
-        nutritionSummary.sugar += (foodItem.sugar ?? 0) / 100 * entry.quantityInGrams;
-        nutritionSummary.fiber += (foodItem.fiber ?? 0) / 100 * entry.quantityInGrams;
-        nutritionSummary.salt += (foodItem.salt ?? 0) / 100 * entry.quantityInGrams;
-        foodTimeline.add(FoodTimelineEntry(TrackedFoodItem(entry: entry, item: foodItem)));
+        nutritionSummary.calories +=
+            (foodItem.calories / 100 * entry.quantityInGrams).round();
+        nutritionSummary.protein +=
+            (foodItem.protein / 100 * entry.quantityInGrams).round();
+        nutritionSummary.carbs +=
+            (foodItem.carbs / 100 * entry.quantityInGrams).round();
+        nutritionSummary.fat +=
+            (foodItem.fat / 100 * entry.quantityInGrams).round();
+        nutritionSummary.sugar +=
+            (foodItem.sugar ?? 0) / 100 * entry.quantityInGrams;
+        nutritionSummary.fiber +=
+            (foodItem.fiber ?? 0) / 100 * entry.quantityInGrams;
+        nutritionSummary.salt +=
+            (foodItem.salt ?? 0) / 100 * entry.quantityInGrams;
+        foodTimeline.add(
+            FoodTimelineEntry(TrackedFoodItem(entry: entry, item: foodItem)));
       }
     }
-    
-    final waterTimeline = waterEntries.map((e) => WaterTimelineEntry(e)).toList();
-    nutritionSummary.water = waterEntries.fold(0, (sum, entry) => sum + entry.quantityInMl);
+
+    final waterTimeline =
+        waterEntries.map((e) => WaterTimelineEntry(e)).toList();
+    nutritionSummary.water =
+        waterEntries.fold(0, (sum, entry) => sum + entry.quantityInMl);
 
     final List<dynamic> finalDisplayList = [];
-    
+
     // ### NEUE LOGIK: Ansicht basierend auf der Dauer anpassen ###
     if (range.duration.inDays == 0) {
       // --- LOGIK FÜR EINZELTAG-ANSICHT (Gruppiert nach Mahlzeit) ---
@@ -100,16 +121,22 @@ class _NutritionScreenState extends State<NutritionScreen> {
           groupedFood[mealType] = [entry];
         }
       }
-      
-      const mealOrder = ["mealtypeBreakfast", "mealtypeLunch", "mealtypeDinner", "mealtypeSnack"];
+
+      const mealOrder = [
+        "mealtypeBreakfast",
+        "mealtypeLunch",
+        "mealtypeDinner",
+        "mealtypeSnack"
+      ];
       for (final mealKey in mealOrder) {
         if (groupedFood.containsKey(mealKey)) {
           finalDisplayList.add(mealKey);
-          groupedFood[mealKey]!.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+          groupedFood[mealKey]!
+              .sort((a, b) => b.timestamp.compareTo(a.timestamp));
           finalDisplayList.addAll(groupedFood[mealKey]!);
         }
       }
-      
+
       if (waterTimeline.isNotEmpty) {
         finalDisplayList.add("waterHeader");
         waterTimeline.sort((a, b) => b.timestamp.compareTo(a.timestamp));
@@ -117,21 +144,25 @@ class _NutritionScreenState extends State<NutritionScreen> {
       }
     } else {
       // --- LOGIK FÜR MEHRTAGES-ANSICHT (Chronologische Liste mit Datums-Trennern) ---
-      final List<TimelineEntry> combinedList = [...foodTimeline, ...waterTimeline];
+      final List<TimelineEntry> combinedList = [
+        ...foodTimeline,
+        ...waterTimeline
+      ];
       combinedList.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-      
+
       DateTime? lastDate;
       for (final entry in combinedList) {
         final entryDate = entry.timestamp;
         if (lastDate == null || !entryDate.isSameDate(lastDate)) {
-          finalDisplayList.add(entryDate); // Füge DateTime-Objekt als Trenner hinzu
+          finalDisplayList
+              .add(entryDate); // Füge DateTime-Objekt als Trenner hinzu
           lastDate = entryDate;
         }
         finalDisplayList.add(entry);
       }
     }
 
-    if(mounted) {
+    if (mounted) {
       setState(() {
         _nutritionData = nutritionSummary;
         _displayItems = finalDisplayList;
@@ -139,13 +170,13 @@ class _NutritionScreenState extends State<NutritionScreen> {
       });
     }
   }
-  
+
   void _navigateDay(bool forward) {
     final currentDay = _selectedDateRange.start;
     final newDay = currentDay.add(Duration(days: forward ? 1 : -1));
     // Navigation über den heutigen Tag hinaus verhindern
     if (forward && newDay.isAfter(DateTime.now())) return;
-    
+
     setState(() {
       _selectedDateRange = DateTimeRange(start: newDay, end: newDay);
       _selectedRangeKey = 'custom'; // De-selektiert die Filter-Chips
@@ -167,16 +198,18 @@ class _NutritionScreenState extends State<NutritionScreen> {
         start = now.subtract(const Duration(days: 29));
         break;
       case 'All':
-        final earliest = await DatabaseHelper.instance.getEarliestFoodEntryDate();
+        final earliest =
+            await DatabaseHelper.instance.getEarliestFoodEntryDate();
         start = earliest ?? now;
         break;
       case '1D':
       default:
         start = now;
     }
-    
+
     final normalizedStart = DateTime(start.year, start.month, start.day);
-    setState(() => _selectedDateRange = DateTimeRange(start: normalizedStart, end: end));
+    setState(() =>
+        _selectedDateRange = DateTimeRange(start: normalizedStart, end: end));
     _loadEntriesForDateRange(_selectedDateRange);
   }
 
@@ -184,7 +217,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
     await DatabaseHelper.instance.deleteFoodEntry(id);
     _loadEntriesForDateRange(_selectedDateRange);
   }
-  
+
   Future<void> _deleteWaterEntry(int id) async {
     await DatabaseHelper.instance.deleteWaterEntry(id);
     _loadEntriesForDateRange(_selectedDateRange);
@@ -193,12 +226,13 @@ class _NutritionScreenState extends State<NutritionScreen> {
   Future<void> _editFoodEntry(TrackedFoodItem trackedItem) async {
     final l10n = AppLocalizations.of(context)!;
     final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
-    
+
     final result = await showDialog<(int, DateTime, bool, String)?>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(trackedItem.item.name, maxLines: 2, overflow: TextOverflow.ellipsis),
+          title: Text(trackedItem.item.name,
+              maxLines: 2, overflow: TextOverflow.ellipsis),
           content: QuantityDialogContent(
             key: dialogStateKey,
             item: trackedItem.item,
@@ -207,16 +241,25 @@ class _NutritionScreenState extends State<NutritionScreen> {
             initialMealType: trackedItem.entry.mealType,
           ),
           actions: [
-            TextButton(child: Text(l10n.cancel), onPressed: () => Navigator.of(context).pop()),
-            FilledButton(child: Text(l10n.save), onPressed: () {
-              final state = dialogStateKey.currentState;
-              if (state != null) {
-                final quantity = int.tryParse(state.quantityText);
-                if (quantity != null && quantity > 0) {
-                  Navigator.of(context).pop((quantity, state.selectedDateTime, state.countAsWater, state.selectedMealType));
-                }
-              }
-            }),
+            TextButton(
+                child: Text(l10n.cancel),
+                onPressed: () => Navigator.of(context).pop()),
+            FilledButton(
+                child: Text(l10n.save),
+                onPressed: () {
+                  final state = dialogStateKey.currentState;
+                  if (state != null) {
+                    final quantity = int.tryParse(state.quantityText);
+                    if (quantity != null && quantity > 0) {
+                      Navigator.of(context).pop((
+                        quantity,
+                        state.selectedDateTime,
+                        state.countAsWater,
+                        state.selectedMealType
+                      ));
+                    }
+                  }
+                }),
           ],
         );
       },
@@ -237,6 +280,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // KORREKTUR: Hier sollte BuildContext immer korrekt sein.
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
@@ -247,55 +291,86 @@ class _NutritionScreenState extends State<NutritionScreen> {
         : "${DateFormat.yMMMMd(locale).format(_selectedDateRange.start)} - ${DateFormat.yMMMMd(locale).format(_selectedDateRange.end)}";
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.nutritionScreenTitle),
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
-      ),
       body: Stack(
         children: [
           Column(
             children: [
-              // KORREKTUR: Datums-Navigation und Filter sind jetzt außerhalb der Animation
+              // KORREKTUR: Header-Bereich mit angepasster Überschrift
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                child: Row(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 24.0), // KORREKTUR: Vertikales Padding erhöht
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    IconButton(icon: const Icon(Icons.chevron_left), onPressed: () => _navigateDay(false)),
-                    Expanded(
-                      child: InkWell(
-                        onTap: () async {
-                          final picked = await showDateRangePicker(context: context, initialDateRange: _selectedDateRange, firstDate: DateTime(2020), lastDate: DateTime.now());
-                          if (picked != null) {
-                            setState(() {
-                              _selectedDateRange = picked;
-                              _selectedRangeKey = 'custom';
-                            });
-                            _loadEntriesForDateRange(picked);
-                          }
-                        },
-                        child: Text(
-                          rangeText, 
-                          style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                          textAlign: TextAlign.center,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                    // KORREKTUR: Stil der Überschrift angepasst
+                    Text(
+                      l10n.nutritionScreenTitle,
+                      style: textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.w900, // Deutlich fetter
+                        fontSize: 28, // Etwas größer
+                        color: textTheme
+                            .headlineMedium?.color, // Farbe aus dem Theme
                       ),
                     ),
-                    IconButton(icon: const Icon(Icons.chevron_right), onPressed: _selectedDateRange.end.isSameDate(DateTime.now()) ? null : () => _navigateDay(true)),
+                    const SizedBox(height: 24), // KORREKTUR: Abstand erhöht
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                            icon: const Icon(Icons.chevron_left),
+                            onPressed: () => _navigateDay(false)),
+                        Expanded(
+                          child: InkWell(
+                            onTap: () async {
+                              final picked = await showDateRangePicker(
+                                  context: context,
+                                  initialDateRange: _selectedDateRange,
+                                  firstDate: DateTime(2020),
+                                  lastDate: DateTime.now());
+                              if (picked != null) {
+                                setState(() {
+                                  _selectedDateRange = picked;
+                                  _selectedRangeKey = 'custom';
+                                });
+                                _loadEntriesForDateRange(picked);
+                              }
+                            },
+                            child: Text(
+                              rangeText,
+                              style: textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                            icon: const Icon(Icons.chevron_right),
+                            onPressed: _selectedDateRange.end
+                                    .isSameDate(DateTime.now())
+                                ? null
+                                : () => _navigateDay(true)),
+                      ],
+                    ),
+                    const SizedBox(height: 16), // KORREKTUR: Abstand
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildFilterButton(l10n.filterToday, '1D'),
+                        _buildFilterButton(l10n.filter7Days, '1W'),
+                        _buildFilterButton(l10n.filter30Days, '1M'),
+                        _buildFilterButton(l10n.filterAll, 'All'),
+                      ],
+                    ),
                   ],
                 ),
               ),
-              Wrap(
-                spacing: 8.0,
-                children: [
-                  FilterChip(label: Text(l10n.filterToday), selected: _selectedRangeKey == '1D', onSelected: (_) => _setTimeRange('1D')),
-                  FilterChip(label: Text(l10n.filter7Days), selected: _selectedRangeKey == '1W', onSelected: (_) => _setTimeRange('1W')),
-                  FilterChip(label: Text(l10n.filter30Days), selected: _selectedRangeKey == '1M', onSelected: (_) => _setTimeRange('1M')),
-                  FilterChip(label: Text(l10n.filterAll), selected: _selectedRangeKey == 'All', onSelected: (_) => _setTimeRange('All')),
-                ],
-              ),
-              // KORREKTUR: AnimatedSize umschließt jetzt nur noch den relevanten Teil
+              Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
+
               AnimatedSize(
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
@@ -306,23 +381,34 @@ class _NutritionScreenState extends State<NutritionScreen> {
                             Column(
                               children: [
                                 Padding(
-                                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
-                                  child: NutritionSummaryWidget(nutritionData: _nutritionData!, isExpandedView: _isSummaryExpanded, l10n: l10n),
+                                  padding:
+                                      const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                                  child: NutritionSummaryWidget(
+                                      nutritionData: _nutritionData!,
+                                      isExpandedView: _isSummaryExpanded,
+                                      l10n: l10n),
                                 ),
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
                                   children: [
                                     TextButton(
                                       onPressed: () {
                                         setState(() {
-                                          _isSummaryExpanded = !_isSummaryExpanded;
-                                          UiStateService.instance.isNutritionSummaryExpanded = _isSummaryExpanded;
+                                          _isSummaryExpanded =
+                                              !_isSummaryExpanded;
+                                          UiStateService.instance
+                                                  .isNutritionSummaryExpanded =
+                                              _isSummaryExpanded;
                                         });
                                       },
-                                      child: Text(_isSummaryExpanded ? l10n.showLess : l10n.showMoreDetails),
+                                      child: Text(_isSummaryExpanded
+                                          ? l10n.showLess
+                                          : l10n.showMoreDetails),
                                     ),
                                     TextButton(
-                                      onPressed: () => setState(() => _isHeaderVisible = false),
+                                      onPressed: () => setState(
+                                          () => _isHeaderVisible = false),
                                       child: Text(l10n.hideSummary),
                                     ),
                                   ],
@@ -336,47 +422,64 @@ class _NutritionScreenState extends State<NutritionScreen> {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16.0),
                           child: TextButton(
-                            onPressed: () => setState(() => _isHeaderVisible = true),
+                            onPressed: () =>
+                                setState(() => _isHeaderVisible = true),
                             child: Text(l10n.showSummary),
                           ),
                         ),
                       ),
               ),
-              const Divider(height: 1),
+              Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
               Expanded(
                 child: _displayItems.isEmpty
                     ? Center(child: Text(l10n.noEntriesForPeriod))
                     : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8.0, vertical: 8.0),
                         itemCount: _displayItems.length,
                         itemBuilder: (context, index) {
                           final item = _displayItems[index];
 
                           String getLocalizedMealName(String key) {
                             switch (key) {
-                              case "mealtypeBreakfast": return l10n.mealtypeBreakfast;
-                              case "mealtypeLunch": return l10n.mealtypeLunch;
-                              case "mealtypeDinner": return l10n.mealtypeDinner;
-                              case "mealtypeSnack": return l10n.mealtypeSnack;
-                              case "waterHeader": return l10n.waterHeader;
-                              default: return key;
+                              case "mealtypeBreakfast":
+                                return l10n.mealtypeBreakfast;
+                              case "mealtypeLunch":
+                                return l10n.mealtypeLunch;
+                              case "mealtypeDinner":
+                                return l10n.mealtypeDinner;
+                              case "mealtypeSnack":
+                                return l10n.mealtypeSnack;
+                              case "waterHeader":
+                                return l10n.waterHeader;
+                              default:
+                                return key;
                             }
                           }
 
                           if (item is DateTime) {
                             return Padding(
-                              padding: const EdgeInsets.only(top: 24.0, bottom: 8.0, left: 8.0),
+                              padding: const EdgeInsets.only(
+                                  top: 24.0, bottom: 8.0, left: 8.0),
                               child: Text(
                                 DateFormat.yMMMMEEEEd(locale).format(item),
-                                style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.primary),
+                                style: textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: colorScheme.primary),
                               ),
                             );
                           }
 
                           if (item is String) {
                             return Padding(
-                              padding: const EdgeInsets.only(top: 24.0, bottom: 8.0, left: 8.0),
-                              child: Text(getLocalizedMealName(item), style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                              padding: const EdgeInsets.only(
+                                  top: 24.0, bottom: 8.0, left: 8.0),
+                              child: Text(getLocalizedMealName(item),
+                                  style: textTheme.titleLarge
+                                      ?.copyWith(fontWeight: FontWeight.bold)),
                             );
                           }
 
@@ -385,31 +488,42 @@ class _NutritionScreenState extends State<NutritionScreen> {
                             return Dismissible(
                               key: Key('food_${trackedItem.entry.id}'),
                               background: Container(
-                                color: Colors.blueAccent,
-                                alignment: Alignment.centerLeft,
-                                padding: const EdgeInsets.symmetric(horizontal: 20),
-                                child: const Icon(Icons.edit, color: Colors.white),
-                              ),
+                                  color: Colors.blueAccent,
+                                  alignment: Alignment.centerLeft,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20),
+                                  child: const Icon(Icons.edit,
+                                      color: Colors.white)),
                               secondaryBackground: Container(
-                                color: Colors.redAccent,
-                                alignment: Alignment.centerRight,
-                                padding: const EdgeInsets.symmetric(horizontal: 20),
-                                child: const Icon(Icons.delete, color: Colors.white),
-                              ),
+                                  color: Colors.redAccent,
+                                  alignment: Alignment.centerRight,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20),
+                                  child: const Icon(Icons.delete,
+                                      color: Colors.white)),
                               confirmDismiss: (direction) async {
                                 if (direction == DismissDirection.startToEnd) {
                                   _editFoodEntry(trackedItem);
-                                  return false; 
+                                  return false;
                                 } else {
                                   return await showDialog(
                                     context: context,
                                     builder: (BuildContext context) {
                                       return AlertDialog(
                                         title: Text(l10n.deleteConfirmTitle),
-                                        content: Text(l10n.deleteConfirmContent),
+                                        content:
+                                            Text(l10n.deleteConfirmContent),
                                         actions: <Widget>[
-                                          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
-                                          TextButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.delete)),
+                                          TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context)
+                                                      .pop(false),
+                                              child: Text(l10n.cancel)),
+                                          TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context)
+                                                      .pop(true),
+                                              child: Text(l10n.delete)),
                                         ],
                                       );
                                     },
@@ -421,15 +535,21 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                   _deleteFoodEntry(trackedItem.entry.id!);
                                 }
                               },
-                               child: Card(
+                              child: SummaryCard(
                                 child: ListTile(
                                   leading: const Icon(Icons.restaurant),
                                   title: Text(trackedItem.item.name),
-                                  subtitle: Text(l10n.foodListSubtitle(trackedItem.entry.quantityInGrams, DateFormat.Hm(locale).format(trackedItem.entry.timestamp))),
-                                  trailing: Text(l10n.foodListTrailingKcal(trackedItem.calculatedCalories)),
+                                  subtitle: Text(l10n.foodListSubtitle(
+                                      trackedItem.entry.quantityInGrams,
+                                      DateFormat.Hm(locale).format(
+                                          trackedItem.entry.timestamp))),
+                                  trailing: Text(l10n.foodListTrailingKcal(
+                                      trackedItem.calculatedCalories)),
                                   onTap: () => Navigator.of(context).push(
-                                    MaterialPageRoute(builder: (context) => FoodDetailScreen(trackedItem: trackedItem))
-                                  ),
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              FoodDetailScreen(
+                                                  trackedItem: trackedItem))),
                                 ),
                               ),
                             );
@@ -440,14 +560,27 @@ class _NutritionScreenState extends State<NutritionScreen> {
                             return Dismissible(
                               key: Key('water_${waterEntry.id}'),
                               direction: DismissDirection.endToStart,
-                              onDismissed: (direction) => _deleteWaterEntry(waterEntry.id!),
-                              background: Container(color: Colors.red, alignment: Alignment.centerRight, padding: const EdgeInsets.symmetric(horizontal: 20), child: const Icon(Icons.delete, color: Colors.white)),
-                              child: Card(
+                              onDismissed: (direction) =>
+                                  _deleteWaterEntry(waterEntry.id!),
+                              background: Container(
+                                  color: Colors.red,
+                                  alignment: Alignment.centerRight,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20),
+                                  child: const Icon(Icons.delete,
+                                      color: Colors.white)),
+                              child: SummaryCard(
                                 child: ListTile(
-                                  leading: Icon(Icons.local_drink, color: colorScheme.primary),
+                                  leading: Icon(Icons.local_drink,
+                                      color: colorScheme.primary),
                                   title: Text(l10n.waterEntryTitle),
-                                  subtitle: Text(DateFormat.Hm(locale).format(waterEntry.timestamp)),
-                                  trailing: Text(l10n.waterListTrailingMl(waterEntry.quantityInMl), style: const TextStyle(fontWeight: FontWeight.bold)),
+                                  subtitle: Text(DateFormat.Hm(locale)
+                                      .format(waterEntry.timestamp)),
+                                  trailing: Text(
+                                      l10n.waterListTrailingMl(
+                                          waterEntry.quantityInMl),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold)),
                                 ),
                               ),
                             );
@@ -458,7 +591,6 @@ class _NutritionScreenState extends State<NutritionScreen> {
               ),
             ],
           ),
-           // Das Lade-Overlay bleibt auf der obersten Ebene des Stacks
           if (_isLoading)
             Positioned.fill(
               child: Container(
@@ -467,6 +599,32 @@ class _NutritionScreenState extends State<NutritionScreen> {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFilterButton(String label, String key) {
+    final theme = Theme.of(context);
+    final isSelected = _selectedRangeKey == key;
+    return GestureDetector(
+      onTap: () => _setTimeRange(key),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? theme.colorScheme.primary
+              : theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        child: Text(
+          label,
+          style: theme.textTheme.labelLarge?.copyWith(
+            color: isSelected
+                ? theme.colorScheme.onPrimary
+                : theme.colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
     );
   }

@@ -7,7 +7,8 @@ const Color tdWhite = Colors.white;
 const Color tdBGColor = Colors.white;
 
 // DOC: DIESE ZEILE HINZUFÜGEN
-const Color tdBlue = Colors.blue; // Oder eine spezifischere Farbe, z.B. Color(0xFF5F52EE)
+const Color tdBlue =
+    Colors.blue; // Oder eine spezifischere Farbe, z.B. Color(0xFF5F52EE)
 
 // Semantische Farben für die Nährwert-Balken
 const Color tdWaterColor = Colors.blue;

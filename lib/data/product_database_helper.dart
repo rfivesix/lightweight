@@ -38,13 +38,15 @@ class ProductDatabaseHelper {
     try {
       _offDatabase = await _initDB('vita_prep_de.db');
     } catch (e) {
-      print("KRITISCHER FEHLER: Die Haupt-Produktdatenbank konnte nicht geladen werden: $e");
+      print(
+          "KRITISCHER FEHLER: Die Haupt-Produktdatenbank konnte nicht geladen werden: $e");
     }
 
     try {
       _baseDatabase = await _initDB('vita_base_foods.db');
     } catch (e) {
-      print("INFO: Die optionale Grundnahrungsmittel-DB wurde nicht gefunden. Das ist normal, wenn sie noch nicht hinzugefügt wurde. Fehler: $e");
+      print(
+          "INFO: Die optionale Grundnahrungsmittel-DB wurde nicht gefunden. Das ist normal, wenn sie noch nicht hinzugefügt wurde. Fehler: $e");
     }
 
     _isInitializing = false;
@@ -56,24 +58,27 @@ class ProductDatabaseHelper {
     final exists = await databaseExists(path);
 
     if (!exists) {
-      print("Datenbank '$fileName' existiert nicht, kopiere sie aus den Assets...");
+      print(
+          "Datenbank '$fileName' existiert nicht, kopiere sie aus den Assets...");
       try {
         await Directory(dirname(path)).create(recursive: true);
         ByteData data = await rootBundle.load(join('assets/db', fileName));
-        List<int> bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+        List<int> bytes =
+            data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
         await File(path).writeAsBytes(bytes, flush: true);
         print("Datenbank '$fileName' erfolgreich kopiert.");
       } catch (e) {
         print("Fehler beim Kopieren der Datenbank '$fileName': $e");
         if (await File(path).exists()) await File(path).delete();
-        throw Exception("Konnte Datenbank '$fileName' nicht aus den Assets laden.");
+        throw Exception(
+            "Konnte Datenbank '$fileName' nicht aus den Assets laden.");
       }
     } else {
       print("Bestehende Datenbank '$fileName' gefunden.");
     }
     return await openDatabase(path);
   }
-  
+
   // ÖFFENTLICHER GETTER FÜR DEN BACKUP-MANAGER
   Future<Database?> get offDatabase async {
     await _ensureDatabasesInitialized();
@@ -83,18 +88,28 @@ class ProductDatabaseHelper {
   Future<List<FoodItem>> searchProducts(String query) async {
     await _ensureDatabasesInitialized();
     final List<FoodItem> combinedResults = [];
-    
+
     if (_baseDatabase != null) {
-      final List<Map<String, dynamic>> baseMaps = await _baseDatabase!.query('products', where: 'name LIKE ?', whereArgs: ['%$query%'], limit: 25);
-      combinedResults.addAll(baseMaps.map((map) => FoodItem.fromMap(map, source: FoodItemSource.base)));
+      final List<Map<String, dynamic>> baseMaps = await _baseDatabase!.query(
+          'products',
+          where: 'name LIKE ?',
+          whereArgs: ['%$query%'],
+          limit: 25);
+      combinedResults.addAll(baseMaps
+          .map((map) => FoodItem.fromMap(map, source: FoodItemSource.base)));
     }
-    
+
     // Die Haupt-DB muss existieren, sonst stürzt die App hier ab, was korrekt ist.
     if (_offDatabase != null) {
-      final List<Map<String, dynamic>> offMaps = await _offDatabase!.query('products', where: 'name LIKE ? OR brand LIKE ?', whereArgs: ['%$query%', '%$query%'], limit: 50);
-      combinedResults.addAll(offMaps.map((map) => FoodItem.fromMap(map, source: FoodItemSource.off)));
+      final List<Map<String, dynamic>> offMaps = await _offDatabase!.query(
+          'products',
+          where: 'name LIKE ? OR brand LIKE ?',
+          whereArgs: ['%$query%', '%$query%'],
+          limit: 50);
+      combinedResults.addAll(offMaps
+          .map((map) => FoodItem.fromMap(map, source: FoodItemSource.off)));
     }
-    
+
     final uniqueResults = <String, FoodItem>{};
     for (var item in combinedResults) {
       uniqueResults.putIfAbsent(item.barcode, () => item);
@@ -104,24 +119,35 @@ class ProductDatabaseHelper {
 
   Future<FoodItem?> getProductByBarcode(String barcode) async {
     await _ensureDatabasesInitialized();
-    
+
     if (_baseDatabase != null) {
-      final List<Map<String, dynamic>> baseMaps = await _baseDatabase!.query('products', where: 'barcode = ?', whereArgs: [barcode], limit: 1);
-      if (baseMaps.isNotEmpty) return FoodItem.fromMap(baseMaps.first, source: FoodItemSource.base);
+      final List<Map<String, dynamic>> baseMaps = await _baseDatabase!.query(
+          'products',
+          where: 'barcode = ?',
+          whereArgs: [barcode],
+          limit: 1);
+      if (baseMaps.isNotEmpty)
+        return FoodItem.fromMap(baseMaps.first, source: FoodItemSource.base);
     }
-    
+
     if (_offDatabase != null) {
-      final List<Map<String, dynamic>> offMaps = await _offDatabase!.query('products', where: 'barcode = ?', whereArgs: [barcode], limit: 1);
-      if (offMaps.isNotEmpty) return FoodItem.fromMap(offMaps.first, source: FoodItemSource.off);
+      final List<Map<String, dynamic>> offMaps = await _offDatabase!.query(
+          'products',
+          where: 'barcode = ?',
+          whereArgs: [barcode],
+          limit: 1);
+      if (offMaps.isNotEmpty)
+        return FoodItem.fromMap(offMaps.first, source: FoodItemSource.off);
     }
-    
+
     return null;
   }
 
   Future<void> insertProduct(FoodItem item) async {
     await _ensureDatabasesInitialized();
     if (_offDatabase == null) return;
-    await _offDatabase!.insert('products', item.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    await _offDatabase!.insert('products', item.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<List<FoodItem>> _getProductsByBarcodes(List<String> barcodes) async {
@@ -135,12 +161,33 @@ class ProductDatabaseHelper {
   }
 
   Future<List<FoodItem>> getFavoriteProducts() async {
-    final favoriteBarcodes = await DatabaseHelper.instance.getFavoriteBarcodes();
+    final favoriteBarcodes =
+        await DatabaseHelper.instance.getFavoriteBarcodes();
     return await _getProductsByBarcodes(favoriteBarcodes);
   }
 
   Future<List<FoodItem>> getRecentProducts() async {
-    final recentBarcodes = await DatabaseHelper.instance.getRecentlyUsedBarcodes();
+    final recentBarcodes =
+        await DatabaseHelper.instance.getRecentlyUsedBarcodes();
     return await _getProductsByBarcodes(recentBarcodes);
+  }
+
+  Future<List<FoodItem>> getProductsByBarcodes(List<String> barcodes) async {
+    if (barcodes.isEmpty) return [];
+    await _ensureDatabasesInitialized();
+
+    final db = _offDatabase;
+    if (db == null) return [];
+
+    // Erstellt eine Kette von '?' für die IN-Klausel
+    final placeholders = List.filled(barcodes.length, '?').join(',');
+    final maps = await db.query(
+      'products',
+      where: 'barcode IN ($placeholders)',
+      whereArgs: barcodes,
+    );
+    return maps
+        .map((map) => FoodItem.fromMap(map, source: FoodItemSource.off))
+        .toList();
   }
 }

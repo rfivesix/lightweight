@@ -22,6 +22,7 @@ class SetTemplate {
     );
   }
 
+  // In lib/models/set_template.dart
   Map<String, dynamic> toMap() {
     return {
       'id': id,

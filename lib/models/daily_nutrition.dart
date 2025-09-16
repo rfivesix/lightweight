@@ -17,7 +17,7 @@ class DailyNutrition {
   int targetProtein;
   int targetCarbs;
   int targetFat;
-  
+
   // DOC: NEUE ZIELFELDER
   int targetSugar;
   int targetFiber;
@@ -32,7 +32,6 @@ class DailyNutrition {
     this.fiber = 0.0,
     this.sugar = 0.0,
     this.salt = 0.0,
-    
     this.targetCalories = 0,
     this.targetWater = 0,
     this.targetProtein = 0,

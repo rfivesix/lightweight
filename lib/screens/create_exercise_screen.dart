@@ -15,7 +15,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
   final _descriptionController = TextEditingController();
   final _primaryMusclesController = TextEditingController();
   final _secondaryMusclesController = TextEditingController();
-  
+
   final List<String> _categories = ["Kraft", "Cardio", "Dehnen", "Sonstiges"];
   late String _selectedCategory;
 
@@ -42,18 +42,27 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
         descriptionDe: _descriptionController.text,
         descriptionEn: _descriptionController.text,
         categoryName: _selectedCategory,
-        primaryMuscles: _primaryMusclesController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
-        secondaryMuscles: _secondaryMusclesController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+        primaryMuscles: _primaryMusclesController.text
+            .split(',')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList(),
+        secondaryMuscles: _secondaryMusclesController.text
+            .split(',')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList(),
       );
 
       await WorkoutDatabaseHelper.instance.insertExercise(newExercise);
       if (mounted) Navigator.of(context).pop(true);
     }
   }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Eigene Übung erstellen"), // TODO: Lokalisieren
@@ -76,13 +85,18 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(labelText: "Name der Übung"),
-                validator: (value) => value == null || value.isEmpty ? "Bitte einen Namen eingeben." : null,
+                validator: (value) => value == null || value.isEmpty
+                    ? "Bitte einen Namen eingeben."
+                    : null,
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 initialValue: _selectedCategory,
                 decoration: const InputDecoration(labelText: "Kategorie"),
-                items: _categories.map((cat) => DropdownMenuItem(value: cat, child: Text(cat))).toList(),
+                items: _categories
+                    .map(
+                        (cat) => DropdownMenuItem(value: cat, child: Text(cat)))
+                    .toList(),
                 onChanged: (value) {
                   if (value != null) setState(() => _selectedCategory = value);
                 },
@@ -90,18 +104,23 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _descriptionController,
-                decoration: const InputDecoration(labelText: "Beschreibung (optional)"),
+                decoration:
+                    const InputDecoration(labelText: "Beschreibung (optional)"),
                 maxLines: 3,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _primaryMusclesController,
-                decoration: const InputDecoration(labelText: "Primäre Muskeln", hintText: "z.B. Brust, Trizeps"),
+                decoration: const InputDecoration(
+                    labelText: "Primäre Muskeln",
+                    hintText: "z.B. Brust, Trizeps"),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _secondaryMusclesController,
-                decoration: const InputDecoration(labelText: "Sekundäre Muskeln (optional)", hintText: "z.B. Schultern"),
+                decoration: const InputDecoration(
+                    labelText: "Sekundäre Muskeln (optional)",
+                    hintText: "z.B. Schultern"),
               ),
             ],
           ),

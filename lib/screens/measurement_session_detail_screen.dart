@@ -13,12 +13,17 @@ class MeasurementSessionDetailScreen extends StatelessWidget {
   // Wir kopieren die Helfer-Methode hierher, um die Namen zu übersetzen.
   String _getLocalizedMeasurementName(String key, AppLocalizations l10n) {
     switch (key) {
-      case 'weight': return l10n.measurementWeight;
-      case 'fat_percent': return l10n.measurementFatPercent;
-      case 'neck': return l10n.measurementNeck;
+      case 'weight':
+        return l10n.measurementWeight;
+      case 'fat_percent':
+        return l10n.measurementFatPercent;
+      case 'neck':
+        return l10n.measurementNeck;
       // ... (füge hier alle anderen 'case' Anweisungen aus dem measurements_screen.dart ein)
-      case 'right_calf': return l10n.measurementRightCalf;
-      default: return key;
+      case 'right_calf':
+        return l10n.measurementRightCalf;
+      default:
+        return key;
     }
   }
 
@@ -46,7 +51,10 @@ class MeasurementSessionDetailScreen extends StatelessWidget {
               title: Text(_getLocalizedMeasurementName(measurement.type, l10n)),
               trailing: Text(
                 "${measurement.value.toStringAsFixed(1)} ${measurement.unit}",
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
               ),
             ),
           );

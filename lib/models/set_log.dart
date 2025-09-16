@@ -8,8 +8,13 @@ class SetLog {
   final double? weightKg;
   final int? reps;
   final int? restTimeSeconds;
-  final bool isCompleted;
-  final int? logOrder;
+  final bool? isCompleted;
+  final int? log_order;
+  final String? notes;
+  final double? distanceKm;
+  final int? durationSeconds;
+  final int? rpe;
+  final int? supersetId;
 
   SetLog({
     this.id,
@@ -19,9 +24,33 @@ class SetLog {
     this.weightKg,
     this.reps,
     this.restTimeSeconds,
-    this.isCompleted = false,
-    this.logOrder
+    this.isCompleted,
+    this.log_order,
+    this.notes,
+    this.distanceKm,
+    this.durationSeconds,
+    this.rpe,
+    this.supersetId,
   });
+
+  factory SetLog.fromMap(Map<String, dynamic> map) {
+    return SetLog(
+      id: map['id'],
+      workoutLogId: map['workout_log_id'],
+      exerciseName: map['exercise_name'],
+      setType: map['set_type'],
+      weightKg: map['weight_kg'],
+      reps: map['reps'],
+      restTimeSeconds: map['rest_time_seconds'],
+      isCompleted: map['is_completed'] == 1,
+      log_order: map['log_order'],
+      notes: map['notes'],
+      distanceKm: map['distance_km'],
+      durationSeconds: map['duration_seconds'],
+      rpe: map['rpe'],
+      supersetId: map['superset_id'],
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {
@@ -32,24 +61,14 @@ class SetLog {
       'weight_kg': weightKg,
       'reps': reps,
       'rest_time_seconds': restTimeSeconds,
-      'is_completed': isCompleted ? 1 : 0,
-      'log_order': logOrder
+      'is_completed': isCompleted == true ? 1 : 0,
+      'log_order': log_order,
+      'notes': notes,
+      'distance_km': distanceKm,
+      'duration_seconds': durationSeconds,
+      'rpe': rpe,
+      'superset_id': supersetId,
     };
-  }
-
-  factory SetLog.fromMap(Map<String, dynamic> map) {
-    final bool completed = (map['is_completed'] != null && map['is_completed'] == 1);
-    return SetLog(
-      id: map['id'],
-      workoutLogId: map['workout_log_id'],
-      exerciseName: map['exercise_name'],
-      setType: map['set_type'],
-      weightKg: map['weight_kg'],
-      reps: map['reps'],
-      restTimeSeconds: map['rest_time_seconds'],
-      isCompleted: completed,
-      logOrder: map['log_order']
-    );
   }
 
   SetLog copyWith({
@@ -59,9 +78,14 @@ class SetLog {
     String? setType,
     double? weightKg,
     int? reps,
-    bool? isCompleted,
     int? restTimeSeconds,
-    int? logOrder
+    bool? isCompleted,
+    int? log_order,
+    String? notes,
+    double? distanceKm,
+    int? durationSeconds,
+    int? rpe,
+    int? supersetId,
   }) {
     return SetLog(
       id: id ?? this.id,
@@ -70,9 +94,14 @@ class SetLog {
       setType: setType ?? this.setType,
       weightKg: weightKg ?? this.weightKg,
       reps: reps ?? this.reps,
-      isCompleted: isCompleted ?? this.isCompleted,
       restTimeSeconds: restTimeSeconds ?? this.restTimeSeconds,
-      logOrder: logOrder ?? this.logOrder
+      isCompleted: isCompleted ?? this.isCompleted,
+      log_order: log_order ?? this.log_order,
+      notes: notes ?? this.notes,
+      distanceKm: distanceKm ?? this.distanceKm,
+      durationSeconds: durationSeconds ?? this.durationSeconds,
+      rpe: rpe ?? this.rpe,
+      supersetId: supersetId ?? this.supersetId,
     );
   }
 }

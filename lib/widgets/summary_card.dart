@@ -1,3 +1,5 @@
+// lib/widgets/summary_card.dart (Endgültige Korrektur)
+
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
@@ -14,29 +16,35 @@ class SummaryCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
-      //margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       margin: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24.0),
-        // DOC: SCHATTEN VERSTÄRKT
+        // KORREKTUR: Rundung direkt in der BoxDecoration ändern
+        borderRadius:
+            BorderRadius.circular(16.0), // Rundung von 24 auf 16 reduziert
+        // KORREKTUR: Schatten direkt in der BoxDecoration ändern
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15), // Etwas dunkler
-            blurRadius: 25,                        // Weicher und größer
-            spreadRadius: 0,                         // Etwas breiter
-            offset: const Offset(0, 15),           // Deutlich nach unten verschoben
+            color: Colors.black
+                .withOpacity(0.08), // Leichterer, dezenterer Schatten
+            blurRadius: 15, // Weicher und kleiner
+            spreadRadius: 0,
+            offset: const Offset(0, 8), // Weniger stark nach unten verschoben
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24.0),
+        // KORREKTUR: Rundung direkt in ClipRRect ändern
+        borderRadius:
+            BorderRadius.circular(16.0), // Passende Rundung für ClipRRect
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
           child: Container(
             decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest.withOpacity(0.6),
-              borderRadius: BorderRadius.circular(24.0),
-              border: Border.all(color: colorScheme.surfaceContainerHighest.withOpacity(0.2)),
+              color: colorScheme.surfaceContainerHighest.withOpacity(0.9),
+              // KORREKTUR: Rundung und Rand in der inneren BoxDecoration anpassen
+              borderRadius: BorderRadius.circular(16.0), // Passende Rundung
+              border: Border.all(
+                  color: colorScheme.surfaceContainerHighest.withOpacity(0.2)),
             ),
             child: child,
           ),

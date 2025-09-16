@@ -5,8 +5,10 @@ import 'package:lightweight/models/food_item.dart';
 // aus zwei verschiedenen Quellen (unserem Tagebucheintrag und dem Produktkatalog),
 // damit die UI sie einfach an einem Ort abgreifen kann.
 class TrackedFoodItem {
-  final FoodEntry entry; // Der eigentliche Tagebucheintrag (mit ID, Menge, Zeit)
-  final FoodItem item;  // Die Details des Lebensmittels (mit Name, Kalorien etc.)
+  final FoodEntry
+      entry; // Der eigentliche Tagebucheintrag (mit ID, Menge, Zeit)
+  final FoodItem
+      item; // Die Details des Lebensmittels (mit Name, Kalorien etc.)
 
   TrackedFoodItem({
     required this.entry,

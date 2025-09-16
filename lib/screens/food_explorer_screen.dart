@@ -1,11 +1,13 @@
+// lib/screens/food_explorer_screen.dart (Final & De-Materialisiert)
+
 import 'package:flutter/material.dart';
-import 'package:lightweight/constants/colors.dart';
-import 'package:lightweight/data/product_database_helper.dart'; 
+import 'package:lightweight/data/product_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
+import 'package:lightweight/models/food_item.dart';
+import 'package:lightweight/screens/create_food_screen.dart';
+import 'package:lightweight/screens/food_detail_screen.dart';
 import 'package:lightweight/widgets/off_attribution_widget.dart';
-import '../models/food_item.dart';
-import './create_food_screen.dart';
-import './food_detail_screen.dart';
+import 'package:lightweight/widgets/summary_card.dart'; // HINZUGEFÜGT
 
 class FoodExplorerScreen extends StatefulWidget {
   const FoodExplorerScreen({super.key});
@@ -14,14 +16,13 @@ class FoodExplorerScreen extends StatefulWidget {
   State<FoodExplorerScreen> createState() => _FoodExplorerScreenState();
 }
 
-class _FoodExplorerScreenState extends State<FoodExplorerScreen> with SingleTickerProviderStateMixin {
-  // Such-Logik
+class _FoodExplorerScreenState extends State<FoodExplorerScreen>
+    with SingleTickerProviderStateMixin {
   List<FoodItem> _foundFoodItems = [];
   bool _isLoadingSearch = false;
-  String _searchInitialText = "Bitte gib einen Suchbegriff ein.";
+  String _searchInitialText = "";
   final _searchController = TextEditingController();
 
-  // Favoriten-Logik
   List<FoodItem> _favoriteFoodItems = [];
   bool _isLoadingFavorites = true;
 
@@ -44,33 +45,45 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen> with SingleTick
 
   void _runFilter(String enteredKeyword) async {
     final l10n = AppLocalizations.of(context)!;
-    
+
     if (enteredKeyword.isEmpty) {
-      setState(() { _foundFoodItems = []; _searchInitialText = l10n.searchInitialHint; });
+      setState(() {
+        _foundFoodItems = [];
+        _searchInitialText = l10n.searchInitialHint;
+      });
       return;
     }
-    setState(() { _isLoadingSearch = true; });
-    final results = await ProductDatabaseHelper.instance.searchProducts(enteredKeyword);
+    setState(() {
+      _isLoadingSearch = true;
+    });
+    final results =
+        await ProductDatabaseHelper.instance.searchProducts(enteredKeyword);
     if (mounted) {
       setState(() {
         _foundFoodItems = results;
         _isLoadingSearch = false;
-        if (results.isEmpty) { _searchInitialText = l10n.searchNoResults;}
+        if (results.isEmpty) {
+          _searchInitialText = l10n.searchNoResults;
+        }
       });
     }
   }
 
   void _navigateAndCreateFood() {
-    Navigator.of(context).push(
+    Navigator.of(context)
+        .push(
       MaterialPageRoute(builder: (context) => const CreateFoodScreen()),
-    ).then((_) {
+    )
+        .then((_) {
       _searchController.clear();
       _runFilter('');
     });
   }
 
   Future<void> _loadFavorites() async {
-    setState(() { _isLoadingFavorites = true; });
+    setState(() {
+      _isLoadingFavorites = true;
+    });
     final results = await ProductDatabaseHelper.instance.getFavoriteProducts();
     if (mounted) {
       setState(() {
@@ -84,80 +97,189 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen> with SingleTick
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    // KORREKTUR: Direkte Abfrage des Theme-Modus
+    final isLightMode = Theme.of(context).brightness == Brightness.light;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        title: const Text("Lebensmittel-Explorer"),
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: colorScheme.onPrimary,
-          labelColor: colorScheme.onPrimary,
-          unselectedLabelColor: colorScheme.onPrimary.withOpacity(0.7),
-          tabs: [
-            Tab(icon: const Icon(Icons.search), text: l10n.tabSearch),
-            Tab(icon: const Icon(Icons.favorite), text: l10n.tabFavorites),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: Column(
         children: [
-          _buildSearchTab(l10n),
-          _buildFavoritesTab(l10n),
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.drawerFoodExplorer,
+                    style: textTheme.headlineMedium
+                        ?.copyWith(fontWeight: FontWeight.w900, fontSize: 28)),
+                const SizedBox(height: 16),
+                TabBar(
+                  controller: _tabController,
+                  isScrollable: false,
+                  indicator: const BoxDecoration(),
+                  splashFactory: NoSplash.splashFactory,
+                  overlayColor: MaterialStateProperty.all(Colors.transparent),
+                  dividerColor: Colors.transparent,
+                  // KORREKTUR: Dynamische Farbe basierend auf dem Theme-Modus
+                  labelColor: isLightMode ? Colors.black : Colors.white,
+                  unselectedLabelColor: Colors.grey.shade600,
+                  labelStyle: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.0),
+                  unselectedLabelStyle: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.0),
+                  tabs: [
+                    Tab(text: l10n.tabSearch),
+                    Tab(text: l10n.tabFavorites),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Divider(
+              height: 1,
+              thickness: 1,
+              color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildSearchTab(l10n),
+                _buildFavoritesTab(l10n),
+              ],
+            ),
+          ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _navigateAndCreateFood,
-        label: Text(l10n.fabCreateOwnFood),
-        icon: const Icon(Icons.add),
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 24.0, right: 16.0),
+        child: ElevatedButton.icon(
+          onPressed: _navigateAndCreateFood,
+          icon: const Icon(Icons.add),
+          label: Text(l10n.fabCreateOwnFood),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0)),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          ),
+        ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
-  
+
   Widget _buildSearchTab(AppLocalizations l10n) {
     final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 15),
-            decoration: BoxDecoration(color: colorScheme.surfaceContainerHighest.withOpacity(0.7), borderRadius: BorderRadius.circular(20)),
-            child: TextField(controller: _searchController, onChanged: (value) => _runFilter(value), decoration: InputDecoration(contentPadding: const EdgeInsets.all(0), prefixIcon: Icon(Icons.search, color: colorScheme.onSurfaceVariant, size: 20), prefixIconConstraints: const BoxConstraints(maxHeight: 20, minWidth: 25), border: InputBorder.none, hintText: l10n.searchHintText, hintStyle: TextStyle(color: colorScheme.onSurfaceVariant.withOpacity(0.7)), suffixIcon: _searchController.text.isNotEmpty ? IconButton(icon: Icon(Icons.clear, color: colorScheme.onSurfaceVariant), onPressed: () { _searchController.clear(); _runFilter(''); }) : null)),
-          ),
+          // KORREKTUR 4: TextField nutzt globale InputDecorationTheme
+          TextField(
+              controller: _searchController,
+              onChanged: (value) => _runFilter(value),
+              decoration: InputDecoration(
+                  hintText: l10n.searchHintText,
+                  prefixIcon: Icon(Icons.search,
+                      color: colorScheme.onSurfaceVariant, size: 20),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(Icons.clear,
+                              color: colorScheme.onSurfaceVariant),
+                          onPressed: () {
+                            _searchController.clear();
+                            _runFilter('');
+                          })
+                      : null)),
           const SizedBox(height: 20),
           Expanded(
             child: _isLoadingSearch
                 ? const Center(child: CircularProgressIndicator())
                 : _foundFoodItems.isNotEmpty
-                    ? ListView.builder(itemCount: _foundFoodItems.length, itemBuilder: (context, index) => _buildFoodListItem(_foundFoodItems[index]))
-                    : Center(child: Text(_searchInitialText, style: const TextStyle(fontSize: 18))),
+                    ? ListView.builder(
+                        itemCount: _foundFoodItems.length,
+                        itemBuilder: (context, index) =>
+                            _buildFoodListItem(_foundFoodItems[index]))
+                    : Center(
+                        child: Text(_searchInitialText,
+                            style: textTheme.titleMedium)),
           ),
-          if (_foundFoodItems.isNotEmpty) const OffAttributionWidget(),
+          if (_foundFoodItems.any((item) => item.source == FoodItemSource.off))
+            const OffAttributionWidget(),
         ],
       ),
     );
   }
 
   Widget _buildFavoritesTab(AppLocalizations l10n) {
-    if (_isLoadingFavorites) return const Center(child: CircularProgressIndicator());
-    if (_favoriteFoodItems.isEmpty) return Center(child: Text(l10n.favoritesEmptyState, textAlign: TextAlign.center, style: const TextStyle(fontSize: 18, color: Colors.grey)));
-    return Column(children: [Expanded(child: ListView.builder(padding: const EdgeInsets.all(16.0), itemCount: _favoriteFoodItems.length, itemBuilder: (context, index) => _buildFoodListItem(_favoriteFoodItems[index]))), const OffAttributionWidget()]);
+    if (_isLoadingFavorites)
+      return const Center(child: CircularProgressIndicator());
+    if (_favoriteFoodItems.isEmpty) {
+      return Center(
+          child: Text(l10n.favoritesEmptyState,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withOpacity(0.6))));
+    }
+    return Column(children: [
+      Expanded(
+          child: ListView.builder(
+              padding: const EdgeInsets.all(16.0),
+              itemCount: _favoriteFoodItems.length,
+              itemBuilder: (context, index) =>
+                  _buildFoodListItem(_favoriteFoodItems[index]))),
+      if (_favoriteFoodItems.any((item) => item.source == FoodItemSource.off))
+        const OffAttributionWidget()
+    ]);
   }
 
+  // KORREKTUR 5: _buildFoodListItem verwendet jetzt SummaryCard
   Widget _buildFoodListItem(FoodItem item) {
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.symmetric(vertical: 6),
+    final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+
+    IconData sourceIcon;
+    switch (item.source) {
+      case FoodItemSource.base:
+        sourceIcon = Icons.star;
+        break;
+      case FoodItemSource.off:
+      case FoodItemSource.user:
+        sourceIcon = Icons.inventory_2;
+        break;
+    }
+
+    return SummaryCard(
+      // KORREKTUR: Jetzt mit SummaryCard
       child: ListTile(
-        title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text('${item.brand.isNotEmpty ? item.brand : "Keine Marke"} - ${item.calories} kcal / 100g'),
-        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => FoodDetailScreen(foodItem: item))).then((_) => _loadFavorites()),
+        leading: Icon(sourceIcon, color: colorScheme.primary),
+        title: Text(item.name.isNotEmpty ? item.name : l10n.unknown,
+            style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text(l10n.foodItemSubtitle(
+            item.brand.isNotEmpty ? item.brand : l10n.noBrand, item.calories)),
+        trailing: IconButton(
+          icon: Icon(Icons.add_circle_outline,
+              color: colorScheme.primary, size: 28),
+          onPressed: () => Navigator.of(context).pop(item),
+        ),
+        onTap: () => Navigator.of(context)
+            .push(MaterialPageRoute(
+                builder: (context) => FoodDetailScreen(foodItem: item)))
+            .then((_) {
+          _loadFavorites();
+        }),
       ),
     );
   }

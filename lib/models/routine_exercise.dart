@@ -15,4 +15,14 @@ class RoutineExercise {
     this.setTemplates = const [],
     this.pauseSeconds, // NEUES FELD
   });
+
+  // BITTE DIESE METHODE HINZUFÜGEN ODER ERSETZEN
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'exercise': exercise.toMap(), // Annahme: Exercise hat eine toMap-Methode
+      'setTemplates': setTemplates.map((st) => st.toMap()).toList(),
+      'pause_seconds': pauseSeconds,
+    };
+  }
 }

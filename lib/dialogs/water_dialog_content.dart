@@ -30,19 +30,31 @@ class WaterDialogContentState extends State<WaterDialogContent> {
   }
 
   Future<void> _selectDate() async {
-    final DateTime? picked = await showDatePicker(context: context, initialDate: _selectedDateTime, firstDate: DateTime(2020), lastDate: DateTime.now());
+    final DateTime? picked = await showDatePicker(
+        context: context,
+        initialDate: _selectedDateTime,
+        firstDate: DateTime(2020),
+        lastDate: DateTime.now());
     if (picked != null && picked != _selectedDateTime) {
       setState(() {
-        _selectedDateTime = DateTime(picked.year, picked.month, picked.day, _selectedDateTime.hour, _selectedDateTime.minute);
+        _selectedDateTime = DateTime(picked.year, picked.month, picked.day,
+            _selectedDateTime.hour, _selectedDateTime.minute);
       });
     }
   }
 
   Future<void> _selectTime() async {
-    final TimeOfDay? picked = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(_selectedDateTime));
+    final TimeOfDay? picked = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(_selectedDateTime));
     if (picked != null) {
       setState(() {
-        _selectedDateTime = DateTime(_selectedDateTime.year, _selectedDateTime.month, _selectedDateTime.day, picked.hour, picked.minute);
+        _selectedDateTime = DateTime(
+            _selectedDateTime.year,
+            _selectedDateTime.month,
+            _selectedDateTime.day,
+            picked.hour,
+            picked.minute);
       });
     }
   }
@@ -54,13 +66,34 @@ class WaterDialogContentState extends State<WaterDialogContent> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        TextField(controller: _textController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: "Menge in Millilitern", suffixText: 'ml'), autofocus: true),
+        TextField(
+            controller: _textController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+                labelText: "Menge in Millilitern", suffixText: 'ml'),
+            autofocus: true),
         const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            InkWell(onTap: _selectDate, child: Padding(padding: const EdgeInsets.symmetric(vertical: 8.0), child: Row(children: [const Icon(Icons.calendar_today, size: 20), const SizedBox(width: 8), Text(formattedDate, style: const TextStyle(fontSize: 16))]))),
-            InkWell(onTap: _selectTime, child: Padding(padding: const EdgeInsets.symmetric(vertical: 8.0), child: Row(children: [const Icon(Icons.access_time, size: 20), const SizedBox(width: 8), Text(formattedTime, style: const TextStyle(fontSize: 16))]))),
+            InkWell(
+                onTap: _selectDate,
+                child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Row(children: [
+                      const Icon(Icons.calendar_today, size: 20),
+                      const SizedBox(width: 8),
+                      Text(formattedDate, style: const TextStyle(fontSize: 16))
+                    ]))),
+            InkWell(
+                onTap: _selectTime,
+                child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Row(children: [
+                      const Icon(Icons.access_time, size: 20),
+                      const SizedBox(width: 8),
+                      Text(formattedTime, style: const TextStyle(fontSize: 16))
+                    ]))),
           ],
         ),
       ],

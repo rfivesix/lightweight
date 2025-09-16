@@ -11,9 +11,9 @@ class FoodItem {
   final String name;
   final String brand;
   final int calories; // pro 100g
-  final double protein;  // pro 100g
-  final double carbs;    // pro 100g
-  final double fat;      // pro 100g
+  final double protein; // pro 100g
+  final double carbs; // pro 100g
+  final double fat; // pro 100g
   final FoodItemSource source;
 
   final double? kj;
@@ -22,7 +22,7 @@ class FoodItem {
   final double? salt;
   final double? sodium;
   final double? calcium;
-  
+
   FoodItem({
     required this.barcode,
     required this.name,
@@ -40,11 +40,12 @@ class FoodItem {
     this.calcium,
   });
 
-  factory FoodItem.fromMap(Map<String, dynamic> map, {required FoodItemSource source}) {
+  factory FoodItem.fromMap(Map<String, dynamic> map,
+      {required FoodItemSource source}) {
     return FoodItem(
       barcode: map['barcode'] ?? '',
       // KORREKTUR: Kein hartcodierter Fallback mehr. Die UI kümmert sich darum.
-      name: map['name'] ?? '', 
+      name: map['name'] ?? '',
       brand: map['brand'] ?? '',
       calories: (map['calories_100g'] as num?)?.round() ?? 0,
       protein: (map['protein_100g'] as num?)?.toDouble() ?? 0.0,

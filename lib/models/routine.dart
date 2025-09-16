@@ -11,4 +11,13 @@ class Routine {
     required this.name,
     this.exercises = const [],
   });
+
+  // BITTE DIESE METHODE HINZUFÜGEN
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'exercises': exercises.map((re) => re.toMap()).toList(),
+    };
+  }
 }

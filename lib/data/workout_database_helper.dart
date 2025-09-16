@@ -42,7 +42,7 @@ class WorkoutDatabaseHelper {
     // FINALE LÖSUNG: Wir verwenden NUR onUpgrade.
     return await openDatabase(
       path,
-      version: 6,
+      version: 8,
       onUpgrade: _upgradeDB,
     );
   }
@@ -107,7 +107,29 @@ class WorkoutDatabaseHelper {
         // Schritt 4: Alte Tabelle löschen
         await txn.execute('DROP TABLE set_logs_old');
       });
-      print("Migration auf v6 erfolgreich abgeschlossen.");
+      // NEUE MIGRATION
+      if (oldVersion < 7) {
+        print("Upgrade DB auf v7: Füge Detail-Spalten zu set_logs hinzu...");
+        await db
+            .execute("ALTER TABLE set_logs ADD COLUMN notes TEXT")
+            .catchError((_) {});
+        await db
+            .execute("ALTER TABLE set_logs ADD COLUMN distance_km REAL")
+            .catchError((_) {});
+        await db
+            .execute("ALTER TABLE set_logs ADD COLUMN duration_seconds INTEGER")
+            .catchError((_) {});
+        await db
+            .execute("ALTER TABLE set_logs ADD COLUMN rpe INTEGER")
+            .catchError((_) {});
+      }
+      if (oldVersion < 8) {
+        print("Upgrade DB auf v8: Füge superset_id zu set_logs hinzu...");
+        await db
+            .execute("ALTER TABLE set_logs ADD COLUMN superset_id INTEGER")
+            .catchError((_) {});
+      }
+      print("Migration auf v8 erfolgreich abgeschlossen.");
     }
   }
 
@@ -540,5 +562,105 @@ class WorkoutDatabaseHelper {
     );
 
     return maps.map((map) => SetLog.fromMap(map)).toList();
+  }
+// --- NEUE METHODEN FÜR BACKUP & RESTORE ---
+
+  Future<List<Routine>> getAllRoutinesWithDetails() async {
+    final routines = await getAllRoutines();
+    final detailedRoutines = <Routine>[];
+    for (final routine in routines) {
+      // KORREKTUR 1: Prüfe auf Null, bevor die ID verwendet wird.
+      if (routine.id != null) {
+        final detailedRoutine =
+            await getRoutineById(routine.id!); // routine.id! ist jetzt sicher
+        if (detailedRoutine != null) {
+          detailedRoutines.add(detailedRoutine);
+        }
+      }
+    }
+    return detailedRoutines;
+  }
+
+  Future<List<WorkoutLog>> getFullWorkoutLogs() async {
+    final db = await database;
+    final maps = await db.query('workout_logs', orderBy: 'start_time DESC');
+    final logs = <WorkoutLog>[];
+    for (final map in maps) {
+      final log = await getWorkoutLogById(map['id'] as int);
+      if (log != null) {
+        logs.add(log);
+      }
+    }
+    return logs;
+  }
+
+  Future<void> clearAllWorkoutData() async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete('set_logs');
+      await txn.delete('workout_logs');
+      await txn.delete('routine_set_templates');
+      await txn.delete('routine_exercises');
+      await txn.delete('routines');
+    });
+  }
+
+  Future<void> importWorkoutData({
+    required List<Routine> routines,
+    required List<WorkoutLog> workoutLogs,
+  }) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      // Routinen importieren
+      for (final routine in routines) {
+        final newRoutineId =
+            await txn.insert('routines', {'name': routine.name});
+        for (final re in routine.exercises) {
+          final newReId = await txn.insert('routine_exercises', {
+            'routine_id': newRoutineId,
+            'exercise_id': re.exercise.id,
+            'exercise_order': routine.exercises.indexOf(re),
+            'pause_seconds': re.pauseSeconds,
+          });
+          for (final st in re.setTemplates) {
+            // KORREKTUR: Map erstellen und alte ID entfernen
+            final stMap = st.toMap();
+            stMap.remove('id');
+            stMap['routine_exercise_id'] = newReId;
+            stMap['set_index'] =
+                re.setTemplates.indexOf(st); // Index für die Reihenfolge setzen
+            await txn.insert('routine_set_templates', stMap);
+          }
+        }
+      }
+
+      // Workout Logs importieren
+      for (final log in workoutLogs) {
+        // KORREKTUR 1: Erstelle eine neue Map aus dem WorkoutLog-Objekt.
+        final logMap = log.toMap();
+
+        // KORREKTUR 2: Entferne die alte ID. Dies ist SEHR WICHTIG,
+        // damit die Datenbank eine neue, eindeutige ID per AUTOINCREMENT vergeben kann.
+        logMap.remove('id');
+
+        // KORREKTUR 3: Setze den Status explizit auf 'completed'.
+        // Das stellt sicher, dass importierte Workouts im Verlauf erscheinen,
+        // da der Verlauf nur Einträge mit diesem Status anzeigt.
+        logMap['status'] = 'completed';
+
+        final newLogId = await txn.insert('workout_logs', logMap);
+
+        for (final setLog in log.sets) {
+          // Wiederhole den Prozess für jeden Satz (SetLog).
+          final setMap = setLog.toMap();
+          setMap.remove('id'); // Alte ID entfernen
+
+          // Die workout_log_id MUSS auf die ID des GERADE ERSTELLTEN Logs zeigen.
+          setMap['workout_log_id'] = newLogId;
+
+          await txn.insert('set_logs', setMap);
+        }
+      }
+    });
   }
 }

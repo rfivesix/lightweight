@@ -36,14 +36,54 @@ class NutritionSummaryWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final specs = <String, _NutrientSpec>{
-      'calories': _NutrientSpec(label: l10n.calories, unit: 'kcal', value: nutritionData.calories.toDouble(), target: nutritionData.targetCalories.toDouble(), color: Colors.orange),
-      'water': _NutrientSpec(label: l10n.water, unit: 'ml', value: nutritionData.water.toDouble(), target: nutritionData.targetWater.toDouble(), color: Colors.blue),
-      'protein': _NutrientSpec(label: l10n.protein, unit: 'g', value: nutritionData.protein.toDouble(), target: nutritionData.targetProtein.toDouble(), color: Colors.red.shade400),
-      'carbs': _NutrientSpec(label: l10n.carbs, unit: 'g', value: nutritionData.carbs.toDouble(), target: nutritionData.targetCarbs.toDouble(), color: Colors.green.shade400),
-      'fat': _NutrientSpec(label: l10n.fat, unit: 'g', value: nutritionData.fat.toDouble(), target: nutritionData.targetFat.toDouble(), color: Colors.purple.shade300),
-      'sugar': _NutrientSpec(label: l10n.sugar, unit: 'g', value: nutritionData.sugar, target: nutritionData.targetSugar.toDouble(), color: Colors.pink.shade200),
-      'fiber': _NutrientSpec(label: l10n.fiber, unit: 'g', value: nutritionData.fiber, target: nutritionData.targetFiber.toDouble(), color: Colors.brown.shade400),
-      'salt': _NutrientSpec(label: l10n.salt, unit: 'g', value: nutritionData.salt, target: nutritionData.targetSalt.toDouble(), color: Colors.grey.shade500),
+      'calories': _NutrientSpec(
+          label: l10n.calories,
+          unit: 'kcal',
+          value: nutritionData.calories.toDouble(),
+          target: nutritionData.targetCalories.toDouble(),
+          color: Colors.orange),
+      'water': _NutrientSpec(
+          label: l10n.water,
+          unit: 'ml',
+          value: nutritionData.water.toDouble(),
+          target: nutritionData.targetWater.toDouble(),
+          color: Colors.blue),
+      'protein': _NutrientSpec(
+          label: l10n.protein,
+          unit: 'g',
+          value: nutritionData.protein.toDouble(),
+          target: nutritionData.targetProtein.toDouble(),
+          color: Colors.red.shade400),
+      'carbs': _NutrientSpec(
+          label: l10n.carbs,
+          unit: 'g',
+          value: nutritionData.carbs.toDouble(),
+          target: nutritionData.targetCarbs.toDouble(),
+          color: Colors.green.shade400),
+      'fat': _NutrientSpec(
+          label: l10n.fat,
+          unit: 'g',
+          value: nutritionData.fat.toDouble(),
+          target: nutritionData.targetFat.toDouble(),
+          color: Colors.purple.shade300),
+      'sugar': _NutrientSpec(
+          label: l10n.sugar,
+          unit: 'g',
+          value: nutritionData.sugar,
+          target: nutritionData.targetSugar.toDouble(),
+          color: Colors.pink.shade200),
+      'fiber': _NutrientSpec(
+          label: l10n.fiber,
+          unit: 'g',
+          value: nutritionData.fiber,
+          target: nutritionData.targetFiber.toDouble(),
+          color: Colors.brown.shade400),
+      'salt': _NutrientSpec(
+          label: l10n.salt,
+          unit: 'g',
+          value: nutritionData.salt,
+          target: nutritionData.targetSalt.toDouble(),
+          color: Colors.grey.shade500),
     };
 
     return SummaryCard(
@@ -114,13 +154,14 @@ class _InfoBox extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.surface.withOpacity(0.5),
         borderRadius: BorderRadius.circular(9),
+        // KORREKTUR: Schatten für _InfoBox entfernt
+        // boxShadow: [ ... ], // Diese Zeilen können entfernt oder auskommentiert werden
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(9),
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // BUGFIX 5: Opazität für besseren Kontrast erhöht
             Container(color: colorScheme.onSurface.withOpacity(0.12)),
             Align(
               alignment: Alignment.centerLeft,
@@ -128,12 +169,14 @@ class _InfoBox extends StatelessWidget {
                 tween: Tween(begin: 0, end: progress),
                 duration: const Duration(milliseconds: 350),
                 curve: Curves.easeOutCubic,
-                builder: (context, p, child) => FractionallySizedBox(widthFactor: p, child: child),
+                builder: (context, p, child) =>
+                    FractionallySizedBox(widthFactor: p, child: child),
                 child: Container(color: spec.color),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,7 +186,10 @@ class _InfoBox extends StatelessWidget {
                     child: Text(
                       spec.label,
                       maxLines: 1,
-                      style: TextStyle(color: colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          color: colorScheme.onSurface,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -154,7 +200,8 @@ class _InfoBox extends StatelessWidget {
                     style: TextStyle(
                       color: colorScheme.onSurface.withOpacity(0.8),
                       fontSize: 14,
-                      shadows: [Shadow(blurRadius: 1.0, color: colorScheme.surface.withOpacity(0.7), offset: const Offset(1.0, 1.0))],
+                      // KORREKTUR: Schatten für Text in _InfoBox entfernt
+                      // shadows: [Shadow(blurRadius: 1.0, color: colorScheme.surface.withOpacity(0.7), offset: const Offset(1.0, 1.0))],
                     ),
                   ),
                 ],

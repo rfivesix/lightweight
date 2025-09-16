@@ -10,7 +10,7 @@ class AddMenuSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -24,7 +24,6 @@ class AddMenuSheet extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            
             _buildMenuOption(
               context: context,
               colorScheme: colorScheme,
@@ -33,7 +32,6 @@ class AddMenuSheet extends StatelessWidget {
               onTap: () => Navigator.of(context).pop('start_workout'),
             ),
             const SizedBox(height: 12),
-
             _buildMenuOption(
               context: context,
               colorScheme: colorScheme,
@@ -42,7 +40,6 @@ class AddMenuSheet extends StatelessWidget {
               onTap: () => Navigator.of(context).pop('add_measurement'),
             ),
             const Divider(height: 24, indent: 16, endIndent: 16),
-
             _buildMenuOption(
               context: context,
               colorScheme: colorScheme,
@@ -75,7 +72,8 @@ class AddMenuSheet extends StatelessWidget {
       leading: Icon(icon, color: colorScheme.primary),
       title: Text(
         title,
-        style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.w500),
+        style:
+            TextStyle(color: colorScheme.primary, fontWeight: FontWeight.w500),
       ),
       tileColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

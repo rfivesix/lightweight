@@ -20,7 +20,7 @@ class FoodEntry {
       'id': id,
       'barcode': barcode,
       // DOC: KORRIGIERTE ZEILE (Tippfehler "g" entfernt)
-      'timestamp': timestamp.toIso8601String(), 
+      'timestamp': timestamp.toIso8601String(),
       'quantity_in_grams': quantityInGrams,
       'meal_type': mealType,
     };

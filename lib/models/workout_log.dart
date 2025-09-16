@@ -22,14 +22,18 @@ class WorkoutLog {
   });
 
   // NEU: Factory-Konstruktor zum Erstellen aus einer Datenbank-Map
-  factory WorkoutLog.fromMap(Map<String, dynamic> map, {List<SetLog> sets = const []}) {
+  factory WorkoutLog.fromMap(Map<String, dynamic> map,
+      {List<SetLog> sets = const []}) {
     return WorkoutLog(
       id: map['id'],
       routineName: map['routine_name'],
       startTime: DateTime.parse(map['start_time'] as String),
-      endTime: map['end_time'] != null ? DateTime.parse(map['end_time'] as String) : null,
+      endTime: map['end_time'] != null
+          ? DateTime.parse(map['end_time'] as String)
+          : null,
       notes: map['notes'],
-      status: map['status'] ?? 'completed', // Fallback für alte Einträge ohne Status
+      status: map['status'] ??
+          'completed', // Fallback für alte Einträge ohne Status
       sets: sets,
     );
   }

@@ -1,11 +1,11 @@
-// lib/screens/data_management_screen.dart
+// lib/screens/data_management_screen.dart (Final & Vollständig)
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/data/backup_manager.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:lightweight/generated/app_localizations.dart';
+import 'package:lightweight/data/backup_manager.dart';
 import 'package:lightweight/data/import_manager.dart';
-  
+import 'package:lightweight/generated/app_localizations.dart';
+import 'package:lightweight/widgets/summary_card.dart';
 
 class DataManagementScreen extends StatefulWidget {
   const DataManagementScreen({super.key});
@@ -15,227 +15,290 @@ class DataManagementScreen extends StatefulWidget {
 }
 
 class _DataManagementScreenState extends State<DataManagementScreen> {
-  bool _isExporting = false;
-  bool _isImporting = false;
+  // Lade-Zustände für die verschiedenen Aktionen
+  bool _isFullBackupRunning = false;
+  bool _isCsvExportRunning = false;
+  bool _isMigrationRunning = false;
 
-
-  void _exportData() async {
-    setState(() => _isExporting = true);
-    
-    final manager = BackupManager();
-    final success = await manager.exportData();
-    final l10n = AppLocalizations.of(context)!;
-
+  // --- UNVERÄNDERT: Logik für Komplett-Backup ---
+  void _performFullExport() async {
+    setState(() => _isFullBackupRunning = true);
+    final success = await BackupManager().exportFullBackup();
     if (!mounted) return;
+    setState(() => _isFullBackupRunning = false);
 
-    setState(() => _isExporting = false);
-
+    final l10n = AppLocalizations.of(context)!;
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.snackbarExportSuccess),
-          duration: const Duration(seconds: 4),
-        ),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.snackbarExportSuccess)));
     } else {
-      // Wenn 'success' false ist, kann es ein Fehler sein oder der Nutzer hat abgebrochen.
-      // Eine stille Rückkehr ist hier oft die beste User Experience.
-      // Optional kann man eine Meldung für den Fehlerfall anzeigen.
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(l10n.snackbarExportFailed),
-          backgroundColor: Colors.orange,
-        ),
-      );
+          backgroundColor: Colors.orange));
     }
   }
 
-  void _importData() async {
-    // 1. Dateiauswahl-Dialog öffnen
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['json'],
-    );
+  void _performFullImport() async {
+    final result = await FilePicker.platform
+        .pickFiles(type: FileType.custom, allowedExtensions: ['json']);
+    if (result == null || result.files.single.path == null) return;
+
+    final filePath = result.files.single.path!;
     final l10n = AppLocalizations.of(context)!;
 
-    if (result == null || result.files.single.path == null) {
-      // Nutzer hat den Dialog abgebrochen
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.snackbarNoFileSelected)));
-      return;
-    }
-    
-    final filePath = result.files.single.path!;
-
-    // 2. Warn-Dialog anzeigen
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.dialogConfirmTitle),
         content: Text(l10n.dialogConfirmImportContent),
         actions: [
-          TextButton(child: Text(l10n.dialogButtonCancel),
-            onPressed: () => Navigator.of(context).pop(false),
-          ),
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l10n.dialogButtonCancel)),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
-            //child: const Text("Ja, alles überschreiben"),
+            style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error),
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.dialogButtonOverwrite)
+            child: Text(l10n.dialogButtonOverwrite),
           ),
         ],
       ),
     );
 
-    // 3. Wenn der Nutzer bestätigt hat, den Import starten
     if (confirmed == true) {
-      setState(() => _isImporting = true);
-      
-      final manager = BackupManager();
-      final success = await manager.importData(filePath);
-
+      setState(() => _isFullBackupRunning = true);
+      final success = await BackupManager().importFullBackup(filePath);
       if (!mounted) return;
-
-      setState(() => _isImporting = false);
+      setState(() => _isFullBackupRunning = false);
 
       if (success) {
         await showDialog(
           context: context,
-          barrierDismissible: false, // Nutzer muss den Dialog bestätigen
+          barrierDismissible: false,
           builder: (context) => AlertDialog(
             title: Text(l10n.snackbarImportSuccessTitle),
             content: Text(l10n.snackbarImportSuccessContent),
-            actions: [ FilledButton(child: Text(l10n.snackbarButtonOK),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
+            actions: [
+              FilledButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(l10n.snackbarButtonOK))
             ],
           ),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(l10n.snackbarImportError),
-            backgroundColor: Colors.red,
-          ),
-        );
+            backgroundColor: Colors.red));
       }
     }
   }
 
-void _importHevyData() async {
-    setState(() => _isImporting = true);
+  // --- UNVERÄNDERT: Logik für Hevy-Import ---
+  void _performHevyImport() async {
+    setState(() => _isMigrationRunning = true);
     final count = await ImportManager().importHevyCsv();
     if (!mounted) return;
-    setState(() => _isImporting = false);
+    setState(() => _isMigrationRunning = false);
 
     final l10n = AppLocalizations.of(context)!;
     if (count > 0) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.hevyImportSuccess(count))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.hevyImportSuccess(count))));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.hevyImportFailed), backgroundColor: Colors.red));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(l10n.hevyImportFailed), backgroundColor: Colors.red));
+    }
+  }
+
+  // --- NEU: Helfer-Methode für alle CSV-Exporte ---
+  void _exportCsv(Future<bool> Function() exportFunction, String successMessage,
+      String failureMessage) async {
+    setState(() => _isCsvExportRunning = true);
+    final success = await exportFunction();
+    if (!mounted) return;
+    setState(() => _isCsvExportRunning = false);
+
+    if (success) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(successMessage)));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(failureMessage), backgroundColor: Colors.orange));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.dataManagementTitle),
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
+        title: const Text("Daten-Hub"),
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
       ),
-      // DOC: HIER IST DIE KORREKTUR
-      // Wir wickeln den Body in einen SingleChildScrollView
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildCard(
-                context: context,
-                icon: Icons.upload_file,
-                title: l10n.exportCardTitle,
-                description: l10n.exportCardDescription,
-                buttonText: l10n.exportCardButton,
-                isLoading: _isExporting,
-                onPressed: _exportData,
-              ),
-              const SizedBox(height: 24),
-              _buildCard(
-                context: context,
-                icon: Icons.download_for_offline,
-                title: l10n.importCardTitle,
-                description: l10n.importCardDescription,
-                buttonText: l10n.importCardButton,
-                isLoading: _isImporting,
-                onPressed: _importData,
-                isDestructive: true,
-              ),
-              const SizedBox(height: 24),
-              // Die neue Karte für den Hevy Import
-              _buildCard(
-                context: context,
-                icon: Icons.sync_alt,
-                title: l10n.hevyImportTitle,
-                description: l10n.hevyImportDescription,
-                buttonText: l10n.hevyImportButton,
-                isLoading: _isImporting,
-                onPressed: _importHevyData,
-              ),
-            ],
-          ),
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildFullBackupCard(context, l10n, theme),
+            const SizedBox(height: 16),
+            _buildCsvExportCard(context, l10n, theme),
+            const SizedBox(height: 16),
+            _buildMigrationCard(context, l10n, theme),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildCard({
-    required BuildContext context,
-    required IconData icon,
-    required String title,
-    required String description,
-    required String buttonText,
-    required bool isLoading,
-    required VoidCallback onPressed,
-    bool isDestructive = false,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final buttonColor = isDestructive ? colorScheme.error : colorScheme.primary;
-    final onButtonColor = isDestructive ? colorScheme.onError : colorScheme.onPrimary;
+  // --- WIDGET BUILDER ---
 
-    return Card(
-      elevation: 2,
+  Widget _buildFullBackupCard(
+      BuildContext context, AppLocalizations l10n, ThemeData theme) {
+    return SummaryCard(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 40, color: colorScheme.primary),
-            const SizedBox(height: 12),
-            Text(title, style: Theme.of(context).textTheme.headlineSmall),
+            Text("Lightweight Datensicherung",
+                style: theme.textTheme.headlineSmall),
             const SizedBox(height: 8),
-            Text(description, style: Theme.of(context).textTheme.bodyMedium),
+            Text(
+                "Sichere oder wiederherstelle alle deine App-Daten. Ideal für einen Gerätewechsel.",
+                style: theme.textTheme.bodyMedium),
             const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: isLoading ? null : onPressed,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: buttonColor,
-                  foregroundColor: onButtonColor,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.upload_file),
+                    label: const Text("Exportieren"),
+                    onPressed: _isFullBackupRunning ? null : _performFullExport,
+                  ),
                 ),
-                child: isLoading
-                    ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3))
-                    : Text(buttonText),
-              ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton.icon(
+                    icon: const Icon(Icons.download_for_offline),
+                    label: const Text("Importieren"),
+                    style: FilledButton.styleFrom(
+                        backgroundColor: theme.colorScheme.error),
+                    onPressed: _isFullBackupRunning ? null : _performFullImport,
+                  ),
+                ),
+              ],
             ),
+            if (_isFullBackupRunning)
+              const Padding(
+                padding: EdgeInsets.only(top: 16.0),
+                child: Center(child: CircularProgressIndicator()),
+              ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildCsvExportCard(
+      BuildContext context, AppLocalizations l10n, ThemeData theme) {
+    return SummaryCard(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Daten-Export (CSV)", style: theme.textTheme.headlineSmall),
+            const SizedBox(height: 8),
+            Text(
+                "Exportiere Teile deiner Daten als CSV-Datei zur Analyse in anderen Programmen.",
+                style: theme.textTheme.bodyMedium),
+            const SizedBox(height: 8),
+            _buildExportTile(
+              icon: Icons.restaurant_menu,
+              title: "Ernährungstagebuch",
+              onTap: _isCsvExportRunning
+                  ? null
+                  : () => _exportCsv(
+                      BackupManager().exportNutritionAsCsv,
+                      "Ernährungstagebuch wird geteilt...",
+                      "Export fehlgeschlagen. Eventuell existieren noch keine Einträge."),
+            ),
+            _buildExportTile(
+              icon: Icons.monitor_weight_outlined,
+              title: "Messwerte",
+              onTap: _isCsvExportRunning
+                  ? null
+                  : () => _exportCsv(
+                      BackupManager().exportMeasurementsAsCsv,
+                      "Messwerte werden geteilt...",
+                      "Export fehlgeschlagen. Eventuell existieren noch keine Einträge."),
+            ),
+            _buildExportTile(
+              icon: Icons.fitness_center,
+              title: "Trainingsverlauf",
+              onTap: _isCsvExportRunning
+                  ? null
+                  : () => _exportCsv(
+                      BackupManager().exportWorkoutsAsCsv,
+                      "Trainingsverlauf wird geteilt...",
+                      "Export fehlgeschlagen. Eventuell existieren noch keine Einträge."),
+            ),
+            if (_isCsvExportRunning)
+              const Padding(
+                padding: EdgeInsets.only(top: 16.0),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMigrationCard(
+      BuildContext context, AppLocalizations l10n, ThemeData theme) {
+    return SummaryCard(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.hevyImportTitle, style: theme.textTheme.headlineSmall),
+            const SizedBox(height: 8),
+            Text(l10n.hevyImportDescription, style: theme.textTheme.bodyMedium),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.sync_alt),
+                label: Text(l10n.hevyImportButton),
+                onPressed: _isMigrationRunning ? null : _performHevyImport,
+              ),
+            ),
+            if (_isMigrationRunning)
+              const Padding(
+                padding: EdgeInsets.only(top: 16.0),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExportTile(
+      {required IconData icon,
+      required String title,
+      required VoidCallback? onTap}) {
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(title),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: onTap,
+      contentPadding: EdgeInsets.zero,
     );
   }
 }

@@ -1,4 +1,4 @@
-// lib/data/import_manager.dart
+// lib/data/import_manager.dart (Final, mit Deutsch-Support)
 
 import 'dart:io';
 import 'package:csv/csv.dart';
@@ -9,6 +9,7 @@ import 'package:lightweight/models/set_log.dart';
 
 class ImportManager {
   Future<int> importHevyCsv() async {
+    // ... (Diese Methode bleibt unverändert, sie ist bereits korrekt)
     try {
       final result = await FilePicker.platform
           .pickFiles(type: FileType.custom, allowedExtensions: ['csv']);
@@ -27,8 +28,14 @@ class ImportManager {
 
       for (var i = 1; i < rows.length; i++) {
         final row = rows[i];
-        if (row.length != header.length) continue; // Skip malformed rows
+        if (row.length != header.length) continue;
         final rowMap = Map<String, dynamic>.fromIterables(header, row);
+
+        if (rowMap['start_time'] == null ||
+            rowMap['start_time'].toString().trim().isEmpty) {
+          continue;
+        }
+
         final key = "${rowMap['title']}_${rowMap['start_time']}";
         if (workoutGroups.containsKey(key)) {
           workoutGroups[key]!.add(rowMap);
@@ -51,20 +58,27 @@ class ImportManager {
                   _parseHevyDate(firstRow['start_time']).toIso8601String(),
               'end_time':
                   _parseHevyDate(firstRow['end_time']).toIso8601String(),
-              'notes': firstRow['description']
+              'notes': firstRow['description'],
+              'status': 'completed',
             },
             where: 'id = ?',
             whereArgs: [newLog.id]);
 
+        int setOrder = 0;
         for (var row in group) {
-          // KORREKTUR: Der 'setIndex'-Parameter wurde entfernt, da er im
-          // SetLog-Konstruktor nicht mehr existiert.
           final setLog = SetLog(
             workoutLogId: newLog.id!,
             exerciseName: row['exercise_title'],
             setType: row['set_type'] ?? 'normal',
             weightKg: double.tryParse(row['weight_kg']?.toString() ?? ''),
             reps: int.tryParse(row['reps']?.toString() ?? ''),
+            log_order: setOrder++,
+            notes: row['exercise_notes'],
+            distanceKm: double.tryParse(row['distance_km']?.toString() ?? ''),
+            durationSeconds:
+                int.tryParse(row['duration_seconds']?.toString() ?? ''),
+            rpe: int.tryParse(row['rpe']?.toString() ?? ''),
+            supersetId: int.tryParse(row['superset_id']?.toString() ?? ''),
           );
           await db.insertSetLog(setLog);
         }
@@ -72,23 +86,39 @@ class ImportManager {
       }
       return importedWorkouts;
     } catch (e) {
-      // ignore: avoid_print
       print("Hevy Import Error: $e");
-      return -1; // Fehlercode
+      return -1;
     }
   }
 
-  DateTime _parseHevyDate(String dateString) {
-    try {
-      return DateFormat("dd MMM yyyy, HH:mm", "en_US").parse(dateString);
-    } catch (e) {
-      // Versuche ein alternatives, häufiges Format
+  /// KORREKTUR: Die Parser-Funktion unterstützt jetzt explizit deutsche Monatsnamen.
+  DateTime _parseHevyDate(dynamic rawDateString) {
+    final dateString = rawDateString?.toString().trim();
+    if (dateString == null || dateString.isEmpty) {
+      print(
+          "Leere oder null Datumszeichenfolge erhalten. Fallback auf DateTime.now()");
+      return DateTime.now();
+    }
+
+    // Die Liste der Formate wurde um das deutsche Locale erweitert.
+    final List<DateFormat> formats = [
+      DateFormat("dd MMM yyyy, HH:mm",
+          "en_US"), // Probiert zuerst Englisch (Jan, Feb, Apr...)
+      DateFormat(
+          "dd MMM yyyy, HH:mm", "de_DE"), // Dann Deutsch (März, Mai, Juni...)
+      DateFormat("yyyy-MM-dd HH:mm:ss"),
+      DateFormat("dd.MM.yyyy, HH:mm"),
+    ];
+
+    for (final format in formats) {
       try {
-        return DateFormat("yyyy-MM-dd HH:mm:ss").parse(dateString);
-      } catch (e2) {
-        print("Konnte Datum nicht parsen: $dateString");
-        return DateTime.now();
+        return format.parse(dateString);
+      } catch (e) {
+        continue;
       }
     }
+
+    print("Konnte Datum nicht mit bekannten Formaten parsen: '$dateString'");
+    return DateTime.now();
   }
 }

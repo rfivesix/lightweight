@@ -1,11 +1,13 @@
-// lib/screens/workout_history_screen.dart
+// lib/screens/workout_history_screen.dart (Final & De-Materialisiert)
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/workout_log.dart';
-import 'workout_log_detail_screen.dart';
+import 'package:lightweight/screens/workout_log_detail_screen.dart';
+import 'package:lightweight/util/time_util.dart';
+import 'package:lightweight/widgets/summary_card.dart'; // HINZUGEFÜGT
 
 class WorkoutHistoryScreen extends StatefulWidget {
   const WorkoutHistoryScreen({super.key});
@@ -26,7 +28,11 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
   Future<void> _loadHistory() async {
     setState(() => _isLoading = true);
     final data = await WorkoutDatabaseHelper.instance.getWorkoutLogs();
-    if (mounted) setState(() { _logs = data; _isLoading = false; });
+    if (mounted)
+      setState(() {
+        _logs = data;
+        _isLoading = false;
+      });
   }
 
   Future<void> _deleteLog(int logId) async {
@@ -34,42 +40,44 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
     _loadHistory();
   }
 
-  String _formatDuration(Duration d) {
-    var seconds = d.inSeconds;
-    final hours = seconds ~/ Duration.secondsPerHour;
-    seconds -= hours * Duration.secondsPerHour;
-    final minutes = seconds ~/ Duration.secondsPerMinute;
-    seconds -= minutes * Duration.secondsPerMinute;
-
-    final hoursString = hours > 0 ? '$hours:' : '';
-    final minutesString = minutes.toString().padLeft(2, '0');
-    final secondsString = seconds.toString().padLeft(2, '0');
-    
-    return '$hoursString$minutesString:$secondsString';
-  }
+  // Diese Methode ist jetzt in lib/util/time_util.dart
+  // String _formatDuration(Duration d) { /* ... */ }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final locale = Localizations.localeOf(context).toString(); // KORREKTUR: Locale hier definieren
+    final locale = Localizations.localeOf(context).toString();
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.workoutHistoryTitle),
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
-      ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      // KORREKTUR 1: AppBar entfernt, Titel direkt im Body
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _logs.isEmpty
-              ? Center(child: Text(l10n.emptyHistory, style: const TextStyle(fontSize: 18, color: Colors.grey)))
+              ? Center(
+                  child: Text(l10n.emptyHistory,
+                      style: const TextStyle(fontSize: 18, color: Colors.grey)))
               : ListView.builder(
-                  padding: const EdgeInsets.all(8.0),
-                  itemCount: _logs.length,
+                  padding: const EdgeInsets.all(16.0), // Padding für die Liste
+                  itemCount: _logs.length + 1, // +1 für den Titel
                   itemBuilder: (context, index) {
-                    final log = _logs[index];
+                    if (index == 0) {
+                      // Der erste Eintrag ist der Titel
+                      return Padding(
+                        padding: const EdgeInsets.only(
+                            bottom: 24.0), // Abstand nach dem Titel
+                        child: Text(l10n.workoutHistoryTitle,
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineMedium
+                                ?.copyWith(
+                                    fontWeight: FontWeight.w900, fontSize: 28)),
+                      );
+                    }
+                    final log = _logs[index - 1]; // -1 wegen des Titels
                     final duration = log.endTime?.difference(log.startTime);
+
                     return Dismissible(
                       key: Key('log_${log.id}'),
                       direction: DismissDirection.endToStart,
@@ -81,32 +89,50 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                       ),
                       confirmDismiss: (direction) async {
                         return await showDialog<bool>(
-                          context: context,
-                          builder: (ctx) => AlertDialog(
-                            title: Text(l10n.deleteConfirmTitle),
-                            content: Text(l10n.deleteWorkoutConfirmContent),
-                            actions: [
-                              TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: Text(l10n.cancel)),
-                              TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: Text(l10n.delete)),
-                            ],
-                          ),
-                        ) ?? false;
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                // Nutzt globales DialogTheme
+                                title: Text(l10n.deleteConfirmTitle),
+                                content: Text(l10n.deleteWorkoutConfirmContent),
+                                actions: [
+                                  TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(ctx).pop(false),
+                                      child: Text(l10n.cancel)),
+                                  TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(ctx).pop(true),
+                                      child: Text(l10n.delete)),
+                                ],
+                              ),
+                            ) ??
+                            false;
                       },
                       onDismissed: (direction) {
                         _deleteLog(log.id!);
                       },
-                      child: Card(
+                      child: SummaryCard(
+                        // KORREKTUR 2: Jetzt mit SummaryCard
                         child: ListTile(
                           leading: const Icon(Icons.event_note, size: 40),
-                          title: Text(log.routineName ?? l10n.freeWorkoutTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
-                          // KORREKTUR: Hartcodierte Locale entfernt und durch die dynamische Variable ersetzt
-                          subtitle: Text(DateFormat.yMMMMd(locale).add_Hm().format(log.startTime)),
-                          trailing: duration != null 
-                              ? Text(_formatDuration(duration), style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.w500)) 
+                          title: Text(log.routineName ?? l10n.freeWorkoutTitle,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: Text(DateFormat.yMMMMd(locale)
+                              .add_Hm()
+                              .format(log.startTime)),
+                          // KORREKTUR: Nutzt die globale formatDuration-Hilfsfunktion
+                          trailing: duration != null
+                              ? Text(formatDuration(duration),
+                                  style: TextStyle(
+                                      color: colorScheme.primary,
+                                      fontWeight: FontWeight.w500))
                               : null,
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(builder: (context) => WorkoutLogDetailScreen(logId: log.id!))
-                          ).then((_) => _loadHistory()),
+                          onTap: () => Navigator.of(context)
+                              .push(MaterialPageRoute(
+                                  builder: (context) =>
+                                      WorkoutLogDetailScreen(logId: log.id!)))
+                              .then((_) => _loadHistory()),
                         ),
                       ),
                     );

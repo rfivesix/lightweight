@@ -1,16 +1,14 @@
-// lib/screens/measurements_screen.dart
+// lib/screens/measurements_screen.dart (Final & De-Materialisiert - Korrigiert)
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/measurement_session.dart';
 import 'package:lightweight/models/measurement.dart';
-import 'package:lightweight/widgets/summary_card.dart';
-import 'add_measurement_screen.dart';
-import 'package:lightweight/models/chart_data_point.dart';
+import 'package:lightweight/models/measurement_session.dart';
+import 'package:lightweight/screens/add_measurement_screen.dart';
 import 'package:lightweight/widgets/measurement_chart_widget.dart';
-// import 'measurement_session_detail_screen.dart'; // Auskommentiert, bis der Screen erstellt ist
+import 'package:lightweight/widgets/summary_card.dart';
 
 class MeasurementsScreen extends StatefulWidget {
   const MeasurementsScreen({super.key});
@@ -22,290 +20,427 @@ class MeasurementsScreen extends StatefulWidget {
 class _MeasurementsScreenState extends State<MeasurementsScreen> {
   bool _isLoading = true;
   List<MeasurementSession> _sessions = [];
-  List<ChartDataPoint> _chartData = [];
-  String _selectedChartType = 'weight';
-  bool _isChartLoading = true;
-  late DateTimeRange _currentDateRange;
+  // Map<String, List<Measurement>> _measurementsByType = {}; // Nicht direkt verwendet
+  String? _selectedChartType;
+  List<String> _availableMeasurementTypes = [];
+
+  DateTimeRange _currentChartDateRange = DateTimeRange(
+    start: DateTime.now().subtract(const Duration(days: 29)),
+    end: DateTime.now(),
+  );
+  List<String> _chartDateRangeKeys = ['30D', '90D', '180D', 'All'];
+  String _selectedChartRangeKey = '30D';
 
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now();
-    final startDate = now.subtract(const Duration(days: 30));
-    _currentDateRange = DateTimeRange(start: startDate, end: now);
-    _loadAllData();
-  }
-  // NEUE State-Variable für die FilterChips
-  String _selectedRangeKey = '1M';
-
-  // NEUE Methode zum Setzen des Zeitraums
-  void _setTimeRange(String key) async {
-    setState(() => _selectedRangeKey = key);
-    final now = DateTime.now();
-    DateTime start;
-
-    switch (key) {
-      case '3M':
-        start = now.subtract(const Duration(days: 90));
-        break;
-      case '1J':
-        start = now.subtract(const Duration(days: 365));
-        break;
-      case 'Alle':
-        final earliest = await DatabaseHelper.instance.getEarliestMeasurementDate();
-        start = earliest ?? now.subtract(const Duration(days: 30));
-        break;
-      case '1M':
-      default:
-        start = now.subtract(const Duration(days: 30));
-    }
-    setState(() {
-      _currentDateRange = DateTimeRange(start: start, end: now);
-    });
-    _loadChartData(_selectedChartType);
+    _loadMeasurements();
   }
 
-  Future<void> _loadAllData() async {
+  Future<void> _loadMeasurements() async {
     setState(() => _isLoading = true);
-    await _loadSessions();
-    await _loadChartData(_selectedChartType);
-    if (mounted) setState(() => _isLoading = false);
-  }
+    final sessions = await DatabaseHelper.instance.getMeasurementSessions();
 
-  Future<void> _loadSessions() async {
-    final data = await DatabaseHelper.instance.getMeasurementSessions();
-    if (mounted) setState(() => _sessions = data);
-  }
+    final Set<String> types = {}; // Sammelt nur die Typen
+    for (final session in sessions) {
+      for (final measurement in session.measurements) {
+        types.add(measurement.type);
+      }
+    }
 
-  Future<void> _loadChartData(String type) async {
-    setState(() => _isChartLoading = true);
-    final data = await DatabaseHelper.instance.getChartDataForTypeAndRange(type, _currentDateRange);
     if (mounted) {
       setState(() {
-        _chartData = data;
-        _isChartLoading = false;
+        _sessions = sessions;
+        _availableMeasurementTypes = types.toList();
+        _availableMeasurementTypes.sort();
+
+        if (_selectedChartType == null &&
+            _availableMeasurementTypes.isNotEmpty) {
+          _selectedChartType = _availableMeasurementTypes.first;
+        }
+        _isLoading = false;
       });
+      _loadChartData();
     }
   }
 
-  void _navigateTimeRange(bool forward) {
-    final duration = _currentDateRange.duration;
-    DateTime newStart;
-    DateTime newEnd;
+  Future<void> _loadChartData() async {
+    if (_selectedChartType == null || _selectedChartType!.isEmpty) return;
 
-    if (forward) {
-      newStart = _currentDateRange.start.add(duration);
-      newEnd = _currentDateRange.end.add(duration);
-      if (newEnd.isAfter(DateTime.now())) {
-        newEnd = DateTime.now();
-        newStart = newEnd.subtract(duration);
-      }
-    } else {
-      newStart = _currentDateRange.start.subtract(duration);
-      newEnd = _currentDateRange.end.subtract(duration);
+    final now = DateTime.now();
+    DateTime start;
+    DateTime end = DateTime(now.year, now.month, now.day, 23, 59, 59);
+
+    switch (_selectedChartRangeKey) {
+      case '90D':
+        start = now.subtract(const Duration(days: 89));
+        break;
+      case '180D':
+        start = now.subtract(const Duration(days: 179));
+        break;
+      case 'All':
+        final earliest =
+            await DatabaseHelper.instance.getEarliestMeasurementDate();
+        start = earliest ?? now;
+        break;
+      case '30D':
+      default:
+        start = now.subtract(const Duration(days: 29));
     }
 
-    setState(() => _currentDateRange = DateTimeRange(start: newStart, end: newEnd));
-    _loadChartData(_selectedChartType);
-  }
-
-  void _navigateToAddScreen() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const AddMeasurementScreen()),
-    ).then((result) {
-      if (result == true) _loadAllData();
+    final normalizedStart = DateTime(start.year, start.month, start.day);
+    if (!mounted) return;
+    setState(() {
+      _currentChartDateRange = DateTimeRange(start: normalizedStart, end: end);
     });
   }
 
-  void _deleteSession(int id) async {
+  Future<void> _deleteSession(int id) async {
     await DatabaseHelper.instance.deleteMeasurementSession(id);
-    _loadAllData();
+    _loadMeasurements();
   }
 
-  String _getLocalizedMeasurementName(String key, AppLocalizations l10n) {
-    switch (key) {
-      case 'weight': return l10n.measurementWeight;
-      case 'fat_percent': return l10n.measurementFatPercent;
-      case 'neck': return l10n.measurementNeck;
-      case 'shoulder': return l10n.measurementShoulder;
-      case 'chest': return l10n.measurementChest;
-      case 'left_bicep': return l10n.measurementLeftBicep;
-      case 'right_bicep': return l10n.measurementRightBicep;
-      case 'left_forearm': return l10n.measurementLeftForearm;
-      case 'right_forearm': return l10n.measurementRightForearm;
-      case 'abdomen': return l10n.measurementAbdomen;
-      case 'waist': return l10n.measurementWaist;
-      case 'hips': return l10n.measurementHips;
-      case 'left_thigh': return l10n.measurementLeftThigh;
-      case 'right_thigh': return l10n.measurementRightThigh;
-      case 'left_calf': return l10n.measurementLeftCalf;
-      case 'right_calf': return l10n.measurementRightCalf;
-      default: return key;
-    }
-  }
-
-  String _getUnitForSelectedType() {
-    if (_sessions.isEmpty) return '';
-    for (final session in _sessions) {
-      final measurement = session.measurements.firstWhere(
-        (m) => m.type == _selectedChartType,
-        orElse: () => Measurement(sessionId: 0, type: '', value: 0, unit: 'NOT_FOUND'),
-      );
-      if (measurement.unit != 'NOT_FOUND') return measurement.unit;
-    }
-    return '';
+  void _navigateToCreateMeasurement() {
+    Navigator.of(context)
+        .push(MaterialPageRoute(
+            builder: (context) => const AddMeasurementScreen()))
+        .then((_) => _loadMeasurements());
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        title: Text(l10n.measurementsScreenTitle),
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
-      ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              children: [
-                SummaryCard(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Expanded(child: _buildChartTypeSelector(l10n, colorScheme)),
-                            Row(
-                              children: [
-                                IconButton(icon: const Icon(Icons.chevron_left), onPressed: () => _navigateTimeRange(false)),
-                                Text(
-                                  "${DateFormat.MMMd().format(_currentDateRange.start)} - ${DateFormat.MMMd().format(_currentDateRange.end)}",
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                                IconButton(icon: const Icon(Icons.chevron_right), onPressed: () => _navigateTimeRange(true)),
-                              ],
-                            )
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8.0,
-                          children: [
-                            FilterChip(label: const Text("1M"), selected: _selectedRangeKey == '1M', onSelected: (_) => _setTimeRange('1M')),
-                            FilterChip(label: const Text("3M"), selected: _selectedRangeKey == '3M', onSelected: (_) => _setTimeRange('3M')),
-                            FilterChip(label: const Text("1J"), selected: _selectedRangeKey == '1J', onSelected: (_) => _setTimeRange('1J')),
-                            FilterChip(label: const Text("Alle"), selected: _selectedRangeKey == 'Alle', onSelected: (_) => _setTimeRange('Alle')),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        GestureDetector(
-                          onHorizontalDragEnd: (details) {
-                            if (details.primaryVelocity! > 0) _navigateTimeRange(false);
-                            if (details.primaryVelocity! < 0) _navigateTimeRange(true);
-                          },
-                          child: _isChartLoading
-                              ? const SizedBox(height: 200, child: Center(child: CircularProgressIndicator()))
-                              : MeasurementChartWidget(
-                                  //title: _getLocalizedMeasurementName(_selectedChartType, l10n),
-                                  dataPoints: _chartData,
-                                  lineColor: colorScheme.primary,
-                                  unit: _getUnitForSelectedType(),
-                                ),
-                        ),
-                      ],
-                    ),
-                  ),
+          : _sessions.isEmpty
+              ? _buildEmptyState(l10n, context)
+              : ListView(
+                  padding: const EdgeInsets.all(16.0),
+                  children: [
+                    Text(l10n.measurementsScreenTitle,
+                        style: textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w900, fontSize: 28)),
+                    const SizedBox(height: 24),
+                    if (_availableMeasurementTypes.isNotEmpty) ...[
+                      _buildChartSection(l10n, colorScheme, textTheme),
+                      const SizedBox(height: 24),
+                    ],
+                    _buildSectionTitle(context, "Alle Messwerte"),
+                    ..._sessions
+                        .map((session) => _buildMeasurementSessionCard(
+                            l10n, colorScheme, session))
+                        .toList(),
+                  ],
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-                  child: Text("Verlaufsprotokoll", style: Theme.of(context).textTheme.headlineSmall),
-                ),
-                _sessions.isEmpty
-                    ? Center(child: Padding(padding: const EdgeInsets.all(32.0), child: Text(l10n.measurementsEmptyState, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, color: Colors.grey))))
-                    : ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _sessions.length,
-                        itemBuilder: (context, index) {
-                          final session = _sessions[index];
-                          final weightEntry = session.measurements.firstWhere((m) => m.type == 'weight', orElse: () => Measurement(sessionId: 0, type: '', value: 0, unit: ''));
-                          return Card(
-                            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                            elevation: 2,
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: colorScheme.primaryContainer,
-                                child: Icon(Icons.calendar_today_outlined, color: colorScheme.onPrimaryContainer),
-                              ),
-                              title: Text(DateFormat.yMMMMd('de_DE').format(session.timestamp), style: const TextStyle(fontWeight: FontWeight.bold)),
-                              subtitle: Text("${session.measurements.length} Messwerte erfasst"),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (weightEntry.value > 0)
-                                    Text("${weightEntry.value.toStringAsFixed(1)} ${weightEntry.unit}", style: Theme.of(context).textTheme.titleMedium),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                                    onPressed: () => _deleteSession(session.id!),
-                                  ),
-                                ],
-                              ),
-                              onTap: () {
-                                // Navigator.of(context).push(MaterialPageRoute(builder: (context) => MeasurementSessionDetailScreen(session: session)));
-                              },
-                            ),
-                          );
-                        },
-                      ),
-              ],
-            ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToAddScreen,
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
-        child: const Icon(Icons.add),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 24.0, right: 16.0),
+        child: ElevatedButton.icon(
+          onPressed: _navigateToCreateMeasurement,
+          icon: const Icon(Icons.add),
+          label: Text(l10n.addMeasurement),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0)),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          ),
+        ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
-  Widget _buildChartTypeSelector(AppLocalizations l10n, ColorScheme colorScheme) {
-    return PopupMenuButton<String>(
-      onSelected: (String newValue) {
-        setState(() => _selectedChartType = newValue);
-        _loadChartData(newValue);
-      },
-      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-        PopupMenuItem(value: 'weight', child: Text(l10n.measurementWeight)),
-        PopupMenuItem(value: 'fat_percent', child: Text(l10n.measurementFatPercent)),
-        PopupMenuItem(value: 'waist', child: Text(l10n.measurementWaist)),
-      ],
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: colorScheme.primaryContainer.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
+  Widget _buildEmptyState(AppLocalizations l10n, BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Flexible(
-              child: Text(
-                _getLocalizedMeasurementName(_selectedChartType, l10n),
-                style: TextStyle(color: colorScheme.onPrimaryContainer, fontWeight: FontWeight.bold),
-                overflow: TextOverflow.ellipsis,
-              ),
+            Text(l10n.measurementsEmptyState,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: _navigateToCreateMeasurement,
+              icon: const Icon(Icons.add),
+              label: Text(l10n.addMeasurement),
             ),
-            Icon(Icons.arrow_drop_down, color: colorScheme.onPrimaryContainer),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildSectionTitle(BuildContext context, String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: Colors.grey[600],
+              fontWeight: FontWeight.bold,
+            ),
+      ),
+    );
+  }
+
+  Widget _buildChartSection(
+      AppLocalizations l10n, ColorScheme colorScheme, TextTheme textTheme) {
+    if (_selectedChartType == null) return const SizedBox.shrink();
+
+    return SummaryCard(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _selectedChartType,
+                      isExpanded: true,
+                      onChanged: (String? newValue) {
+                        if (newValue != null) {
+                          setState(() {
+                            _selectedChartType = newValue;
+                          });
+                          _loadChartData();
+                        }
+                      },
+                      items: _availableMeasurementTypes
+                          .map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child:
+                              Text(_getLocalizedMeasurementType(l10n, value)),
+                        );
+                      }).toList(),
+                      style: textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                      icon: Icon(Icons.arrow_drop_down,
+                          color: colorScheme.onSurfaceVariant),
+                    ),
+                  ),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: _chartDateRangeKeys
+                      .map((key) => _buildFilterButton(key, key))
+                      .toList(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            MeasurementChartWidget(
+              chartType: _selectedChartType!,
+              dateRange: _currentChartDateRange,
+              lineColor: colorScheme.primary,
+              unit: _getMeasurementUnit(_selectedChartType!),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterButton(String label, String key) {
+    final theme = Theme.of(context);
+    final isSelected = _selectedChartRangeKey == key;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedChartRangeKey = key;
+        });
+        _loadChartData();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? theme.colorScheme.primary
+              : theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        child: Text(
+          label,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: isSelected
+                ? theme.colorScheme.onPrimary
+                : theme.colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMeasurementSessionCard(AppLocalizations l10n,
+      ColorScheme colorScheme, MeasurementSession session) {
+    final locale = Localizations.localeOf(context).toString();
+    final sortedMeasurements = session.measurements.toList()
+      ..sort((a, b) => a.type.compareTo(b.type));
+
+    return Dismissible(
+      key: Key('session_${session.id}'),
+      direction: DismissDirection.endToStart,
+      onDismissed: (direction) => _deleteSession(session.id!),
+      background: Container(
+        color: Colors.redAccent,
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: const Icon(Icons.delete, color: Colors.white),
+      ),
+      child: SummaryCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              title: Text(
+                  DateFormat.yMMMMEEEEd(locale)
+                      .add_Hm()
+                      .format(session.timestamp),
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text("Detailansicht der Messsession.")),
+                );
+              },
+            ),
+            Divider(
+                height: 1,
+                thickness: 1,
+                color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
+            ...sortedMeasurements
+                .map((measurement) => ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16.0, vertical: 4.0),
+                      leading: _getMeasurementIcon(measurement.type),
+                      title: Text(_getLocalizedMeasurementType(
+                          l10n, measurement.type)), // l10n übergeben
+                      trailing: Text(
+                          "${measurement.value.toStringAsFixed(1)} ${measurement.unit}",
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                    ))
+                .toList(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // HINZUGEFÜGT: Helfermethoden für Lokalisierung, Einheit und Icons
+  String _getLocalizedMeasurementType(AppLocalizations l10n, String type) {
+    switch (type) {
+      case 'weight':
+        return l10n.measurementWeight;
+      case 'fat_percent':
+        return l10n.measurementFatPercent;
+      case 'neck':
+        return l10n.measurementNeck;
+      case 'shoulder':
+        return l10n.measurementShoulder;
+      case 'chest':
+        return l10n.measurementChest;
+      case 'left_bicep':
+        return l10n.measurementLeftBicep;
+      case 'right_bicep':
+        return l10n.measurementRightBicep;
+      case 'left_forearm':
+        return l10n.measurementLeftForearm;
+      case 'right_forearm':
+        return l10n.measurementRightForearm;
+      case 'abdomen':
+        return l10n.measurementAbdomen;
+      case 'waist':
+        return l10n.measurementWaist;
+      case 'hips':
+        return l10n.measurementHips;
+      case 'left_thigh':
+        return l10n.measurementLeftThigh;
+      case 'right_thigh':
+        return l10n.measurementRightThigh;
+      case 'left_calf':
+        return l10n.measurementLeftCalf;
+      case 'right_calf':
+        return l10n.measurementRightCalf;
+      default:
+        return type;
+    }
+  }
+
+  String _getMeasurementUnit(String type) {
+    // Hier die Einheiten basierend auf dem Typ zurückgeben
+    switch (type) {
+      case 'weight':
+        return 'kg';
+      case 'fat_percent':
+        return '%';
+      case 'neck':
+      case 'shoulder':
+      case 'chest':
+      case 'left_bicep':
+      case 'right_bicep':
+      case 'left_forearm':
+      case 'right_forearm':
+      case 'abdomen':
+      case 'waist':
+      case 'hips':
+      case 'left_thigh':
+      case 'right_thigh':
+      case 'left_calf':
+      case 'right_calf':
+        return 'cm';
+      default:
+        return '';
+    }
+  }
+
+  Icon _getMeasurementIcon(String type) {
+    // Hier Icons basierend auf dem Typ zurückgeben
+    switch (type) {
+      case 'weight':
+        return const Icon(Icons.monitor_weight);
+      case 'fat_percent':
+        return const Icon(Icons.fitness_center);
+      case 'neck':
+        return const Icon(Icons.accessibility_new);
+      case 'shoulder':
+        return const Icon(Icons.accessibility_new);
+      case 'chest':
+        return const Icon(Icons.accessibility_new);
+      case 'left_bicep':
+        return const Icon(Icons.accessibility_new);
+      case 'right_bicep':
+        return const Icon(Icons.accessibility_new);
+      case 'abdomen':
+        return const Icon(Icons.accessibility_new);
+      case 'waist':
+        return const Icon(Icons.accessibility_new);
+      case 'hips':
+        return const Icon(Icons.accessibility_new);
+      default:
+        return const Icon(Icons.straighten);
+    }
+  }
+}
+
+extension DateOnlyCompare on DateTime {
+  bool isSameDate(DateTime other) {
+    return year == other.year && month == other.month && day == other.day;
   }
 }

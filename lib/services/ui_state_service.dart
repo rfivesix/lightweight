@@ -3,7 +3,7 @@
 class UiStateService {
   // Statische Instanz, die beim ersten Zugriff erstellt wird (Singleton-Pattern)
   static final UiStateService instance = UiStateService._internal();
-  
+
   // Privater Konstruktor
   UiStateService._internal();
 

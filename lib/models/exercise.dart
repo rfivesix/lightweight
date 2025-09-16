@@ -59,7 +59,9 @@ class Exercise {
       if (jsonString == null || jsonString.isEmpty) return [];
       try {
         // jsonDecode kann eine List<dynamic> zurückgeben, daher der cast.
-        return (jsonDecode(jsonString) as List).map((item) => item.toString()).toList();
+        return (jsonDecode(jsonString) as List)
+            .map((item) => item.toString())
+            .toList();
       } catch (e) {
         return []; // Im Fehlerfall leere Liste zurückgeben
       }
@@ -77,17 +79,17 @@ class Exercise {
       secondaryMuscles: parseMuscles(map['secondaryMuscles']),
     );
   }
-  
-  Exercise copyWith({ int? id }) {
-      return Exercise(
-        id: id ?? this.id,
-        nameDe: nameDe,
-        nameEn: nameEn,
-        descriptionDe: descriptionDe,
-        descriptionEn: descriptionEn,
-        categoryName: categoryName,
-        primaryMuscles: primaryMuscles,
-        secondaryMuscles: secondaryMuscles,
-      );
-    }
+
+  Exercise copyWith({int? id}) {
+    return Exercise(
+      id: id ?? this.id,
+      nameDe: nameDe,
+      nameEn: nameEn,
+      descriptionDe: descriptionDe,
+      descriptionEn: descriptionEn,
+      categoryName: categoryName,
+      primaryMuscles: primaryMuscles,
+      secondaryMuscles: secondaryMuscles,
+    );
+  }
 }
