@@ -186,7 +186,7 @@ Widget build(BuildContext context) {
                 Expanded(
                   child: OutlinedButton.icon(
                     icon: const Icon(Icons.upload_file),
-                    label: const Text("Exportieren"),
+                    label: Text(l10n.data_export_button),
                     onPressed: _isFullBackupRunning ? null : _performFullExport,
                   ),
                 ),
@@ -194,7 +194,7 @@ Widget build(BuildContext context) {
                 Expanded(
                   child: FilledButton.icon(
                     icon: const Icon(Icons.download_for_offline),
-                    label: const Text("Importieren"),
+                    label: Text(l10n.data_import_button),
                     style: FilledButton.styleFrom(
                         backgroundColor: theme.colorScheme.error),
                     onPressed: _isFullBackupRunning ? null : _performFullImport,

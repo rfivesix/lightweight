@@ -699,7 +699,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
               onPressed: () {
                 manager.cancelRest();
               },
-              child: const Text("OK"),
+              child: Text(l10n.snackbar_button_ok),
             ),
           ],
         ),

@@ -337,7 +337,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                 children: [
                                   // KORREKTUR: NutritionSummaryWidget in einem Padding, das dem horizontalen ListView-Padding entspricht.
                                   Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 0.0), // <- Dieser Padding ist wichtig!
+                                    padding: const EdgeInsets.symmetric(horizontal: 16.0), // <- Dieser Padding ist wichtig!
                                     child: NutritionSummaryWidget(
                                       nutritionData: _nutritionData!, 
                                       isExpandedView: _isSummaryExpanded,

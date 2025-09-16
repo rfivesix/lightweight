@@ -170,7 +170,7 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16.0),
                 children: [
-                  _buildSectionTitle(context, "HEUTE IM BLICK"),
+                  _buildSectionTitle(context, l10n.today_overview_text),
                   GestureDetector(
                     onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const NutritionScreen())).then((_) => _loadTodaysData()),
                     // KORREKTUR 1: Die umgebende SummaryCard entfernt.
@@ -181,15 +181,15 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
                   ),
                   const SizedBox(height: 24),
                   
-                  _buildSectionTitle(context, "SCHNELLES HINZUFÜGEN"),
+                  _buildSectionTitle(context, l10n.quick_add_text),
                   _buildQuickAddButton(context, l10n.addFoodOption, Icons.search, () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const AddFoodScreen())).then((_) => _loadTodaysData())),
                   const SizedBox(height: 8),
-                  _buildQuickAddButton(context, "Barcode scannen", Icons.qr_code_scanner, () { /* TODO */ }),
+                  _buildQuickAddButton(context, l10n.scann_barcode_capslock, Icons.qr_code_scanner, () { /* TODO */ }),
                   const SizedBox(height: 8),
                   _buildQuickAddButton(context, l10n.fabCreateOwnFood, Icons.add, () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const CreateFoodScreen())).then((_) => _loadTodaysData())),
                   const SizedBox(height: 24),
 
-                  _buildSectionTitle(context, "HEUTIGES PROTOKOLL"),
+                  _buildSectionTitle(context, l10n.protocol_today_capslock),
                   hasEntries 
                     ? _buildTodaysLog(l10n) 
                     : _buildEmptyLogState(l10n),

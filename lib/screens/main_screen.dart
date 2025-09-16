@@ -44,6 +44,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   late final AnimationController _menuController;
   // Hilfsfunktion: NaN -> 0.0 und [0,1] clampen
   double _safe01(double v) => v.isNaN ? 0.0 : v.clamp(0.0, 1.0).toDouble();
+  late final l10n = AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -159,14 +160,14 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Flüssigkeit hinzufügen"),
+          title: Text(l10n.add_liquid_title),
           content: WaterDialogContent(key: dialogStateKey),
           actions: [
             TextButton(
-                child: const Text("Abbrechen"),
+                child: Text(l10n.cancel),
                 onPressed: () => Navigator.of(context).pop(null)),
             FilledButton(
-              child: const Text("Hinzufügen"),
+              child: Text(l10n.add_button),
               onPressed: () {
                 final state = dialogStateKey.currentState;
                 if (state != null) {
@@ -196,10 +197,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           content: QuantityDialogContent(key: dialogStateKey, item: item),
           actions: [
             TextButton(
-                child: const Text("Abbrechen"),
+                child: Text(l10n.cancel),
                 onPressed: () => Navigator.of(context).pop(null)),
             FilledButton(
-              child: const Text("Hinzufügen"),
+              child: Text(l10n.add_button),
               onPressed: () {
                 final state = dialogStateKey.currentState;
                 if (state != null) {
@@ -415,7 +416,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                   .shade600, // Auffälliges Rot für die Warnung
                               foregroundColor: Colors.white,
                             ),
-                            child: const Text('Verwerfen'),
+                            child: Text(l10n.discard_button),
                           ),
                           const SizedBox(
                               width: 8), // Abstand zwischen den Knöpfen
@@ -437,7 +438,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                               backgroundColor: theme.colorScheme.onPrimary,
                               foregroundColor: theme.colorScheme.primary,
                             ),
-                            child: const Text('Workout fortsetzen'),
+                            child: Text(l10n.continue_workout_button),
                           ),
                         ],
                       ),
@@ -490,95 +491,98 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                       bottom: 100.0,
                       right: 20.0,
                       child: Material(
-                        color: Colors.transparent, // eigener Ink-Kontext -> kein gelber Balken mehr
+                        color: Colors
+                            .transparent, // eigener Ink-Kontext -> kein gelber Balken mehr
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
-                          children: speedDialActions.asMap().entries.map((entry) {
+                          children:
+                              speedDialActions.asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final action = entry.value;
 
-                          final index = entry.key;
-                          final action = entry.value;
+                            final curved = CurvedAnimation(
+                              parent: _menuController,
+                              curve: Interval(
+                                (index * 0.12).clamp(0.0, 0.95),
+                                1.0,
+                                curve: Curves.easeOutBack,
+                              ),
+                            );
 
-                          final curved = CurvedAnimation(
-                            parent: _menuController,
-                            curve: Interval(
-                              (index * 0.12).clamp(0.0, 0.95),
-                              1.0,
-                              curve: Curves.easeOutBack,
-                            ),
-                          );
+                            final tv = _safe01(curved.value);
+                            final offsetY = 90.0 * (index + 1);
 
-                          final tv = _safe01(curved.value);
-                          final offsetY = 90.0 * (index + 1);
-
-                          return Transform.translate(
-                            offset: Offset(0, (1 - tv) * offsetY),
-                            child: Opacity(
-                              opacity: tv,
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 10.0),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    // Text links
-                                    Text(
-                                      action['label'],
-                                      style: TextStyle(
-                                        color: Theme.of(context).brightness ==
-                                                Brightness.light
-                                            ? Colors.black87
-                                            : Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18,
+                            return Transform.translate(
+                              offset: Offset(0, (1 - tv) * offsetY),
+                              child: Opacity(
+                                opacity: tv,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 10.0),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      // Text links
+                                      Text(
+                                        action['label'],
+                                        style: TextStyle(
+                                          color: Theme.of(context).brightness ==
+                                                  Brightness.light
+                                              ? Colors.black87
+                                              : Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    // Glas-Icon rechts
-                                    GestureDetector(
-                                      behavior: HitTestBehavior.opaque,
-                                      onTap: () {
-                                        setState(() {
-                                          _isAddMenuOpen = false;
-                                          _menuController.reverse();
-                                        });
-                                        _executeAddMenuAction(action['action']);
-                                      },
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(20),
-                                        child: BackdropFilter(
-                                          filter: ImageFilter.blur(
-                                              sigmaX: 12, sigmaY: 12),
-                                          child: Container(
-                                            width: 76,
-                                            height: 76,
-                                            decoration: BoxDecoration(
-                                              color: Colors.white
-                                                  .withOpacity(0.15),
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                              border: Border.all(
+                                      const SizedBox(width: 16),
+                                      // Glas-Icon rechts
+                                      GestureDetector(
+                                        behavior: HitTestBehavior.opaque,
+                                        onTap: () {
+                                          setState(() {
+                                            _isAddMenuOpen = false;
+                                            _menuController.reverse();
+                                          });
+                                          _executeAddMenuAction(
+                                              action['action']);
+                                        },
+                                        child: ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                          child: BackdropFilter(
+                                            filter: ImageFilter.blur(
+                                                sigmaX: 12, sigmaY: 12),
+                                            child: Container(
+                                              width: 76,
+                                              height: 76,
+                                              decoration: BoxDecoration(
                                                 color: Colors.white
-                                                    .withOpacity(0.3),
-                                                width: 1.5,
+                                                    .withOpacity(0.15),
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                                border: Border.all(
+                                                  color: Colors.white
+                                                      .withOpacity(0.3),
+                                                  width: 1.5,
+                                                ),
                                               ),
-                                            ),
-                                            child: Icon(
-                                              action['icon'],
-                                              size: 34,
-                                              color: Colors.white,
+                                              child: Icon(
+                                                action['icon'],
+                                                size: 34,
+                                                color: Colors.white,
+                                              ),
                                             ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                          );
-                        }).toList(),
+                            );
+                          }).toList(),
+                        ),
                       ),
-                    ),
                     ),
                   ],
                 ),

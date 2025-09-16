@@ -1,7 +1,7 @@
 
 ===== Datei: D:\lightweight\lib\main.dart =====
 
-// lib/main.dart (Endgültige Korrektur für DialogThemeData)
+// lib/main.dart
 
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
@@ -22,7 +22,7 @@ void main() {
         ChangeNotifierProvider(
           create: (context) {
             final profileService = ProfileService();
-            profileService.initialize(); 
+            profileService.initialize();
             return profileService;
           },
         ),
@@ -38,245 +38,305 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(
-        const SystemUiOverlayStyle(statusBarColor: Colors.transparent));
+      const SystemUiOverlayStyle(statusBarColor: Colors.transparent),
+    );
+
+    // Feste Card-Farben (unabhängig von Material You)
+    const _cardDark = Color(0xFF171717); // tiefes Grau
+    const _cardLight = Color(0xFFF3F3F3); // sehr helles Grau
 
     return DynamicColorBuilder(
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
-        // --- ColorSchemes definieren ---
-        ColorScheme lightColorScheme =
-            ColorScheme.fromSeed(seedColor: Colors.blue);
-        
-        ColorScheme customDarkColorScheme = darkDynamic?.copyWith(
-          brightness: Brightness.dark,
-          primary: darkDynamic?.primary ?? Colors.blue,
-          onPrimary: darkDynamic?.onPrimary ?? Colors.white,
-          background: Colors.black,
-          surface: Colors.grey.shade900,
-          surfaceContainerHighest: Colors.grey.shade800,
-          scrim: Colors.black.withOpacity(0.5),
-          onSurface: Colors.white,
-          onBackground: Colors.white,
-          onSurfaceVariant: Colors.grey.shade300,
-        ) ?? ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-          brightness: Brightness.dark,
-          background: Colors.black,
-          surface: Colors.grey.shade900,
-          surfaceContainerHighest: Colors.grey.shade800,
-          onSurface: Colors.white,
-          onBackground: Colors.white,
-          onSurfaceVariant: Colors.grey.shade300,
+        // === Akzent/Seed aus Dynamic Color (Android 12+) oder Fallback ===
+        final Color lightSeed = lightDynamic?.primary ?? Colors.blue;
+        final Color darkSeed = darkDynamic?.primary ?? lightSeed;
+
+        // --- Light Scheme aus Seed, aber ohne Material You UI ---
+        final lightScheme = ColorScheme.fromSeed(
+          seedColor: lightSeed,
+          brightness: Brightness.light,
+        ).copyWith(
+          background: Colors.white,
+          surface: Colors.white,
         );
-        
-        // --- Light Theme Definition ---
+
+        // --- Dark Scheme aus Seed + OLED-Schwarz ---
+        final _seededDark = ColorScheme.fromSeed(
+          seedColor: darkSeed,
+          brightness: Brightness.dark,
+        );
+        final darkScheme = _seededDark.copyWith(
+          background: Colors.black,
+          surface: Colors.black,
+          surfaceDim: Colors.black,
+          surfaceBright: Colors.black,
+          surfaceContainerLowest: Colors.black,
+          surfaceContainerLow: Colors.black,
+          surfaceContainer: Colors.black,
+          surfaceContainerHigh: Colors.black,
+          surfaceContainerHighest: Colors.black,
+        );
+
+        // --- Light Theme (Material2, aber mit ColorScheme aus Seed) ---
         final baseLightTheme = ThemeData(
-          colorScheme: lightDynamic ?? lightColorScheme,
-          useMaterial3: true,
-          textTheme: GoogleFonts.interTextTheme(
-            (lightDynamic ?? lightColorScheme).brightness == Brightness.light
-                ? Typography.material2018().black
-                : Typography.material2018().white,
-          ).apply(
-            bodyColor: (lightDynamic ?? lightColorScheme).onSurface,
-            displayColor: (lightDynamic ?? lightColorScheme).onSurface,
+          useMaterial3: false, // KEIN Material You
+          colorScheme: lightScheme,
+          primaryColor: lightScheme.primary, // Akzent in M2-Welten
+          scaffoldBackgroundColor: Colors.white,
+          canvasColor: Colors.white,
+          cardColor: _cardLight,
+          dialogBackgroundColor: _cardLight,
+          // NEU / ANGEPASST:
+          splashFactory: NoSplash.splashFactory,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+
+          pageTransitionsTheme: const PageTransitionsTheme(
+            builders: {
+              TargetPlatform.android: ZoomPageTransitionsBuilder(),
+              TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+              TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+              TargetPlatform.windows: ZoomPageTransitionsBuilder(),
+              TargetPlatform.linux: ZoomPageTransitionsBuilder(),
+            },
           ),
-          
+
           inputDecorationTheme: InputDecorationTheme(
             filled: true,
-            fillColor: (lightDynamic ?? lightColorScheme).surfaceContainerHighest.withOpacity(0.5),
+            fillColor: const Color(0xFFF3F3F3),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
+              borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide: BorderSide(color: (lightDynamic ?? lightColorScheme).primary, width: 2.0),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: lightScheme.primary, width: 2),
             ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide: BorderSide(color: (lightDynamic ?? lightColorScheme).error, width: 2.0),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide: BorderSide(color: (lightDynamic ?? lightColorScheme).error, width: 2.0),
-            ),
-            contentPadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
-            hintStyle: TextStyle(color: (lightDynamic ?? lightColorScheme).onSurfaceVariant.withOpacity(0.7)),
-            labelStyle: TextStyle(color: (lightDynamic ?? lightColorScheme).onSurface),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           ),
+
+          bottomSheetTheme: BottomSheetThemeData(
+            backgroundColor: _cardLight,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            elevation: 0,
+          ),
+
+          snackBarTheme: SnackBarThemeData(
+            backgroundColor: lightScheme.primary,
+            contentTextStyle: TextStyle(
+              color: lightScheme.onPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+
+          dividerTheme: DividerThemeData(
+            color: Colors.black.withOpacity(0.08),
+            thickness: 1,
+            space: 24,
+          ),
+          appBarTheme: const AppBarTheme(
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
+            centerTitle: false,
+          ),
+          textTheme: GoogleFonts.interTextTheme().apply(
+            bodyColor: Colors.black87,
+            displayColor: Colors.black87,
+          ),
+          // Stellen sicher, dass Akzent sichtbar "lebt"
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
-              elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              textStyle: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          textButtonTheme: TextButtonThemeData(
-            style: TextButton.styleFrom(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              textStyle: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          outlinedButtonTheme: OutlinedButtonThemeData(
-            style: OutlinedButton.styleFrom(
-              elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-              side: BorderSide(color: (lightDynamic ?? lightColorScheme).primary),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+              backgroundColor: lightScheme.primary,
+              foregroundColor: lightScheme.onPrimary,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
           ),
           floatingActionButtonTheme: FloatingActionButtonThemeData(
-            elevation: 0,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+            backgroundColor: lightScheme.primary,
+            foregroundColor: lightScheme.onPrimary,
           ),
-        listTileTheme: ListTileThemeData(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0), 
-          // KORREKTUR: tileColor ist jetzt transparent
-          tileColor: Colors.transparent, 
-          // KORREKTUR: shape ist jetzt null, da die SummaryCard die Rundung gibt
-          shape: null, // Oder RoundedRectangleBorder(borderRadius: BorderRadius.zero)
-        ),
-          // KORREKTUR: Jetzt verwenden wir die korrekte Klasse `DialogThemeData`.
-          dialogTheme: DialogThemeData( 
-            backgroundColor: (lightDynamic ?? lightColorScheme).surface,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
-            titleTextStyle: TextStyle(color: (lightDynamic ?? lightColorScheme).onSurface, fontSize: 20, fontWeight: FontWeight.bold),
-            contentTextStyle: TextStyle(color: (lightDynamic ?? lightColorScheme).onSurfaceVariant, fontSize: 16),
+          //toggleableActiveColor: lightScheme.primary,
+          progressIndicatorTheme:
+              ProgressIndicatorThemeData(color: lightScheme.primary),
+          textSelectionTheme: TextSelectionThemeData(
+            cursorColor: lightScheme.primary,
+            selectionColor: lightScheme.primary.withOpacity(0.25),
+            selectionHandleColor: lightScheme.primary,
           ),
-        );
-        
-        // --- Dark Theme Definition ---
-        final baseDarkTheme = ThemeData(
-          colorScheme: customDarkColorScheme,
-          useMaterial3: true,
-          scaffoldBackgroundColor: Colors.black,
-          cardColor: customDarkColorScheme.surface,
-          dialogBackgroundColor: customDarkColorScheme.surface,
-          textTheme: GoogleFonts.interTextTheme(
-            Typography.material2018().white,
-          ).apply(
-            bodyColor: customDarkColorScheme.onSurface,
-            displayColor: customDarkColorScheme.onSurface,
+          checkboxTheme: CheckboxThemeData(
+            fillColor: MaterialStateProperty.all(lightScheme.primary),
           ),
-          
-          inputDecorationTheme: InputDecorationTheme(
-            filled: true,
-            fillColor: customDarkColorScheme.surfaceContainerHighest.withOpacity(0.5),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide: BorderSide(color: customDarkColorScheme.primary, width: 2.0),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide: BorderSide(color: customDarkColorScheme.error, width: 2.0),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide: BorderSide(color: customDarkColorScheme.error, width: 2.0),
-            ),
-            contentPadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
-            hintStyle: TextStyle(color: customDarkColorScheme.onSurfaceVariant.withOpacity(0.7)),
-            labelStyle: TextStyle(color: customDarkColorScheme.onSurface),
+          radioTheme: RadioThemeData(
+            fillColor: MaterialStateProperty.all(lightScheme.primary),
           ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
-              elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              textStyle: const TextStyle(fontWeight: FontWeight.bold),
-            ),
+          switchTheme: SwitchThemeData(
+            thumbColor:
+                MaterialStateProperty.resolveWith((s) => lightScheme.primary),
+            trackColor: MaterialStateProperty.resolveWith(
+                (s) => lightScheme.primary.withOpacity(0.5)),
           ),
-          textButtonTheme: TextButtonThemeData(
-            style: TextButton.styleFrom(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              textStyle: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          outlinedButtonTheme: OutlinedButtonThemeData(
-            style: OutlinedButton.styleFrom(
-              elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-              side: BorderSide(color: customDarkColorScheme.primary),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              textStyle: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          floatingActionButtonTheme: FloatingActionButtonThemeData(
-            elevation: 0,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
-          ),
-        listTileTheme: ListTileThemeData(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0), 
-          // KORREKTUR: tileColor ist jetzt transparent
-          tileColor: Colors.transparent, 
-          // KORREKTUR: shape ist jetzt null, da die SummaryCard die Rundung gibt
-          shape: null, // Oder RoundedRectangleBorder(borderRadius: BorderRadius.zero)
-        ),
           dialogTheme: DialogThemeData(
-            backgroundColor: customDarkColorScheme.surface,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
-            titleTextStyle: TextStyle(color: customDarkColorScheme.onSurface, fontSize: 20, fontWeight: FontWeight.bold),
-            contentTextStyle: TextStyle(color: customDarkColorScheme.onSurfaceVariant, fontSize: 16),
+            backgroundColor: _cardLight,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           ),
         );
 
+        // --- Dark Theme (Material2, OLED, Akzent aus Seed) ---
+        final baseDarkTheme = ThemeData(
+          useMaterial3: false, // KEIN Material You
+          colorScheme: darkScheme,
+          primaryColor: darkScheme.primary, // Akzent in M2-Welten
+          scaffoldBackgroundColor: Colors.black,
+          canvasColor: Colors.black,
+          cardColor: _cardDark,
+          dialogBackgroundColor: _cardDark,
+          // NEU / ANGEPASST:
+          splashFactory: NoSplash.splashFactory,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+
+          pageTransitionsTheme: const PageTransitionsTheme(
+            builders: {
+              TargetPlatform.android: ZoomPageTransitionsBuilder(),
+              TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+              TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+              TargetPlatform.windows: ZoomPageTransitionsBuilder(),
+              TargetPlatform.linux: ZoomPageTransitionsBuilder(),
+            },
+          ),
+
+          inputDecorationTheme: InputDecorationTheme(
+            filled: true,
+            fillColor: const Color(0xFF1C1C1C),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: darkScheme.primary, width: 2),
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          ),
+
+          bottomSheetTheme: BottomSheetThemeData(
+            backgroundColor: _cardDark,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            elevation: 0,
+          ),
+
+          snackBarTheme: SnackBarThemeData(
+            backgroundColor: darkScheme.primary,
+            contentTextStyle: TextStyle(
+              color: darkScheme.onPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+
+          dividerTheme: DividerThemeData(
+            color: Colors.white.withOpacity(0.08),
+            thickness: 1,
+            space: 24,
+          ),
+          appBarTheme: const AppBarTheme(
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            backgroundColor: Colors.black,
+            foregroundColor: Colors.white,
+            centerTitle: false,
+          ),
+          textTheme: GoogleFonts.interTextTheme().apply(
+            bodyColor: Colors.white,
+            displayColor: Colors.white,
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: darkScheme.primary,
+              foregroundColor: darkScheme.onPrimary,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+          floatingActionButtonTheme: FloatingActionButtonThemeData(
+            backgroundColor: darkScheme.primary,
+            foregroundColor: darkScheme.onPrimary,
+          ),
+          //toggleableActiveColor: darkScheme.primary,
+          progressIndicatorTheme:
+              ProgressIndicatorThemeData(color: darkScheme.primary),
+          textSelectionTheme: TextSelectionThemeData(
+            cursorColor: darkScheme.primary,
+            selectionColor: darkScheme.primary.withOpacity(0.35),
+            selectionHandleColor: darkScheme.primary,
+          ),
+          checkboxTheme: CheckboxThemeData(
+            fillColor: MaterialStateProperty.all(darkScheme.primary),
+          ),
+          radioTheme: RadioThemeData(
+            fillColor: MaterialStateProperty.all(darkScheme.primary),
+          ),
+          switchTheme: SwitchThemeData(
+            thumbColor:
+                MaterialStateProperty.resolveWith((s) => darkScheme.primary),
+            trackColor: MaterialStateProperty.resolveWith(
+                (s) => darkScheme.primary.withOpacity(0.5)),
+          ),
+          dialogTheme: DialogThemeData(
+            backgroundColor: _cardDark,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          ),
+        );
 
         return MaterialApp(
           debugShowCheckedModeBanner: false,
+          scrollBehavior: NoGlowScrollBehavior(), // iOS-Bounce aktiv, kein Glow
           onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           title: "LightWeight",
-          
           theme: baseLightTheme,
           darkTheme: baseDarkTheme,
-          
           themeMode: ThemeMode.system,
-          home: const MainScreen(), 
+          home: const MainScreen(),
         );
       },
     );
   }
 }
 
-===== Datei: D:\lightweight\lib\constants\colors.dart =====
+class NoGlowScrollBehavior extends ScrollBehavior {
+  @override
+  Widget buildOverscrollIndicator(
+      BuildContext context, Widget child, ScrollableDetails details) {
+    // Keine Glow-Effekte
+    return child;
+  }
 
-import 'package:flutter/material.dart';
-
-// Basis-Farben
-const Color tdBlack = Colors.black;
-const Color tdGrey = Color.fromARGB(255, 209, 209, 209);
-const Color tdWhite = Colors.white;
-const Color tdBGColor = Colors.white;
-
-// DOC: DIESE ZEILE HINZUFÜGEN
-const Color tdBlue =
-    Colors.blue; // Oder eine spezifischere Farbe, z.B. Color(0xFF5F52EE)
-
-// Semantische Farben für die Nährwert-Balken
-const Color tdWaterColor = Colors.blue;
-const Color tdCaloriesColor = Colors.orange;
-const Color tdProteinColor = Color.fromARGB(255, 212, 85, 76);
-const Color tdCarbsColor = Color.fromARGB(255, 76, 175, 80);
-const Color tdFatColor = Color.fromARGB(255, 137, 95, 188);
-
-//const Color tdProgressEmpty = Color(0xFFE0E0E0);
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) {
+    // iOS-Style: Bouncing
+    return const BouncingScrollPhysics();
+  }
+}
 
 
 ===== Datei: D:\lightweight\lib\data\backup_manager.dart =====
@@ -5978,6 +6038,7 @@ import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/food_item.dart';
 import 'package:lightweight/screens/create_food_screen.dart';
 import 'package:lightweight/screens/food_detail_screen.dart';
+import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/off_attribution_widget.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 
@@ -6165,21 +6226,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         ],
       ),
       floatingActionButton: GlassFab(
-        padding: const EdgeInsets.only(bottom: 24.0, right: 16.0),
-        child: ElevatedButton.icon(
-          onPressed: _navigateAndCreateFood,
-          icon: const Icon(Icons.add),
-          label: Text(l10n.fabCreateOwnFood),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: colorScheme.primary,
-            foregroundColor: colorScheme.onPrimary,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0)),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          ),
+          onPressed: _navigateAndCreateFood
         ),
-      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
@@ -6498,8 +6546,19 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
     final formattedTime = DateFormat.Hm().format(_selectedDateTime);
 
     return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.addMeasurementDialogTitle),
+        actions: [
+          TextButton(
+            onPressed: _saveSession,
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
+            ),
+            child: Text(l10n.save),
+          ),
+        ],
+      ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      // KORREKTUR 1: AppBar entfernt, Titel und Save-Button direkt im Body
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -6507,21 +6566,6 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header-Bereich mit Titel und Save-Button
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(l10n.addMeasurementDialogTitle,
-                      style: textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w900, fontSize: 28)),
-                  ElevatedButton(
-                    onPressed: _saveSession,
-                    child: Text(l10n.save),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
               // Datum & Uhrzeit Sektion
               Text("Datum & Uhrzeit der Messung",
                   style: textTheme.titleMedium), // TODO: Lokalisieren
@@ -7051,22 +7095,32 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
+@override
+Widget build(BuildContext context) {
+  final l10n = AppLocalizations.of(context)!;
+  final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Daten-Hub"),
-        backgroundColor: theme.colorScheme.primary,
-        foregroundColor: theme.colorScheme.onPrimary,
-      ),
-      body: SingleChildScrollView(
+  return Scaffold(
+  appBar: AppBar(
+    automaticallyImplyLeading: true, // <- zeigt den Zurück-Pfeil
+    elevation: 0,
+    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+    scrolledUnderElevation: 0,
+    centerTitle: false,
+    title: Text(
+      "Data Hub",
+      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w900,
+          ),
+    ),
+  ),
+    body: SafeArea(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // --- bestehender Inhalt bleibt unverändert ---
             _buildFullBackupCard(context, l10n, theme),
             const SizedBox(height: 16),
             _buildCsvExportCard(context, l10n, theme),
@@ -7075,9 +7129,9 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
           ],
         ),
       ),
-    );
-  }
-
+    ),
+  );
+}
   // --- WIDGET BUILDER ---
 
   Widget _buildFullBackupCard(
@@ -7242,6 +7296,7 @@ import 'package:lightweight/models/set_template.dart';
 import 'package:lightweight/screens/exercise_catalog_screen.dart';
 import 'package:lightweight/screens/exercise_detail_screen.dart';
 import 'package:lightweight/screens/live_workout_screen.dart'; // Zum Starten der Routine
+import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/set_type_chip.dart';
 import 'package:lightweight/widgets/summary_card.dart'; // HINZUGEFÜGT
 import 'package:lightweight/widgets/wger_attribution_widget.dart'; // HINZUGEFÜGT
@@ -7556,61 +7611,66 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      // KORREKTUR 1: AppBar entfernt, Titel und Save-Button im Body
-      body: Column(
-        children: [
-          // Header-Bereich mit Titel und Save-Button
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
+  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+  appBar: AppBar(
+    automaticallyImplyLeading: true,
+    elevation: 0,
+    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+    scrolledUnderElevation: 0,
+    centerTitle: false,
+    title: Text(
+      _isNewRoutine ? l10n.titleNewRoutine : l10n.titleEditRoutine,
+      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w900,
+          ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => _saveRoutine(),
+        child: Text(
+          l10n.save,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    ],
+  ),
+  body: Column(
+    children: [
+      // Routine-Name Eingabe bleibt im Body
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        child: TextFormField(
+          controller: _nameController,
+          decoration: InputDecoration(labelText: l10n.formFieldRoutineName),
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return l10n.validatorPleaseEnterRoutineName;
+            }
+            return null;
+          },
+        ),
+      ),
+      const SizedBox(height: 12),
+      Divider(
+        height: 1,
+        thickness: 1,
+        color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+      ),
+      // Rest: ListView mit Exercises (unverändert)
+      Expanded(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _routineExercises.isEmpty
+                ? Center(
                     child: Text(
-                        _isNewRoutine
-                            ? l10n.titleNewRoutine
-                            : l10n.titleEditRoutine,
-                        style: textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.w900, fontSize: 28))),
-                ElevatedButton(
-                  // Nutzt globales Theme
-                  onPressed: () => _saveRoutine(),
-                  child: Text(l10n.save),
-                ),
-              ],
-            ),
-          ),
-          // Routine-Name Eingabe
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: TextFormField(
-              // Nutzt globales Theme
-              controller: _nameController,
-              decoration: InputDecoration(labelText: l10n.formFieldRoutineName),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return l10n.validatorPleaseEnterRoutineName;
-                }
-                return null;
-              },
-            ),
-          ),
-          const SizedBox(height: 24),
-          // Trennlinie
-          Divider(
-              height: 1,
-              thickness: 1,
-              color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _routineExercises.isEmpty
-                    ? Center(
-                        child: Text(l10n.emptyStateAddFirstExercise,
-                            style: textTheme.titleMedium))
-                    : ReorderableListView.builder(
+                      l10n.emptyStateAddFirstExercise,
+                      style: textTheme.titleMedium,
+                    ),
+                  )
+                : ReorderableListView.builder(
                         padding: const EdgeInsets.all(16.0),
                         itemCount: _routineExercises.length,
                         // KORREKTUR: onReorderStart/End für Drag-Feedback
@@ -7783,23 +7843,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         ],
       ),
       floatingActionButton: GlassFab(
-        // KORREKTUR: FAB
-        padding: const EdgeInsets.only(bottom: 24.0, right: 16.0),
-        child: ElevatedButton.icon(
-          onPressed:
-              _addExercises, // Fügt neue Übungen hinzu ODER speichert die Routine
-          icon: const Icon(Icons.add),
-          label: Text(l10n.fabAddExercise),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: colorScheme.primary,
-            foregroundColor: colorScheme.onPrimary,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0)),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          ),
+          onPressed: _addExercises, // Fügt neue Übungen hinzu ODER speichert die Routine
         ),
-      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
@@ -8002,35 +8047,41 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          "Exercises",
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+        ),
+      ),
+
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       // KORREKTUR 1: AppBar entfernt, Titel und Aktionen im Body
+// Body ohne doppelten Titel
       body: Column(
         children: [
-          // Header-Bereich mit Titel, Suche und Filter-Button
           Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(l10n.exerciseCatalogTitle,
-                        style: textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.w900, fontSize: 28)),
-                    if (widget.isSelectionMode)
-                      ElevatedButton(
-                        // Nutzt globales Theme
-                        onPressed: () => Navigator.of(context)
-                            .pop(), // Pop mit null, falls keine Auswahl
-                        child: Text(l10n.doneButtonLabel),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 16),
+                if (widget.isSelectionMode)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(l10n.doneButtonLabel),
+                    ),
+                  ),
+                const SizedBox(height: 8),
                 TextField(
-                  // Nutzt globales Theme
                   controller: _searchController,
                   decoration: InputDecoration(
                     hintText: l10n.searchHintText,
@@ -8046,16 +8097,15 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // KORREKTUR 2: Filter-Button
                 _buildFilterButton(context, l10n),
               ],
             ),
           ),
-          // Trennlinie
           Divider(
-              height: 1,
-              thickness: 1,
-              color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
+            height: 1,
+            thickness: 1,
+            color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+          ),
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -8180,77 +8230,81 @@ class ExerciseDetailScreen extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(exercise.getLocalizedName(context),
-                style: textTheme.headlineMedium
-                    ?.copyWith(fontWeight: FontWeight.w900, fontSize: 28)),
-            const SizedBox(height: 8),
-            Text(
-              exercise.categoryName,
-              style: textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 24),
-            SummaryCard(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Beschreibung", style: textTheme.titleLarge),
-                    const SizedBox(height: 8),
-                    Text(
-                      exercise.getLocalizedDescription(context).isNotEmpty
-                          ? exercise.getLocalizedDescription(context)
-                          : l10n.noDescriptionAvailable,
-                      style: textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            SummaryCard(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Involvierte Muskeln", style: textTheme.titleLarge),
-                    const SizedBox(height: 8),
-                    if (exercise.primaryMuscles.isNotEmpty)
-                      // KORREKTUR: Einfaches Join für List<String>
-                      _buildMuscleRow("Primär:",
-                          exercise.primaryMuscles.join(', '), textTheme),
-                    if (exercise.secondaryMuscles.isNotEmpty)
-                      // KORREKTUR: Einfaches Join für List<String>
-                      _buildMuscleRow("Sekundär:",
-                          exercise.secondaryMuscles.join(', '), textTheme),
-                    if (exercise.primaryMuscles.isEmpty &&
-                        exercise.secondaryMuscles.isEmpty)
-                      Text("Keine Muskeln angegeben.",
-                          style: textTheme.bodyMedium
-                              ?.copyWith(color: Colors.grey[600])),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
-              child: WgerAttributionWidget(
-                textStyle:
-                    textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-              ),
-            ),
-          ],
-        ),
+return Scaffold(
+  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+  appBar: AppBar(
+    automaticallyImplyLeading: true, // <-- zeigt den Zurück-Pfeil
+    elevation: 0,
+    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+    title: Text(
+      exercise.getLocalizedName(context),
+      style: textTheme.headlineSmall?.copyWith(
+        fontWeight: FontWeight.w900,
       ),
-    );
+    ),
+  ),
+  body: SingleChildScrollView(
+    padding: const EdgeInsets.all(16.0),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          exercise.categoryName,
+          style: textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
+        ),
+        const SizedBox(height: 24),
+        SummaryCard(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Beschreibung", style: textTheme.titleLarge),
+                const SizedBox(height: 8),
+                Text(
+                  exercise.getLocalizedDescription(context).isNotEmpty
+                      ? exercise.getLocalizedDescription(context)
+                      : l10n.noDescriptionAvailable,
+                  style: textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SummaryCard(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Involvierte Muskeln", style: textTheme.titleLarge),
+                const SizedBox(height: 8),
+                if (exercise.primaryMuscles.isNotEmpty)
+                  _buildMuscleRow("Primär:",
+                      exercise.primaryMuscles.join(', '), textTheme),
+                if (exercise.secondaryMuscles.isNotEmpty)
+                  _buildMuscleRow("Sekundär:",
+                      exercise.secondaryMuscles.join(', '), textTheme),
+                if (exercise.primaryMuscles.isEmpty &&
+                    exercise.secondaryMuscles.isEmpty)
+                  Text("Keine Muskeln angegeben.",
+                      style: textTheme.bodyMedium
+                          ?.copyWith(color: Colors.grey[600])),
+              ],
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
+          child: WgerAttributionWidget(
+            textStyle: textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+          ),
+        ),
+      ],
+    ),
+  ),
+);
   }
 
   Widget _buildMuscleRow(String label, String muscles, TextTheme textTheme) {
@@ -8277,7 +8331,7 @@ class ExerciseDetailScreen extends StatelessWidget {
 
 ===== Datei: D:\lightweight\lib\screens\food_detail_screen.dart =====
 
-// lib/screens/food_detail_screen.dart (Final & De-Materialisiert)
+// lib/screens/food_detail_screen.dart (Final & De-Materialisiert - OLED Ready)
 
 import 'package:flutter/material.dart';
 import 'package:lightweight/data/database_helper.dart';
@@ -8353,40 +8407,43 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: Text(
+          _displayItem.name,
+          style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              _isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: _isFavorite
+                  ? Colors.redAccent
+                  : colorScheme.onSurfaceVariant,
+            ),
+            onPressed: _toggleFavorite,
+          )
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                    child: Text(_displayItem.name,
-                        style: textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.w900, fontSize: 28))),
-                IconButton(
-                  icon: Icon(
-                      _isFavorite ? Icons.favorite : Icons.favorite_border,
-                      color: _isFavorite
-                          ? Colors.redAccent
-                          : colorScheme.onSurfaceVariant),
-                  onPressed: _toggleFavorite,
-                ),
-              ],
-            ),
             if (_displayItem.brand.isNotEmpty)
-              Text(_displayItem.brand,
-                  style:
-                      textTheme.titleMedium?.copyWith(color: Colors.grey[600])),
+              Text(
+                _displayItem.brand,
+                style: textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
+              ),
 
-            // KORREKTUR 1: Dezenterer Divider
             Divider(
-                height: 32,
-                thickness: 1,
-                color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
+              height: 32,
+              thickness: 1,
+              color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+            ),
 
-            // KORREKTUR 2: Toggle-Buttons für Portion/100g
             if (_hasPortionInfo)
               SummaryCard(
                 child: Padding(
@@ -8423,18 +8480,16 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                 ],
               ),
             ),
+
             if (_displayItem.sugar != null ||
                 _displayItem.fiber != null ||
-                _displayItem.salt != null)
+                _displayItem.salt != null) ...[
               const SizedBox(height: 12),
-            if (_displayItem.sugar != null ||
-                _displayItem.fiber != null ||
-                _displayItem.salt != null)
               SummaryCard(
                 child: Column(
                   children: [
                     if (_displayItem.sugar != null)
-                      _buildNutrientRow("  ${l10n.sugar}",
+                      _buildNutrientRow(l10n.sugar,
                           "${_getDisplayValue(_displayItem.sugar).toStringAsFixed(1)} g"),
                     if (_displayItem.fiber != null)
                       _buildNutrientRow(l10n.fiber,
@@ -8445,14 +8500,12 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                   ],
                 ),
               ),
+            ],
 
-            // KORREKTUR 3: OffAttributionWidget überprüfen und stylen
             if (!_displayItem.barcode.startsWith('user_created_'))
               Padding(
-                // Zusätzlicher Padding für den Abstand
                 padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
                 child: OffAttributionWidget(
-                  // Eventuell spezifische Textstile hier anpassen
                   textStyle:
                       textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                 ),
@@ -8463,7 +8516,6 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
     );
   }
 
-  // KORREKTUR 4: _buildToggleButton (aus AddFoodScreen übernommen)
   Widget _buildToggleButton(
       BuildContext context, String label, bool is100gOption) {
     final theme = Theme.of(context);
@@ -8480,9 +8532,10 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(12.0),
             border: Border.all(
-                color: isSelected
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurfaceVariant.withOpacity(0.3)),
+              color: isSelected
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
+            ),
           ),
           child: Text(
             label,
@@ -8499,13 +8552,14 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
     );
   }
 
-  // KORREKTUR 5: _buildNutrientRow nutzt jetzt ListTile und respektiert Themes
   Widget _buildNutrientRow(String label, String value) {
     return ListTile(
-      // Padding und andere Stile kommen jetzt vom globalen ListTileTheme
+      dense: true,
       title: Text(label),
-      trailing:
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+      trailing: Text(
+        value,
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
     );
   }
 }
@@ -8521,6 +8575,7 @@ import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/food_item.dart';
 import 'package:lightweight/screens/create_food_screen.dart';
 import 'package:lightweight/screens/food_detail_screen.dart';
+import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/off_attribution_widget.dart';
 import 'package:lightweight/widgets/summary_card.dart'; // HINZUGEFÜGT
 
@@ -8672,20 +8727,7 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
         ],
       ),
       floatingActionButton: GlassFab(
-        padding: const EdgeInsets.only(bottom: 24.0, right: 16.0),
-        child: ElevatedButton.icon(
           onPressed: _navigateAndCreateFood,
-          icon: const Icon(Icons.add),
-          label: Text(l10n.fabCreateOwnFood),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: colorScheme.primary,
-            foregroundColor: colorScheme.onPrimary,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0)),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          ),
-        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
@@ -8900,12 +8942,19 @@ class _GoalsScreenState extends State<GoalsScreen> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        title: Text(l10n.profileDailyGoals), // KORREKTUR: Titel anpassen
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
-      ),
+  appBar: AppBar(
+    automaticallyImplyLeading: true,
+    elevation: 0,
+    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+    scrolledUnderElevation: 0,
+    centerTitle: false,
+    title: Text(
+      "Goals",
+      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w900,
+          ),
+    ),
+  ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -9126,7 +9175,35 @@ class HomeState extends State<Home> {
     }
   }
 
-  Future<void> _loadChartData() async { /* ... unverändert ... */ }
+Future<void> _loadChartData() async {
+  // Hole alle Mess-Sessions und filtere auf den sichtbaren Bereich + Typ "weight"
+  final sessions = await DatabaseHelper.instance.getMeasurementSessions();
+
+  // Tagesgrenzen normalisieren (Start 00:00, Ende 23:59:59)
+  final start = DateTime(_currentDateRange.start.year, _currentDateRange.start.month, _currentDateRange.start.day);
+  final end = DateTime(_currentDateRange.end.year, _currentDateRange.end.month, _currentDateRange.end.day, 23, 59, 59);
+
+  final points = <ChartDataPoint>[];
+
+  for (final s in sessions) {
+    if (s.timestamp.isBefore(start) || s.timestamp.isAfter(end)) continue;
+
+    for (final m in s.measurements) {
+      if (m.type == _chartType) {
+        // Annahme: ChartDataPoint hat Felder/Named-Ctor "date" und "value"
+        points.add(ChartDataPoint(date: s.timestamp, value: m.value.toDouble()));
+      }
+    }
+  }
+
+  points.sort((a, b) => a.date.compareTo(b.date));
+
+  if (!mounted) return;
+  setState(() {
+    _weightChartData = points;
+  });
+}
+
   // KORREKTUR: Methode umbenannt, damit sie Daten ZURÜCKGIBT
   Future<Map<String, int>> _getWorkoutStats() async {
     final today = DateTime.now();
@@ -9154,10 +9231,58 @@ class HomeState extends State<Home> {
     };
   }
 
-  Future<void> _loadLatestWorkout() async { /* ... unverändert ... */ } // Nicht mehr direkt von loadAllHomeScreenData aufgerufen
-  void _navigateTimeRange(bool forward) { /* ... unverändert ... */ }
-  void _navigateToNutritionScreen() { /* ... unverändert ... */ }
-  void _repeatWorkout(WorkoutLog log) { /* ... unverändert ... */ }
+Future<void> _loadLatestWorkout() async {
+  // Beispiel: hole alle Logs und merke dir das Neueste (falls du es später anzeigen willst)
+  final logs = await WorkoutDatabaseHelper.instance.getWorkoutLogs();
+  if (logs.isEmpty) return;
+
+  logs.sort((a, b) => b.startTime.compareTo(a.startTime));
+  final latest = logs.first;
+
+  // Falls du später etwas im UI mit dem letzten Log machen willst,
+  // kannst du hier setState(...) nutzen und z.B. ein Feld speichern.
+  // Aktuell: kein sichtbarer Seiteneffekt nötig.
+}
+
+void _navigateTimeRange(bool forward) {
+  // "All" deckt sowieso alles ab – kein Paging
+  if (_selectedChartRangeKey == 'All') return;
+
+  final int days = _selectedChartRangeKey == '90D' ? 90 : 30;
+  final delta = Duration(days: days);
+
+  final newStart = forward ? _currentDateRange.start.add(delta) : _currentDateRange.start.subtract(delta);
+  final newEnd   = forward ? _currentDateRange.end.add(delta)   : _currentDateRange.end.subtract(delta);
+
+  setState(() {
+    _currentDateRange = DateTimeRange(start: newStart, end: newEnd);
+  });
+
+  // Daten für die neue Range nachladen
+  _loadChartData();
+}
+
+  void _navigateToNutritionScreen() {
+  Navigator.of(context)
+      .push(MaterialPageRoute(builder: (context) => const NutritionScreen()))
+      .then((_) => loadAllHomeScreenData(showLoadingIndicator: false));
+}
+
+  void _repeatWorkout(WorkoutLog log) async {
+  // Startet ein neues (ggf. leeres) Workout mit dem gleichen Namen wie der Log.
+  // (Für 1:1-Übungs-Übernahme bräuchte man mehr Logik; so ist es "lightweight".)
+  final newWorkoutLog = await WorkoutDatabaseHelper.instance.startWorkout(
+    routineName: log.routineName ?? AppLocalizations.of(context)!.freeWorkoutTitle,
+  );
+
+  if (!mounted) return;
+  Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (context) => LiveWorkoutScreen(workoutLog: newWorkoutLog),
+    ),
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -9178,18 +9303,18 @@ class HomeState extends State<Home> {
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               children: [
                 _buildBannerCard(l10n),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 GestureDetector(
                     onTap: _navigateToNutritionScreen,
                     child: _nutritionData != null
                         ? NutritionSummaryWidget(nutritionData: _nutritionData!, isExpandedView: false, l10n: l10n)
                         : const SizedBox.shrink()),
-                const SizedBox(height: 12),
                 if (_weightChartData.isNotEmpty)
+                const SizedBox(height: 8),
                   GestureDetector(
                       onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const MeasurementsScreen())).then((_) => loadAllHomeScreenData()),
                       child: _buildWeightChartCard(context, colorScheme, l10n)),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 _buildWorkoutStatsCard(l10n),
               ],
             ),
@@ -9211,8 +9336,8 @@ class HomeState extends State<Home> {
   Widget _buildBannerCard(AppLocalizations l10n) {
     // KORREKTUR: externalMargin wird jetzt gesetzt
     return SummaryCard(
-      internalPadding: const EdgeInsets.symmetric(horizontal: 16.0),
-      externalMargin: EdgeInsets.zero, // Wichtig, da ListView.separated den Abstand steuert
+      //internalPadding: const EdgeInsets.symmetric(horizontal: 16.0),
+      //externalMargin: EdgeInsets.zero, // Wichtig, da ListView.separated den Abstand steuert
       child: Container(
         height: 100,
         alignment: Alignment.center,
@@ -9233,8 +9358,8 @@ class HomeState extends State<Home> {
     return _nutritionData == null
         ? const SizedBox.shrink()
         : SummaryCard( // KORREKTUR: SummaryCard um das Widget
-            internalPadding: const EdgeInsets.all(12.0), // Passender Padding
-            externalMargin: EdgeInsets.zero, // Wichtig
+            //internalPadding: const EdgeInsets.all(12.0), // Passender Padding
+            //externalMargin: EdgeInsets.zero, // Wichtig
             child: NutritionSummaryWidget(
               nutritionData: _nutritionData!,
               isExpandedView: false,
@@ -9246,7 +9371,7 @@ class HomeState extends State<Home> {
   Widget _buildWeightChartCard(BuildContext context, ColorScheme colorScheme, AppLocalizations l10n) {
     // KORREKTUR: externalMargin wird jetzt gesetzt
     return SummaryCard(
-      externalMargin: EdgeInsets.zero, // Wichtig
+      //externalMargin: EdgeInsets.zero, // Wichtig
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -9325,7 +9450,7 @@ class HomeState extends State<Home> {
 
     // KORREKTUR: externalMargin wird jetzt gesetzt
     return SummaryCard(
-      externalMargin: EdgeInsets.zero, // Wichtig
+      //externalMargin: EdgeInsets.zero, // Wichtig
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -9399,6 +9524,7 @@ class HomeState extends State<Home> {
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:vibration/vibration.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
@@ -9417,7 +9543,6 @@ import 'exercise_catalog_screen.dart';
 import 'exercise_detail_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:lightweight/util/time_util.dart'; // Für formatDuration
-
 
 class LiveWorkoutScreen extends StatefulWidget {
   final Routine? routine;
@@ -9442,7 +9567,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
   void initState() {
     super.initState();
     final manager = Provider.of<WorkoutSessionManager>(context, listen: false);
-    final isContinuing = manager.isActive && manager.workoutLog?.id == widget.workoutLog.id;
+    final isContinuing =
+        manager.isActive && manager.workoutLog?.id == widget.workoutLog.id;
 
     if (isContinuing) {
       _liveExercises = manager.exercises;
@@ -9452,7 +9578,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
           return RoutineExercise(
             id: re.id,
             exercise: re.exercise,
-            setTemplates: re.setTemplates.map((st) => SetTemplate.fromMap(st.toMap())).toList(),
+            setTemplates: re.setTemplates
+                .map((st) => SetTemplate.fromMap(st.toMap()))
+                .toList(),
             pauseSeconds: re.pauseSeconds,
           );
         }).toList();
@@ -9468,27 +9596,38 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
 
   @override
   void dispose() {
-    for (var c in _weightControllers.values) { c.dispose(); }
-    for (var c in _repsControllers.values) { c.dispose(); }
+    for (var c in _weightControllers.values) {
+      c.dispose();
+    }
+    for (var c in _repsControllers.values) {
+      c.dispose();
+    }
     super.dispose();
   }
 
   Future<void> _initializeScreen() async {
     for (var routineExercise in _liveExercises) {
-      final lastPerf = await WorkoutDatabaseHelper.instance.getLastPerformance(routineExercise.exercise.nameEn);
-      if (mounted) setState(() => _lastPerformances[routineExercise.exercise.nameEn] = lastPerf);
+      final lastPerf = await WorkoutDatabaseHelper.instance
+          .getLastPerformance(routineExercise.exercise.nameEn);
+      if (mounted)
+        setState(() =>
+            _lastPerformances[routineExercise.exercise.nameEn] = lastPerf);
       for (final template in routineExercise.setTemplates) {
         final templateId = template.id!;
-        String initialReps = template.targetReps ?? (lastPerf?.reps?.toString() ?? '');
-        String initialWeight = (template.targetWeight ?? lastPerf?.weightKg)?.toStringAsFixed(1).replaceAll('.0', '') ?? '';
+        String initialReps =
+            template.targetReps ?? (lastPerf?.reps?.toString() ?? '');
+        String initialWeight = (template.targetWeight ?? lastPerf?.weightKg)
+                ?.toStringAsFixed(1)
+                .replaceAll('.0', '') ??
+            '';
         _setUIData[templateId] = {'setType': template.setType};
-        _weightControllers[templateId] = TextEditingController(text: initialWeight);
+        _weightControllers[templateId] =
+            TextEditingController(text: initialWeight);
         _repsControllers[templateId] = TextEditingController(text: initialReps);
       }
     }
     if (mounted) setState(() => _isLoading = false);
   }
-
 
   void _logSet(int setTemplateId, RoutineExercise re) async {
     final weight = double.tryParse(
@@ -9664,7 +9803,13 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     });
   }
 
-  Widget _buildHeader(String text) => Expanded(child: Text(text, textAlign: TextAlign.center, style: TextStyle(color: Colors.grey[600], fontSize: 12, fontWeight: FontWeight.bold)));
+  Widget _buildHeader(String text) => Expanded(
+      child: Text(text,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontWeight: FontWeight.bold)));
 
   @override
   Widget build(BuildContext context) {
@@ -9675,25 +9820,35 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      // KORREKTUR 1: AppBar entfernt, Titel und Aktionen im Body
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          widget.workoutLog.routineName ?? l10n.freeWorkoutTitle,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: _finishWorkout,
+            child: Text(
+              l10n.finishWorkoutButton,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                // Header-Bereich mit Titel und "Beenden"-Button
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(widget.workoutLog.routineName ?? l10n.freeWorkoutTitle, style: textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900, fontSize: 28)),
-                      ElevatedButton( // Nutzt globales Theme
-                        onPressed: _finishWorkout,
-                        child: Text(l10n.finishWorkoutButton),
-                      ),
-                    ],
-                  ),
-                ),
                 AnimatedBuilder(
                   animation: manager,
                   builder: (context, _) {
@@ -9704,11 +9859,14 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                     );
                   },
                 ),
-                // KORREKTUR: Trennlinie unter der SummaryBar
-                Divider(height: 1, thickness: 1, color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
+                Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
                 Expanded(
                   child: ReorderableListView(
-                    proxyDecorator: (Widget child, int index, Animation<double> animation) {
+                    proxyDecorator:
+                        (Widget child, int index, Animation<double> animation) {
                       final exercise = _liveExercises[index];
                       return Material(
                         elevation: 4.0,
@@ -9742,21 +9900,37 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                     onReorder: _onReorder,
                     padding: const EdgeInsets.all(8.0),
                     children: [
-                      for (int index = 0; index < _liveExercises.length; index++)
-                        SummaryCard( // KORREKTUR 2: Übungsblock in SummaryCard
+                      for (int index = 0;
+                          index < _liveExercises.length;
+                          index++)
+                        SummaryCard(
+                          // KORREKTUR 2: Übungsblock in SummaryCard
                           key: ValueKey(_liveExercises[index].id),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              ListTile( // Übungstitel mit Drag-Handle und Aktionen
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                                title: InkWell( // KORREKTUR: InkWell, um den Titel klickbar zu machen
-                                  onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => ExerciseDetailScreen(exercise: _liveExercises[index].exercise))),
+                              ListTile(
+                                // Übungstitel mit Drag-Handle und Aktionen
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16.0, vertical: 8.0),
+                                title: InkWell(
+                                  // KORREKTUR: InkWell, um den Titel klickbar zu machen
+                                  onTap: () => Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              ExerciseDetailScreen(
+                                                  exercise:
+                                                      _liveExercises[index]
+                                                          .exercise))),
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 4.0),
                                     child: Text(
-                                      _liveExercises[index].exercise.getLocalizedName(context),
-                                      style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                                      _liveExercises[index]
+                                          .exercise
+                                          .getLocalizedName(context),
+                                      style: textTheme.titleLarge?.copyWith(
+                                          fontWeight: FontWeight.bold),
                                     ),
                                   ),
                                 ),
@@ -9768,64 +9942,101 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     // Pausezeit anzeigen
-                                    if (manager.pauseTimes[_liveExercises[index].id!] != null && manager.pauseTimes[_liveExercises[index].id!]! > 0)
+                                    if (manager.pauseTimes[
+                                                _liveExercises[index].id!] !=
+                                            null &&
+                                        manager.pauseTimes[
+                                                _liveExercises[index].id!]! >
+                                            0)
                                       Padding(
-                                        padding: const EdgeInsets.only(right: 4.0),
+                                        padding:
+                                            const EdgeInsets.only(right: 4.0),
                                         child: Text(
                                           "${manager.pauseTimes[_liveExercises[index].id!]}s",
-                                          style: textTheme.bodyMedium?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.bold),
+                                          style: textTheme.bodyMedium?.copyWith(
+                                              color: colorScheme.primary,
+                                              fontWeight: FontWeight.bold),
                                         ),
                                       ),
                                     // Bearbeiten-Button für Pause
                                     IconButton(
                                       icon: const Icon(Icons.timer_outlined),
                                       tooltip: l10n.editPauseTime,
-                                      onPressed: () => _editPauseTime(_liveExercises[index]),
+                                      onPressed: () =>
+                                          _editPauseTime(_liveExercises[index]),
                                     ),
                                     // Löschen-Button für Übung
                                     IconButton(
-                                      icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                                      icon: const Icon(Icons.delete_outline,
+                                          color: Colors.redAccent),
                                       tooltip: l10n.removeExercise,
-                                      onPressed: () => _removeExercise(_liveExercises[index]),
+                                      onPressed: () => _removeExercise(
+                                          _liveExercises[index]),
                                     ),
                                   ],
                                 ),
                               ),
                               // Trennlinie nach dem Titel
-                              Divider(height: 1, thickness: 1, color: colorScheme.onSurfaceVariant.withOpacity(0.1), indent: 16, endIndent: 16),
+                              Divider(
+                                  height: 1,
+                                  thickness: 1,
+                                  color: colorScheme.onSurfaceVariant
+                                      .withOpacity(0.1),
+                                  indent: 16,
+                                  endIndent: 16),
                               // Sets und "Satz hinzufügen"-Button
                               Padding(
-                                padding: const EdgeInsets.all(16.0), // Padding für den Inhalt der Übung
+                                padding: const EdgeInsets.all(
+                                    16.0), // Padding für den Inhalt der Übung
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
                                       children: [
-                                        _buildHeader(l10n.setLabel), _buildHeader(l10n.lastTimeLabel), _buildHeader(l10n.kgLabel), _buildHeader(l10n.repsLabel), const SizedBox(width: 48),
+                                        _buildHeader(l10n.setLabel),
+                                        _buildHeader(l10n.lastTimeLabel),
+                                        _buildHeader(l10n.kgLabel),
+                                        _buildHeader(l10n.repsLabel),
+                                        const SizedBox(width: 48),
                                       ],
                                     ),
-                                    Divider(height: 1, thickness: 1, color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
-                                    ..._liveExercises[index].setTemplates.asMap().entries.map((setEntry) {
+                                    Divider(
+                                        height: 1,
+                                        thickness: 1,
+                                        color: colorScheme.onSurfaceVariant
+                                            .withOpacity(0.1)),
+                                    ..._liveExercises[index]
+                                        .setTemplates
+                                        .asMap()
+                                        .entries
+                                        .map((setEntry) {
                                       final setTemplate = setEntry.value;
                                       int workingSetIndex = 0; // Neu berechnen
-                                      for (final st in _liveExercises[index].setTemplates) {
+                                      for (final st in _liveExercises[index]
+                                          .setTemplates) {
                                         if (st.id == setTemplate.id) break;
-                                        if (st.setType != 'warmup') workingSetIndex++;
+                                        if (st.setType != 'warmup')
+                                          workingSetIndex++;
                                       }
-                                      if (setTemplate.setType != 'warmup') workingSetIndex++;
+                                      if (setTemplate.setType != 'warmup')
+                                        workingSetIndex++;
 
                                       return _buildSetRow(
                                         workingSetIndex,
                                         _liveExercises[index],
                                         setTemplate,
-                                        manager.completedSets.contains(setTemplate.id!),
+                                        manager.completedSets
+                                            .contains(setTemplate.id!),
                                         colorScheme,
-                                        _lastPerformances[_liveExercises[index].exercise.nameEn],
+                                        _lastPerformances[_liveExercises[index]
+                                            .exercise
+                                            .nameEn],
                                       );
                                     }).toList(),
                                     const SizedBox(height: 8),
                                     TextButton.icon(
-                                      onPressed: () => _addSet(_liveExercises[index]),
+                                      onPressed: () =>
+                                          _addSet(_liveExercises[index]),
                                       icon: const Icon(Icons.add),
                                       label: Text(l10n.addSetButton),
                                     ),
@@ -9841,26 +10052,15 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
               ],
             ),
       floatingActionButton: GlassFab(
-        padding: const EdgeInsets.only(bottom: 24.0, right: 16.0),
-        child: ElevatedButton.icon(
           onPressed: _addExercise,
-          icon: const Icon(Icons.add),
-          label: Text(l10n.addExerciseToWorkoutButton),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: colorScheme.primary,
-            foregroundColor: colorScheme.onPrimary,
-            elevation: 0,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          ),
-        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       // KORREKTUR: BottomNavigationBar für Rest-Timer beibehalten und stylen
       bottomNavigationBar: AnimatedBuilder(
         animation: manager,
         builder: (context, _) {
-          final bar = _buildRestBottomBar(l10n, colorScheme); // colorScheme übergeben
+          final bar =
+              _buildRestBottomBar(l10n, colorScheme); // colorScheme übergeben
           return bar ?? const SizedBox.shrink();
         },
       ),
@@ -9984,7 +10184,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                 ),
               ),
               ElevatedButton(
-                onPressed: () { manager.cancelRest(); },
+                onPressed: () {
+                  manager.cancelRest();
+                },
                 child: Text(l10n.skipButton),
               ),
             ],
@@ -10008,12 +10210,17 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                 SizedBox(width: 8),
                 Text(
                   "Pause vorbei!",
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 18),
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 18),
                 ),
               ],
             ),
             TextButton(
-              onPressed: () { manager.cancelRest(); },
+              onPressed: () {
+                manager.cancelRest();
+              },
               child: const Text("OK"),
             ),
           ],
@@ -10022,6 +10229,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     );
   }
 }
+
 
 ===== Datei: D:\lightweight\lib\screens\main_screen.dart =====
 
@@ -10038,6 +10246,7 @@ import 'package:lightweight/screens/nutrition_hub_screen.dart';
 import 'package:lightweight/screens/profile_screen.dart';
 import 'package:lightweight/services/workout_session_manager.dart';
 import 'package:lightweight/util/time_util.dart';
+import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:provider/provider.dart';
 import 'package:lightweight/models/food_item.dart';
 import 'package:lightweight/models/food_entry.dart';
@@ -10051,6 +10260,7 @@ import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/screens/workout_hub_screen.dart';
 import 'package:lightweight/screens/statistics_hub_screen.dart';
 import 'package:lightweight/services/profile_service.dart';
+import 'package:lightweight/widgets/keep_alive_page.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -10066,24 +10276,48 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
   late final List<Widget> _pages;
   bool _isAddMenuOpen = false;
+  late final AnimationController _menuController;
+  // Hilfsfunktion: NaN -> 0.0 und [0,1] clampen
+  double _safe01(double v) => v.isNaN ? 0.0 : v.clamp(0.0, 1.0).toDouble();
 
   @override
   void initState() {
     super.initState();
     _pages = [
-      Home(key: _homeKey),
-      const NutritionHubScreen(),
-      const WorkoutHubScreen(),
-      const StatisticsHubScreen(),
-      const ProfileScreen(),
+      KeepAlivePage(
+        storageKey: const PageStorageKey('tab_home'),
+        child: Home(key: _homeKey),
+      ),
+      const KeepAlivePage(
+        storageKey: PageStorageKey('tab_nutrition'),
+        child: NutritionHubScreen(),
+      ),
+      const KeepAlivePage(
+        storageKey: PageStorageKey('tab_workout'),
+        child: WorkoutHubScreen(),
+      ),
+      const KeepAlivePage(
+        storageKey: PageStorageKey('tab_stats'),
+        child: StatisticsHubScreen(),
+      ),
+      const KeepAlivePage(
+        storageKey: PageStorageKey('tab_profile'),
+        child: ProfileScreen(),
+      ),
     ];
+
     // KORREKTUR 2: Der Controller wird jetzt konsistent mit der Länge von _pages (5) initialisiert.
     _tabController = TabController(length: _pages.length, vsync: this);
+    _menuController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _menuController.dispose();
     super.dispose();
   }
 
@@ -10295,25 +10529,34 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
               controller: _tabController,
               isScrollable: false,
               labelPadding: const EdgeInsets.symmetric(horizontal: 0.0),
-              indicator: const BoxDecoration(),
+              indicator: const UnderlineTabIndicator(
+                borderSide: BorderSide(width: 0.0, color: Colors.transparent),
+              ),
+              indicatorColor: Colors.transparent,
+              indicatorWeight: 0.0001,
               splashFactory: NoSplash.splashFactory,
               overlayColor: MaterialStateProperty.all(Colors.transparent),
               dividerColor: Colors.transparent,
+              indicatorSize: TabBarIndicatorSize.label,
               labelColor: theme.brightness == Brightness.light
                   ? Colors.black
                   : Colors.white,
               unselectedLabelColor: Colors.grey.shade600,
               labelStyle: const TextStyle(
-                  fontSize: 23,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0.0),
+                fontSize: 23,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.0,
+              ),
               unselectedLabelStyle: const TextStyle(
-                  fontSize: 23,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.0),
+                fontSize: 23,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.0,
+              ),
               tabs: [
-                const Tab(text: 'Home'), const Tab(text: 'Food'),
-                const Tab(text: 'Train'), const Tab(text: 'Stats'),
+                const Tab(text: 'Home'),
+                const Tab(text: 'Food'),
+                const Tab(text: 'Train'),
+                const Tab(text: 'Stats'),
                 // KORREKTUR: Der Profil-Tab reagiert jetzt auf seine Auswahl.
                 // Erhöht den Radius, wenn der Tab ausgewählt ist.
                 AnimatedBuilder(
@@ -10357,9 +10600,17 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             controller: _tabController,
             children: _pages,
           ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () => setState(() => _isAddMenuOpen = !_isAddMenuOpen),
-            child: Icon(_isAddMenuOpen ? Icons.close : Icons.add),
+          floatingActionButton: GlassFab(
+            onPressed: () {
+              setState(() {
+                _isAddMenuOpen = !_isAddMenuOpen;
+                if (_isAddMenuOpen) {
+                  _menuController.forward();
+                } else {
+                  _menuController.reverse();
+                }
+              });
+            },
           ),
           bottomNavigationBar: Consumer<WorkoutSessionManager>(
             builder: (context, manager, child) {
@@ -10432,64 +10683,143 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             },
           ),
         ),
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 250),
-          child: _isAddMenuOpen
-              ? Stack(
-                  key: const ValueKey('add_menu_open'),
+// Overlay & Speed-Dial
+        AnimatedBuilder(
+          animation: _menuController,
+          builder: (context, _) {
+            // Fortschritt sauber in [0,1]
+            final v = _safe01(_menuController.value);
+
+            return Offstage(
+              // Wenn zu: gar nicht rendern / hittesten
+              offstage: v == 0.0,
+              child: IgnorePointer(
+                // Wenn zu: keine Gesten durchlassen
+                ignoring: v == 0.0,
+                child: Stack(
                   children: [
-                    GestureDetector(
-                      onTap: () => setState(() => _isAddMenuOpen = false),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-                        child: Container(color: Colors.black.withOpacity(0.3)),
+                    // Blur-Overlay
+                    Opacity(
+                      opacity: v,
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _isAddMenuOpen = false;
+                            _menuController.reverse();
+                          });
+                        },
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(
+                            sigmaX: 6.0 * v,
+                            sigmaY: 6.0 * v,
+                          ),
+                          child: Container(
+                            color: Colors.black.withOpacity(0.4 * v),
+                          ),
+                        ),
                       ),
                     ),
+
+                    // Actions (gestaffelt vom FAB „hochfahren“)
                     Positioned(
                       bottom: 100.0,
                       right: 20.0,
                       child: Material(
-                        // KORREKTUR 1: Das Material-Widget behebt die gelbe Unterstreichung.
-                        type: MaterialType.transparency,
+                        color: Colors.transparent, // eigener Ink-Kontext -> kein gelber Balken mehr
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
-                          children: speedDialActions.map((action) {
-                            return Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 8.0),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    action['label'],
-                                    style: TextStyle(
-                                      color: isLightMode
-                                          ? Colors.black87
-                                          : Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 16,
-                                      // KORREKTUR 2: Der Schatten ist entfernt.
+                          children: speedDialActions.asMap().entries.map((entry) {
+
+                          final index = entry.key;
+                          final action = entry.value;
+
+                          final curved = CurvedAnimation(
+                            parent: _menuController,
+                            curve: Interval(
+                              (index * 0.12).clamp(0.0, 0.95),
+                              1.0,
+                              curve: Curves.easeOutBack,
+                            ),
+                          );
+
+                          final tv = _safe01(curved.value);
+                          final offsetY = 90.0 * (index + 1);
+
+                          return Transform.translate(
+                            offset: Offset(0, (1 - tv) * offsetY),
+                            child: Opacity(
+                              opacity: tv,
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 10.0),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    // Text links
+                                    Text(
+                                      action['label'],
+                                      style: TextStyle(
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.light
+                                            ? Colors.black87
+                                            : Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 16.0),
-                                  FloatingActionButton(
-                                    onPressed: () {
-                                      setState(() => _isAddMenuOpen = false);
-                                      _executeAddMenuAction(action['action']);
-                                    },
-                                    mini: true,
-                                    heroTag: action['label'],
-                                    child: Icon(action['icon']),
-                                  ),
-                                ],
+                                    const SizedBox(width: 16),
+                                    // Glas-Icon rechts
+                                    GestureDetector(
+                                      behavior: HitTestBehavior.opaque,
+                                      onTap: () {
+                                        setState(() {
+                                          _isAddMenuOpen = false;
+                                          _menuController.reverse();
+                                        });
+                                        _executeAddMenuAction(action['action']);
+                                      },
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(20),
+                                        child: BackdropFilter(
+                                          filter: ImageFilter.blur(
+                                              sigmaX: 12, sigmaY: 12),
+                                          child: Container(
+                                            width: 76,
+                                            height: 76,
+                                            decoration: BoxDecoration(
+                                              color: Colors.white
+                                                  .withOpacity(0.15),
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                              border: Border.all(
+                                                color: Colors.white
+                                                    .withOpacity(0.3),
+                                                width: 1.5,
+                                              ),
+                                            ),
+                                            child: Icon(
+                                              action['icon'],
+                                              size: 34,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            );
-                          }).toList(),
-                        ),
+                            ),
+                          );
+                        }).toList(),
                       ),
                     ),
+                    ),
                   ],
-                )
-              : const SizedBox.shrink(key: ValueKey('add_menu_closed')),
+                ),
+              ),
+            );
+          },
         ),
       ],
     );
@@ -10499,7 +10829,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
 ===== Datei: D:\lightweight\lib\screens\measurements_screen.dart =====
 
-// lib/screens/measurements_screen.dart (Final & De-Materialisiert - Korrigiert)
+// lib/screens/measurements_screen.dart (Final & De-Materialisiert - mit AppBar)
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -10508,6 +10838,7 @@ import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/measurement.dart';
 import 'package:lightweight/models/measurement_session.dart';
 import 'package:lightweight/screens/add_measurement_screen.dart';
+import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/measurement_chart_widget.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 
@@ -10521,7 +10852,6 @@ class MeasurementsScreen extends StatefulWidget {
 class _MeasurementsScreenState extends State<MeasurementsScreen> {
   bool _isLoading = true;
   List<MeasurementSession> _sessions = [];
-  // Map<String, List<Measurement>> _measurementsByType = {}; // Nicht direkt verwendet
   String? _selectedChartType;
   List<String> _availableMeasurementTypes = [];
 
@@ -10542,7 +10872,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
     setState(() => _isLoading = true);
     final sessions = await DatabaseHelper.instance.getMeasurementSessions();
 
-    final Set<String> types = {}; // Sammelt nur die Typen
+    final Set<String> types = {};
     for (final session in sessions) {
       for (final measurement in session.measurements) {
         types.add(measurement.type);
@@ -10552,9 +10882,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
     if (mounted) {
       setState(() {
         _sessions = sessions;
-        _availableMeasurementTypes = types.toList();
-        _availableMeasurementTypes.sort();
-
+        _availableMeasurementTypes = types.toList()..sort();
         if (_selectedChartType == null &&
             _availableMeasurementTypes.isNotEmpty) {
           _selectedChartType = _availableMeasurementTypes.first;
@@ -10589,10 +10917,8 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
         start = now.subtract(const Duration(days: 29));
     }
 
-    final normalizedStart = DateTime(start.year, start.month, start.day);
-    if (!mounted) return;
     setState(() {
-      _currentChartDateRange = DateTimeRange(start: normalizedStart, end: end);
+      _currentChartDateRange = DateTimeRange(start: start, end: end);
     });
   }
 
@@ -10612,9 +10938,21 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          l10n.measurementsScreenTitle,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+        ),
+      ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -10623,41 +10961,21 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
               : ListView(
                   padding: const EdgeInsets.all(16.0),
                   children: [
-                    Text(l10n.measurementsScreenTitle,
-                        style: textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.w900, fontSize: 28)),
-                    const SizedBox(height: 24),
                     if (_availableMeasurementTypes.isNotEmpty) ...[
-                      _buildChartSection(l10n, colorScheme, textTheme),
+                      _buildChartSection(l10n, colorScheme,Theme.of(context).textTheme),
                       const SizedBox(height: 24),
                     ],
                     _buildSectionTitle(context, "Alle Messwerte"),
-                    ..._sessions
-                        .map((session) => _buildMeasurementSessionCard(
-                            l10n, colorScheme, session))
-                        .toList(),
+                    ..._sessions.map((session) =>
+                        _buildMeasurementSessionCard(l10n, colorScheme, session))
                   ],
                 ),
       floatingActionButton: GlassFab(
-        padding: const EdgeInsets.only(bottom: 24.0, right: 16.0),
-        child: ElevatedButton.icon(
           onPressed: _navigateToCreateMeasurement,
-          icon: const Icon(Icons.add),
-          label: Text(l10n.addMeasurement),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: colorScheme.primary,
-            foregroundColor: colorScheme.onPrimary,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0)),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          ),
-        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
-
   Widget _buildEmptyState(AppLocalizations l10n, BuildContext context) {
     return Center(
       child: Padding(
@@ -10984,32 +11302,39 @@ class MeasurementSessionDetailScreen extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        // Zeigt das Datum der Sitzung als Titel an
-        title: Text(DateFormat.yMMMMd('de_DE').format(session.timestamp)),
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
-      ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(8.0),
-        itemCount: session.measurements.length,
-        itemBuilder: (context, index) {
-          final measurement = session.measurements[index];
-          return Card(
-            elevation: 2,
-            child: ListTile(
-              title: Text(_getLocalizedMeasurementName(measurement.type, l10n)),
-              trailing: Text(
-                "${measurement.value.toStringAsFixed(1)} ${measurement.unit}",
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
+        automaticallyImplyLeading: true, // zeigt den Zurück-Pfeil
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          DateFormat.yMMMMd('de_DE').format(session.timestamp),
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
               ),
-            ),
-          );
-        },
+        ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          ...session.measurements.map((measurement) {
+            return Card(
+              elevation: 2,
+              margin: const EdgeInsets.symmetric(vertical: 6),
+              child: ListTile(
+                title:
+                    Text(_getLocalizedMeasurementName(measurement.type, l10n)),
+                trailing: Text(
+                  "${measurement.value.toStringAsFixed(1)} ${measurement.unit}",
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
@@ -11832,7 +12157,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                     _deleteFoodEntry(trackedItem.entry.id!);
                                   }
                                 },
-                                child: SummaryCard(externalMargin: EdgeInsets.zero,
+                                child: SummaryCard(//externalMargin: EdgeInsets.zero,
                                   child: ListTile(
                                     leading: const Icon(Icons.restaurant),
                                     title: Text(trackedItem.item.name),
@@ -11853,7 +12178,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                 direction: DismissDirection.endToStart,
                                 onDismissed: (direction) => _deleteWaterEntry(waterEntry.id!),
                                 background: Container(color: Colors.red, alignment: Alignment.centerRight, padding: const EdgeInsets.symmetric(horizontal: 20), child: const Icon(Icons.delete, color: Colors.white)),
-                                child: SummaryCard(externalMargin: EdgeInsets.zero,
+                                child: SummaryCard(//externalMargin: EdgeInsets.zero,
                                   child: ListTile(
                                     leading: Icon(Icons.local_drink, color: colorScheme.primary),
                                     title: Text(l10n.waterEntryTitle),
@@ -12124,6 +12449,7 @@ import 'package:lightweight/models/routine.dart';
 import 'package:lightweight/screens/edit_routine_screen.dart';
 import 'package:lightweight/screens/live_workout_screen.dart';
 import 'package:lightweight/screens/workout_history_screen.dart';
+import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/util/time_util.dart';
 
@@ -12245,28 +12571,32 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
     final textTheme = Theme.of(context).textTheme; // Hier definiert
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _routines.isEmpty
-              // KORREKTUR: textTheme wird an _buildEmptyState übergeben
-              ? _buildEmptyState(context, l10n, textTheme)
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16.0),
-                  itemCount: _routines.length + 2,
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 24.0),
-                        child: Text(l10n.workoutRoutinesTitle,
-                            style: textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.w900, fontSize: 28)),
-                      );
-                    }
-                    if (index == 1) {
-                      return _buildStartEmptyWorkoutCard(context, l10n);
-                    }
-                    final routine = _routines[index - 2];
+  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+  appBar: AppBar(
+    automaticallyImplyLeading: true,
+    elevation: 0,
+    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+    scrolledUnderElevation: 0,
+    centerTitle: false,
+    title: Text(
+      l10n.workoutRoutinesTitle,
+      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w900,
+          ),
+    ),
+  ),
+  body: _isLoading
+      ? const Center(child: CircularProgressIndicator())
+      : _routines.isEmpty
+          ? _buildEmptyState(context, l10n, textTheme)
+          : ListView.builder(
+              padding: const EdgeInsets.all(16.0),
+              itemCount: _routines.length + 1, // statt +2
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return _buildStartEmptyWorkoutCard(context, l10n);
+                }
+                final routine = _routines[index - 1];
                     return Dismissible(
                       key: Key('routine_${routine.id}'),
                       direction: DismissDirection.endToStart,
@@ -12342,20 +12672,7 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
                   },
                 ),
       floatingActionButton: GlassFab(
-        padding: const EdgeInsets.only(bottom: 24.0, right: 16.0),
-        child: ElevatedButton.icon(
           onPressed: _createNewRoutine,
-          icon: const Icon(Icons.add),
-          label: Text(l10n.addRoutineButton),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: colorScheme.primary,
-            foregroundColor: colorScheme.onPrimary,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0)),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          ),
-        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
@@ -12542,7 +12859,7 @@ class StatisticsHubScreen extends StatelessWidget {
 
 ===== Datei: D:\lightweight\lib\screens\workout_history_screen.dart =====
 
-// lib/screens/workout_history_screen.dart (Final & De-Materialisiert)
+// lib/screens/workout_history_screen.dart (Final & De-Materialisiert mit AppBar)
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -12551,7 +12868,7 @@ import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/workout_log.dart';
 import 'package:lightweight/screens/workout_log_detail_screen.dart';
 import 'package:lightweight/util/time_util.dart';
-import 'package:lightweight/widgets/summary_card.dart'; // HINZUGEFÜGT
+import 'package:lightweight/widgets/summary_card.dart';
 
 class WorkoutHistoryScreen extends StatefulWidget {
   const WorkoutHistoryScreen({super.key});
@@ -12572,20 +12889,18 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
   Future<void> _loadHistory() async {
     setState(() => _isLoading = true);
     final data = await WorkoutDatabaseHelper.instance.getWorkoutLogs();
-    if (mounted)
+    if (mounted) {
       setState(() {
         _logs = data;
         _isLoading = false;
       });
+    }
   }
 
   Future<void> _deleteLog(int logId) async {
     await WorkoutDatabaseHelper.instance.deleteWorkoutLog(logId);
     _loadHistory();
   }
-
-  // Diese Methode ist jetzt in lib/util/time_util.dart
-  // String _formatDuration(Duration d) { /* ... */ }
 
   @override
   Widget build(BuildContext context) {
@@ -12594,32 +12909,34 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          l10n.workoutHistoryTitle,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+        ),
+      ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      // KORREKTUR 1: AppBar entfernt, Titel direkt im Body
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _logs.isEmpty
               ? Center(
-                  child: Text(l10n.emptyHistory,
-                      style: const TextStyle(fontSize: 18, color: Colors.grey)))
+                  child: Text(
+                    l10n.emptyHistory,
+                    style: const TextStyle(fontSize: 18, color: Colors.grey),
+                  ),
+                )
               : ListView.builder(
-                  padding: const EdgeInsets.all(16.0), // Padding für die Liste
-                  itemCount: _logs.length + 1, // +1 für den Titel
+                  padding: const EdgeInsets.all(16.0),
+                  itemCount: _logs.length,
                   itemBuilder: (context, index) {
-                    if (index == 0) {
-                      // Der erste Eintrag ist der Titel
-                      return Padding(
-                        padding: const EdgeInsets.only(
-                            bottom: 24.0), // Abstand nach dem Titel
-                        child: Text(l10n.workoutHistoryTitle,
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineMedium
-                                ?.copyWith(
-                                    fontWeight: FontWeight.w900, fontSize: 28)),
-                      );
-                    }
-                    final log = _logs[index - 1]; // -1 wegen des Titels
+                    final log = _logs[index];
                     final duration = log.endTime?.difference(log.startTime);
 
                     return Dismissible(
@@ -12635,18 +12952,19 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                         return await showDialog<bool>(
                               context: context,
                               builder: (ctx) => AlertDialog(
-                                // Nutzt globales DialogTheme
                                 title: Text(l10n.deleteConfirmTitle),
                                 content: Text(l10n.deleteWorkoutConfirmContent),
                                 actions: [
                                   TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(ctx).pop(false),
-                                      child: Text(l10n.cancel)),
+                                    onPressed: () =>
+                                        Navigator.of(ctx).pop(false),
+                                    child: Text(l10n.cancel),
+                                  ),
                                   TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(ctx).pop(true),
-                                      child: Text(l10n.delete)),
+                                    onPressed: () =>
+                                        Navigator.of(ctx).pop(true),
+                                    child: Text(l10n.delete),
+                                  ),
                                 ],
                               ),
                             ) ??
@@ -12656,26 +12974,34 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                         _deleteLog(log.id!);
                       },
                       child: SummaryCard(
-                        // KORREKTUR 2: Jetzt mit SummaryCard
                         child: ListTile(
                           leading: const Icon(Icons.event_note, size: 40),
-                          title: Text(log.routineName ?? l10n.freeWorkoutTitle,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text(DateFormat.yMMMMd(locale)
-                              .add_Hm()
-                              .format(log.startTime)),
-                          // KORREKTUR: Nutzt die globale formatDuration-Hilfsfunktion
+                          title: Text(
+                            log.routineName ?? l10n.freeWorkoutTitle,
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            DateFormat.yMMMMd(locale)
+                                .add_Hm()
+                                .format(log.startTime),
+                          ),
                           trailing: duration != null
-                              ? Text(formatDuration(duration),
+                              ? Text(
+                                  formatDuration(duration),
                                   style: TextStyle(
-                                      color: colorScheme.primary,
-                                      fontWeight: FontWeight.w500))
+                                    color: colorScheme.primary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                )
                               : null,
                           onTap: () => Navigator.of(context)
-                              .push(MaterialPageRoute(
+                              .push(
+                                MaterialPageRoute(
                                   builder: (context) =>
-                                      WorkoutLogDetailScreen(logId: log.id!)))
+                                      WorkoutLogDetailScreen(logId: log.id!),
+                                ),
+                              )
                               .then((_) => _loadHistory()),
                         ),
                       ),
@@ -13172,6 +13498,31 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        automaticallyImplyLeading: true, // Zurück-Pfeil
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        title: Text(
+          l10n.workoutDetailsTitle,
+          style: textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        actions: [
+          if (!_isLoading && _log != null)
+            _isEditMode
+                ? TextButton(
+                    onPressed: _saveChanges,
+                    child: Text(l10n.save,
+                        style:
+                            TextStyle(color: Theme.of(context).primaryColor)),
+                  )
+                : IconButton(
+                    icon: const Icon(Icons.edit),
+                    onPressed: _toggleEditMode,
+                  ),
+        ],
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _log == null
@@ -13179,25 +13530,6 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
               : ListView(
                   padding: const EdgeInsets.all(16.0),
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(l10n.workoutDetailsTitle,
-                            style: textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.w900, fontSize: 28)),
-                        if (!_isLoading && _log != null)
-                          _isEditMode
-                              ? ElevatedButton(
-                                  onPressed: _saveChanges,
-                                  child: Text(l10n.save))
-                              : ElevatedButton.icon(
-                                  icon: const Icon(Icons.edit),
-                                  label: Text(l10n.edit),
-                                  onPressed: _toggleEditMode,
-                                ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
                     WorkoutSummaryBar(
                       duration: duration,
                       volume: totalVolume,
@@ -13209,8 +13541,10 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(_log!.routineName ?? l10n.freeWorkoutTitle,
-                              style: textTheme.headlineMedium),
+                          Text(
+                            _log!.routineName ?? l10n.freeWorkoutTitle,
+                            style: textTheme.headlineMedium,
+                          ),
                           Row(
                             children: [
                               Text(DateFormat.yMMMMd(locale)
@@ -13779,6 +14113,39 @@ class WorkoutSessionManager extends ChangeNotifier {
 }
 
 
+===== Datei: D:\lightweight\lib\theme\app_colors.dart =====
+
+import 'package:flutter/material.dart';
+
+@immutable
+class AppSurfaces extends ThemeExtension<AppSurfaces> {
+  final Color summaryCard;
+  const AppSurfaces({required this.summaryCard});
+
+  @override
+  AppSurfaces copyWith({Color? summaryCard}) =>
+      AppSurfaces(summaryCard: summaryCard ?? this.summaryCard);
+
+  @override
+  AppSurfaces lerp(ThemeExtension<AppSurfaces>? other, double t) {
+    if (other is! AppSurfaces) return this;
+    return AppSurfaces(
+      summaryCard: Color.lerp(summaryCard, other.summaryCard, t)!,
+    );
+  }
+}
+
+
+===== Datei: D:\lightweight\lib\util\l10n_ext.dart =====
+
+// lib/util/l10n_ext.dart
+import 'package:flutter/widgets.dart';
+import 'package:lightweight/generated/app_localizations.dart';
+
+extension L10nX on BuildContext {
+  AppLocalizations get l10n => AppLocalizations.of(this)!;
+}
+
 ===== Datei: D:\lightweight\lib\util\time_util.dart =====
 
 // lib/util/time_util.dart
@@ -14097,6 +14464,284 @@ class _EditableSetRowState extends State<EditableSetRow> {
 }
 
 
+===== Datei: D:\lightweight\lib\widgets\glass_fab.dart =====
+
+import 'dart:ui';
+import 'package:flutter/material.dart';
+
+class GlassFab extends StatefulWidget {
+  final VoidCallback onPressed;
+  final IconData icon;
+  final String? label; // optionaler Text
+
+  const GlassFab({
+    super.key,
+    required this.onPressed,
+    this.icon = Icons.add,
+    this.label,
+  });
+
+  @override
+  State<GlassFab> createState() => _GlassFabState();
+}
+
+class _GlassFabState extends State<GlassFab>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+      lowerBound: 0.0,
+      upperBound: 0.1,
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onTapDown(TapDownDetails details) => _controller.forward();
+  void _onTapUp(TapUpDetails details) {
+    _controller.reverse();
+    widget.onPressed();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: () => _controller.reverse(),
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          final scale = 1 - _controller.value;
+          return Transform.scale(
+            scale: scale,
+            child: child,
+          );
+        },
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20), // viereckiger
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              width: 76, // doppelt so breit
+              height: 76, // nur minimal höher
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.3),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    widget.icon,
+                    size: 30,
+                    color: Colors.white,
+                  ),
+                  if (widget.label != null) ...[
+                    const SizedBox(width: 8),
+                    Text(
+                      widget.label!,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+===== Datei: D:\lightweight\lib\widgets\glass_menu.dart =====
+
+import 'dart:ui';
+import 'package:flutter/material.dart';
+
+class GlassMenuItem {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  GlassMenuItem({required this.icon, required this.label, required this.onTap});
+}
+
+class GlassMenu extends StatefulWidget {
+  final List<GlassMenuItem> items;
+  final VoidCallback onDismiss;
+
+  const GlassMenu({
+    super.key,
+    required this.items,
+    required this.onDismiss,
+  });
+
+  @override
+  State<GlassMenu> createState() => _GlassMenuState();
+}
+
+class _GlassMenuState extends State<GlassMenu>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onDismiss,
+      child: Scaffold(
+        backgroundColor: Colors.black.withOpacity(0.4),
+        body: Center(
+          child: Wrap(
+            spacing: 24,
+            runSpacing: 24,
+            children: List.generate(widget.items.length, (index) {
+              final item = widget.items[index];
+              final intervalStart = index * 0.1;
+              final intervalEnd = intervalStart + 0.5;
+
+              final animation = CurvedAnimation(
+                parent: _controller,
+                curve: Interval(intervalStart, intervalEnd,
+                    curve: Curves.easeOutBack),
+              );
+
+              return ScaleTransition(
+                scale: animation,
+                child: FadeTransition(
+                  opacity: animation,
+                  child: GestureDetector(
+                    onTap: () {
+                      item.onTap();
+                      widget.onDismiss();
+                    },
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildGlassIcon(item.icon),
+                        const SizedBox(height: 12),
+                        Text(
+                          item.label,
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGlassIcon(IconData icon) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          width: 76,
+          height: 76,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.3),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Icon(icon, size: 34, color: Colors.white),
+        ),
+      ),
+    );
+  }
+}
+
+
+===== Datei: D:\lightweight\lib\widgets\keep_alive_page.dart =====
+
+import 'package:flutter/widgets.dart';
+
+class KeepAlivePage extends StatefulWidget {
+  final Widget child;
+  final Key? storageKey; // optional, falls du’s später brauchen willst
+
+  const KeepAlivePage({super.key, required this.child, this.storageKey});
+
+  @override
+  State<KeepAlivePage> createState() => _KeepAlivePageState();
+}
+
+class _KeepAlivePageState extends State<KeepAlivePage>
+    with AutomaticKeepAliveClientMixin<KeepAlivePage> {
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context); // wichtig für KeepAlive!
+    // Kein PageStorage() mehr -> kein bucket nötig.
+    // Optional: mit KeyedSubtree den storageKey an den Subtree hängen
+    return widget.storageKey == null
+        ? widget.child
+        : KeyedSubtree(key: widget.storageKey, child: widget.child);
+  }
+}
+
+
 ===== Datei: D:\lightweight\lib\widgets\measurement_chart_widget.dart =====
 
 // lib/widgets/measurement_chart_widget.dart (Final & De-Materialisiert)
@@ -14393,7 +15038,7 @@ class NutritionSummaryWidget extends StatelessWidget {
 
     return SummaryCard(
       // KORREKTUR: internalPadding für diese spezifische Karte ist 12.0
-      internalPadding: const EdgeInsets.all(12.0),
+      //internalPadding: const EdgeInsets.all(12.0),
       child: IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -14665,58 +15310,41 @@ class ShadowContainer extends StatelessWidget {
 
 ===== Datei: D:\lightweight\lib\widgets\summary_card.dart =====
 
-// lib/widgets/summary_card.dart (Final, mit korrigiertem vertikalen Abstand)
-
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:lightweight/widgets/shadow_container.dart';
 
 class SummaryCard extends StatelessWidget {
   final Widget child;
-  final EdgeInsetsGeometry? internalPadding; 
-  final EdgeInsetsGeometry? externalMargin;
+  final EdgeInsetsGeometry padding;
 
   const SummaryCard({
     super.key,
     required this.child,
-    this.internalPadding,
-    this.externalMargin,
+    this.padding = const EdgeInsets.all(12.0),
   });
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final brightness = Theme.of(context).brightness;
 
-    return ShadowContainer(
-      // KORREKTUR: Standard-Margin wieder auf horizontal 16 und vertikal 8 setzen.
-      // Dieser kann weiterhin über 'externalMargin' überschrieben werden.
-      margin: externalMargin ?? const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0), 
-      borderRadius: BorderRadius.circular(16.0),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.08),
-          blurRadius: 15,
-          spreadRadius: 0,
-          offset: const Offset(0, 8),
-        ),
-      ],
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16.0),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest.withOpacity(0.9),
-              borderRadius: BorderRadius.circular(16.0),
-              border: Border.all(color: colorScheme.surfaceContainerHighest.withOpacity(0.2)),
-            ),
-            child: Padding(
-              padding: internalPadding ?? const EdgeInsets.all(16.0),
-              child: child,
-            ),
+    final background = brightness == Brightness.dark
+        ? const Color.fromARGB(255, 22, 22, 22) // tiefes Grau für Dark Mode
+        : const Color.fromARGB(255, 253, 253, 253); // sehr helles Grau für Light Mode
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6.0),
+      padding: padding,
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.25),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
-        ),
+        ],
       ),
+      child: child,
     );
   }
 }

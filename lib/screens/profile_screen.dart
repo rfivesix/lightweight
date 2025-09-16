@@ -22,7 +22,8 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   // KORREKTUR: State-Klasse
-  String _appVersion = "Lade..."; // Wird dynamisch geladen
+  late final l10n = AppLocalizations.of(context)!;
+  late String _appVersion = l10n.load_dots; // Wird dynamisch geladen
 
   @override
   void initState() {
@@ -49,7 +50,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.all(16.0),
         children: [
           // HINZUGEFÜGT: Profilbild-Sektion
-          _buildSectionTitle(context, "PROFIL"),
+          _buildSectionTitle(context, l10n.profile_capslock),
           SummaryCard(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -80,7 +81,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       onPressed: () async {
                         await profileService.deleteProfileImage();
                       },
-                      child: const Text("Profilbild löschen"),
+                      child: Text(l10n.delete_profile_picture_button),
                     ),
                 ],
               ),
@@ -88,12 +89,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 24),
           // Sektion 1: "EINSTELLUNGEN"
-          _buildSectionTitle(context, "EINSTELLUNGEN"),
+          _buildSectionTitle(context, l10n.settings_capslock),
           _buildNavigationCard(
             context: context,
             icon: Icons.flag_outlined,
-            title: "Meine Ziele",
-            subtitle: "Kalorien, Makros und Wasser anpassen.",
+            title: l10n.my_goals,
+            subtitle: l10n.my_goals_description,
             onTap: () {
               // KORREKTUR: Navigation zum neuen GoalsScreen
               Navigator.of(context).push(
@@ -104,9 +105,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _buildNavigationCard(
             context: context,
             icon: Icons.import_export_rounded,
-            title: "Datensicherung & Import",
+            title: l10n.backup_and_import,
             subtitle:
-                "Backups erstellen, wiederherstellen und Daten importieren.",
+                l10n.backup_and_import_description,
             onTap: () {
               Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => const DataManagementScreen()));
@@ -115,17 +116,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 24),
 
           // Sektion 2: "ÜBER & RECHTLICHES"
-          _buildSectionTitle(context, "ÜBER & RECHTLICHES"),
+          _buildSectionTitle(context, l10n.about_and_legal_capslock),
           _buildNavigationCard(
             context: context,
             icon: Icons.info_outline_rounded,
-            title: "Attribution & Lizenzen",
-            subtitle: "Daten von Open Food Facts und wger.",
+            title: l10n.attribution_and_license,
+            subtitle: l10n.data_from_off_and_wger,
             onTap: () {
               showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
-                        title: const Text("Attribution"),
+                        title: Text(l10n.attribution_title),
                         content: const SingleChildScrollView(
                           child: Text(
                               "Diese App verwendet Daten von externen Quellen:\n\n"
@@ -135,7 +136,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         actions: [
                           TextButton(
                               onPressed: () => Navigator.of(context).pop(),
-                              child: const Text("OK")),
+                              child: Text(l10n.snackbar_button_ok)),
                         ],
                       ));
             },
@@ -144,7 +145,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SummaryCard(
             child: ListTile(
               leading: const Icon(Icons.code_rounded),
-              title: const Text("App-Version",
+              title: Text(l10n.app_version,
                   style: TextStyle(fontWeight: FontWeight.bold)),
               subtitle: Text(
                   _appVersion), // KORREKTUR: Zeigt die dynamische Version an

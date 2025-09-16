@@ -697,4 +697,196 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get muscleSplitLabel => 'Muskel-Split';
+
+  @override
+  String get snackbar_could_not_open_open_link => 'Konnte Link nicht öffnen';
+
+  @override
+  String get chart_no_data_for_period => 'Keine Daten für diesen Zeitraum.';
+
+  @override
+  String get amount_in_milliliters => 'Menge in Millilitern';
+
+  @override
+  String get amount_in_grams => 'Menge in Gramm';
+
+  @override
+  String get meal_label => 'Mahlzeit';
+
+  @override
+  String get add_to_water_intake => 'Zur Trinkmenge hinzufügen';
+
+  @override
+  String get create_exercise_screen_title => 'Eigene Übung erstellen';
+
+  @override
+  String get exercise_name_label => 'Name der Übung';
+
+  @override
+  String get category_label => 'Kategorie';
+
+  @override
+  String get description_optional_label => 'Beschreibung (optional)';
+
+  @override
+  String get primary_muscles_label => 'Primäre Muskeln';
+
+  @override
+  String get primary_muscles_hint => 'z.B. Brust, Trizeps';
+
+  @override
+  String get secondary_muscles_label => 'Sekundäre Muskeln (optional)';
+
+  @override
+  String get secondary_muscles_hint => 'z.B. Schultern';
+
+  @override
+  String get set_type_normal => 'Normal';
+
+  @override
+  String get set_type_warmup => 'Warmup';
+
+  @override
+  String get set_type_failure => 'Failure';
+
+  @override
+  String get set_type_dropset => 'Dropset';
+
+  @override
+  String get set_reps_hint => '8-12';
+
+  @override
+  String get data_export_button => 'Exportieren';
+
+  @override
+  String get data_import_button => 'Importieren';
+
+  @override
+  String get snackbar_button_ok => 'OK';
+
+  @override
+  String get measurement_session_detail_view =>
+      'Detailansicht der Messsession.';
+
+  @override
+  String get unit_grams => 'g';
+
+  @override
+  String get unit_kcal => 'kcal';
+
+  @override
+  String get delete_profile_picture_button => 'Profilbild löschen';
+
+  @override
+  String get attribution_title => 'Attribution';
+
+  @override
+  String get add_liquid_title => 'Flüssigkeit hinzufügen';
+
+  @override
+  String get add_button => 'Hinzufügen';
+
+  @override
+  String get discard_button => 'Verwerfen';
+
+  @override
+  String get continue_workout_button => 'Workout fortsetzen';
+
+  @override
+  String get soon_available_snackbar =>
+      'Dieser Screen wird bald verfügbar sein!';
+
+  @override
+  String get start_button => 'Start';
+
+  @override
+  String get today_overview_text => 'HEUTE IM BLICK';
+
+  @override
+  String get quick_add_text => 'SCHNELLES HINZUFÜGEN';
+
+  @override
+  String get scann_barcode_capslock => 'Barcode scannen';
+
+  @override
+  String get protocol_today_capslock => 'HEUTIGES PROTOKOLL';
+
+  @override
+  String get my_plans_capslock => 'MEINE PLÄNE';
+
+  @override
+  String get overview_capslock => 'ÜBERBLICK';
+
+  @override
+  String get manage_all_plans => 'Alle Pläne verwalten';
+
+  @override
+  String get free_training => 'Freies Training';
+
+  @override
+  String get my_consistency => 'MEINE KONSISTENZ';
+
+  @override
+  String get calendar_currently_not_available =>
+      'Die Kalender-Ansicht ist in Kürze verfügbar.';
+
+  @override
+  String get in_depth_analysis => 'TIEFEN-ANALYSE';
+
+  @override
+  String get body_measurements => 'Körpermaße';
+
+  @override
+  String get measurements_description =>
+      'Gewicht, KFA und Umfänge analysieren.';
+
+  @override
+  String get nutrition_description => 'Makros, Kalorien und Trends auswerten.';
+
+  @override
+  String get training_analysis => 'Trainings-Analyse';
+
+  @override
+  String get training_analysis_description =>
+      'Volumen, Kraft und Progression verfolgen.';
+
+  @override
+  String get load_dots => 'lade...';
+
+  @override
+  String get profile_capslock => 'PROFIL';
+
+  @override
+  String get settings_capslock => 'EINSTELLUNGEN';
+
+  @override
+  String get my_goals => 'Meine Ziele';
+
+  @override
+  String get my_goals_description => 'Kalorien, Makros und Wasser anpassen.';
+
+  @override
+  String get backup_and_import => 'Datensicherung & Import';
+
+  @override
+  String get backup_and_import_description =>
+      'Backups erstellen, wiederherstellen und Daten importieren.';
+
+  @override
+  String get about_and_legal_capslock => 'ÜBER & RECHTLICHES';
+
+  @override
+  String get attribution_and_license => 'Attribution & Lizenzen';
+
+  @override
+  String get data_from_off_and_wger => 'Daten von Open Food Facts und wger.';
+
+  @override
+  String get app_version => 'App Version';
+
+  @override
+  String get all_measurements => 'ALLE MESSWERTE';
+
+  @override
+  String get date_and_time_of_measurement => 'Datum & Uhrzeit der Messung';
 }

@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:lightweight/generated/app_localizations.dart';
 
 class WaterDialogContent extends StatefulWidget {
   const WaterDialogContent({super.key});
@@ -12,6 +13,7 @@ class WaterDialogContent extends StatefulWidget {
 class WaterDialogContentState extends State<WaterDialogContent> {
   late final TextEditingController _textController;
   late DateTime _selectedDateTime;
+  late final l10n = AppLocalizations.of(context)!;
 
   String get quantityText => _textController.text;
   DateTime get selectedDateTime => _selectedDateTime;
@@ -69,8 +71,8 @@ class WaterDialogContentState extends State<WaterDialogContent> {
         TextField(
             controller: _textController,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-                labelText: "Menge in Millilitern", suffixText: 'ml'),
+            decoration: InputDecoration(
+                labelText: l10n.amount_in_milliliters, suffixText: 'ml'),
             autofocus: true),
         const SizedBox(height: 16),
         Row(

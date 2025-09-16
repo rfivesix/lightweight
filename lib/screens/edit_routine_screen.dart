@@ -609,8 +609,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
             controller: _repsControllers[template.id!],
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-                hintText: "8-12", isDense: true), // TODO: hintText lokalisieren
+            decoration: InputDecoration(
+                hintText: l10n.set_reps_hint, isDense: true), 
             validator: (value) {
               if (value != null &&
                   value.isNotEmpty &&

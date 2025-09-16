@@ -28,7 +28,7 @@ class OffAttributionWidget extends StatelessWidget {
               await launchUrl(uri);
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Konnte Link nicht öffnen")),
+                SnackBar(content: Text(l10n.snackbar_could_not_open_open_link)),
               );
             }
           },

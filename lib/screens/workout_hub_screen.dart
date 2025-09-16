@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/routine.dart';
+import 'package:lightweight/screens/edit_routine_screen.dart';
 import 'package:lightweight/screens/exercise_catalog_screen.dart';
 import 'package:lightweight/screens/live_workout_screen.dart';
 import 'package:lightweight/screens/routines_screen.dart';
@@ -21,6 +22,7 @@ class WorkoutHubScreen extends StatefulWidget {
 class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
   bool _isLoading = true;
   List<Routine> _routines = [];
+  late final l10n = AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -41,7 +43,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
 
   void _startEmptyWorkout() async {
     final newLog = await WorkoutDatabaseHelper.instance
-        .startWorkout(routineName: "Freies Training");
+        .startWorkout(routineName: l10n.free_training);
     if (mounted) {
       Navigator.of(context)
           .push(MaterialPageRoute(
@@ -80,7 +82,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16.0),
                 children: [
-                  _buildSectionTitle(context, "START"),
+                  _buildSectionTitle(context, l10n.start_button),
                   SummaryCard(
                     child: InkWell(
                       onTap: _startEmptyWorkout,
@@ -100,7 +102,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  _buildSectionTitle(context, "MEINE PLÄNE"),
+                  _buildSectionTitle(context, l10n.my_plans_capslock),
                   _routines.isEmpty
                       ? _buildEmptyRoutinesCard(context, l10n)
                       : SizedBox(
@@ -116,7 +118,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                           ),
                         ),
                   const SizedBox(height: 24),
-                  _buildSectionTitle(context, "ÜBERBLICK"),
+                  _buildSectionTitle(context, l10n.overview_capslock),
                   _buildNavigationTile(
                     context: context,
                     icon: Icons.history,
@@ -128,7 +130,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                   _buildNavigationTile(
                     context: context,
                     icon: Icons.list_alt_rounded,
-                    title: "Alle Pläne verwalten",
+                    title: l10n.manage_all_plans,
                     onTap: () => Navigator.of(context)
                         .push(MaterialPageRoute(
                             builder: (context) => const RoutinesScreen()))
@@ -173,7 +175,11 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
         child: SummaryCard(
           child: InkWell(
             onTap: () {
-              // ... (Navigation zur Detailansicht)
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => EditRoutineScreen(routine: routine),
+                ),
+              );
             },
             borderRadius: BorderRadius.circular(12.0),
             child: Padding(
@@ -191,7 +197,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                       overflow: TextOverflow.ellipsis),
                   ElevatedButton(
                       onPressed: () => _startRoutine(routine),
-                      child: const Text("Start")),
+                      child: Text(l10n.start_button)),
                 ],
               ),
             ),

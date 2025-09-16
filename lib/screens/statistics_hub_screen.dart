@@ -18,7 +18,7 @@ class StatisticsHubScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         children: [
           // Sektion 1: "MEINE KONSISTENZ" (Platzhalter)
-          _buildSectionTitle(context, "MEINE KONSISTENZ"),
+          _buildSectionTitle(context, l10n.my_consistency),
           SummaryCard(
             child: Padding(
               padding: const EdgeInsets.all(20.0),
@@ -28,7 +28,7 @@ class StatisticsHubScreen extends StatelessWidget {
                   const SizedBox(width: 16),
                   Expanded(
                     child: Text(
-                      "Die Kalender-Ansicht ist in Kürze verfügbar.",
+                      l10n.calendar_currently_not_available,
                       style: Theme.of(context)
                           .textTheme
                           .bodyLarge
@@ -42,12 +42,12 @@ class StatisticsHubScreen extends StatelessWidget {
           const SizedBox(height: 24),
 
           // Sektion 2: "TIEFEN-ANALYSE" (Voll funktionsfähig)
-          _buildSectionTitle(context, "TIEFEN-ANALYSE"),
+          _buildSectionTitle(context, l10n.in_depth_analysis),
           _buildAnalysisGateway(
             context: context,
             icon: Icons.monitor_weight_outlined,
-            title: "Körpermaße",
-            subtitle: "Gewicht, KFA und Umfänge analysieren.",
+            title: l10n.body_measurements,
+            subtitle: l10n.measurements_description,
             onTap: () {
               Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => const MeasurementsScreen()));
@@ -57,8 +57,8 @@ class StatisticsHubScreen extends StatelessWidget {
           _buildAnalysisGateway(
             context: context,
             icon: Icons.pie_chart_outline_rounded,
-            title: "Ernährungs-Analyse",
-            subtitle: "Makros, Kalorien und Trends auswerten.",
+            title: l10n.nutritionScreenTitle,
+            subtitle: l10n.nutrition_description,
             onTap: () {
               Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => const NutritionScreen()));
@@ -68,13 +68,13 @@ class StatisticsHubScreen extends StatelessWidget {
           _buildAnalysisGateway(
             context: context,
             icon: Icons.bar_chart_rounded,
-            title: "Trainings-Analyse",
-            subtitle: "Volumen, Kraft und Progression verfolgen.",
+            title: l10n.training_analysis,
+            subtitle: l10n.training_analysis_description,
             onTap: () {
               // Platzhalter für den zukünftigen Trainings-Analyse-Screen
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text("Dieser Screen wird bald verfügbar sein!")),
+                SnackBar(
+                    content: Text(l10n.soon_available_snackbar)),
               );
             },
           ),

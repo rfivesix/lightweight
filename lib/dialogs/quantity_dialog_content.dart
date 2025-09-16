@@ -113,8 +113,8 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
         TextField(
             controller: _textController,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-                labelText: "Menge in Gramm", suffixText: 'g'),
+            decoration: InputDecoration(
+                labelText: l10n.amount_in_grams, suffixText: 'g'),
             autofocus: true),
         const SizedBox(height: 16),
         DropdownButtonFormField<String>(
@@ -157,7 +157,7 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
         ]),
         const SizedBox(height: 8),
         CheckboxListTile(
-            title: const Text("Zur Trinkmenge hinzufügen"),
+            title: Text(l10n.add_to_water_intake),
             value: _countAsWater,
             onChanged: (bool? newValue) {
               setState(() {

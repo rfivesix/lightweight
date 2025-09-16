@@ -182,8 +182,8 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Datum & Uhrzeit Sektion
-              Text("Datum & Uhrzeit der Messung",
-                  style: textTheme.titleMedium), // TODO: Lokalisieren
+              Text(l10n.date_and_time_of_measurement,
+                  style: textTheme.titleMedium), 
               const SizedBox(height: 8),
               SummaryCard(
                 // KORREKTUR 2: Datum/Uhrzeit in SummaryCard
@@ -216,7 +216,7 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
               const SizedBox(height: 24), // KORREKTUR 3: Abstand angepasst
 
               // Messwerte-Sektion
-              Text("Messwerte",
+              Text(l10n.drawerMeasurements,
                   style: textTheme.titleMedium), // TODO: Lokalisieren
               const SizedBox(height: 8),
               ..._measurementTypes.keys.map((key) {

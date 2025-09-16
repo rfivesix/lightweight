@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/models/exercise.dart';
+import 'package:lightweight/generated/app_localizations.dart';
 
 class CreateExerciseScreen extends StatefulWidget {
   const CreateExerciseScreen({super.key});
@@ -17,6 +18,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
   final _secondaryMusclesController = TextEditingController();
 
   final List<String> _categories = ["Kraft", "Cardio", "Dehnen", "Sonstiges"];
+  late final l10n = AppLocalizations.of(context)!;
   late String _selectedCategory;
 
   @override
@@ -65,7 +67,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Eigene Übung erstellen"), // TODO: Lokalisieren
+        title: Text(l10n.create_exercise_screen_title),
         backgroundColor: colorScheme.primary,
         foregroundColor: colorScheme.onPrimary,
         actions: [
@@ -84,7 +86,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: "Name der Übung"),
+                decoration: InputDecoration(labelText: l10n.exercise_name_label),
                 validator: (value) => value == null || value.isEmpty
                     ? "Bitte einen Namen eingeben."
                     : null,
@@ -92,7 +94,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 initialValue: _selectedCategory,
-                decoration: const InputDecoration(labelText: "Kategorie"),
+                decoration: InputDecoration(labelText: l10n.category_label),
                 items: _categories
                     .map(
                         (cat) => DropdownMenuItem(value: cat, child: Text(cat)))
@@ -105,22 +107,22 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
               TextFormField(
                 controller: _descriptionController,
                 decoration:
-                    const InputDecoration(labelText: "Beschreibung (optional)"),
+                    InputDecoration(labelText: l10n.description_optional_label),
                 maxLines: 3,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _primaryMusclesController,
-                decoration: const InputDecoration(
-                    labelText: "Primäre Muskeln",
-                    hintText: "z.B. Brust, Trizeps"),
+                decoration: InputDecoration(
+                    labelText: l10n.primary_muscles_label,
+                    hintText: l10n.primary_muscles_hint),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _secondaryMusclesController,
-                decoration: const InputDecoration(
-                    labelText: "Sekundäre Muskeln (optional)",
-                    hintText: "z.B. Schultern"),
+                decoration: InputDecoration(
+                    labelText: l10n.secondary_muscles_label,
+                    hintText: l10n.secondary_muscles_hint),
               ),
             ],
           ),

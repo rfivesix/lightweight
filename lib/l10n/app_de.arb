@@ -1,301 +1,391 @@
 {
-    "@@locale": "de",
-    "appTitle": "Vita",
-    "bannerText": "Empfehlung / Aktuelles Workout",
-    "calories": "Kalorien",
-    "water": "Wasser",
-    "protein": "Protein",
-    "carbs": "Kohlenhydrate",
-    "fat": "Fett",
-    "daily": "Täglich",
-    "today": "Heute",
-    "workoutSection": "Workout-Bereich - noch nicht implementiert",
-    "addMenuTitle": "Was möchtest du hinzufügen?",
-    "addFoodOption": "Lebensmittel",
-    "addLiquidOption": "Flüssigkeit",
-    "searchHintText": "Suchen...",
-    "mealtypeBreakfast": "Frühstück",
-    "mealtypeLunch": "Mittagessen",
-    "mealtypeDinner": "Abendessen",
-    "mealtypeSnack": "Snack",
-    "waterHeader": "Wasser & Getränke",
-    "openFoodFactsSource": "Daten von Open Food Facts",
-    "tabRecent": "Zuletzt",
-    "tabSearch": "Suchen",
-    "tabFavorites": "Favoriten",
-    "fabCreateOwnFood": "Eigenes Lebensmittel",
-    "recentEmptyState": "Deine zuletzt verwendeten Lebensmittel\nerscheinen hier.",
-    "favoritesEmptyState": "Du hast noch keine Favoriten.\nMarkiere ein Lebensmittel mit dem Herz-Icon, um es hier zu sehen.",
-    "searchInitialHint": "Bitte gib einen Suchbegriff ein.",
-    "searchNoResults": "Keine Ergebnisse gefunden.",
-    "createFoodScreenTitle": "Eigenes Lebensmittel erstellen",
-    "formFieldName": "Name des Lebensmittels",
-    "formFieldBrand": "Marke (optional)",
-    "formSectionMainNutrients": "Haupt-Nährwerte (pro 100g)",
-    "formFieldCalories": "Kalorien (kcal)",
-    "formFieldProtein": "Protein (g)",
-    "formFieldCarbs": "Kohlenhydrate (g)",
-    "formFieldFat": "Fett (g)",
-    "formSectionOptionalNutrients": "Weitere Nährwerte (optional, pro 100g)",
-    "formFieldSugar": "Davon Zucker (g)",
-    "formFieldFiber": "Ballaststoffe (g)",
-    "formFieldKj": "Kilojoule (kJ)",
-    "formFieldSalt": "Salz (g)",
-    "formFieldSodium": "Natrium (mg)",
-    "formFieldCalcium": "Kalzium (mg)",
-    "buttonSave": "Speichern",
-    "validatorPleaseEnterName": "Bitte gib einen Namen ein.",
-    "validatorPleaseEnterNumber": "Bitte gib eine gültige Zahl ein.",
-    "snackbarSaveSuccess": "{foodName} wurde erfolgreich gespeichert.",
-    "@snackbarSaveSuccess": {
-        "placeholders": {
-            "foodName": {
-                "type": "String"
-            }
-        }
-    },
-    "foodDetailSegmentPortion": "Portion",
-    "foodDetailSegment100g": "100g",
-    "sugar": "Zucker",
-    "fiber": "Ballaststoffe",
-    "salt": "Salz",
-    "explorerScreenTitle": "Lebensmittel-Explorer",
-    "nutritionScreenTitle": "Ernährungsanalyse",
-    "entriesForDateRangeLabel": "Einträge für",
-    "noEntriesForPeriod": "Noch keine Einträge für diesen Zeitraum.",
-    "waterEntryTitle": "Wasser",
-    "profileScreenTitle": "Profil & Ziele",
-    "profileDailyGoals": "Tägliche Ziele",
-    "snackbarGoalsSaved": "Ziele erfolgreich gespeichert!",
-    "measurementsScreenTitle": "Messwerte",
-    "measurementsEmptyState": "Noch keine Messwerte erfasst.\nBeginne mit dem '+' Button.",
-    "addMeasurementDialogTitle": "Neuen Messwert hinzufügen",
-    "formFieldMeasurementType": "Art der Messung",
-    "formFieldMeasurementValue": "Wert ({unit})",
-    "validatorPleaseEnterValue": "Bitte Wert eingeben",
-    "measurementWeight": "Körpergewicht",
-    "measurementFatPercent": "Körperfett",
-    "measurementNeck": "Nacken",
-    "measurementShoulder": "Schulter",
-    "measurementChest": "Brust",
-    "measurementLeftBicep": "Linker Bizeps",
-    "measurementRightBicep": "Rechter Bizeps",
-    "measurementLeftForearm": "Linker Unterarm",
-    "measurementRightForearm": "Rechter Unterarm",
-    "measurementAbdomen": "Bauch",
-    "measurementWaist": "Taille",
-    "measurementHips": "Hüfte",
-    "measurementLeftThigh": "Linker Oberschenkel",
-    "measurementRightThigh": "Rechter Oberschenkel",
-    "measurementLeftCalf": "Linke Wade",
-    "measurementRightCalf": "Rechte Wade",
-    "drawerMenuTitle": "Vita Menü",
-    "drawerDashboard": "Dashboard",
-    "drawerFoodExplorer": "Lebensmittel-Explorer",
-    "drawerDataManagement": "Datensicherung",
-    "drawerMeasurements": "Messwerte",
-    "dataManagementTitle": "Datensicherung",
-    "exportCardTitle": "Daten exportieren",
-    "exportCardDescription": "Sichert alle deine Tagebucheinträge, Favoriten und eigenen Lebensmittel in einer einzigen Backup-Datei.",
-    "exportCardButton": "Backup erstellen",
-    "importCardTitle": "Daten importieren",
-    "importCardDescription": "Stellt deine Daten aus einer zuvor erstellten Backup-Datei wieder her. ACHTUNG: Alle aktuell in der App gespeicherten Daten werden dabei überschrieben!",
-    "importCardButton": "Backup wiederherstellen",
-    "recommendationDefault": "Tracke deine erste Mahlzeit!",
-    "recommendationOverTarget": "Letzte {count} Tage: +{difference} kcal über dem Ziel",
-    "@recommendationOverTarget": { "placeholders": { "count": {}, "difference": {} } },
-    "recommendationUnderTarget": "Letzte {count} Tage: {difference} kcal unter dem Ziel",
-    "@recommendationUnderTarget": { "placeholders": { "count": {}, "difference": {} } },
-    "recommendationOnTarget": "Letzte {count} Tage: Ziel erreicht ✅",
-    "@recommendationOnTarget": { "placeholders": { "count": {} } },
-    "recommendationFirstEntry": "Super, dein erster Eintrag ist gemacht!",
-    "dialogConfirmTitle": "Bestätigung erforderlich",
-    "dialogConfirmImportContent": "Möchtest du wirklich die Daten aus diesem Backup wiederherstellen?\n\nACHTUNG: Alle deine aktuellen Einträge, Favoriten und eigenen Lebensmittel werden unwiderruflich gelöscht und ersetzt.",
-    "dialogButtonCancel": "Abbrechen",
-    "dialogButtonOverwrite": "Ja, alles überschreiben",
-    "snackbarNoFileSelected": "Keine Datei ausgewählt.",
-    "snackbarImportSuccessTitle": "Import erfolgreich!",
-    "snackbarImportSuccessContent": "Deine Daten wurden wiederhergestellt. Für eine korrekte Anzeige wird empfohlen, die App jetzt neu zu starten.",
-    "snackbarButtonOK": "OK",
-    "snackbarImportError": "Fehler beim Importieren der Daten.",
-    "snackbarExportSuccess": "Backup-Datei wurde an das System übergeben. Bitte wähle einen Speicherort.",
-    "snackbarExportFailed": "Export abgebrochen oder fehlgeschlagen.",
-    "profileUserHeight": "Körpergröße (cm)",
-    "workoutRoutinesTitle": "Trainingspläne",
-    "workoutHistoryTitle": "Workout-Verlauf",
-    "workoutHistoryButton": "Verlauf",
-    "emptyRoutinesTitle": "Keine Trainingspläne gefunden",
-    "emptyRoutinesSubtitle": "Erstelle deinen ersten Trainingsplan oder starte ein freies Training.",
-    "createFirstRoutineButton": "Ersten Plan erstellen",
-    "startEmptyWorkoutButton": "Freies Training",
-    "editRoutineSubtitle": "Tippen zum Bearbeiten, oder starte das Training.",
-    "startButton": "Start",
-    "addRoutineButton": "Neue Routine",
-    "freeWorkoutTitle": "Freies Training",
-    "finishWorkoutButton": "Beenden",
-    "addSetButton": "Satz hinzufügen",
-    "addExerciseToWorkoutButton": "Übung zum Workout hinzufügen",
-    "lastTimeLabel": "Letztes Mal",
-    "setLabel": "Satz",
-    "kgLabel": "Gewicht (kg)",
-    "repsLabel": "Wdh",
-    "restTimerLabel": "Pause",
-    "skipButton": "Überspringen",
-    "emptyHistory": "Noch keine Workouts abgeschlossen.",
-    "workoutDetailsTitle": "Workout-Details",
-    "workoutNotFound": "Workout nicht gefunden.",
-    "totalVolumeLabel": "Gesamtvolumen",
-    "notesLabel": "Notizen",
-    "hevyImportTitle": "Hevy Import",
-    "hevyImportDescription": "Importiere deine gesamte Trainings-Historie aus einer Hevy CSV-Exportdatei.",
-    "hevyImportButton": "Hevy-Daten importieren",
-    "hevyImportSuccess": "{count} Workouts erfolgreich importiert!",
-    "@hevyImportSuccess": { "placeholders": { "count": {} } },
-    "hevyImportFailed": "Import fehlgeschlagen. Bitte überprüfe die Datei.",
-    "startWorkout": "Workout starten",
-    "addMeasurement": "Messwert hinzufügen",
-    "filterToday": "Heute",
-    "filter7Days": "7 Tage",
-    "filter30Days": "30 Tage",
-    "filterAll": "Alle",
-    "showLess": "Weniger anzeigen",
-    "showMoreDetails": "Mehr Details anzeigen",
-    "deleteConfirmTitle": "Löschen bestätigen",
-    "deleteConfirmContent": "Möchtest du diesen Eintrag wirklich löschen?",
-    "cancel": "Abbrechen",
-    "delete": "Löschen",
-    "save": "Speichern",
-    "tabBaseFoods": "Grundnahrungsmittel",
-    "baseFoodsEmptyState": "Dieser Bereich wird bald mit einer kuratierten Liste von Grundnahrungsmitteln wie Obst, Gemüse und mehr gefüllt sein.",
-    "noBrand": "Keine Marke",
-    "unknown": "Unbekannt",
-    "backupFileSubject": "Vita App Backup - {timestamp}",
-    "@backupFileSubject": {
-        "placeholders": {
-            "timestamp": {
-                "type": "String"
-            }
-        }
-    },
-    "foodItemSubtitle": "{brand} - {calories} kcal / 100g",
-    "@foodItemSubtitle": {
-        "placeholders": {
-            "brand": { "type": "String" },
-            "calories": { "type": "int" }
-        }
-    },
-    "foodListSubtitle": "{grams}g - {time}",
-    "@foodListSubtitle": {
-        "placeholders": {
-            "grams": { "type": "int" },
-            "time": { "type": "String" }
-        }
-    },
-    "foodListTrailingKcal": "{calories} kcal",
-    "@foodListTrailingKcal": {
-        "placeholders": {
-            "calories": { "type": "int" }
-        }
-    },
-    "waterListTrailingMl": "{milliliters} ml",
-    "@waterListTrailingMl": {
-        "placeholders": {
-            "milliliters": { "type": "int" }
-        }
-    },
-    "exerciseCatalogTitle": "Übungskatalog",
-    "filterByMuscle": "Nach Muskelgruppe filtern",
-    "noExercisesFound": "Keine Übungen gefunden.",
-    "noDescriptionAvailable": "Keine Beschreibung verfügbar.",
-    "filterByMuscle": "Nach Muskelgruppe filtern",
-    "filterByCategory": "Nach Kategorie filtern",
-    "edit": "Bearbeiten",
-    "repsLabelShort": "Wdh",
-    "titleNewRoutine": "Neue Routine",
-    "titleEditRoutine": "Routine bearbeiten",
-    "validatorPleaseEnterRoutineName": "Bitte gib der Routine einen Namen.",
-    "snackbarRoutineCreated": "Routine erstellt. Füge nun Übungen hinzu.",
-    "snackbarRoutineSaved": "Routine gespeichert.",
-    "formFieldRoutineName": "Name der Routine",
-    "emptyStateAddFirstExercise": "Füge deine erste Übung hinzu.",
-    "setCount": "{count,plural, =1{1 Satz}other{{count} Sätze}}",
-    "@setCount": {
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        }
-    },
-    "fabAddExercise": "Übung hinzufügen",
-    "kgLabelShort": "kg",
-    "drawerExerciseCatalog": "Übungskatalog",
-    "lastWorkoutTitle": "Letztes Workout",
-    "repeatButton": "Wiederholen",
-    "weightHistoryTitle": "Gewichtsverlauf",
-    "hideSummary": "Übersicht ausblenden",
-    "showSummary": "Übersicht einblenden",
-    "exerciseDataAttribution": "Übungsdaten von",
-    "duplicate": "Duplizieren",
-    "deleteRoutineConfirmContent": "Möchtest du den Trainingsplan '{routineName}' wirklich unwiderruflich löschen?",
-    "@deleteRoutineConfirmContent": {
-        "placeholders": {
-            "routineName": {
-                "type": "String"
-            }
-        }
-    },
-    "editPauseTimeTitle": "Pausendauer bearbeiten",
-    "pauseInSeconds": "Pause in Sekunden",
-    "editPauseTime": "Pause bearbeiten",
-    "pauseDuration": "{seconds} Sekunden Pause",
-    "@pauseDuration": {
-        "placeholders": {
-            "seconds": {
-                "type": "int"
-            }
-        }
-    },
-    "maxPauseDuration": "Pausen bis zu {seconds}s",
-    "@maxPauseDuration": {
-        "placeholders": {
-            "seconds": {
-                "type": "int"
-            }
-        }
-    },
-    "deleteWorkoutConfirmContent": "Möchtest du dieses protokollierte Workout wirklich unwiderruflich löschen?",
-    "removeExercise": "Übung entfernen",
-    "deleteExerciseConfirmTitle": "Übung entfernen?",
-    "deleteExerciseConfirmContent": "Möchtest du '{exerciseName}' wirklich aus diesem Trainingsplan entfernen?",
-    "@deleteExerciseConfirmContent": {
-        "placeholders": {
-            "exerciseName": {
-                "type": "String"
-            }
-        }
-    },
-    "doneButtonLabel": "Fertig",
-    "setRestTimeButton": "Pause einstellen",
-    "deleteExerciseButton": "Übung löschen",
-    "restOverLabel": "Pause vorbei",
-    "workoutRunningLabel": "Workout läuft …",
-    "continueButton": "Weiter",
-    "discardButton": "Verwerfen",
-    "workoutStatsTitle": "Training (7 Tage)",
-    "workoutsLabel": "Workouts",
-    "durationLabel": "Dauer",
-    "volumeLabel": "Volumen",
-    "@durationLabel": {
-        "description": "Label für die Zusammenfassung der Trainingsdauer"
-    },
-    "durationLabel": "Dauer",
+  "@@locale": "de",
+  "appTitle": "Vita",
+  "bannerText": "Empfehlung / Aktuelles Workout",
+  "calories": "Kalorien",
+  "water": "Wasser",
+  "protein": "Protein",
+  "carbs": "Kohlenhydrate",
+  "fat": "Fett",
+  "daily": "Täglich",
+  "today": "Heute",
+  "workoutSection": "Workout-Bereich - noch nicht implementiert",
+  "addMenuTitle": "Was möchtest du hinzufügen?",
+  "addFoodOption": "Lebensmittel",
+  "addLiquidOption": "Flüssigkeit",
+  "searchHintText": "Suchen...",
+  "mealtypeBreakfast": "Frühstück",
+  "mealtypeLunch": "Mittagessen",
+  "mealtypeDinner": "Abendessen",
+  "mealtypeSnack": "Snack",
+  "waterHeader": "Wasser & Getränke",
+  "openFoodFactsSource": "Daten von Open Food Facts",
+  "tabRecent": "Zuletzt",
+  "tabSearch": "Suchen",
+  "tabFavorites": "Favoriten",
+  "fabCreateOwnFood": "Eigenes Lebensmittel",
+  "recentEmptyState": "Deine zuletzt verwendeten Lebensmittel\nerscheinen hier.",
+  "favoritesEmptyState": "Du hast noch keine Favoriten.\nMarkiere ein Lebensmittel mit dem Herz-Icon, um es hier zu sehen.",
+  "searchInitialHint": "Bitte gib einen Suchbegriff ein.",
+  "searchNoResults": "Keine Ergebnisse gefunden.",
+  "createFoodScreenTitle": "Eigenes Lebensmittel erstellen",
+  "formFieldName": "Name des Lebensmittels",
+  "formFieldBrand": "Marke (optional)",
+  "formSectionMainNutrients": "Haupt-Nährwerte (pro 100g)",
+  "formFieldCalories": "Kalorien (kcal)",
+  "formFieldProtein": "Protein (g)",
+  "formFieldCarbs": "Kohlenhydrate (g)",
+  "formFieldFat": "Fett (g)",
+  "formSectionOptionalNutrients": "Weitere Nährwerte (optional, pro 100g)",
+  "formFieldSugar": "Davon Zucker (g)",
+  "formFieldFiber": "Ballaststoffe (g)",
+  "formFieldKj": "Kilojoule (kJ)",
+  "formFieldSalt": "Salz (g)",
+  "formFieldSodium": "Natrium (mg)",
+  "formFieldCalcium": "Kalzium (mg)",
+  "buttonSave": "Speichern",
+  "validatorPleaseEnterName": "Bitte gib einen Namen ein.",
+  "validatorPleaseEnterNumber": "Bitte gib eine gültige Zahl ein.",
+  "snackbarSaveSuccess": "{foodName} wurde erfolgreich gespeichert.",
+  "@snackbarSaveSuccess": {
+    "placeholders": {
+      "foodName": {
+        "type": "String"
+      }
+    }
+  },
+  "foodDetailSegmentPortion": "Portion",
+  "foodDetailSegment100g": "100g",
+  "sugar": "Zucker",
+  "fiber": "Ballaststoffe",
+  "salt": "Salz",
+  "explorerScreenTitle": "Lebensmittel-Explorer",
+  "nutritionScreenTitle": "Ernährungsanalyse",
+  "entriesForDateRangeLabel": "Einträge für",
+  "noEntriesForPeriod": "Noch keine Einträge für diesen Zeitraum.",
+  "waterEntryTitle": "Wasser",
+  "profileScreenTitle": "Profil & Ziele",
+  "profileDailyGoals": "Tägliche Ziele",
+  "snackbarGoalsSaved": "Ziele erfolgreich gespeichert!",
+  "measurementsScreenTitle": "Messwerte",
+  "measurementsEmptyState": "Noch keine Messwerte erfasst.\nBeginne mit dem '+' Button.",
+  "addMeasurementDialogTitle": "Neuen Messwert hinzufügen",
+  "formFieldMeasurementType": "Art der Messung",
+  "formFieldMeasurementValue": "Wert ({unit})",
+  "validatorPleaseEnterValue": "Bitte Wert eingeben",
+  "measurementWeight": "Körpergewicht",
+  "measurementFatPercent": "Körperfett",
+  "measurementNeck": "Nacken",
+  "measurementShoulder": "Schulter",
+  "measurementChest": "Brust",
+  "measurementLeftBicep": "Linker Bizeps",
+  "measurementRightBicep": "Rechter Bizeps",
+  "measurementLeftForearm": "Linker Unterarm",
+  "measurementRightForearm": "Rechter Unterarm",
+  "measurementAbdomen": "Bauch",
+  "measurementWaist": "Taille",
+  "measurementHips": "Hüfte",
+  "measurementLeftThigh": "Linker Oberschenkel",
+  "measurementRightThigh": "Rechter Oberschenkel",
+  "measurementLeftCalf": "Linke Wade",
+  "measurementRightCalf": "Rechte Wade",
+  "drawerMenuTitle": "Vita Menü",
+  "drawerDashboard": "Dashboard",
+  "drawerFoodExplorer": "Lebensmittel-Explorer",
+  "drawerDataManagement": "Datensicherung",
+  "drawerMeasurements": "Messwerte",
+  "dataManagementTitle": "Datensicherung",
+  "exportCardTitle": "Daten exportieren",
+  "exportCardDescription": "Sichert alle deine Tagebucheinträge, Favoriten und eigenen Lebensmittel in einer einzigen Backup-Datei.",
+  "exportCardButton": "Backup erstellen",
+  "importCardTitle": "Daten importieren",
+  "importCardDescription": "Stellt deine Daten aus einer zuvor erstellten Backup-Datei wieder her. ACHTUNG: Alle aktuell in der App gespeicherten Daten werden dabei überschrieben!",
+  "importCardButton": "Backup wiederherstellen",
+  "recommendationDefault": "Tracke deine erste Mahlzeit!",
+  "recommendationOverTarget": "Letzte {count} Tage: +{difference} kcal über dem Ziel",
+  "@recommendationOverTarget": {
+    "placeholders": {
+      "count": {},
+      "difference": {}
+    }
+  },
+  "recommendationUnderTarget": "Letzte {count} Tage: {difference} kcal unter dem Ziel",
+  "@recommendationUnderTarget": {
+    "placeholders": {
+      "count": {},
+      "difference": {}
+    }
+  },
+  "recommendationOnTarget": "Letzte {count} Tage: Ziel erreicht ✅",
+  "@recommendationOnTarget": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "recommendationFirstEntry": "Super, dein erster Eintrag ist gemacht!",
+  "dialogConfirmTitle": "Bestätigung erforderlich",
+  "dialogConfirmImportContent": "Möchtest du wirklich die Daten aus diesem Backup wiederherstellen?\n\nACHTUNG: Alle deine aktuellen Einträge, Favoriten und eigenen Lebensmittel werden unwiderruflich gelöscht und ersetzt.",
+  "dialogButtonCancel": "Abbrechen",
+  "dialogButtonOverwrite": "Ja, alles überschreiben",
+  "snackbarNoFileSelected": "Keine Datei ausgewählt.",
+  "snackbarImportSuccessTitle": "Import erfolgreich!",
+  "snackbarImportSuccessContent": "Deine Daten wurden wiederhergestellt. Für eine korrekte Anzeige wird empfohlen, die App jetzt neu zu starten.",
+  "snackbarButtonOK": "OK",
+  "snackbarImportError": "Fehler beim Importieren der Daten.",
+  "snackbarExportSuccess": "Backup-Datei wurde an das System übergeben. Bitte wähle einen Speicherort.",
+  "snackbarExportFailed": "Export abgebrochen oder fehlgeschlagen.",
+  "profileUserHeight": "Körpergröße (cm)",
+  "workoutRoutinesTitle": "Trainingspläne",
+  "workoutHistoryTitle": "Workout-Verlauf",
+  "workoutHistoryButton": "Verlauf",
+  "emptyRoutinesTitle": "Keine Trainingspläne gefunden",
+  "emptyRoutinesSubtitle": "Erstelle deinen ersten Trainingsplan oder starte ein freies Training.",
+  "createFirstRoutineButton": "Ersten Plan erstellen",
+  "startEmptyWorkoutButton": "Freies Training",
+  "editRoutineSubtitle": "Tippen zum Bearbeiten, oder starte das Training.",
+  "startButton": "Start",
+  "addRoutineButton": "Neue Routine",
+  "freeWorkoutTitle": "Freies Training",
+  "finishWorkoutButton": "Beenden",
+  "addSetButton": "Satz hinzufügen",
+  "addExerciseToWorkoutButton": "Übung zum Workout hinzufügen",
+  "lastTimeLabel": "Letztes Mal",
+  "setLabel": "Satz",
+  "kgLabel": "Gewicht (kg)",
+  "repsLabel": "Wdh",
+  "restTimerLabel": "Pause",
+  "skipButton": "Überspringen",
+  "emptyHistory": "Noch keine Workouts abgeschlossen.",
+  "workoutDetailsTitle": "Workout-Details",
+  "workoutNotFound": "Workout nicht gefunden.",
+  "totalVolumeLabel": "Gesamtvolumen",
+  "notesLabel": "Notizen",
+  "hevyImportTitle": "Hevy Import",
+  "hevyImportDescription": "Importiere deine gesamte Trainings-Historie aus einer Hevy CSV-Exportdatei.",
+  "hevyImportButton": "Hevy-Daten importieren",
+  "hevyImportSuccess": "{count} Workouts erfolgreich importiert!",
+  "@hevyImportSuccess": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "hevyImportFailed": "Import fehlgeschlagen. Bitte überprüfe die Datei.",
+  "startWorkout": "Workout starten",
+  "addMeasurement": "Messwert hinzufügen",
+  "filterToday": "Heute",
+  "filter7Days": "7 Tage",
+  "filter30Days": "30 Tage",
+  "filterAll": "Alle",
+  "showLess": "Weniger anzeigen",
+  "showMoreDetails": "Mehr Details anzeigen",
+  "deleteConfirmTitle": "Löschen bestätigen",
+  "deleteConfirmContent": "Möchtest du diesen Eintrag wirklich löschen?",
+  "cancel": "Abbrechen",
+  "delete": "Löschen",
+  "save": "Speichern",
+  "tabBaseFoods": "Grundnahrungsmittel",
+  "baseFoodsEmptyState": "Dieser Bereich wird bald mit einer kuratierten Liste von Grundnahrungsmitteln wie Obst, Gemüse und mehr gefüllt sein.",
+  "noBrand": "Keine Marke",
+  "unknown": "Unbekannt",
+  "backupFileSubject": "Vita App Backup - {timestamp}",
+  "@backupFileSubject": {
+    "placeholders": {
+      "timestamp": {
+        "type": "String"
+      }
+    }
+  },
+  "foodItemSubtitle": "{brand} - {calories} kcal / 100g",
+  "@foodItemSubtitle": {
+    "placeholders": {
+      "brand": {
+        "type": "String"
+      },
+      "calories": {
+        "type": "int"
+      }
+    }
+  },
+  "foodListSubtitle": "{grams}g - {time}",
+  "@foodListSubtitle": {
+    "placeholders": {
+      "grams": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "foodListTrailingKcal": "{calories} kcal",
+  "@foodListTrailingKcal": {
+    "placeholders": {
+      "calories": {
+        "type": "int"
+      }
+    }
+  },
+  "waterListTrailingMl": "{milliliters} ml",
+  "@waterListTrailingMl": {
+    "placeholders": {
+      "milliliters": {
+        "type": "int"
+      }
+    }
+  },
+  "exerciseCatalogTitle": "Übungskatalog",
+  "filterByMuscle": "Nach Muskelgruppe filtern",
+  "noExercisesFound": "Keine Übungen gefunden.",
+  "noDescriptionAvailable": "Keine Beschreibung verfügbar.",
+  "filterByCategory": "Nach Kategorie filtern",
+  "edit": "Bearbeiten",
+  "repsLabelShort": "Wdh",
+  "titleNewRoutine": "Neue Routine",
+  "titleEditRoutine": "Routine bearbeiten",
+  "validatorPleaseEnterRoutineName": "Bitte gib der Routine einen Namen.",
+  "snackbarRoutineCreated": "Routine erstellt. Füge nun Übungen hinzu.",
+  "snackbarRoutineSaved": "Routine gespeichert.",
+  "formFieldRoutineName": "Name der Routine",
+  "emptyStateAddFirstExercise": "Füge deine erste Übung hinzu.",
+  "setCount": "{count,plural, =1{1 Satz}other{{count} Sätze}}",
+  "@setCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fabAddExercise": "Übung hinzufügen",
+  "kgLabelShort": "kg",
+  "drawerExerciseCatalog": "Übungskatalog",
+  "lastWorkoutTitle": "Letztes Workout",
+  "repeatButton": "Wiederholen",
+  "weightHistoryTitle": "Gewichtsverlauf",
+  "hideSummary": "Übersicht ausblenden",
+  "showSummary": "Übersicht einblenden",
+  "exerciseDataAttribution": "Übungsdaten von",
+  "duplicate": "Duplizieren",
+  "deleteRoutineConfirmContent": "Möchtest du den Trainingsplan '{routineName}' wirklich unwiderruflich löschen?",
+  "@deleteRoutineConfirmContent": {
+    "placeholders": {
+      "routineName": {
+        "type": "String"
+      }
+    }
+  },
+  "editPauseTimeTitle": "Pausendauer bearbeiten",
+  "pauseInSeconds": "Pause in Sekunden",
+  "editPauseTime": "Pause bearbeiten",
+  "pauseDuration": "{seconds} Sekunden Pause",
+  "@pauseDuration": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "maxPauseDuration": "Pausen bis zu {seconds}s",
+  "@maxPauseDuration": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteWorkoutConfirmContent": "Möchtest du dieses protokollierte Workout wirklich unwiderruflich löschen?",
+  "removeExercise": "Übung entfernen",
+  "deleteExerciseConfirmTitle": "Übung entfernen?",
+  "deleteExerciseConfirmContent": "Möchtest du '{exerciseName}' wirklich aus diesem Trainingsplan entfernen?",
+  "@deleteExerciseConfirmContent": {
+    "placeholders": {
+      "exerciseName": {
+        "type": "String"
+      }
+    }
+  },
+  "doneButtonLabel": "Fertig",
+  "setRestTimeButton": "Pause einstellen",
+  "deleteExerciseButton": "Übung löschen",
+  "restOverLabel": "Pause vorbei",
+  "workoutRunningLabel": "Workout läuft …",
+  "continueButton": "Weiter",
+  "discardButton": "Verwerfen",
+  "workoutStatsTitle": "Training (7 Tage)",
+  "workoutsLabel": "Workouts",
+  "durationLabel": "Dauer",
+  "volumeLabel": "Volumen",
+  "@durationLabel": {
+    "description": "Label für die Zusammenfassung der Trainingsdauer"
+  },
+  "@setsLabel": {
+    "description": "Label für die Zusammenfassung der Satzzahl"
+  },
+  "setsLabel": "Sätze",
+  "@muscleSplitLabel": {
+    "description": "Label für das Muskel-Split-Balkendiagramm"
+  },
+  "muscleSplitLabel": "Muskel-Split",
+  "snackbar_could_not_open_open_link": "Konnte Link nicht öffnen",
+  "chart_no_data_for_period": "Keine Daten für diesen Zeitraum.",
+  "amount_in_milliliters": "Menge in Millilitern",
+  "amount_in_grams": "Menge in Gramm",
+  "meal_label": "Mahlzeit",
+  "add_to_water_intake": "Zur Trinkmenge hinzufügen",
+  "create_exercise_screen_title": "Eigene Übung erstellen",
+  "exercise_name_label": "Name der Übung",
+  "category_label": "Kategorie",
+  "description_optional_label": "Beschreibung (optional)",
+  "primary_muscles_label": "Primäre Muskeln",
+  "primary_muscles_hint": "z.B. Brust, Trizeps",
+  "secondary_muscles_label": "Sekundäre Muskeln (optional)",
+  "secondary_muscles_hint": "z.B. Schultern",
+  "set_type_normal": "Normal",
+  "set_type_warmup": "Warmup",
+  "set_type_failure": "Failure",
+  "set_type_dropset": "Dropset",
+  "set_reps_hint": "8-12",
+  "data_export_button": "Exportieren",
+  "data_import_button": "Importieren",
+  "snackbar_button_ok": "OK",
+  "measurement_session_detail_view": "Detailansicht der Messsession.",
+  "unit_grams": "g",
+  "unit_kcal": "kcal",
+  "delete_profile_picture_button": "Profilbild löschen",
+  "attribution_title": "Attribution",
+  "add_liquid_title": "Flüssigkeit hinzufügen",
+  "add_button": "Hinzufügen",
+  "discard_button": "Verwerfen",
+  "continue_workout_button": "Workout fortsetzen",
+  "soon_available_snackbar": "Dieser Screen wird bald verfügbar sein!",
+  "start_button": "Start",
+  "today_overview_text": "HEUTE IM BLICK",
+  "quick_add_text": "SCHNELLES HINZUFÜGEN",
+  "scann_barcode_capslock": "Barcode scannen",
+  "protocol_today_capslock": "HEUTIGES PROTOKOLL",
+  "my_plans_capslock":"MEINE PLÄNE",
+  "overview_capslock":"ÜBERBLICK",
+  "manage_all_plans":"Alle Pläne verwalten",
+  "free_training":"Freies Training",
+  "my_consistency":"MEINE KONSISTENZ",
+  "calendar_currently_not_available":"Die Kalender-Ansicht ist in Kürze verfügbar.",
+  "in_depth_analysis":"TIEFEN-ANALYSE",
+  "body_measurements":"Körpermaße",
+  "measurements_description":"Gewicht, KFA und Umfänge analysieren.",
+  "nutrition_description":"Makros, Kalorien und Trends auswerten.",
+  "training_analysis":"Trainings-Analyse",
+  "training_analysis_description":"Volumen, Kraft und Progression verfolgen.",
+  "load_dots":"lade...",
+  "profile_capslock":"PROFIL",
+  "settings_capslock":"EINSTELLUNGEN",
+  "my_goals":"Meine Ziele",
+  "my_goals_description":"Kalorien, Makros und Wasser anpassen.",
+  "backup_and_import":"Datensicherung & Import",
+  "backup_and_import_description":"Backups erstellen, wiederherstellen und Daten importieren.",
+  "about_and_legal_capslock":"ÜBER & RECHTLICHES",
+  "attribution_and_license":"Attribution & Lizenzen",
+  "data_from_off_and_wger":"Daten von Open Food Facts und wger.",
+  "app_version":"App Version",
+  "all_measurements":"ALLE MESSWERTE",
+  "date_and_time_of_measurement":"Datum & Uhrzeit der Messung"
 
-    "@setsLabel": {
-        "description": "Label für die Zusammenfassung der Satzzahl"
-    },
-    "setsLabel": "Sätze",
-    "@muscleSplitLabel": {
-        "description": "Label für das Muskel-Split-Balkendiagramm"
-    },
-    "muscleSplitLabel": "Muskel-Split"
 }

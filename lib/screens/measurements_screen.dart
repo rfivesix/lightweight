@@ -134,7 +134,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
                       _buildChartSection(l10n, colorScheme,Theme.of(context).textTheme),
                       const SizedBox(height: 24),
                     ],
-                    _buildSectionTitle(context, "Alle Messwerte"),
+                    _buildSectionTitle(context, l10n.all_measurements),
                     ..._sessions.map((session) =>
                         _buildMeasurementSessionCard(l10n, colorScheme, session))
                   ],
@@ -304,8 +304,8 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text("Detailansicht der Messsession.")),
+                  SnackBar(
+                      content: Text(l10n.measurement_session_detail_view)),
                 );
               },
             ),

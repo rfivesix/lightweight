@@ -5,12 +5,14 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/models/chart_data_point.dart';
 import 'package:intl/intl.dart'; // Für das Datumsformat im Chart
+import 'package:lightweight/generated/app_localizations.dart';
 
 class MeasurementChartWidget extends StatefulWidget {
   final String chartType;
   final DateTimeRange dateRange;
   final Color lineColor;
   final String unit;
+  
 
   const MeasurementChartWidget({
     super.key,
@@ -27,6 +29,7 @@ class MeasurementChartWidget extends StatefulWidget {
 class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
   List<ChartDataPoint> _dataPoints = [];
   bool _isLoadingChart = true;
+  late final l10n = AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -65,9 +68,9 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
       );
     }
     if (_dataPoints.isEmpty) {
-      return const SizedBox(
+      return SizedBox(
         height: 200,
-        child: Center(child: Text("Keine Daten für diesen Zeitraum.")),
+        child: Center(child: Text(l10n.chart_no_data_for_period)),
       );
     }
 

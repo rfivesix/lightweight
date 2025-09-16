@@ -1363,6 +1363,378 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Muscle Split'**
   String get muscleSplitLabel;
+
+  /// No description provided for @snackbar_could_not_open_open_link.
+  ///
+  /// In en, this message translates to:
+  /// **'Konnte Link nicht öffnen'**
+  String get snackbar_could_not_open_open_link;
+
+  /// No description provided for @chart_no_data_for_period.
+  ///
+  /// In en, this message translates to:
+  /// **'Keine Daten für diesen Zeitraum.'**
+  String get chart_no_data_for_period;
+
+  /// No description provided for @amount_in_milliliters.
+  ///
+  /// In en, this message translates to:
+  /// **'Menge in Millilitern'**
+  String get amount_in_milliliters;
+
+  /// No description provided for @amount_in_grams.
+  ///
+  /// In en, this message translates to:
+  /// **'Menge in Gramm'**
+  String get amount_in_grams;
+
+  /// No description provided for @meal_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Mahlzeit'**
+  String get meal_label;
+
+  /// No description provided for @add_to_water_intake.
+  ///
+  /// In en, this message translates to:
+  /// **'Zur Trinkmenge hinzufügen'**
+  String get add_to_water_intake;
+
+  /// No description provided for @create_exercise_screen_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Eigene Übung erstellen'**
+  String get create_exercise_screen_title;
+
+  /// No description provided for @exercise_name_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Name der Übung'**
+  String get exercise_name_label;
+
+  /// No description provided for @category_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Kategorie'**
+  String get category_label;
+
+  /// No description provided for @description_optional_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Beschreibung (optional)'**
+  String get description_optional_label;
+
+  /// No description provided for @primary_muscles_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Primäre Muskeln'**
+  String get primary_muscles_label;
+
+  /// No description provided for @primary_muscles_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'z.B. Brust, Trizeps'**
+  String get primary_muscles_hint;
+
+  /// No description provided for @secondary_muscles_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Sekundäre Muskeln (optional)'**
+  String get secondary_muscles_label;
+
+  /// No description provided for @secondary_muscles_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'z.B. Schultern'**
+  String get secondary_muscles_hint;
+
+  /// No description provided for @set_type_normal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get set_type_normal;
+
+  /// No description provided for @set_type_warmup.
+  ///
+  /// In en, this message translates to:
+  /// **'Warmup'**
+  String get set_type_warmup;
+
+  /// No description provided for @set_type_failure.
+  ///
+  /// In en, this message translates to:
+  /// **'Failure'**
+  String get set_type_failure;
+
+  /// No description provided for @set_type_dropset.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropset'**
+  String get set_type_dropset;
+
+  /// No description provided for @set_reps_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'8-12'**
+  String get set_reps_hint;
+
+  /// No description provided for @data_export_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Exportieren'**
+  String get data_export_button;
+
+  /// No description provided for @data_import_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Importieren'**
+  String get data_import_button;
+
+  /// No description provided for @snackbar_button_ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get snackbar_button_ok;
+
+  /// No description provided for @measurement_session_detail_view.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailansicht der Messsession.'**
+  String get measurement_session_detail_view;
+
+  /// No description provided for @unit_grams.
+  ///
+  /// In en, this message translates to:
+  /// **'g'**
+  String get unit_grams;
+
+  /// No description provided for @unit_kcal.
+  ///
+  /// In en, this message translates to:
+  /// **'kcal'**
+  String get unit_kcal;
+
+  /// No description provided for @delete_profile_picture_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Profilbild löschen'**
+  String get delete_profile_picture_button;
+
+  /// No description provided for @attribution_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Attribution'**
+  String get attribution_title;
+
+  /// No description provided for @add_liquid_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Flüssigkeit hinzufügen'**
+  String get add_liquid_title;
+
+  /// No description provided for @add_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Hinzufügen'**
+  String get add_button;
+
+  /// No description provided for @discard_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Verwerfen'**
+  String get discard_button;
+
+  /// No description provided for @continue_workout_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout fortsetzen'**
+  String get continue_workout_button;
+
+  /// No description provided for @soon_available_snackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Dieser Screen wird bald verfügbar sein!'**
+  String get soon_available_snackbar;
+
+  /// No description provided for @start_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get start_button;
+
+  /// No description provided for @today_overview_text.
+  ///
+  /// In en, this message translates to:
+  /// **'TODAY IN FOCUS'**
+  String get today_overview_text;
+
+  /// No description provided for @quick_add_text.
+  ///
+  /// In en, this message translates to:
+  /// **'QUICK ADD'**
+  String get quick_add_text;
+
+  /// No description provided for @scann_barcode_capslock.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan barcode'**
+  String get scann_barcode_capslock;
+
+  /// No description provided for @protocol_today_capslock.
+  ///
+  /// In en, this message translates to:
+  /// **'TODAY\'S PROTOCOL'**
+  String get protocol_today_capslock;
+
+  /// No description provided for @my_plans_capslock.
+  ///
+  /// In en, this message translates to:
+  /// **'MY PLANS'**
+  String get my_plans_capslock;
+
+  /// No description provided for @overview_capslock.
+  ///
+  /// In en, this message translates to:
+  /// **'OVERVIEW'**
+  String get overview_capslock;
+
+  /// No description provided for @manage_all_plans.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage all plans'**
+  String get manage_all_plans;
+
+  /// No description provided for @free_training.
+  ///
+  /// In en, this message translates to:
+  /// **'free training'**
+  String get free_training;
+
+  /// No description provided for @my_consistency.
+  ///
+  /// In en, this message translates to:
+  /// **'MY CONSISTENCY'**
+  String get my_consistency;
+
+  /// No description provided for @calendar_currently_not_available.
+  ///
+  /// In en, this message translates to:
+  /// **'The calendar view will be available soon.'**
+  String get calendar_currently_not_available;
+
+  /// No description provided for @in_depth_analysis.
+  ///
+  /// In en, this message translates to:
+  /// **'IN-DEPTH ANALYSIS'**
+  String get in_depth_analysis;
+
+  /// No description provided for @body_measurements.
+  ///
+  /// In en, this message translates to:
+  /// **'Body measurements'**
+  String get body_measurements;
+
+  /// No description provided for @measurements_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyze weight, body fat percentage and circumference.'**
+  String get measurements_description;
+
+  /// No description provided for @nutrition_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluate macros, calories and trends.'**
+  String get nutrition_description;
+
+  /// No description provided for @training_analysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Training analysis'**
+  String get training_analysis;
+
+  /// No description provided for @training_analysis_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Track volume, strength and progression.'**
+  String get training_analysis_description;
+
+  /// No description provided for @load_dots.
+  ///
+  /// In en, this message translates to:
+  /// **'loading...'**
+  String get load_dots;
+
+  /// No description provided for @profile_capslock.
+  ///
+  /// In en, this message translates to:
+  /// **'PROFILE'**
+  String get profile_capslock;
+
+  /// No description provided for @settings_capslock.
+  ///
+  /// In en, this message translates to:
+  /// **'SETTINGS'**
+  String get settings_capslock;
+
+  /// No description provided for @my_goals.
+  ///
+  /// In en, this message translates to:
+  /// **'My goals'**
+  String get my_goals;
+
+  /// No description provided for @my_goals_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust calories, macros and water.'**
+  String get my_goals_description;
+
+  /// No description provided for @backup_and_import.
+  ///
+  /// In en, this message translates to:
+  /// **'Data backup & import'**
+  String get backup_and_import;
+
+  /// No description provided for @backup_and_import_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Create backups, restore, and import data.'**
+  String get backup_and_import_description;
+
+  /// No description provided for @about_and_legal_capslock.
+  ///
+  /// In en, this message translates to:
+  /// **'ABOUT & LEGAL'**
+  String get about_and_legal_capslock;
+
+  /// No description provided for @attribution_and_license.
+  ///
+  /// In en, this message translates to:
+  /// **'Attribution & Licenses'**
+  String get attribution_and_license;
+
+  /// No description provided for @data_from_off_and_wger.
+  ///
+  /// In en, this message translates to:
+  /// **'Data from Open Food Facts and wger.'**
+  String get data_from_off_and_wger;
+
+  /// No description provided for @app_version.
+  ///
+  /// In en, this message translates to:
+  /// **'App version'**
+  String get app_version;
+
+  /// No description provided for @all_measurements.
+  ///
+  /// In en, this message translates to:
+  /// **'ALL MEASUREMENTS'**
+  String get all_measurements;
+
+  /// No description provided for @date_and_time_of_measurement.
+  ///
+  /// In en, this message translates to:
+  /// **'Date & time of measurement'**
+  String get date_and_time_of_measurement;
 }
 
 class _AppLocalizationsDelegate
