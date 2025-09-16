@@ -294,7 +294,11 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
               controller: _tabController,
               isScrollable: false,
               labelPadding: const EdgeInsets.symmetric(horizontal: 0.0),
-              indicator: const BoxDecoration(),
+              indicator: const UnderlineTabIndicator(
+                borderSide: BorderSide(width: 0.0, color: Colors.transparent),
+              ),
+              indicatorColor: Colors.transparent,
+              indicatorWeight: 0.0001,
               splashFactory: NoSplash.splashFactory,
               overlayColor: MaterialStateProperty.all(Colors.transparent),
               dividerColor: Colors.transparent,
@@ -445,146 +449,142 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           ),
         ),
 // Overlay & Speed-Dial
-        Stack(
-          children: [
-            // Blur-Overlay weich ein-/ausblenden
-            // Blur-Overlay weich ein-/ausblenden (an _menuController gekoppelt)
-            AnimatedBuilder(
-                animation: _menuController,
-                builder: (context, _) {
-                  // sanfte Kurve + garantierter 0..1 Bereich
-                  final t = CurvedAnimation(
-                    parent: _menuController,
-                    curve: Curves.easeOutCubic,
-                  ).value.clamp(0.0, 1.0);
+        AnimatedBuilder(
+          animation: _menuController,
+          builder: (context, _) {
+            // Fortschritt sauber in [0,1]
+            final v = _safe01(_menuController.value);
 
-                  return AnimatedBuilder(
-                    animation: _menuController,
-                    builder: (context, _) {
-                      final t = _safe01(
-                        CurvedAnimation(
-                                parent: _menuController,
-                                curve: Curves.easeOutCubic)
-                            .value,
-                      );
-                      return Opacity(
-                        opacity: t,
-                        child: IgnorePointer(
-                          ignoring: t == 0.0,
-                          child: GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _isAddMenuOpen = false;
-                                _menuController.reverse();
-                              });
-                            },
-                            child: BackdropFilter(
-                              filter:
-                                  ImageFilter.blur(sigmaX: 6.0, sigmaY: 6.0),
-                              child: Container(
-                                  color: Colors.black.withOpacity(0.4)),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                }),
-
-            // Actions fahren vom FAB nach oben (gestaffelt per Interval)
-            // Actions fahren vom FAB nach oben (gestaffelt per Interval)
-Positioned(
-  bottom: 100.0,
-  right: 20.0,
-  child: Material(
-    color: Colors
-        .transparent, // eigener Material-Kontext verhindert gelben Ink-Balken
-    child: AnimatedBuilder(
-      animation: _menuController,
-      builder: (context, _) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: speedDialActions.asMap().entries.map((entry) {
-            final index = entry.key;
-            final action = entry.value;
-
-            final double start = index * 0.12;
-            final double safeStart = start >= 0.95 ? 0.95 : start;
-
-            final curved = CurvedAnimation(
-              parent: _menuController,
-              curve: Interval(safeStart, 1.0, curve: Curves.easeOutBack),
-            );
-
-            final offsetY = 90.0 * (index + 1);
-
-            return Transform.translate(
-              offset: Offset(0, (1 - curved.value) * offsetY),
-              child: Opacity(
-                opacity: _safe01(curved.value),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10.0),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        action['label'],
-                        style: TextStyle(
-                          color: Theme.of(context).brightness ==
-                                  Brightness.light
-                              ? Colors.black87
-                              : Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      GestureDetector(
-                        behavior: HitTestBehavior.opaque,
+            return Offstage(
+              // Wenn zu: gar nicht rendern / hittesten
+              offstage: v == 0.0,
+              child: IgnorePointer(
+                // Wenn zu: keine Gesten durchlassen
+                ignoring: v == 0.0,
+                child: Stack(
+                  children: [
+                    // Blur-Overlay
+                    Opacity(
+                      opacity: v,
+                      child: GestureDetector(
                         onTap: () {
                           setState(() {
                             _isAddMenuOpen = false;
                             _menuController.reverse();
                           });
-                          _executeAddMenuAction(action['action']);
                         },
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(20),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                            child: Container(
-                              width: 76,
-                              height: 76,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.3),
-                                  width: 1.5,
-                                ),
-                              ),
-                              child: Icon(
-                                action['icon'],
-                                size: 34,
-                                color: Colors.white,
-                              ),
-                            ),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(
+                            sigmaX: 6.0 * v,
+                            sigmaY: 6.0 * v,
+                          ),
+                          child: Container(
+                            color: Colors.black.withOpacity(0.4 * v),
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+
+                    // Actions (gestaffelt vom FAB „hochfahren“)
+                    Positioned(
+                      bottom: 100.0,
+                      right: 20.0,
+                      child: Material(
+                        color: Colors.transparent, // eigener Ink-Kontext -> kein gelber Balken mehr
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: speedDialActions.asMap().entries.map((entry) {
+
+                          final index = entry.key;
+                          final action = entry.value;
+
+                          final curved = CurvedAnimation(
+                            parent: _menuController,
+                            curve: Interval(
+                              (index * 0.12).clamp(0.0, 0.95),
+                              1.0,
+                              curve: Curves.easeOutBack,
+                            ),
+                          );
+
+                          final tv = _safe01(curved.value);
+                          final offsetY = 90.0 * (index + 1);
+
+                          return Transform.translate(
+                            offset: Offset(0, (1 - tv) * offsetY),
+                            child: Opacity(
+                              opacity: tv,
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 10.0),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    // Text links
+                                    Text(
+                                      action['label'],
+                                      style: TextStyle(
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.light
+                                            ? Colors.black87
+                                            : Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    // Glas-Icon rechts
+                                    GestureDetector(
+                                      behavior: HitTestBehavior.opaque,
+                                      onTap: () {
+                                        setState(() {
+                                          _isAddMenuOpen = false;
+                                          _menuController.reverse();
+                                        });
+                                        _executeAddMenuAction(action['action']);
+                                      },
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(20),
+                                        child: BackdropFilter(
+                                          filter: ImageFilter.blur(
+                                              sigmaX: 12, sigmaY: 12),
+                                          child: Container(
+                                            width: 76,
+                                            height: 76,
+                                            decoration: BoxDecoration(
+                                              color: Colors.white
+                                                  .withOpacity(0.15),
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                              border: Border.all(
+                                                color: Colors.white
+                                                    .withOpacity(0.3),
+                                                width: 1.5,
+                                              ),
+                                            ),
+                                            child: Icon(
+                                              action['icon'],
+                                              size: 34,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    ),
+                  ],
                 ),
               ),
             );
-          }).toList(),
-        );
-      },
-    ),
-  ),
-),
-
-          ],
+          },
         ),
       ],
     );
