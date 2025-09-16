@@ -86,9 +86,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
           IconButton(
             icon: Icon(
               _isFavorite ? Icons.favorite : Icons.favorite_border,
-              color: _isFavorite
-                  ? Colors.redAccent
-                  : colorScheme.onSurfaceVariant,
+              color:
+                  _isFavorite ? Colors.redAccent : colorScheme.onSurfaceVariant,
             ),
             onPressed: _toggleFavorite,
           )
@@ -104,13 +103,11 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                 _displayItem.brand,
                 style: textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
               ),
-
             Divider(
               height: 32,
               thickness: 1,
               color: colorScheme.onSurfaceVariant.withOpacity(0.1),
             ),
-
             if (_hasPortionInfo)
               SummaryCard(
                 child: Padding(
@@ -128,11 +125,9 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                 ),
               ),
             if (_hasPortionInfo) const SizedBox(height: 16),
-
             Text("Nährwerte pro ${displayQuantity}g",
                 style: textTheme.titleLarge),
             const SizedBox(height: 8),
-
             SummaryCard(
               child: Column(
                 children: [
@@ -147,7 +142,6 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                 ],
               ),
             ),
-
             if (_displayItem.sugar != null ||
                 _displayItem.fiber != null ||
                 _displayItem.salt != null) ...[
@@ -168,7 +162,6 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                 ),
               ),
             ],
-
             if (!_displayItem.barcode.startsWith('user_created_'))
               Padding(
                 padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),

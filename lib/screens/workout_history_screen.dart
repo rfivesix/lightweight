@@ -117,8 +117,7 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                           leading: const Icon(Icons.event_note, size: 40),
                           title: Text(
                             log.routineName ?? l10n.freeWorkoutTitle,
-                            style:
-                                const TextStyle(fontWeight: FontWeight.bold),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Text(
                             DateFormat.yMMMMd(locale)

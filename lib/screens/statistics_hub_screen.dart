@@ -73,8 +73,7 @@ class StatisticsHubScreen extends StatelessWidget {
             onTap: () {
               // Platzhalter für den zukünftigen Trainings-Analyse-Screen
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                    content: Text(l10n.soon_available_snackbar)),
+                SnackBar(content: Text(l10n.soon_available_snackbar)),
               );
             },
           ),

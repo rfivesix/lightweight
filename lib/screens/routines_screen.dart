@@ -6,10 +6,8 @@ import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/routine.dart';
 import 'package:lightweight/screens/edit_routine_screen.dart';
 import 'package:lightweight/screens/live_workout_screen.dart';
-import 'package:lightweight/screens/workout_history_screen.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/summary_card.dart';
-import 'package:lightweight/util/time_util.dart';
 
 class RoutinesScreen extends StatefulWidget {
   final int? initialRoutineId;
@@ -125,36 +123,35 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme; // Hier definiert
 
     return Scaffold(
-  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-  appBar: AppBar(
-    automaticallyImplyLeading: true,
-    elevation: 0,
-    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-    scrolledUnderElevation: 0,
-    centerTitle: false,
-    title: Text(
-      l10n.workoutRoutinesTitle,
-      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w900,
-          ),
-    ),
-  ),
-  body: _isLoading
-      ? const Center(child: CircularProgressIndicator())
-      : _routines.isEmpty
-          ? _buildEmptyState(context, l10n, textTheme)
-          : ListView.builder(
-              padding: const EdgeInsets.all(16.0),
-              itemCount: _routines.length + 1, // statt +2
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return _buildStartEmptyWorkoutCard(context, l10n);
-                }
-                final routine = _routines[index - 1];
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          l10n.workoutRoutinesTitle,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+        ),
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _routines.isEmpty
+              ? _buildEmptyState(context, l10n, textTheme)
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16.0),
+                  itemCount: _routines.length + 1, // statt +2
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return _buildStartEmptyWorkoutCard(context, l10n);
+                    }
+                    final routine = _routines[index - 1];
                     return Dismissible(
                       key: Key('routine_${routine.id}'),
                       direction: DismissDirection.endToStart,
@@ -230,7 +227,7 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
                   },
                 ),
       floatingActionButton: GlassFab(
-          onPressed: _createNewRoutine,
+        onPressed: _createNewRoutine,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );

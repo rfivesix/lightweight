@@ -126,8 +126,9 @@ class ProductDatabaseHelper {
           where: 'barcode = ?',
           whereArgs: [barcode],
           limit: 1);
-      if (baseMaps.isNotEmpty)
+      if (baseMaps.isNotEmpty) {
         return FoodItem.fromMap(baseMaps.first, source: FoodItemSource.base);
+      }
     }
 
     if (_offDatabase != null) {
@@ -136,8 +137,9 @@ class ProductDatabaseHelper {
           where: 'barcode = ?',
           whereArgs: [barcode],
           limit: 1);
-      if (offMaps.isNotEmpty)
+      if (offMaps.isNotEmpty) {
         return FoodItem.fromMap(offMaps.first, source: FoodItemSource.off);
+      }
     }
 
     return null;

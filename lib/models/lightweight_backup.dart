@@ -5,9 +5,7 @@ import 'package:lightweight/models/food_item.dart';
 import 'package:lightweight/models/measurement.dart';
 import 'package:lightweight/models/measurement_session.dart';
 import 'package:lightweight/models/routine.dart';
-import 'package:lightweight/models/routine_exercise.dart';
 import 'package:lightweight/models/set_log.dart';
-import 'package:lightweight/models/set_template.dart';
 import 'package:lightweight/models/water_entry.dart';
 import 'package:lightweight/models/workout_log.dart';
 

@@ -183,7 +183,7 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
             children: [
               // Datum & Uhrzeit Sektion
               Text(l10n.date_and_time_of_measurement,
-                  style: textTheme.titleMedium), 
+                  style: textTheme.titleMedium),
               const SizedBox(height: 8),
               SummaryCard(
                 // KORREKTUR 2: Datum/Uhrzeit in SummaryCard

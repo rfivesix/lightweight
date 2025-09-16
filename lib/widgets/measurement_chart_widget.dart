@@ -12,7 +12,6 @@ class MeasurementChartWidget extends StatefulWidget {
   final DateTimeRange dateRange;
   final Color lineColor;
   final String unit;
-  
 
   const MeasurementChartWidget({
     super.key,

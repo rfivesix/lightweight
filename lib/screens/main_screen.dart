@@ -18,7 +18,6 @@ import 'package:lightweight/models/food_entry.dart';
 import 'package:lightweight/screens/add_food_screen.dart';
 import 'package:lightweight/screens/add_measurement_screen.dart';
 import 'package:lightweight/screens/routines_screen.dart';
-import 'package:lightweight/widgets/add_menu_sheet.dart';
 import 'package:lightweight/dialogs/quantity_dialog_content.dart';
 import 'package:lightweight/dialogs/water_dialog_content.dart';
 import 'package:lightweight/data/database_helper.dart';
@@ -120,37 +119,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   void _addWater(int quantityInMl, DateTime timestamp) async {
     await DatabaseHelper.instance.insertWaterEntry(quantityInMl, timestamp);
     _refreshHomeScreen();
-  }
-
-  void _showAddMenu() async {
-    final result = await showModalBottomSheet<String>(
-      context: context,
-      builder: (BuildContext context) => const AddMenuSheet(),
-    );
-    if (!mounted || result == null) return;
-    switch (result) {
-      case 'start_workout':
-        Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const RoutinesScreen()));
-        break;
-      case 'add_measurement':
-        Navigator.of(context)
-            .push(MaterialPageRoute(
-                builder: (context) => const AddMeasurementScreen()))
-            .then((success) {
-          if (success == true) _refreshHomeScreen();
-        });
-        break;
-      case 'add_food':
-        final selectedFoodItem = await Navigator.of(context).push<FoodItem>(
-            MaterialPageRoute(builder: (context) => const AddFoodScreen()));
-        if (selectedFoodItem != null) _addFoodItem(selectedFoodItem);
-        break;
-      case 'add_liquid':
-        final waterResult = await _showWaterDialog();
-        if (waterResult != null) _addWater(waterResult.$1, waterResult.$2);
-        break;
-    }
   }
 
   Future<(int, DateTime)?> _showWaterDialog() async {
@@ -255,7 +223,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isLightMode = theme.brightness == Brightness.light;
     final l10n = AppLocalizations.of(context)!;
 
     final List<Map<String, dynamic>> speedDialActions = [
@@ -301,7 +268,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
               indicatorColor: Colors.transparent,
               indicatorWeight: 0.0001,
               splashFactory: NoSplash.splashFactory,
-              overlayColor: MaterialStateProperty.all(Colors.transparent),
+              overlayColor: WidgetStateProperty.all(Colors.transparent),
               dividerColor: Colors.transparent,
               indicatorSize: TabBarIndicatorSize.label,
               labelColor: theme.brightness == Brightness.light

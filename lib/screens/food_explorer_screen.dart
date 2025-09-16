@@ -121,7 +121,7 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
                   isScrollable: false,
                   indicator: const BoxDecoration(),
                   splashFactory: NoSplash.splashFactory,
-                  overlayColor: MaterialStateProperty.all(Colors.transparent),
+                  overlayColor: WidgetStateProperty.all(Colors.transparent),
                   dividerColor: Colors.transparent,
                   // KORREKTUR: Dynamische Farbe basierend auf dem Theme-Modus
                   labelColor: isLightMode ? Colors.black : Colors.white,
@@ -158,7 +158,7 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
         ],
       ),
       floatingActionButton: GlassFab(
-          onPressed: _navigateAndCreateFood,
+        onPressed: _navigateAndCreateFood,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
@@ -209,8 +209,9 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
   }
 
   Widget _buildFavoritesTab(AppLocalizations l10n) {
-    if (_isLoadingFavorites)
+    if (_isLoadingFavorites) {
       return const Center(child: CircularProgressIndicator());
+    }
     if (_favoriteFoodItems.isEmpty) {
       return Center(
           child: Text(l10n.favoritesEmptyState,

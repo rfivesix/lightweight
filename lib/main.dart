@@ -39,8 +39,8 @@ class MyApp extends StatelessWidget {
     );
 
     // Feste Card-Farben (unabhängig von Material You)
-    const _cardDark = Color(0xFF171717); // tiefes Grau
-    const _cardLight = Color(0xFFF3F3F3); // sehr helles Grau
+    const cardDark = Color(0xFF171717); // tiefes Grau
+    const cardLight = Color(0xFFF3F3F3); // sehr helles Grau
 
     return DynamicColorBuilder(
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
@@ -53,17 +53,15 @@ class MyApp extends StatelessWidget {
           seedColor: lightSeed,
           brightness: Brightness.light,
         ).copyWith(
-          background: Colors.white,
           surface: Colors.white,
         );
 
         // --- Dark Scheme aus Seed + OLED-Schwarz ---
-        final _seededDark = ColorScheme.fromSeed(
+        final seededDark = ColorScheme.fromSeed(
           seedColor: darkSeed,
           brightness: Brightness.dark,
         );
-        final darkScheme = _seededDark.copyWith(
-          background: Colors.black,
+        final darkScheme = seededDark.copyWith(
           surface: Colors.black,
           surfaceDim: Colors.black,
           surfaceBright: Colors.black,
@@ -81,8 +79,7 @@ class MyApp extends StatelessWidget {
           primaryColor: lightScheme.primary, // Akzent in M2-Welten
           scaffoldBackgroundColor: Colors.white,
           canvasColor: Colors.white,
-          cardColor: _cardLight,
-          dialogBackgroundColor: _cardLight,
+          cardColor: cardLight,
           // NEU / ANGEPASST:
           splashFactory: NoSplash.splashFactory,
           splashColor: Colors.transparent,
@@ -114,9 +111,9 @@ class MyApp extends StatelessWidget {
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           ),
 
-          bottomSheetTheme: BottomSheetThemeData(
-            backgroundColor: _cardLight,
-            shape: const RoundedRectangleBorder(
+          bottomSheetTheme: const BottomSheetThemeData(
+            backgroundColor: cardLight,
+            shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
             elevation: 0,
@@ -171,19 +168,19 @@ class MyApp extends StatelessWidget {
             selectionHandleColor: lightScheme.primary,
           ),
           checkboxTheme: CheckboxThemeData(
-            fillColor: MaterialStateProperty.all(lightScheme.primary),
+            fillColor: WidgetStateProperty.all(lightScheme.primary),
           ),
           radioTheme: RadioThemeData(
-            fillColor: MaterialStateProperty.all(lightScheme.primary),
+            fillColor: WidgetStateProperty.all(lightScheme.primary),
           ),
           switchTheme: SwitchThemeData(
             thumbColor:
-                MaterialStateProperty.resolveWith((s) => lightScheme.primary),
-            trackColor: MaterialStateProperty.resolveWith(
+                WidgetStateProperty.resolveWith((s) => lightScheme.primary),
+            trackColor: WidgetStateProperty.resolveWith(
                 (s) => lightScheme.primary.withOpacity(0.5)),
           ),
           dialogTheme: DialogThemeData(
-            backgroundColor: _cardLight,
+            backgroundColor: cardLight,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           ),
@@ -196,8 +193,7 @@ class MyApp extends StatelessWidget {
           primaryColor: darkScheme.primary, // Akzent in M2-Welten
           scaffoldBackgroundColor: Colors.black,
           canvasColor: Colors.black,
-          cardColor: _cardDark,
-          dialogBackgroundColor: _cardDark,
+          cardColor: cardDark,
           // NEU / ANGEPASST:
           splashFactory: NoSplash.splashFactory,
           splashColor: Colors.transparent,
@@ -229,9 +225,9 @@ class MyApp extends StatelessWidget {
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           ),
 
-          bottomSheetTheme: BottomSheetThemeData(
-            backgroundColor: _cardDark,
-            shape: const RoundedRectangleBorder(
+          bottomSheetTheme: const BottomSheetThemeData(
+            backgroundColor: cardDark,
+            shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
             elevation: 0,
@@ -285,19 +281,19 @@ class MyApp extends StatelessWidget {
             selectionHandleColor: darkScheme.primary,
           ),
           checkboxTheme: CheckboxThemeData(
-            fillColor: MaterialStateProperty.all(darkScheme.primary),
+            fillColor: WidgetStateProperty.all(darkScheme.primary),
           ),
           radioTheme: RadioThemeData(
-            fillColor: MaterialStateProperty.all(darkScheme.primary),
+            fillColor: WidgetStateProperty.all(darkScheme.primary),
           ),
           switchTheme: SwitchThemeData(
             thumbColor:
-                MaterialStateProperty.resolveWith((s) => darkScheme.primary),
-            trackColor: MaterialStateProperty.resolveWith(
+                WidgetStateProperty.resolveWith((s) => darkScheme.primary),
+            trackColor: WidgetStateProperty.resolveWith(
                 (s) => darkScheme.primary.withOpacity(0.5)),
           ),
           dialogTheme: DialogThemeData(
-            backgroundColor: _cardDark,
+            backgroundColor: cardDark,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           ),

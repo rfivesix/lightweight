@@ -9,7 +9,7 @@ import 'package:lightweight/models/routine_exercise.dart';
 import 'package:lightweight/models/set_template.dart';
 import 'package:lightweight/screens/exercise_catalog_screen.dart';
 import 'package:lightweight/screens/exercise_detail_screen.dart';
-import 'package:lightweight/screens/live_workout_screen.dart'; // Zum Starten der Routine
+// Zum Starten der Routine
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/set_type_chip.dart';
 import 'package:lightweight/widgets/summary_card.dart'; // HINZUGEFÜGT
@@ -126,9 +126,10 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     FocusScope.of(context).unfocus();
 
     if (_nameController.text.trim().isEmpty) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(l10n.validatorPleaseEnterRoutineName)));
+      }
       return false;
     }
 
@@ -145,9 +146,10 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
           _originalName = newRoutine.name;
         });
       }
-      if (mounted && !isAddingExercise)
+      if (mounted && !isAddingExercise) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(l10n.snackbarRoutineCreated)));
+      }
     } else {
       if (_nameController.text.trim() != _originalName) {
         await WorkoutDatabaseHelper.instance
@@ -325,66 +327,67 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-  appBar: AppBar(
-    automaticallyImplyLeading: true,
-    elevation: 0,
-    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-    scrolledUnderElevation: 0,
-    centerTitle: false,
-    title: Text(
-      _isNewRoutine ? l10n.titleNewRoutine : l10n.titleEditRoutine,
-      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w900,
-          ),
-    ),
-    actions: [
-      TextButton(
-        onPressed: () => _saveRoutine(),
-        child: Text(
-          l10n.save,
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.primary,
-            fontWeight: FontWeight.bold,
-          ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          _isNewRoutine ? l10n.titleNewRoutine : l10n.titleEditRoutine,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => _saveRoutine(),
+            child: Text(
+              l10n.save,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
       ),
-    ],
-  ),
-  body: Column(
-    children: [
-      // Routine-Name Eingabe bleibt im Body
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        child: TextFormField(
-          controller: _nameController,
-          decoration: InputDecoration(labelText: l10n.formFieldRoutineName),
-          validator: (value) {
-            if (value == null || value.trim().isEmpty) {
-              return l10n.validatorPleaseEnterRoutineName;
-            }
-            return null;
-          },
-        ),
-      ),
-      const SizedBox(height: 12),
-      Divider(
-        height: 1,
-        thickness: 1,
-        color: colorScheme.onSurfaceVariant.withOpacity(0.1),
-      ),
-      // Rest: ListView mit Exercises (unverändert)
-      Expanded(
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _routineExercises.isEmpty
-                ? Center(
-                    child: Text(
-                      l10n.emptyStateAddFirstExercise,
-                      style: textTheme.titleMedium,
-                    ),
-                  )
-                : ReorderableListView.builder(
+      body: Column(
+        children: [
+          // Routine-Name Eingabe bleibt im Body
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: TextFormField(
+              controller: _nameController,
+              decoration: InputDecoration(labelText: l10n.formFieldRoutineName),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return l10n.validatorPleaseEnterRoutineName;
+                }
+                return null;
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+          ),
+          // Rest: ListView mit Exercises (unverändert)
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _routineExercises.isEmpty
+                    ? Center(
+                        child: Text(
+                          l10n.emptyStateAddFirstExercise,
+                          style: textTheme.titleMedium,
+                        ),
+                      )
+                    : ReorderableListView.builder(
                         padding: const EdgeInsets.all(16.0),
                         itemCount: _routineExercises.length,
                         // KORREKTUR: onReorderStart/End für Drag-Feedback
@@ -557,8 +560,9 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         ],
       ),
       floatingActionButton: GlassFab(
-          onPressed: _addExercises, // Fügt neue Übungen hinzu ODER speichert die Routine
-        ),
+        onPressed:
+            _addExercises, // Fügt neue Übungen hinzu ODER speichert die Routine
+      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
@@ -609,8 +613,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
             controller: _repsControllers[template.id!],
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-                hintText: l10n.set_reps_hint, isDense: true), 
+            decoration:
+                InputDecoration(hintText: l10n.set_reps_hint, isDense: true),
             validator: (value) {
               if (value != null &&
                   value.isNotEmpty &&

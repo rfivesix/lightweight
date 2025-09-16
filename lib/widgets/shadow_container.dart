@@ -22,16 +22,19 @@ class ShadowContainer extends StatelessWidget {
       margin: margin,
       decoration: BoxDecoration(
         borderRadius: borderRadius,
-        boxShadow: boxShadow ?? [ // Standard-Schatten, wenn keiner angegeben ist
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 15,
-            spreadRadius: 0,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: boxShadow ??
+            [
+              // Standard-Schatten, wenn keiner angegeben ist
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 15,
+                spreadRadius: 0,
+                offset: const Offset(0, 8),
+              ),
+            ],
       ),
-      child: ClipRRect( // ClipRRect, um den Inhalt innerhalb der Ecken zu halten
+      child: ClipRRect(
+        // ClipRRect, um den Inhalt innerhalb der Ecken zu halten
         borderRadius: borderRadius,
         child: child,
       ),

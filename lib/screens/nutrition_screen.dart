@@ -28,10 +28,13 @@ class _NutritionScreenState extends State<NutritionScreen> {
   List<dynamic> _displayItems = [];
   bool _isLoading = true;
   DateTimeRange _selectedDateRange = DateTime.now().isSameDate(DateTime.now())
-      ? DateTimeRange(start: DateTime.now(), end: DateTime.now()) // Einzeltag für heute
-      : DateTimeRange(start: DateTime.now().subtract(const Duration(days: 6)), end: DateTime.now()); // Standard: Letzte 7 Tage
+      ? DateTimeRange(
+          start: DateTime.now(), end: DateTime.now()) // Einzeltag für heute
+      : DateTimeRange(
+          start: DateTime.now().subtract(const Duration(days: 6)),
+          end: DateTime.now()); // Standard: Letzte 7 Tage
   bool _isSummaryExpanded = UiStateService.instance.isNutritionSummaryExpanded;
-  String _selectedRangeKey = '1D'; 
+  String _selectedRangeKey = '1D';
   bool _isHeaderVisible = true;
 
   @override
@@ -42,7 +45,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
 
   Future<void> _loadEntriesForDateRange(DateTimeRange range) async {
     if (!mounted) return;
-    setState(() { _isLoading = true; });
+    setState(() {
+      _isLoading = true;
+    });
 
     final prefs = await SharedPreferences.getInstance();
     final targetCalories = prefs.getInt('targetCalories') ?? 2500;
@@ -54,11 +59,14 @@ class _NutritionScreenState extends State<NutritionScreen> {
     final targetFiber = prefs.getInt('targetFiber') ?? 30;
     final targetSalt = prefs.getInt('targetSalt') ?? 6;
 
-    final foodEntries = await DatabaseHelper.instance.getEntriesForDateRange(range.start, range.end);
-    final waterEntries = await DatabaseHelper.instance.getWaterEntriesForDateRange(range.start, range.end);
-    
+    final foodEntries = await DatabaseHelper.instance
+        .getEntriesForDateRange(range.start, range.end);
+    final waterEntries = await DatabaseHelper.instance
+        .getWaterEntriesForDateRange(range.start, range.end);
+
     final numberOfDays = range.duration.inDays + 1;
-    final newNutritionSummary = DailyNutrition( // KORREKTUR: Neue Variable
+    final newNutritionSummary = DailyNutrition(
+      // KORREKTUR: Neue Variable
       targetCalories: targetCalories * numberOfDays,
       targetProtein: targetProtein * numberOfDays,
       targetCarbs: targetCarbs * numberOfDays,
@@ -68,27 +76,38 @@ class _NutritionScreenState extends State<NutritionScreen> {
       targetFiber: targetFiber * numberOfDays,
       targetSalt: targetSalt * numberOfDays,
     );
-    
+
     final List<FoodTimelineEntry> foodTimeline = [];
     for (final entry in foodEntries) {
-      final foodItem = await ProductDatabaseHelper.instance.getProductByBarcode(entry.barcode);
+      final foodItem = await ProductDatabaseHelper.instance
+          .getProductByBarcode(entry.barcode);
       if (foodItem != null) {
-        newNutritionSummary.calories += (foodItem.calories / 100 * entry.quantityInGrams).round();
-        newNutritionSummary.protein += (foodItem.protein / 100 * entry.quantityInGrams).round();
-        newNutritionSummary.carbs += (foodItem.carbs / 100 * entry.quantityInGrams).round();
-        newNutritionSummary.fat += (foodItem.fat / 100 * entry.quantityInGrams).round();
-        newNutritionSummary.sugar += (foodItem.sugar ?? 0) / 100 * entry.quantityInGrams;
-        newNutritionSummary.fiber += (foodItem.fiber ?? 0) / 100 * entry.quantityInGrams;
-        newNutritionSummary.salt += (foodItem.salt ?? 0) / 100 * entry.quantityInGrams;
-        foodTimeline.add(FoodTimelineEntry(TrackedFoodItem(entry: entry, item: foodItem)));
+        newNutritionSummary.calories +=
+            (foodItem.calories / 100 * entry.quantityInGrams).round();
+        newNutritionSummary.protein +=
+            (foodItem.protein / 100 * entry.quantityInGrams).round();
+        newNutritionSummary.carbs +=
+            (foodItem.carbs / 100 * entry.quantityInGrams).round();
+        newNutritionSummary.fat +=
+            (foodItem.fat / 100 * entry.quantityInGrams).round();
+        newNutritionSummary.sugar +=
+            (foodItem.sugar ?? 0) / 100 * entry.quantityInGrams;
+        newNutritionSummary.fiber +=
+            (foodItem.fiber ?? 0) / 100 * entry.quantityInGrams;
+        newNutritionSummary.salt +=
+            (foodItem.salt ?? 0) / 100 * entry.quantityInGrams;
+        foodTimeline.add(
+            FoodTimelineEntry(TrackedFoodItem(entry: entry, item: foodItem)));
       }
     }
-    
-    final waterTimeline = waterEntries.map((e) => WaterTimelineEntry(e)).toList();
-    newNutritionSummary.water = waterEntries.fold(0, (sum, entry) => sum + entry.quantityInMl);
+
+    final waterTimeline =
+        waterEntries.map((e) => WaterTimelineEntry(e)).toList();
+    newNutritionSummary.water =
+        waterEntries.fold(0, (sum, entry) => sum + entry.quantityInMl);
 
     final List<dynamic> finalDisplayList = [];
-    
+
     if (range.duration.inDays == 0) {
       final Map<String, List<FoodTimelineEntry>> groupedFood = {};
       for (final entry in foodTimeline) {
@@ -99,25 +118,34 @@ class _NutritionScreenState extends State<NutritionScreen> {
           groupedFood[mealType] = [entry];
         }
       }
-      
-      const mealOrder = ["mealtypeBreakfast", "mealtypeLunch", "mealtypeDinner", "mealtypeSnack"];
+
+      const mealOrder = [
+        "mealtypeBreakfast",
+        "mealtypeLunch",
+        "mealtypeDinner",
+        "mealtypeSnack"
+      ];
       for (final mealKey in mealOrder) {
         if (groupedFood.containsKey(mealKey)) {
           finalDisplayList.add(mealKey);
-          groupedFood[mealKey]!.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+          groupedFood[mealKey]!
+              .sort((a, b) => b.timestamp.compareTo(a.timestamp));
           finalDisplayList.addAll(groupedFood[mealKey]!);
         }
       }
-      
+
       if (waterTimeline.isNotEmpty) {
         finalDisplayList.add("waterHeader");
         waterTimeline.sort((a, b) => b.timestamp.compareTo(a.timestamp));
         finalDisplayList.addAll(waterTimeline);
       }
     } else {
-      final List<TimelineEntry> combinedList = [...foodTimeline, ...waterTimeline];
+      final List<TimelineEntry> combinedList = [
+        ...foodTimeline,
+        ...waterTimeline
+      ];
       combinedList.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-      
+
       DateTime? lastDate;
       for (final entry in combinedList) {
         final entryDate = entry.timestamp;
@@ -129,9 +157,10 @@ class _NutritionScreenState extends State<NutritionScreen> {
       }
     }
 
-    if(mounted) {
+    if (mounted) {
       setState(() {
-        _nutritionData = newNutritionSummary; // KORREKTUR: Die Variable korrekt zuweisen
+        _nutritionData =
+            newNutritionSummary; // KORREKTUR: Die Variable korrekt zuweisen
         _displayItems = finalDisplayList;
         _isLoading = false;
       });
@@ -245,7 +274,6 @@ class _NutritionScreenState extends State<NutritionScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -268,12 +296,13 @@ class _NutritionScreenState extends State<NutritionScreen> {
                 Container(
                   color: Theme.of(context).scaffoldBackgroundColor,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
-                    //padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0), 
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 0.0),
+                    //padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        //const SizedBox(height: 16), // <- DIESE ZEILE 
+                        //const SizedBox(height: 16), // <- DIESE ZEILE
                         Text(
                           l10n.nutritionScreenTitle,
                           style: textTheme.headlineMedium?.copyWith(
@@ -286,11 +315,17 @@ class _NutritionScreenState extends State<NutritionScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            IconButton(icon: const Icon(Icons.chevron_left), onPressed: () => _navigateDay(false)),
+                            IconButton(
+                                icon: const Icon(Icons.chevron_left),
+                                onPressed: () => _navigateDay(false)),
                             Expanded(
                               child: InkWell(
                                 onTap: () async {
-                                  final picked = await showDateRangePicker(context: context, initialDateRange: _selectedDateRange, firstDate: DateTime(2020), lastDate: DateTime.now());
+                                  final picked = await showDateRangePicker(
+                                      context: context,
+                                      initialDateRange: _selectedDateRange,
+                                      firstDate: DateTime(2020),
+                                      lastDate: DateTime.now());
                                   if (picked != null) {
                                     setState(() {
                                       _selectedDateRange = picked;
@@ -300,14 +335,20 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                   }
                                 },
                                 child: Text(
-                                  rangeText, 
-                                  style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                                  rangeText,
+                                  style: textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.bold),
                                   textAlign: TextAlign.center,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ),
-                            IconButton(icon: const Icon(Icons.chevron_right), onPressed: _selectedDateRange.end.isSameDate(DateTime.now()) ? null : () => _navigateDay(true)),
+                            IconButton(
+                                icon: const Icon(Icons.chevron_right),
+                                onPressed: _selectedDateRange.end
+                                        .isSameDate(DateTime.now())
+                                    ? null
+                                    : () => _navigateDay(true)),
                           ],
                         ),
                         const SizedBox(height: 16),
@@ -319,13 +360,15 @@ class _NutritionScreenState extends State<NutritionScreen> {
                             _buildFilterButton(l10n.filterAll, 'All'),
                           ],
                         ),
-                        const SizedBox(height: 16), // <- DIESE ZEILE 
+                        const SizedBox(height: 16), // <- DIESE ZEILE
                       ],
                     ),
                   ),
                 ),
-                Divider(height: 1, thickness: 1, color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
-                
+                Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
                 AnimatedSize(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
@@ -337,27 +380,35 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                 children: [
                                   // KORREKTUR: NutritionSummaryWidget in einem Padding, das dem horizontalen ListView-Padding entspricht.
                                   Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16.0), // <- Dieser Padding ist wichtig!
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal:
+                                            16.0), // <- Dieser Padding ist wichtig!
                                     child: NutritionSummaryWidget(
-                                      nutritionData: _nutritionData!, 
-                                      isExpandedView: _isSummaryExpanded,
-                                      l10n: l10n
-                                    ),
+                                        nutritionData: _nutritionData!,
+                                        isExpandedView: _isSummaryExpanded,
+                                        l10n: l10n),
                                   ),
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
                                     children: [
                                       TextButton(
                                         onPressed: () {
                                           setState(() {
-                                            _isSummaryExpanded = !_isSummaryExpanded;
-                                            UiStateService.instance.isNutritionSummaryExpanded = _isSummaryExpanded;
+                                            _isSummaryExpanded =
+                                                !_isSummaryExpanded;
+                                            UiStateService.instance
+                                                    .isNutritionSummaryExpanded =
+                                                _isSummaryExpanded;
                                           });
                                         },
-                                        child: Text(_isSummaryExpanded ? l10n.showLess : l10n.showMoreDetails),
+                                        child: Text(_isSummaryExpanded
+                                            ? l10n.showLess
+                                            : l10n.showMoreDetails),
                                       ),
                                       TextButton(
-                                        onPressed: () => setState(() => _isHeaderVisible = false),
+                                        onPressed: () => setState(
+                                            () => _isHeaderVisible = false),
                                         child: Text(l10n.hideSummary),
                                       ),
                                     ],
@@ -369,51 +420,69 @@ class _NutritionScreenState extends State<NutritionScreen> {
                       : Align(
                           alignment: Alignment.centerRight,
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
                             child: TextButton(
-                              onPressed: () => setState(() => _isHeaderVisible = true),
+                              onPressed: () =>
+                                  setState(() => _isHeaderVisible = true),
                               child: Text(l10n.showSummary),
                             ),
                           ),
                         ),
                 ),
-                Divider(height: 1, thickness: 1, color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
-                
+                Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
                 Expanded(
                   child: _displayItems.isEmpty
                       ? Center(child: Text(l10n.noEntriesForPeriod))
                       : ListView.separated(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0, vertical: 8.0),
                           itemCount: _displayItems.length,
-                          separatorBuilder: (context, index) => const SizedBox(height: 12), // KORREKTUR: Trenner
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 12), // KORREKTUR: Trenner
                           itemBuilder: (context, index) {
                             final item = _displayItems[index];
 
-                            String getLocalizedMealName(String key) { 
+                            String getLocalizedMealName(String key) {
                               switch (key) {
-                                case "mealtypeBreakfast": return l10n.mealtypeBreakfast;
-                                case "mealtypeLunch": return l10n.mealtypeLunch;
-                                case "mealtypeDinner": return l10n.mealtypeDinner;
-                                case "mealtypeSnack": return l10n.mealtypeSnack;
-                                case "waterHeader": return l10n.waterHeader;
-                                default: return key;
+                                case "mealtypeBreakfast":
+                                  return l10n.mealtypeBreakfast;
+                                case "mealtypeLunch":
+                                  return l10n.mealtypeLunch;
+                                case "mealtypeDinner":
+                                  return l10n.mealtypeDinner;
+                                case "mealtypeSnack":
+                                  return l10n.mealtypeSnack;
+                                case "waterHeader":
+                                  return l10n.waterHeader;
+                                default:
+                                  return key;
                               }
                             }
+
                             if (item is DateTime) {
                               return Padding(
-                                padding: const EdgeInsets.only(top: 24.0, bottom: 8.0, left: 8.0),
+                                padding: const EdgeInsets.only(
+                                    top: 24.0, bottom: 8.0, left: 8.0),
                                 child: Text(
                                   DateFormat.yMMMMEEEEd(locale).format(item),
-                                  style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.primary),
+                                  style: textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: colorScheme.primary),
                                 ),
                               );
                             }
 
                             if (item is String) {
                               return Padding(
-                                padding: const EdgeInsets.only(top: 24.0, bottom: 8.0, left: 8.0),
+                                padding: const EdgeInsets.only(
+                                    top: 24.0, bottom: 8.0, left: 8.0),
                                 child: Text(getLocalizedMealName(item),
-                                    style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                                    style: textTheme.titleLarge?.copyWith(
+                                        fontWeight: FontWeight.bold)),
                               );
                             }
 
@@ -422,43 +491,75 @@ class _NutritionScreenState extends State<NutritionScreen> {
                               return Dismissible(
                                 key: Key('food_${trackedItem.entry.id}'),
                                 background: Container(
-                                  color: Colors.blueAccent, alignment: Alignment.centerLeft, padding: const EdgeInsets.symmetric(horizontal: 20), child: const Icon(Icons.edit, color: Colors.white)),
+                                    color: Colors.blueAccent,
+                                    alignment: Alignment.centerLeft,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20),
+                                    child: const Icon(Icons.edit,
+                                        color: Colors.white)),
                                 secondaryBackground: Container(
-                                  color: Colors.redAccent, alignment: Alignment.centerRight, padding: const EdgeInsets.symmetric(horizontal: 20), child: const Icon(Icons.delete, color: Colors.white)),
+                                    color: Colors.redAccent,
+                                    alignment: Alignment.centerRight,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20),
+                                    child: const Icon(Icons.delete,
+                                        color: Colors.white)),
                                 confirmDismiss: (direction) async {
-                                  if (direction == DismissDirection.startToEnd) {
+                                  if (direction ==
+                                      DismissDirection.startToEnd) {
                                     _editFoodEntry(trackedItem);
-                                    return false; 
+                                    return false;
                                   } else {
                                     return await showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return AlertDialog(
-                                          title: Text(l10n.deleteConfirmTitle),
-                                          content: Text(l10n.deleteConfirmContent),
-                                          actions: <Widget>[
-                                            TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
-                                            TextButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.delete)),
-                                          ],
-                                        );
-                                      },
-                                    ) ?? false;
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              title:
+                                                  Text(l10n.deleteConfirmTitle),
+                                              content: Text(
+                                                  l10n.deleteConfirmContent),
+                                              actions: <Widget>[
+                                                TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.of(context)
+                                                            .pop(false),
+                                                    child: Text(l10n.cancel)),
+                                                TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.of(context)
+                                                            .pop(true),
+                                                    child: Text(l10n.delete)),
+                                              ],
+                                            );
+                                          },
+                                        ) ??
+                                        false;
                                   }
                                 },
                                 onDismissed: (direction) {
-                                  if (direction == DismissDirection.endToStart) {
+                                  if (direction ==
+                                      DismissDirection.endToStart) {
                                     _deleteFoodEntry(trackedItem.entry.id!);
                                   }
                                 },
-                                child: SummaryCard(//externalMargin: EdgeInsets.zero,
+                                child: SummaryCard(
+                                  //externalMargin: EdgeInsets.zero,
                                   child: ListTile(
                                     leading: const Icon(Icons.restaurant),
                                     title: Text(trackedItem.item.name),
-                                    subtitle: Text(l10n.foodListSubtitle(trackedItem.entry.quantityInGrams, DateFormat.Hm(locale).format(trackedItem.entry.timestamp))),
-                                    trailing: Text(l10n.foodListTrailingKcal(trackedItem.calculatedCalories)),
-                                    onTap: () => Navigator.of(context).push(
-                                      MaterialPageRoute(builder: (context) => FoodDetailScreen(trackedItem: trackedItem))
-                                    ).then((_) => _loadEntriesForDateRange(_selectedDateRange)),
+                                    subtitle: Text(l10n.foodListSubtitle(
+                                        trackedItem.entry.quantityInGrams,
+                                        DateFormat.Hm(locale).format(
+                                            trackedItem.entry.timestamp))),
+                                    trailing: Text(l10n.foodListTrailingKcal(
+                                        trackedItem.calculatedCalories)),
+                                    onTap: () => Navigator.of(context)
+                                        .push(MaterialPageRoute(
+                                            builder: (context) =>
+                                                FoodDetailScreen(
+                                                    trackedItem: trackedItem)))
+                                        .then((_) => _loadEntriesForDateRange(
+                                            _selectedDateRange)),
                                   ),
                                 ),
                               );
@@ -469,14 +570,28 @@ class _NutritionScreenState extends State<NutritionScreen> {
                               return Dismissible(
                                 key: Key('water_${waterEntry.id}'),
                                 direction: DismissDirection.endToStart,
-                                onDismissed: (direction) => _deleteWaterEntry(waterEntry.id!),
-                                background: Container(color: Colors.red, alignment: Alignment.centerRight, padding: const EdgeInsets.symmetric(horizontal: 20), child: const Icon(Icons.delete, color: Colors.white)),
-                                child: SummaryCard(//externalMargin: EdgeInsets.zero,
+                                onDismissed: (direction) =>
+                                    _deleteWaterEntry(waterEntry.id!),
+                                background: Container(
+                                    color: Colors.red,
+                                    alignment: Alignment.centerRight,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20),
+                                    child: const Icon(Icons.delete,
+                                        color: Colors.white)),
+                                child: SummaryCard(
+                                  //externalMargin: EdgeInsets.zero,
                                   child: ListTile(
-                                    leading: Icon(Icons.local_drink, color: colorScheme.primary),
+                                    leading: Icon(Icons.local_drink,
+                                        color: colorScheme.primary),
                                     title: Text(l10n.waterEntryTitle),
-                                    subtitle: Text(DateFormat.Hm(locale).format(waterEntry.timestamp)),
-                                    trailing: Text(l10n.waterListTrailingMl(waterEntry.quantityInMl), style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    subtitle: Text(DateFormat.Hm(locale)
+                                        .format(waterEntry.timestamp)),
+                                    trailing: Text(
+                                        l10n.waterListTrailingMl(
+                                            waterEntry.quantityInMl),
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold)),
                                   ),
                                 ),
                               );
@@ -499,8 +614,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
       ),
     );
   }
-  
-  
+
   Widget _buildFilterButton(String label, String key) {
     final theme = Theme.of(context);
     final isSelected = _selectedRangeKey == key;
@@ -511,14 +625,18 @@ class _NutritionScreenState extends State<NutritionScreen> {
           margin: const EdgeInsets.symmetric(horizontal: 4.0),
           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
           decoration: BoxDecoration(
-            color: isSelected ? theme.colorScheme.primary : theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
             borderRadius: BorderRadius.circular(10.0),
           ),
           child: Text(
             label,
             textAlign: TextAlign.center,
             style: theme.textTheme.labelLarge?.copyWith(
-              color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
+              color: isSelected
+                  ? theme.colorScheme.onPrimary
+                  : theme.colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.bold,
             ),
           ),

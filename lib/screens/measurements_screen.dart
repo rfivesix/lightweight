@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/measurement.dart';
 import 'package:lightweight/models/measurement_session.dart';
 import 'package:lightweight/screens/add_measurement_screen.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
@@ -28,7 +27,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
     start: DateTime.now().subtract(const Duration(days: 29)),
     end: DateTime.now(),
   );
-  List<String> _chartDateRangeKeys = ['30D', '90D', '180D', 'All'];
+  final List<String> _chartDateRangeKeys = ['30D', '90D', '180D', 'All'];
   String _selectedChartRangeKey = '30D';
 
   @override
@@ -131,20 +130,22 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
                   padding: const EdgeInsets.all(16.0),
                   children: [
                     if (_availableMeasurementTypes.isNotEmpty) ...[
-                      _buildChartSection(l10n, colorScheme,Theme.of(context).textTheme),
+                      _buildChartSection(
+                          l10n, colorScheme, Theme.of(context).textTheme),
                       const SizedBox(height: 24),
                     ],
                     _buildSectionTitle(context, l10n.all_measurements),
-                    ..._sessions.map((session) =>
-                        _buildMeasurementSessionCard(l10n, colorScheme, session))
+                    ..._sessions.map((session) => _buildMeasurementSessionCard(
+                        l10n, colorScheme, session))
                   ],
                 ),
       floatingActionButton: GlassFab(
-          onPressed: _navigateToCreateMeasurement,
+        onPressed: _navigateToCreateMeasurement,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
+
   Widget _buildEmptyState(AppLocalizations l10n, BuildContext context) {
     return Center(
       child: Padding(
@@ -304,8 +305,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content: Text(l10n.measurement_session_detail_view)),
+                  SnackBar(content: Text(l10n.measurement_session_detail_view)),
                 );
               },
             ),
@@ -313,18 +313,16 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
                 height: 1,
                 thickness: 1,
                 color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
-            ...sortedMeasurements
-                .map((measurement) => ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16.0, vertical: 4.0),
-                      leading: _getMeasurementIcon(measurement.type),
-                      title: Text(_getLocalizedMeasurementType(
-                          l10n, measurement.type)), // l10n übergeben
-                      trailing: Text(
-                          "${measurement.value.toStringAsFixed(1)} ${measurement.unit}",
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
-                    ))
-                .toList(),
+            ...sortedMeasurements.map((measurement) => ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 4.0),
+                  leading: _getMeasurementIcon(measurement.type),
+                  title: Text(_getLocalizedMeasurementType(
+                      l10n, measurement.type)), // l10n übergeben
+                  trailing: Text(
+                      "${measurement.value.toStringAsFixed(1)} ${measurement.unit}",
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                )),
           ],
         ),
       ),

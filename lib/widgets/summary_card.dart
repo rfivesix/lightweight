@@ -16,7 +16,8 @@ class SummaryCard extends StatelessWidget {
 
     final background = brightness == Brightness.dark
         ? const Color.fromARGB(255, 22, 22, 22) // tiefes Grau für Dark Mode
-        : const Color.fromARGB(255, 253, 253, 253); // sehr helles Grau für Light Mode
+        : const Color.fromARGB(
+            255, 253, 253, 253); // sehr helles Grau für Light Mode
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6.0),

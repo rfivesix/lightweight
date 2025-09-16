@@ -5,7 +5,6 @@ import 'package:lightweight/data/product_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/food_item.dart';
 import 'package:lightweight/screens/create_food_screen.dart';
-import 'package:lightweight/screens/food_detail_screen.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/off_attribution_widget.dart';
 import 'package:lightweight/widgets/summary_card.dart';
@@ -125,8 +124,6 @@ class _AddFoodScreenState extends State<AddFoodScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
     final isLightMode = Theme.of(context).brightness == Brightness.light;
 
     return Scaffold(
@@ -156,7 +153,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                   isScrollable: false, // Verteilt Tabs gleichmäßig
                   indicator: const BoxDecoration(),
                   splashFactory: NoSplash.splashFactory,
-                  overlayColor: MaterialStateProperty.all(Colors.transparent),
+                  overlayColor: WidgetStateProperty.all(Colors.transparent),
                   // KORREKTUR: labelPadding: EdgeInsets.zero, für volle Breite der Tab-Labels
                   labelPadding: EdgeInsets.zero, // Wichtig für exaktes Layout
                   labelColor: isLightMode ? Colors.black : Colors.white,
@@ -193,9 +190,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
           ),
         ],
       ),
-      floatingActionButton: GlassFab(
-          onPressed: _navigateAndCreateFood
-        ),
+      floatingActionButton: GlassFab(onPressed: _navigateAndCreateFood),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
@@ -261,8 +256,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
   }
 
   Widget _buildFavoritesTab(AppLocalizations l10n) {
-    if (_isLoadingFavorites)
+    if (_isLoadingFavorites) {
       return const Center(child: CircularProgressIndicator());
+    }
     if (_favoriteFoodItems.isEmpty) {
       // KORREKTUR: Theme-konformer Stil
       return Center(
@@ -287,8 +283,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
   }
 
   Widget _buildRecentTab(AppLocalizations l10n) {
-    if (_isLoadingRecent)
+    if (_isLoadingRecent) {
       return const Center(child: CircularProgressIndicator());
+    }
     if (_recentFoodItems.isEmpty) {
       // KORREKTUR: Theme-konformer Stil
       return Center(

@@ -71,7 +71,6 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
@@ -169,7 +168,7 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
           labelText: label,
           // Wir lassen die globalen Themes greifen
         ),
-        keyboardType: TextInputType.numberWithOptions(decimal: true),
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
         validator: (value) {
           if (isRequired && (value == null || value.isEmpty)) {
             return l10n.validatorPleaseEnterName; // Oder spezifischer Text

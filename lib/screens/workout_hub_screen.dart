@@ -1,7 +1,6 @@
 // lib/screens/workout_hub_screen.dart (Final, mit einheitlichem Design)
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/routine.dart';

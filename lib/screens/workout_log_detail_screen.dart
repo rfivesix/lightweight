@@ -1,6 +1,5 @@
 // lib/screens/workout_log_detail_screen.dart (Final & Korrigiert - Edit Mode)
 
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
@@ -13,7 +12,6 @@ import 'package:lightweight/widgets/set_type_chip.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/widgets/wger_attribution_widget.dart';
 import 'package:lightweight/widgets/workout_summary_bar.dart';
-import 'package:lightweight/util/time_util.dart';
 
 class WorkoutLogDetailScreen extends StatefulWidget {
   final int logId;
@@ -202,9 +200,10 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
       await dbHelper.insertSetLog(set.copyWith(workoutLogId: widget.logId));
     }
 
-    if (mounted)
+    if (mounted) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(l10n.snackbarGoalsSaved)));
+    }
 
     setState(() => _isEditMode = false);
     _loadDetails();
@@ -483,7 +482,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                   ),
                 );
               }
-            }).toList(),
+            }),
             if (_isEditMode)
               Padding(
                 padding:
@@ -514,16 +513,5 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
         ),
       );
     }).toList();
-  }
-
-  // KORREKTUR 8: WgerAttributionWidget anpassen
-  Widget _buildWgerAttributionWidget(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
-      child: WgerAttributionWidget(
-        textStyle: textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-      ),
-    );
   }
 }

@@ -7,7 +7,7 @@ import 'package:lightweight/screens/goals_screen.dart'; // HINZUGEFÜGT: Import 
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:lightweight/services/profile_service.dart'; // HINZUGEFÜGT
-import 'package:image_picker/image_picker.dart'; // HINZUGEFÜGT
+// HINZUGEFÜGT
 import 'dart:io';
 
 import 'package:provider/provider.dart'; // HINZUGEFÜGT
@@ -106,8 +106,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             context: context,
             icon: Icons.import_export_rounded,
             title: l10n.backup_and_import,
-            subtitle:
-                l10n.backup_and_import_description,
+            subtitle: l10n.backup_and_import_description,
             onTap: () {
               Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => const DataManagementScreen()));
@@ -146,7 +145,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: ListTile(
               leading: const Icon(Icons.code_rounded),
               title: Text(l10n.app_version,
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
               subtitle: Text(
                   _appVersion), // KORREKTUR: Zeigt die dynamische Version an
             ),

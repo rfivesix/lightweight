@@ -86,7 +86,8 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: InputDecoration(labelText: l10n.exercise_name_label),
+                decoration:
+                    InputDecoration(labelText: l10n.exercise_name_label),
                 validator: (value) => value == null || value.isEmpty
                     ? "Bitte einen Namen eingeben."
                     : null,

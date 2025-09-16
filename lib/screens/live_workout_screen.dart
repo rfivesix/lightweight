@@ -3,7 +3,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
-import 'package:vibration/vibration.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/exercise.dart';
@@ -15,12 +14,11 @@ import 'package:lightweight/models/workout_log.dart';
 import 'package:lightweight/services/workout_session_manager.dart';
 import 'package:lightweight/widgets/set_type_chip.dart';
 import 'package:lightweight/widgets/summary_card.dart'; // HINZUGEFÜGT
-import 'package:lightweight/widgets/wger_attribution_widget.dart';
 import 'package:lightweight/widgets/workout_summary_bar.dart';
 import 'exercise_catalog_screen.dart';
 import 'exercise_detail_screen.dart';
 import 'package:provider/provider.dart';
-import 'package:lightweight/util/time_util.dart'; // Für formatDuration
+// Für formatDuration
 
 class LiveWorkoutScreen extends StatefulWidget {
   final Routine? routine;
@@ -87,9 +85,10 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     for (var routineExercise in _liveExercises) {
       final lastPerf = await WorkoutDatabaseHelper.instance
           .getLastPerformance(routineExercise.exercise.nameEn);
-      if (mounted)
+      if (mounted) {
         setState(() =>
             _lastPerformances[routineExercise.exercise.nameEn] = lastPerf);
+      }
       for (final template in routineExercise.setTemplates) {
         final templateId = template.id!;
         String initialReps =
@@ -493,11 +492,13 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                       for (final st in _liveExercises[index]
                                           .setTemplates) {
                                         if (st.id == setTemplate.id) break;
-                                        if (st.setType != 'warmup')
+                                        if (st.setType != 'warmup') {
                                           workingSetIndex++;
+                                        }
                                       }
-                                      if (setTemplate.setType != 'warmup')
+                                      if (setTemplate.setType != 'warmup') {
                                         workingSetIndex++;
+                                      }
 
                                       return _buildSetRow(
                                         workingSetIndex,
@@ -510,7 +511,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                             .exercise
                                             .nameEn],
                                       );
-                                    }).toList(),
+                                    }),
                                     const SizedBox(height: 8),
                                     TextButton.icon(
                                       onPressed: () =>
@@ -530,7 +531,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
               ],
             ),
       floatingActionButton: GlassFab(
-          onPressed: _addExercise,
+        onPressed: _addExercise,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       // KORREKTUR: BottomNavigationBar für Rest-Timer beibehalten und stylen

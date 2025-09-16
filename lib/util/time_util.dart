@@ -1,7 +1,5 @@
 // lib/util/time_util.dart
 
-import 'package:flutter/material.dart';
-
 /// Formatiert eine Duration in einen String wie "HH:MM:SS" oder "MM:SS".
 String formatDuration(Duration d) {
   // .abs() stellt sicher, dass wir keine negativen Werte anzeigen,

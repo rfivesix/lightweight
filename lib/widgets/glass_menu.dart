@@ -79,10 +79,11 @@ class _GlassMenuState extends State<GlassMenu>
                         const SizedBox(height: 12),
                         Text(
                           item.label,
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                       ],
                     ),

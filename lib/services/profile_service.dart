@@ -35,7 +35,7 @@ class ProfileService extends ChangeNotifier {
 
     if (pickedFile != null) {
       final appDir = await getApplicationDocumentsDirectory();
-      final String fileName = 'profile_image.jpg';
+      const String fileName = 'profile_image.jpg';
       final String localPath = '${appDir.path}/$fileName';
 
       final File newImage = await File(pickedFile.path).copy(localPath);
