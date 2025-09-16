@@ -1,4 +1,4 @@
-// lib/main.dart (Endgültige Korrektur für DialogThemeData)
+// lib/main.dart
 
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
@@ -35,243 +35,302 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(
-        const SystemUiOverlayStyle(statusBarColor: Colors.transparent));
+      const SystemUiOverlayStyle(statusBarColor: Colors.transparent),
+    );
+
+    // Feste Card-Farben (unabhängig von Material You)
+    const _cardDark = Color(0xFF171717); // tiefes Grau
+    const _cardLight = Color(0xFFF3F3F3); // sehr helles Grau
 
     return DynamicColorBuilder(
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
-        // --- ColorSchemes definieren ---
-        ColorScheme lightColorScheme =
-            ColorScheme.fromSeed(seedColor: Colors.blue);
+        // === Akzent/Seed aus Dynamic Color (Android 12+) oder Fallback ===
+        final Color lightSeed = lightDynamic?.primary ?? Colors.blue;
+        final Color darkSeed = darkDynamic?.primary ?? lightSeed;
 
-        ColorScheme customDarkColorScheme = darkDynamic?.copyWith(
-              brightness: Brightness.dark,
-              primary: darkDynamic?.primary ?? Colors.blue,
-              onPrimary: darkDynamic?.onPrimary ?? Colors.white,
-              background: Colors.black,
-              surface: Colors.grey.shade900,
-              surfaceContainerHighest: Colors.grey.shade800,
-              scrim: Colors.black.withOpacity(0.5),
-              onSurface: Colors.white,
-              onBackground: Colors.white,
-              onSurfaceVariant: Colors.grey.shade300,
-            ) ??
-            ColorScheme.fromSeed(
-              seedColor: Colors.blue,
-              brightness: Brightness.dark,
-              background: Colors.black,
-              surface: Colors.grey.shade900,
-              surfaceContainerHighest: Colors.grey.shade800,
-              onSurface: Colors.white,
-              onBackground: Colors.white,
-              onSurfaceVariant: Colors.grey.shade300,
-            );
+        // --- Light Scheme aus Seed, aber ohne Material You UI ---
+        final lightScheme = ColorScheme.fromSeed(
+          seedColor: lightSeed,
+          brightness: Brightness.light,
+        ).copyWith(
+          background: Colors.white,
+          surface: Colors.white,
+        );
 
-        // --- Light Theme Definition ---
+        // --- Dark Scheme aus Seed + OLED-Schwarz ---
+        final _seededDark = ColorScheme.fromSeed(
+          seedColor: darkSeed,
+          brightness: Brightness.dark,
+        );
+        final darkScheme = _seededDark.copyWith(
+          background: Colors.black,
+          surface: Colors.black,
+          surfaceDim: Colors.black,
+          surfaceBright: Colors.black,
+          surfaceContainerLowest: Colors.black,
+          surfaceContainerLow: Colors.black,
+          surfaceContainer: Colors.black,
+          surfaceContainerHigh: Colors.black,
+          surfaceContainerHighest: Colors.black,
+        );
+
+        // --- Light Theme (Material2, aber mit ColorScheme aus Seed) ---
         final baseLightTheme = ThemeData(
-          colorScheme: lightDynamic ?? lightColorScheme,
-          useMaterial3: true,
+          useMaterial3: false, // KEIN Material You
+          colorScheme: lightScheme,
+          primaryColor: lightScheme.primary, // Akzent in M2-Welten
+          scaffoldBackgroundColor: Colors.white,
+          canvasColor: Colors.white,
+          cardColor: _cardLight,
+          dialogBackgroundColor: _cardLight,
+          // NEU / ANGEPASST:
+          splashFactory: NoSplash.splashFactory,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+
+          pageTransitionsTheme: const PageTransitionsTheme(
+            builders: {
+              TargetPlatform.android: ZoomPageTransitionsBuilder(),
+              TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+              TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+              TargetPlatform.windows: ZoomPageTransitionsBuilder(),
+              TargetPlatform.linux: ZoomPageTransitionsBuilder(),
+            },
+          ),
+
           inputDecorationTheme: InputDecorationTheme(
             filled: true,
-            fillColor: (lightDynamic ?? lightColorScheme)
-                .surfaceContainerHighest
-                .withOpacity(0.5),
+            fillColor: const Color(0xFFF3F3F3),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
+              borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide: BorderSide(
-                  color: (lightDynamic ?? lightColorScheme).primary,
-                  width: 2.0),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide: BorderSide(
-                  color: (lightDynamic ?? lightColorScheme).error, width: 2.0),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide: BorderSide(
-                  color: (lightDynamic ?? lightColorScheme).error, width: 2.0),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: lightScheme.primary, width: 2),
             ),
             contentPadding:
-                const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
-            hintStyle: TextStyle(
-                color: (lightDynamic ?? lightColorScheme)
-                    .onSurfaceVariant
-                    .withOpacity(0.7)),
-            labelStyle:
-                TextStyle(color: (lightDynamic ?? lightColorScheme).onSurface),
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           ),
+
+          bottomSheetTheme: BottomSheetThemeData(
+            backgroundColor: _cardLight,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            elevation: 0,
+          ),
+
+          snackBarTheme: SnackBarThemeData(
+            backgroundColor: lightScheme.primary,
+            contentTextStyle: TextStyle(
+              color: lightScheme.onPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+
+          dividerTheme: DividerThemeData(
+            color: Colors.black.withOpacity(0.08),
+            thickness: 1,
+            space: 24,
+          ),
+          appBarTheme: const AppBarTheme(
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
+            centerTitle: false,
+          ),
+          textTheme: GoogleFonts.interTextTheme().apply(
+            bodyColor: Colors.black87,
+            displayColor: Colors.black87,
+          ),
+          // Stellen sicher, dass Akzent sichtbar "lebt"
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
-              elevation: 0,
+              backgroundColor: lightScheme.primary,
+              foregroundColor: lightScheme.onPrimary,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0)),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              textStyle: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          textButtonTheme: TextButtonThemeData(
-            style: TextButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0)),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              textStyle: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          outlinedButtonTheme: OutlinedButtonThemeData(
-            style: OutlinedButton.styleFrom(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0)),
-              side:
-                  BorderSide(color: (lightDynamic ?? lightColorScheme).primary),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                  borderRadius: BorderRadius.circular(12)),
             ),
           ),
           floatingActionButtonTheme: FloatingActionButtonThemeData(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.0)),
+            backgroundColor: lightScheme.primary,
+            foregroundColor: lightScheme.onPrimary,
           ),
-          listTileTheme: ListTileThemeData(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            tileColor: (lightDynamic ?? lightColorScheme).surface,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.0)),
+          //toggleableActiveColor: lightScheme.primary,
+          progressIndicatorTheme:
+              ProgressIndicatorThemeData(color: lightScheme.primary),
+          textSelectionTheme: TextSelectionThemeData(
+            cursorColor: lightScheme.primary,
+            selectionColor: lightScheme.primary.withOpacity(0.25),
+            selectionHandleColor: lightScheme.primary,
           ),
-          // KORREKTUR: Jetzt verwenden wir die korrekte Klasse `DialogThemeData`.
+          checkboxTheme: CheckboxThemeData(
+            fillColor: MaterialStateProperty.all(lightScheme.primary),
+          ),
+          radioTheme: RadioThemeData(
+            fillColor: MaterialStateProperty.all(lightScheme.primary),
+          ),
+          switchTheme: SwitchThemeData(
+            thumbColor:
+                MaterialStateProperty.resolveWith((s) => lightScheme.primary),
+            trackColor: MaterialStateProperty.resolveWith(
+                (s) => lightScheme.primary.withOpacity(0.5)),
+          ),
           dialogTheme: DialogThemeData(
-            backgroundColor: (lightDynamic ?? lightColorScheme).surface,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20.0)),
-            titleTextStyle: TextStyle(
-                color: (lightDynamic ?? lightColorScheme).onSurface,
-                fontSize: 20,
-                fontWeight: FontWeight.bold),
-            contentTextStyle: TextStyle(
-                color: (lightDynamic ?? lightColorScheme).onSurfaceVariant,
-                fontSize: 16),
+            backgroundColor: _cardLight,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           ),
         );
 
-        // --- Dark Theme Definition ---
+        // --- Dark Theme (Material2, OLED, Akzent aus Seed) ---
         final baseDarkTheme = ThemeData(
-          colorScheme: customDarkColorScheme,
-          useMaterial3: true,
+          useMaterial3: false, // KEIN Material You
+          colorScheme: darkScheme,
+          primaryColor: darkScheme.primary, // Akzent in M2-Welten
           scaffoldBackgroundColor: Colors.black,
-          cardColor: customDarkColorScheme.surface,
-          dialogBackgroundColor: customDarkColorScheme.surface,
+          canvasColor: Colors.black,
+          cardColor: _cardDark,
+          dialogBackgroundColor: _cardDark,
+          // NEU / ANGEPASST:
+          splashFactory: NoSplash.splashFactory,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+
+          pageTransitionsTheme: const PageTransitionsTheme(
+            builders: {
+              TargetPlatform.android: ZoomPageTransitionsBuilder(),
+              TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+              TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+              TargetPlatform.windows: ZoomPageTransitionsBuilder(),
+              TargetPlatform.linux: ZoomPageTransitionsBuilder(),
+            },
+          ),
+
           inputDecorationTheme: InputDecorationTheme(
             filled: true,
-            fillColor:
-                customDarkColorScheme.surfaceContainerHighest.withOpacity(0.5),
+            fillColor: const Color(0xFF1C1C1C),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
+              borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide:
-                  BorderSide(color: customDarkColorScheme.primary, width: 2.0),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide:
-                  BorderSide(color: customDarkColorScheme.error, width: 2.0),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide:
-                  BorderSide(color: customDarkColorScheme.error, width: 2.0),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: darkScheme.primary, width: 2),
             ),
             contentPadding:
-                const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
-            hintStyle: TextStyle(
-                color: customDarkColorScheme.onSurfaceVariant.withOpacity(0.7)),
-            labelStyle: TextStyle(color: customDarkColorScheme.onSurface),
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          ),
+
+          bottomSheetTheme: BottomSheetThemeData(
+            backgroundColor: _cardDark,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            elevation: 0,
+          ),
+
+          snackBarTheme: SnackBarThemeData(
+            backgroundColor: darkScheme.primary,
+            contentTextStyle: TextStyle(
+              color: darkScheme.onPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+
+          dividerTheme: DividerThemeData(
+            color: Colors.white.withOpacity(0.08),
+            thickness: 1,
+            space: 24,
+          ),
+          appBarTheme: const AppBarTheme(
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            backgroundColor: Colors.black,
+            foregroundColor: Colors.white,
+            centerTitle: false,
+          ),
+          textTheme: GoogleFonts.interTextTheme().apply(
+            bodyColor: Colors.white,
+            displayColor: Colors.white,
           ),
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
-              elevation: 0,
+              backgroundColor: darkScheme.primary,
+              foregroundColor: darkScheme.onPrimary,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0)),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              textStyle: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          textButtonTheme: TextButtonThemeData(
-            style: TextButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0)),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              textStyle: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          outlinedButtonTheme: OutlinedButtonThemeData(
-            style: OutlinedButton.styleFrom(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0)),
-              side: BorderSide(color: customDarkColorScheme.primary),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                  borderRadius: BorderRadius.circular(12)),
             ),
           ),
           floatingActionButtonTheme: FloatingActionButtonThemeData(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.0)),
+            backgroundColor: darkScheme.primary,
+            foregroundColor: darkScheme.onPrimary,
           ),
-          listTileTheme: ListTileThemeData(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            tileColor: customDarkColorScheme.surface,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.0)),
+          //toggleableActiveColor: darkScheme.primary,
+          progressIndicatorTheme:
+              ProgressIndicatorThemeData(color: darkScheme.primary),
+          textSelectionTheme: TextSelectionThemeData(
+            cursorColor: darkScheme.primary,
+            selectionColor: darkScheme.primary.withOpacity(0.35),
+            selectionHandleColor: darkScheme.primary,
           ),
-          // KORREKTUR: Jetzt verwenden wir die korrekte Klasse `DialogThemeData`.
+          checkboxTheme: CheckboxThemeData(
+            fillColor: MaterialStateProperty.all(darkScheme.primary),
+          ),
+          radioTheme: RadioThemeData(
+            fillColor: MaterialStateProperty.all(darkScheme.primary),
+          ),
+          switchTheme: SwitchThemeData(
+            thumbColor:
+                MaterialStateProperty.resolveWith((s) => darkScheme.primary),
+            trackColor: MaterialStateProperty.resolveWith(
+                (s) => darkScheme.primary.withOpacity(0.5)),
+          ),
           dialogTheme: DialogThemeData(
-            backgroundColor: customDarkColorScheme.surface,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20.0)),
-            titleTextStyle: TextStyle(
-                color: customDarkColorScheme.onSurface,
-                fontSize: 20,
-                fontWeight: FontWeight.bold),
-            contentTextStyle: TextStyle(
-                color: customDarkColorScheme.onSurfaceVariant, fontSize: 16),
+            backgroundColor: _cardDark,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           ),
         );
 
         return MaterialApp(
           debugShowCheckedModeBanner: false,
+          scrollBehavior: NoGlowScrollBehavior(), // iOS-Bounce aktiv, kein Glow
           onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           title: "LightWeight",
-          theme: baseLightTheme.copyWith(
-            textTheme: GoogleFonts.interTextTheme(baseLightTheme.textTheme),
-          ),
-          darkTheme: baseDarkTheme.copyWith(
-            textTheme: GoogleFonts.interTextTheme(baseDarkTheme.textTheme),
-          ),
+          theme: baseLightTheme,
+          darkTheme: baseDarkTheme,
           themeMode: ThemeMode.system,
           home: const MainScreen(),
         );
       },
     );
+  }
+}
+
+class NoGlowScrollBehavior extends ScrollBehavior {
+  @override
+  Widget buildOverscrollIndicator(
+      BuildContext context, Widget child, ScrollableDetails details) {
+    // Keine Glow-Effekte
+    return child;
+  }
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) {
+    // iOS-Style: Bouncing
+    return const BouncingScrollPhysics();
   }
 }

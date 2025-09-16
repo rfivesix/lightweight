@@ -87,52 +87,51 @@ class NutritionSummaryWidget extends StatelessWidget {
     };
 
     return SummaryCard(
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                flex: 2,
-                child: Column(
-                  children: [
-                    Expanded(child: _InfoBox(spec: specs['calories']!)),
-                    const SizedBox(height: 8),
-                    Expanded(child: _InfoBox(spec: specs['water']!)),
-                  ],
-                ),
+      // KORREKTUR: internalPadding für diese spezifische Karte ist 12.0
+      //internalPadding: const EdgeInsets.all(12.0),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              flex: 3, // KORREKTUR 2: Flex-Wert erhöht, um mehr Platz zu geben
+              child: Column(
+                children: [
+                  Expanded(child: _InfoBox(spec: specs['calories']!)),
+                  const SizedBox(height: 8),
+                  Expanded(child: _InfoBox(spec: specs['water']!)),
+                ],
               ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              flex: 4, // KORREKTUR 2: Flex-Wert erhöht
+              child: Column(
+                children: [
+                  Expanded(child: _InfoBox(spec: specs['protein']!)),
+                  const SizedBox(height: 8),
+                  Expanded(child: _InfoBox(spec: specs['carbs']!)),
+                  const SizedBox(height: 8),
+                  Expanded(child: _InfoBox(spec: specs['fat']!)),
+                ],
+              ),
+            ),
+            if (isExpandedView) ...[
               const SizedBox(width: 8),
               Expanded(
-                flex: 2,
+                flex: 4, // KORREKTUR 2: Flex-Wert erhöht
                 child: Column(
                   children: [
-                    Expanded(child: _InfoBox(spec: specs['protein']!)),
+                    Expanded(child: _InfoBox(spec: specs['sugar']!)),
                     const SizedBox(height: 8),
-                    Expanded(child: _InfoBox(spec: specs['carbs']!)),
+                    Expanded(child: _InfoBox(spec: specs['fiber']!)),
                     const SizedBox(height: 8),
-                    Expanded(child: _InfoBox(spec: specs['fat']!)),
+                    Expanded(child: _InfoBox(spec: specs['salt']!)),
                   ],
                 ),
               ),
-              if (isExpandedView) ...[
-                const SizedBox(width: 8),
-                Expanded(
-                  flex: 2,
-                  child: Column(
-                    children: [
-                      Expanded(child: _InfoBox(spec: specs['sugar']!)),
-                      const SizedBox(height: 8),
-                      Expanded(child: _InfoBox(spec: specs['fiber']!)),
-                      const SizedBox(height: 8),
-                      Expanded(child: _InfoBox(spec: specs['salt']!)),
-                    ],
-                  ),
-                ),
-              ]
-            ],
-          ),
+            ]
+          ],
         ),
       ),
     );

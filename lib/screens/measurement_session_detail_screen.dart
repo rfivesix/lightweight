@@ -33,32 +33,39 @@ class MeasurementSessionDetailScreen extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        // Zeigt das Datum der Sitzung als Titel an
-        title: Text(DateFormat.yMMMMd('de_DE').format(session.timestamp)),
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
-      ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(8.0),
-        itemCount: session.measurements.length,
-        itemBuilder: (context, index) {
-          final measurement = session.measurements[index];
-          return Card(
-            elevation: 2,
-            child: ListTile(
-              title: Text(_getLocalizedMeasurementName(measurement.type, l10n)),
-              trailing: Text(
-                "${measurement.value.toStringAsFixed(1)} ${measurement.unit}",
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
+        automaticallyImplyLeading: true, // zeigt den Zurück-Pfeil
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          DateFormat.yMMMMd('de_DE').format(session.timestamp),
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
               ),
-            ),
-          );
-        },
+        ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          ...session.measurements.map((measurement) {
+            return Card(
+              elevation: 2,
+              margin: const EdgeInsets.symmetric(vertical: 6),
+              child: ListTile(
+                title:
+                    Text(_getLocalizedMeasurementName(measurement.type, l10n)),
+                trailing: Text(
+                  "${measurement.value.toStringAsFixed(1)} ${measurement.unit}",
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ),
+            );
+          }),
+        ],
       ),
     );
   }

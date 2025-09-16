@@ -11,6 +11,7 @@ import 'package:lightweight/screens/nutrition_hub_screen.dart';
 import 'package:lightweight/screens/profile_screen.dart';
 import 'package:lightweight/services/workout_session_manager.dart';
 import 'package:lightweight/util/time_util.dart';
+import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:provider/provider.dart';
 import 'package:lightweight/models/food_item.dart';
 import 'package:lightweight/models/food_entry.dart';
@@ -24,6 +25,7 @@ import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/screens/workout_hub_screen.dart';
 import 'package:lightweight/screens/statistics_hub_screen.dart';
 import 'package:lightweight/services/profile_service.dart';
+import 'package:lightweight/widgets/keep_alive_page.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -39,24 +41,48 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
   late final List<Widget> _pages;
   bool _isAddMenuOpen = false;
+  late final AnimationController _menuController;
+  // Hilfsfunktion: NaN -> 0.0 und [0,1] clampen
+  double _safe01(double v) => v.isNaN ? 0.0 : v.clamp(0.0, 1.0).toDouble();
 
   @override
   void initState() {
     super.initState();
     _pages = [
-      Home(key: _homeKey),
-      const NutritionHubScreen(),
-      const WorkoutHubScreen(),
-      const StatisticsHubScreen(),
-      const ProfileScreen(),
+      KeepAlivePage(
+        storageKey: const PageStorageKey('tab_home'),
+        child: Home(key: _homeKey),
+      ),
+      const KeepAlivePage(
+        storageKey: PageStorageKey('tab_nutrition'),
+        child: NutritionHubScreen(),
+      ),
+      const KeepAlivePage(
+        storageKey: PageStorageKey('tab_workout'),
+        child: WorkoutHubScreen(),
+      ),
+      const KeepAlivePage(
+        storageKey: PageStorageKey('tab_stats'),
+        child: StatisticsHubScreen(),
+      ),
+      const KeepAlivePage(
+        storageKey: PageStorageKey('tab_profile'),
+        child: ProfileScreen(),
+      ),
     ];
+
     // KORREKTUR 2: Der Controller wird jetzt konsistent mit der Länge von _pages (5) initialisiert.
     _tabController = TabController(length: _pages.length, vsync: this);
+    _menuController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _menuController.dispose();
     super.dispose();
   }
 
@@ -272,21 +298,26 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
               splashFactory: NoSplash.splashFactory,
               overlayColor: MaterialStateProperty.all(Colors.transparent),
               dividerColor: Colors.transparent,
+              indicatorSize: TabBarIndicatorSize.label,
               labelColor: theme.brightness == Brightness.light
                   ? Colors.black
                   : Colors.white,
               unselectedLabelColor: Colors.grey.shade600,
               labelStyle: const TextStyle(
-                  fontSize: 23,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0.0),
+                fontSize: 23,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.0,
+              ),
               unselectedLabelStyle: const TextStyle(
-                  fontSize: 23,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.0),
+                fontSize: 23,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.0,
+              ),
               tabs: [
-                const Tab(text: 'Home'), const Tab(text: 'Food'),
-                const Tab(text: 'Train'), const Tab(text: 'Stats'),
+                const Tab(text: 'Home'),
+                const Tab(text: 'Food'),
+                const Tab(text: 'Train'),
+                const Tab(text: 'Stats'),
                 // KORREKTUR: Der Profil-Tab reagiert jetzt auf seine Auswahl.
                 // Erhöht den Radius, wenn der Tab ausgewählt ist.
                 AnimatedBuilder(
@@ -330,9 +361,17 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             controller: _tabController,
             children: _pages,
           ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () => setState(() => _isAddMenuOpen = !_isAddMenuOpen),
-            child: Icon(_isAddMenuOpen ? Icons.close : Icons.add),
+          floatingActionButton: GlassFab(
+            onPressed: () {
+              setState(() {
+                _isAddMenuOpen = !_isAddMenuOpen;
+                if (_isAddMenuOpen) {
+                  _menuController.forward();
+                } else {
+                  _menuController.reverse();
+                }
+              });
+            },
           ),
           bottomNavigationBar: Consumer<WorkoutSessionManager>(
             builder: (context, manager, child) {
@@ -405,64 +444,147 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             },
           ),
         ),
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 250),
-          child: _isAddMenuOpen
-              ? Stack(
-                  key: const ValueKey('add_menu_open'),
-                  children: [
-                    GestureDetector(
-                      onTap: () => setState(() => _isAddMenuOpen = false),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-                        child: Container(color: Colors.black.withOpacity(0.3)),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 100.0,
-                      right: 20.0,
-                      child: Material(
-                        // KORREKTUR 1: Das Material-Widget behebt die gelbe Unterstreichung.
-                        type: MaterialType.transparency,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: speedDialActions.map((action) {
-                            return Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 8.0),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    action['label'],
-                                    style: TextStyle(
-                                      color: isLightMode
-                                          ? Colors.black87
-                                          : Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 16,
-                                      // KORREKTUR 2: Der Schatten ist entfernt.
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16.0),
-                                  FloatingActionButton(
-                                    onPressed: () {
-                                      setState(() => _isAddMenuOpen = false);
-                                      _executeAddMenuAction(action['action']);
-                                    },
-                                    mini: true,
-                                    heroTag: action['label'],
-                                    child: Icon(action['icon']),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
+// Overlay & Speed-Dial
+        Stack(
+          children: [
+            // Blur-Overlay weich ein-/ausblenden
+            // Blur-Overlay weich ein-/ausblenden (an _menuController gekoppelt)
+            AnimatedBuilder(
+                animation: _menuController,
+                builder: (context, _) {
+                  // sanfte Kurve + garantierter 0..1 Bereich
+                  final t = CurvedAnimation(
+                    parent: _menuController,
+                    curve: Curves.easeOutCubic,
+                  ).value.clamp(0.0, 1.0);
+
+                  return AnimatedBuilder(
+                    animation: _menuController,
+                    builder: (context, _) {
+                      final t = _safe01(
+                        CurvedAnimation(
+                                parent: _menuController,
+                                curve: Curves.easeOutCubic)
+                            .value,
+                      );
+                      return Opacity(
+                        opacity: t,
+                        child: IgnorePointer(
+                          ignoring: t == 0.0,
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _isAddMenuOpen = false;
+                                _menuController.reverse();
+                              });
+                            },
+                            child: BackdropFilter(
+                              filter:
+                                  ImageFilter.blur(sigmaX: 6.0, sigmaY: 6.0),
+                              child: Container(
+                                  color: Colors.black.withOpacity(0.4)),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }),
+
+            // Actions fahren vom FAB nach oben (gestaffelt per Interval)
+            // Actions fahren vom FAB nach oben (gestaffelt per Interval)
+Positioned(
+  bottom: 100.0,
+  right: 20.0,
+  child: Material(
+    color: Colors
+        .transparent, // eigener Material-Kontext verhindert gelben Ink-Balken
+    child: AnimatedBuilder(
+      animation: _menuController,
+      builder: (context, _) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: speedDialActions.asMap().entries.map((entry) {
+            final index = entry.key;
+            final action = entry.value;
+
+            final double start = index * 0.12;
+            final double safeStart = start >= 0.95 ? 0.95 : start;
+
+            final curved = CurvedAnimation(
+              parent: _menuController,
+              curve: Interval(safeStart, 1.0, curve: Curves.easeOutBack),
+            );
+
+            final offsetY = 90.0 * (index + 1);
+
+            return Transform.translate(
+              offset: Offset(0, (1 - curved.value) * offsetY),
+              child: Opacity(
+                opacity: _safe01(curved.value),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10.0),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        action['label'],
+                        style: TextStyle(
+                          color: Theme.of(context).brightness ==
+                                  Brightness.light
+                              ? Colors.black87
+                              : Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
                         ),
                       ),
-                    ),
-                  ],
-                )
-              : const SizedBox.shrink(key: ValueKey('add_menu_closed')),
+                      const SizedBox(width: 16),
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          setState(() {
+                            _isAddMenuOpen = false;
+                            _menuController.reverse();
+                          });
+                          _executeAddMenuAction(action['action']);
+                        },
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                            child: Container(
+                              width: 76,
+                              height: 76,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.3),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Icon(
+                                action['icon'],
+                                size: 34,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        );
+      },
+    ),
+  ),
+),
+
+          ],
         ),
       ],
     );

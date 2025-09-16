@@ -1,4 +1,4 @@
-// lib/screens/food_detail_screen.dart (Final & De-Materialisiert)
+// lib/screens/food_detail_screen.dart (Final & De-Materialisiert - OLED Ready)
 
 import 'package:flutter/material.dart';
 import 'package:lightweight/data/database_helper.dart';
@@ -74,40 +74,43 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: Text(
+          _displayItem.name,
+          style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              _isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: _isFavorite
+                  ? Colors.redAccent
+                  : colorScheme.onSurfaceVariant,
+            ),
+            onPressed: _toggleFavorite,
+          )
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                    child: Text(_displayItem.name,
-                        style: textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.w900, fontSize: 28))),
-                IconButton(
-                  icon: Icon(
-                      _isFavorite ? Icons.favorite : Icons.favorite_border,
-                      color: _isFavorite
-                          ? Colors.redAccent
-                          : colorScheme.onSurfaceVariant),
-                  onPressed: _toggleFavorite,
-                ),
-              ],
-            ),
             if (_displayItem.brand.isNotEmpty)
-              Text(_displayItem.brand,
-                  style:
-                      textTheme.titleMedium?.copyWith(color: Colors.grey[600])),
+              Text(
+                _displayItem.brand,
+                style: textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
+              ),
 
-            // KORREKTUR 1: Dezenterer Divider
             Divider(
-                height: 32,
-                thickness: 1,
-                color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
+              height: 32,
+              thickness: 1,
+              color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+            ),
 
-            // KORREKTUR 2: Toggle-Buttons für Portion/100g
             if (_hasPortionInfo)
               SummaryCard(
                 child: Padding(
@@ -144,18 +147,16 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                 ],
               ),
             ),
+
             if (_displayItem.sugar != null ||
                 _displayItem.fiber != null ||
-                _displayItem.salt != null)
+                _displayItem.salt != null) ...[
               const SizedBox(height: 12),
-            if (_displayItem.sugar != null ||
-                _displayItem.fiber != null ||
-                _displayItem.salt != null)
               SummaryCard(
                 child: Column(
                   children: [
                     if (_displayItem.sugar != null)
-                      _buildNutrientRow("  ${l10n.sugar}",
+                      _buildNutrientRow(l10n.sugar,
                           "${_getDisplayValue(_displayItem.sugar).toStringAsFixed(1)} g"),
                     if (_displayItem.fiber != null)
                       _buildNutrientRow(l10n.fiber,
@@ -166,14 +167,12 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                   ],
                 ),
               ),
+            ],
 
-            // KORREKTUR 3: OffAttributionWidget überprüfen und stylen
             if (!_displayItem.barcode.startsWith('user_created_'))
               Padding(
-                // Zusätzlicher Padding für den Abstand
                 padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
                 child: OffAttributionWidget(
-                  // Eventuell spezifische Textstile hier anpassen
                   textStyle:
                       textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                 ),
@@ -184,7 +183,6 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
     );
   }
 
-  // KORREKTUR 4: _buildToggleButton (aus AddFoodScreen übernommen)
   Widget _buildToggleButton(
       BuildContext context, String label, bool is100gOption) {
     final theme = Theme.of(context);
@@ -201,9 +199,10 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(12.0),
             border: Border.all(
-                color: isSelected
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurfaceVariant.withOpacity(0.3)),
+              color: isSelected
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
+            ),
           ),
           child: Text(
             label,
@@ -220,13 +219,14 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
     );
   }
 
-  // KORREKTUR 5: _buildNutrientRow nutzt jetzt ListTile und respektiert Themes
   Widget _buildNutrientRow(String label, String value) {
     return ListTile(
-      // Padding und andere Stile kommen jetzt vom globalen ListTileTheme
+      dense: true,
       title: Text(label),
-      trailing:
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+      trailing: Text(
+        value,
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
     );
   }
 }

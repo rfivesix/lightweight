@@ -1,7 +1,8 @@
-// lib/screens/live_workout_screen.dart
+// lib/screens/live_workout_screen.dart (Final & De-Materialisiert - Endgültig)
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:vibration/vibration.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
@@ -11,13 +12,15 @@ import 'package:lightweight/models/routine_exercise.dart';
 import 'package:lightweight/models/set_log.dart';
 import 'package:lightweight/models/set_template.dart';
 import 'package:lightweight/models/workout_log.dart';
+import 'package:lightweight/services/workout_session_manager.dart';
 import 'package:lightweight/widgets/set_type_chip.dart';
+import 'package:lightweight/widgets/summary_card.dart'; // HINZUGEFÜGT
 import 'package:lightweight/widgets/wger_attribution_widget.dart';
+import 'package:lightweight/widgets/workout_summary_bar.dart';
 import 'exercise_catalog_screen.dart';
 import 'exercise_detail_screen.dart';
-import 'package:lightweight/services/workout_session_manager.dart';
-import 'package:lightweight/widgets/workout_summary_bar.dart';
 import 'package:provider/provider.dart';
+import 'package:lightweight/util/time_util.dart'; // Für formatDuration
 
 class LiveWorkoutScreen extends StatefulWidget {
   final Routine? routine;
@@ -38,34 +41,17 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
   bool _isLoading = true;
   final Map<int, bool> _exerciseExpanded = {};
 
-  bool _isDragging = false;
-
   @override
   void initState() {
     super.initState();
-
-    if (widget.workoutLog.id == null) {
-      debugPrint(
-          "[ERROR] LiveWorkoutScreen ohne gültiges workoutLog.id gestartet!");
-    }
-
-    // BUGFIX: Die Logik hier wurde überarbeitet, um korrekt zwischen einem neuen
-    // (leeren) Workout und dem Fortsetzen eines bestehenden zu unterscheiden.
-    final manager = WorkoutSessionManager();
-    // Ein Workout wird fortgesetzt, wenn der Manager aktiv ist UND die Log-ID
-    // im Manager mit der ID übereinstimmt, die diesem Screen übergeben wurde.
+    final manager = Provider.of<WorkoutSessionManager>(context, listen: false);
     final isContinuing =
         manager.isActive && manager.workoutLog?.id == widget.workoutLog.id;
 
     if (isContinuing) {
-      // FALL 1: Bestehendes Workout fortsetzen.
-      // Der Manager ist die Quelle der Wahrheit, wir übernehmen seine Daten.
       _liveExercises = manager.exercises;
     } else {
-      // FALL 2: Ein neues Workout wird gestartet (egal ob mit Vorlage oder leer).
-      // Wir müssen den Manager initialisieren.
       if (widget.routine != null) {
-        // Neues Workout MIT Vorlage.
         _liveExercises = widget.routine!.exercises.map((re) {
           return RoutineExercise(
             id: re.id,
@@ -77,13 +63,12 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
           );
         }).toList();
       } else {
-        // Neues Workout OHNE Vorlage (leeres Training).
         _liveExercises = [];
       }
-      // Initialisiere den Manager mit dem neuen Log und der (ggf. leeren) Übungsliste.
-      manager.startWorkout(widget.workoutLog, _liveExercises);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        manager.startWorkout(widget.workoutLog, _liveExercises);
+      });
     }
-
     _initializeScreen();
   }
 
@@ -102,10 +87,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     for (var routineExercise in _liveExercises) {
       final lastPerf = await WorkoutDatabaseHelper.instance
           .getLastPerformance(routineExercise.exercise.nameEn);
-      if (mounted) {
+      if (mounted)
         setState(() =>
             _lastPerformances[routineExercise.exercise.nameEn] = lastPerf);
-      }
       for (final template in routineExercise.setTemplates) {
         final templateId = template.id!;
         String initialReps =
@@ -114,7 +98,6 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                 ?.toStringAsFixed(1)
                 .replaceAll('.0', '') ??
             '';
-
         _setUIData[templateId] = {'setType': template.setType};
         _weightControllers[templateId] =
             TextEditingController(text: initialWeight);
@@ -298,26 +281,46 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     });
   }
 
-// In lib/screens/live_workout_screen.dart
+  Widget _buildHeader(String text) => Expanded(
+      child: Text(text,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontWeight: FontWeight.bold)));
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     final manager = WorkoutSessionManager();
 
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(widget.workoutLog.routineName ?? l10n.freeWorkoutTitle),
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
+        automaticallyImplyLeading: true,
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          widget.workoutLog.routineName ?? l10n.freeWorkoutTitle,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+        ),
         actions: [
           TextButton(
-              onPressed: _finishWorkout,
-              child: Text(l10n.finishWorkoutButton,
-                  style: TextStyle(
-                      color: colorScheme.onPrimary,
-                      fontWeight: FontWeight.bold)))
+            onPressed: _finishWorkout,
+            child: Text(
+              l10n.finishWorkoutButton,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
         ],
       ),
       body: _isLoading
@@ -334,10 +337,12 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                     );
                   },
                 ),
+                Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
                 Expanded(
                   child: ReorderableListView(
-                    // SCHRITT 1: Der ProxyDecorator definiert, wie das GEZOGENE Element aussieht.
-                    // Wir bauen es hier manuell als eingeklappte Karte.
                     proxyDecorator:
                         (Widget child, int index, Animation<double> animation) {
                       final exercise = _liveExercises[index];
@@ -370,142 +375,151 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                         }
                       });
                     },
-                    onReorder: (oldIndex, newIndex) {
-                      setState(() {
-                        if (newIndex > oldIndex) newIndex--;
-                        final item = _liveExercises.removeAt(oldIndex);
-                        _liveExercises.insert(newIndex, item);
-                      });
-                    },
+                    onReorder: _onReorder,
                     padding: const EdgeInsets.all(8.0),
                     children: [
                       for (int index = 0;
                           index < _liveExercises.length;
                           index++)
-                        Card(
+                        SummaryCard(
+                          // KORREKTUR 2: Übungsblock in SummaryCard
                           key: ValueKey(_liveExercises[index].id),
-                          margin: const EdgeInsets.symmetric(vertical: 8.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               ListTile(
-                                title: Text(
-                                  _liveExercises[index]
-                                      .exercise
-                                      .getLocalizedName(context),
-                                  style: Theme.of(context).textTheme.titleLarge,
+                                // Übungstitel mit Drag-Handle und Aktionen
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16.0, vertical: 8.0),
+                                title: InkWell(
+                                  // KORREKTUR: InkWell, um den Titel klickbar zu machen
+                                  onTap: () => Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              ExerciseDetailScreen(
+                                                  exercise:
+                                                      _liveExercises[index]
+                                                          .exercise))),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 4.0),
+                                    child: Text(
+                                      _liveExercises[index]
+                                          .exercise
+                                          .getLocalizedName(context),
+                                      style: textTheme.titleLarge?.copyWith(
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ),
+                                leading: ReorderableDragStartListener(
+                                  index: index,
+                                  child: const Icon(Icons.drag_handle),
                                 ),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    if (WorkoutSessionManager().pauseTimes[
+                                    // Pausezeit anzeigen
+                                    if (manager.pauseTimes[
                                                 _liveExercises[index].id!] !=
                                             null &&
-                                        WorkoutSessionManager().pauseTimes[
+                                        manager.pauseTimes[
                                                 _liveExercises[index].id!]! >
                                             0)
                                       Padding(
                                         padding:
                                             const EdgeInsets.only(right: 4.0),
                                         child: Text(
-                                          "${WorkoutSessionManager().pauseTimes[_liveExercises[index].id!]}s",
-                                          style: TextStyle(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary,
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                          "${manager.pauseTimes[_liveExercises[index].id!]}s",
+                                          style: textTheme.bodyMedium?.copyWith(
+                                              color: colorScheme.primary,
+                                              fontWeight: FontWeight.bold),
                                         ),
                                       ),
+                                    // Bearbeiten-Button für Pause
                                     IconButton(
                                       icon: const Icon(Icons.timer_outlined),
                                       tooltip: l10n.editPauseTime,
                                       onPressed: () =>
                                           _editPauseTime(_liveExercises[index]),
                                     ),
+                                    // Löschen-Button für Übung
                                     IconButton(
-                                      icon: const Icon(Icons.delete,
+                                      icon: const Icon(Icons.delete_outline,
                                           color: Colors.redAccent),
                                       tooltip: l10n.removeExercise,
                                       onPressed: () => _removeExercise(
                                           _liveExercises[index]),
                                     ),
-                                    const Icon(Icons.drag_handle),
                                   ],
                                 ),
                               ),
-                              AnimatedSize(
-                                duration: const Duration(milliseconds: 300),
-                                child: _exerciseExpanded[
-                                            _liveExercises[index].id] ??
-                                        true
-                                    ? Padding(
-                                        padding: const EdgeInsets.all(12.0),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                _buildHeader(l10n.setLabel),
-                                                _buildHeader(
-                                                    l10n.lastTimeLabel),
-                                                _buildHeader(l10n.kgLabel),
-                                                _buildHeader(l10n.repsLabel),
-                                                const SizedBox(width: 48),
-                                              ],
-                                            ),
-                                            const Divider(),
-                                            Column(
-                                              children: _liveExercises[index]
-                                                  .setTemplates
-                                                  .map((setTemplate) {
-                                                final lastPerf =
-                                                    _lastPerformances[
-                                                        _liveExercises[index]
-                                                            .exercise
-                                                            .nameEn];
-                                                final isCompleted =
-                                                    WorkoutSessionManager()
-                                                        .completedSets
-                                                        .contains(
-                                                            setTemplate.id!);
-                                                int workingSetIndex = 0;
-                                                for (final st
-                                                    in _liveExercises[index]
-                                                        .setTemplates) {
-                                                  if (st.id == setTemplate.id)
-                                                    break;
-                                                  if (st.setType != 'warmup') {
-                                                    workingSetIndex++;
-                                                  }
-                                                }
-                                                if (setTemplate.setType !=
-                                                    'warmup') {
-                                                  workingSetIndex++;
-                                                }
-                                                return _buildSetRow(
-                                                  workingSetIndex,
-                                                  _liveExercises[index],
-                                                  setTemplate,
-                                                  isCompleted,
-                                                  colorScheme,
-                                                  lastPerf,
-                                                );
-                                              }).toList(),
-                                            ),
-                                            const SizedBox(height: 8),
-                                            TextButton.icon(
-                                              onPressed: () => _addSet(
-                                                  _liveExercises[index]),
-                                              icon: const Icon(Icons.add),
-                                              label: Text(l10n.addSetButton),
-                                            ),
-                                            const SizedBox(height: 8),
-                                          ],
-                                        ),
-                                      )
-                                    : const SizedBox.shrink(),
+                              // Trennlinie nach dem Titel
+                              Divider(
+                                  height: 1,
+                                  thickness: 1,
+                                  color: colorScheme.onSurfaceVariant
+                                      .withOpacity(0.1),
+                                  indent: 16,
+                                  endIndent: 16),
+                              // Sets und "Satz hinzufügen"-Button
+                              Padding(
+                                padding: const EdgeInsets.all(
+                                    16.0), // Padding für den Inhalt der Übung
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        _buildHeader(l10n.setLabel),
+                                        _buildHeader(l10n.lastTimeLabel),
+                                        _buildHeader(l10n.kgLabel),
+                                        _buildHeader(l10n.repsLabel),
+                                        const SizedBox(width: 48),
+                                      ],
+                                    ),
+                                    Divider(
+                                        height: 1,
+                                        thickness: 1,
+                                        color: colorScheme.onSurfaceVariant
+                                            .withOpacity(0.1)),
+                                    ..._liveExercises[index]
+                                        .setTemplates
+                                        .asMap()
+                                        .entries
+                                        .map((setEntry) {
+                                      final setTemplate = setEntry.value;
+                                      int workingSetIndex = 0; // Neu berechnen
+                                      for (final st in _liveExercises[index]
+                                          .setTemplates) {
+                                        if (st.id == setTemplate.id) break;
+                                        if (st.setType != 'warmup')
+                                          workingSetIndex++;
+                                      }
+                                      if (setTemplate.setType != 'warmup')
+                                        workingSetIndex++;
+
+                                      return _buildSetRow(
+                                        workingSetIndex,
+                                        _liveExercises[index],
+                                        setTemplate,
+                                        manager.completedSets
+                                            .contains(setTemplate.id!),
+                                        colorScheme,
+                                        _lastPerformances[_liveExercises[index]
+                                            .exercise
+                                            .nameEn],
+                                      );
+                                    }).toList(),
+                                    const SizedBox(height: 8),
+                                    TextButton.icon(
+                                      onPressed: () =>
+                                          _addSet(_liveExercises[index]),
+                                      icon: const Icon(Icons.add),
+                                      label: Text(l10n.addSetButton),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
@@ -515,27 +529,21 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                 ),
               ],
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addExercise,
-        child: const Icon(Icons.add),
+      floatingActionButton: GlassFab(
+          onPressed: _addExercise,
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      // KORREKTUR: BottomNavigationBar für Rest-Timer beibehalten und stylen
       bottomNavigationBar: AnimatedBuilder(
-        animation: WorkoutSessionManager(),
+        animation: manager,
         builder: (context, _) {
-          final bar = _buildRestBottomBar(AppLocalizations.of(context)!);
+          final bar =
+              _buildRestBottomBar(l10n, colorScheme); // colorScheme übergeben
           return bar ?? const SizedBox.shrink();
         },
       ),
     );
   }
-
-  Widget _buildHeader(String text) => Expanded(
-      child: Text(text,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontWeight: FontWeight.bold)));
 
   Widget _buildSetRow(
     int setIndex,
@@ -627,47 +635,36 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     );
   }
 
-  Widget? _buildRestBottomBar(AppLocalizations l10n) {
+  Widget? _buildRestBottomBar(AppLocalizations l10n, ColorScheme colorScheme) {
     final manager = WorkoutSessionManager();
-
-    // Nichts anzeigen, wenn keine Pause läuft und auch kein „Pause vorbei“-Banner aktiv ist
     final isRunning = manager.remainingRestSeconds > 0;
     final isDoneBanner = !isRunning && manager.showRestDone;
     if (!isRunning && !isDoneBanner) return null;
 
     final theme = Theme.of(context);
-    final cs = theme.colorScheme;
 
-    // Laufende Pause: neutrale Leiste, große Zahl + deutlicher Skip-Button
     if (isRunning) {
       return BottomAppBar(
+        color: colorScheme.surface,
+        elevation: 0,
+        // KORREKTUR: shape ist null
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // große, gut lesbare Zahl
               Text(
                 "${l10n.restTimerLabel}: ${manager.remainingRestSeconds}s",
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
-                  color: cs.primary,
+                  color: colorScheme.primary,
                 ),
               ),
-              // farbiger Skip-Button
-              FilledButton(
+              ElevatedButton(
                 onPressed: () {
-                  manager.cancelRest(); // nur Pause abbrechen
+                  manager.cancelRest();
                 },
-                style: FilledButton.styleFrom(
-                  backgroundColor: cs.primary,
-                  foregroundColor: cs.onPrimary,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                ),
                 child: Text(l10n.skipButton),
               ),
             ],
@@ -675,10 +672,11 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         ),
       );
     }
-
-    // Pause vorbei: grüne Leiste, kurzer Hinweis + OK
+    // Pause vorbei
     return BottomAppBar(
       color: Colors.green.shade600,
+      elevation: 0,
+      // KORREKTUR: shape ist null
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
         child: Row(
@@ -697,14 +695,10 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                 ),
               ],
             ),
-            // OK/hide-Button
             TextButton(
               onPressed: () {
-                manager.cancelRest(); // blendet die Leiste sofort aus
+                manager.cancelRest();
               },
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.white,
-              ),
               child: const Text("OK"),
             ),
           ],

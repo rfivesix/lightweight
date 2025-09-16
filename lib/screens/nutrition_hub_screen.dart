@@ -160,8 +160,7 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final hasEntries =
-        _todaysEntriesByMeal.values.any((list) => list.isNotEmpty);
+    final hasEntries = _todaysEntriesByMeal.values.any((list) => list.isNotEmpty);
 
     return Scaffold(
       body: _isLoading
@@ -172,48 +171,28 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
                 padding: const EdgeInsets.all(16.0),
                 children: [
                   _buildSectionTitle(context, "HEUTE IM BLICK"),
-                  // KORREKTUR 1: Wir verwenden jetzt dein bewährtes NutritionSummaryWidget.
-                  if (_todaysNutrition != null)
-                    GestureDetector(
-                      onTap: () => Navigator.of(context)
-                          .push(MaterialPageRoute(
-                              builder: (context) => const NutritionScreen()))
-                          .then((_) => _loadTodaysData()),
-                      child: NutritionSummaryWidget(
-                          nutritionData: _todaysNutrition!, l10n: l10n),
-                    ),
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const NutritionScreen())).then((_) => _loadTodaysData()),
+                    // KORREKTUR 1: Die umgebende SummaryCard entfernt.
+                    // NutritionSummaryWidget ist bereits eine SummaryCard.
+                    child: _todaysNutrition != null
+                      ? NutritionSummaryWidget(nutritionData: _todaysNutrition!, l10n: l10n, isExpandedView: false)
+                      : const SizedBox(),
+                  ),
                   const SizedBox(height: 24),
-
+                  
                   _buildSectionTitle(context, "SCHNELLES HINZUFÜGEN"),
-                  _buildQuickAddButton(
-                      context,
-                      l10n.addFoodOption,
-                      Icons.search,
-                      () => Navigator.of(context)
-                          .push(MaterialPageRoute(
-                              builder: (context) => const AddFoodScreen()))
-                          .then((_) => _loadTodaysData())),
-                  // KORREKTUR 2: Der Abstand zwischen den Buttons ist jetzt kleiner.
+                  _buildQuickAddButton(context, l10n.addFoodOption, Icons.search, () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const AddFoodScreen())).then((_) => _loadTodaysData())),
                   const SizedBox(height: 8),
-                  _buildQuickAddButton(
-                      context, "Barcode scannen", Icons.qr_code_scanner, () {
-                    /* TODO */
-                  }),
+                  _buildQuickAddButton(context, "Barcode scannen", Icons.qr_code_scanner, () { /* TODO */ }),
                   const SizedBox(height: 8),
-                  _buildQuickAddButton(
-                      context,
-                      l10n.fabCreateOwnFood,
-                      Icons.add,
-                      () => Navigator.of(context)
-                          .push(MaterialPageRoute(
-                              builder: (context) => const CreateFoodScreen()))
-                          .then((_) => _loadTodaysData())),
+                  _buildQuickAddButton(context, l10n.fabCreateOwnFood, Icons.add, () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const CreateFoodScreen())).then((_) => _loadTodaysData())),
                   const SizedBox(height: 24),
 
                   _buildSectionTitle(context, "HEUTIGES PROTOKOLL"),
-                  hasEntries
-                      ? _buildTodaysLog(l10n)
-                      : _buildEmptyLogState(l10n),
+                  hasEntries 
+                    ? _buildTodaysLog(l10n) 
+                    : _buildEmptyLogState(l10n),
                 ],
               ),
             ),

@@ -16,77 +16,81 @@ class ExerciseDetailScreen extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(exercise.getLocalizedName(context),
-                style: textTheme.headlineMedium
-                    ?.copyWith(fontWeight: FontWeight.w900, fontSize: 28)),
-            const SizedBox(height: 8),
-            Text(
-              exercise.categoryName,
-              style: textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 24),
-            SummaryCard(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Beschreibung", style: textTheme.titleLarge),
-                    const SizedBox(height: 8),
-                    Text(
-                      exercise.getLocalizedDescription(context).isNotEmpty
-                          ? exercise.getLocalizedDescription(context)
-                          : l10n.noDescriptionAvailable,
-                      style: textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            SummaryCard(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Involvierte Muskeln", style: textTheme.titleLarge),
-                    const SizedBox(height: 8),
-                    if (exercise.primaryMuscles.isNotEmpty)
-                      // KORREKTUR: Einfaches Join für List<String>
-                      _buildMuscleRow("Primär:",
-                          exercise.primaryMuscles.join(', '), textTheme),
-                    if (exercise.secondaryMuscles.isNotEmpty)
-                      // KORREKTUR: Einfaches Join für List<String>
-                      _buildMuscleRow("Sekundär:",
-                          exercise.secondaryMuscles.join(', '), textTheme),
-                    if (exercise.primaryMuscles.isEmpty &&
-                        exercise.secondaryMuscles.isEmpty)
-                      Text("Keine Muskeln angegeben.",
-                          style: textTheme.bodyMedium
-                              ?.copyWith(color: Colors.grey[600])),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
-              child: WgerAttributionWidget(
-                textStyle:
-                    textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-              ),
-            ),
-          ],
-        ),
+return Scaffold(
+  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+  appBar: AppBar(
+    automaticallyImplyLeading: true, // <-- zeigt den Zurück-Pfeil
+    elevation: 0,
+    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+    title: Text(
+      exercise.getLocalizedName(context),
+      style: textTheme.headlineSmall?.copyWith(
+        fontWeight: FontWeight.w900,
       ),
-    );
+    ),
+  ),
+  body: SingleChildScrollView(
+    padding: const EdgeInsets.all(16.0),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          exercise.categoryName,
+          style: textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
+        ),
+        const SizedBox(height: 24),
+        SummaryCard(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Beschreibung", style: textTheme.titleLarge),
+                const SizedBox(height: 8),
+                Text(
+                  exercise.getLocalizedDescription(context).isNotEmpty
+                      ? exercise.getLocalizedDescription(context)
+                      : l10n.noDescriptionAvailable,
+                  style: textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SummaryCard(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Involvierte Muskeln", style: textTheme.titleLarge),
+                const SizedBox(height: 8),
+                if (exercise.primaryMuscles.isNotEmpty)
+                  _buildMuscleRow("Primär:",
+                      exercise.primaryMuscles.join(', '), textTheme),
+                if (exercise.secondaryMuscles.isNotEmpty)
+                  _buildMuscleRow("Sekundär:",
+                      exercise.secondaryMuscles.join(', '), textTheme),
+                if (exercise.primaryMuscles.isEmpty &&
+                    exercise.secondaryMuscles.isEmpty)
+                  Text("Keine Muskeln angegeben.",
+                      style: textTheme.bodyMedium
+                          ?.copyWith(color: Colors.grey[600])),
+              ],
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
+          child: WgerAttributionWidget(
+            textStyle: textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+          ),
+        ),
+      ],
+    ),
+  ),
+);
   }
 
   Widget _buildMuscleRow(String label, String muscles, TextTheme textTheme) {

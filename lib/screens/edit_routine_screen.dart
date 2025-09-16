@@ -10,6 +10,7 @@ import 'package:lightweight/models/set_template.dart';
 import 'package:lightweight/screens/exercise_catalog_screen.dart';
 import 'package:lightweight/screens/exercise_detail_screen.dart';
 import 'package:lightweight/screens/live_workout_screen.dart'; // Zum Starten der Routine
+import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/set_type_chip.dart';
 import 'package:lightweight/widgets/summary_card.dart'; // HINZUGEFÜGT
 import 'package:lightweight/widgets/wger_attribution_widget.dart'; // HINZUGEFÜGT
@@ -324,61 +325,66 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      // KORREKTUR 1: AppBar entfernt, Titel und Save-Button im Body
-      body: Column(
-        children: [
-          // Header-Bereich mit Titel und Save-Button
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
+  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+  appBar: AppBar(
+    automaticallyImplyLeading: true,
+    elevation: 0,
+    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+    scrolledUnderElevation: 0,
+    centerTitle: false,
+    title: Text(
+      _isNewRoutine ? l10n.titleNewRoutine : l10n.titleEditRoutine,
+      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w900,
+          ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => _saveRoutine(),
+        child: Text(
+          l10n.save,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    ],
+  ),
+  body: Column(
+    children: [
+      // Routine-Name Eingabe bleibt im Body
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        child: TextFormField(
+          controller: _nameController,
+          decoration: InputDecoration(labelText: l10n.formFieldRoutineName),
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return l10n.validatorPleaseEnterRoutineName;
+            }
+            return null;
+          },
+        ),
+      ),
+      const SizedBox(height: 12),
+      Divider(
+        height: 1,
+        thickness: 1,
+        color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+      ),
+      // Rest: ListView mit Exercises (unverändert)
+      Expanded(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _routineExercises.isEmpty
+                ? Center(
                     child: Text(
-                        _isNewRoutine
-                            ? l10n.titleNewRoutine
-                            : l10n.titleEditRoutine,
-                        style: textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.w900, fontSize: 28))),
-                ElevatedButton(
-                  // Nutzt globales Theme
-                  onPressed: () => _saveRoutine(),
-                  child: Text(l10n.save),
-                ),
-              ],
-            ),
-          ),
-          // Routine-Name Eingabe
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: TextFormField(
-              // Nutzt globales Theme
-              controller: _nameController,
-              decoration: InputDecoration(labelText: l10n.formFieldRoutineName),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return l10n.validatorPleaseEnterRoutineName;
-                }
-                return null;
-              },
-            ),
-          ),
-          const SizedBox(height: 24),
-          // Trennlinie
-          Divider(
-              height: 1,
-              thickness: 1,
-              color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _routineExercises.isEmpty
-                    ? Center(
-                        child: Text(l10n.emptyStateAddFirstExercise,
-                            style: textTheme.titleMedium))
-                    : ReorderableListView.builder(
+                      l10n.emptyStateAddFirstExercise,
+                      style: textTheme.titleMedium,
+                    ),
+                  )
+                : ReorderableListView.builder(
                         padding: const EdgeInsets.all(16.0),
                         itemCount: _routineExercises.length,
                         // KORREKTUR: onReorderStart/End für Drag-Feedback
@@ -550,24 +556,9 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
           ),
         ],
       ),
-      floatingActionButton: Padding(
-        // KORREKTUR: FAB
-        padding: const EdgeInsets.only(bottom: 24.0, right: 16.0),
-        child: ElevatedButton.icon(
-          onPressed:
-              _addExercises, // Fügt neue Übungen hinzu ODER speichert die Routine
-          icon: const Icon(Icons.add),
-          label: Text(l10n.fabAddExercise),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: colorScheme.primary,
-            foregroundColor: colorScheme.onPrimary,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0)),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          ),
+      floatingActionButton: GlassFab(
+          onPressed: _addExercises, // Fügt neue Übungen hinzu ODER speichert die Routine
         ),
-      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }

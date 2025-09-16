@@ -1,55 +1,38 @@
-// lib/widgets/summary_card.dart (Endgültige Korrektur)
-
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
 class SummaryCard extends StatelessWidget {
   final Widget child;
+  final EdgeInsetsGeometry padding;
 
   const SummaryCard({
     super.key,
     required this.child,
+    this.padding = const EdgeInsets.all(12.0),
   });
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final brightness = Theme.of(context).brightness;
+
+    final background = brightness == Brightness.dark
+        ? const Color.fromARGB(255, 22, 22, 22) // tiefes Grau für Dark Mode
+        : const Color.fromARGB(255, 253, 253, 253); // sehr helles Grau für Light Mode
 
     return Container(
-      margin: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
+      margin: const EdgeInsets.symmetric(vertical: 6.0),
+      padding: padding,
       decoration: BoxDecoration(
-        // KORREKTUR: Rundung direkt in der BoxDecoration ändern
-        borderRadius:
-            BorderRadius.circular(16.0), // Rundung von 24 auf 16 reduziert
-        // KORREKTUR: Schatten direkt in der BoxDecoration ändern
+        color: background,
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black
-                .withOpacity(0.08), // Leichterer, dezenterer Schatten
-            blurRadius: 15, // Weicher und kleiner
-            spreadRadius: 0,
-            offset: const Offset(0, 8), // Weniger stark nach unten verschoben
+            color: Colors.black.withOpacity(0.25),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: ClipRRect(
-        // KORREKTUR: Rundung direkt in ClipRRect ändern
-        borderRadius:
-            BorderRadius.circular(16.0), // Passende Rundung für ClipRRect
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest.withOpacity(0.9),
-              // KORREKTUR: Rundung und Rand in der inneren BoxDecoration anpassen
-              borderRadius: BorderRadius.circular(16.0), // Passende Rundung
-              border: Border.all(
-                  color: colorScheme.surfaceContainerHighest.withOpacity(0.2)),
-            ),
-            child: child,
-          ),
-        ),
-      ),
+      child: child,
     );
   }
 }

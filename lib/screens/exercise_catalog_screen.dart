@@ -124,35 +124,41 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          "Exercises",
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+        ),
+      ),
+
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       // KORREKTUR 1: AppBar entfernt, Titel und Aktionen im Body
+// Body ohne doppelten Titel
       body: Column(
         children: [
-          // Header-Bereich mit Titel, Suche und Filter-Button
           Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(l10n.exerciseCatalogTitle,
-                        style: textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.w900, fontSize: 28)),
-                    if (widget.isSelectionMode)
-                      ElevatedButton(
-                        // Nutzt globales Theme
-                        onPressed: () => Navigator.of(context)
-                            .pop(), // Pop mit null, falls keine Auswahl
-                        child: Text(l10n.doneButtonLabel),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 16),
+                if (widget.isSelectionMode)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(l10n.doneButtonLabel),
+                    ),
+                  ),
+                const SizedBox(height: 8),
                 TextField(
-                  // Nutzt globales Theme
                   controller: _searchController,
                   decoration: InputDecoration(
                     hintText: l10n.searchHintText,
@@ -168,16 +174,15 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // KORREKTUR 2: Filter-Button
                 _buildFilterButton(context, l10n),
               ],
             ),
           ),
-          // Trennlinie
           Divider(
-              height: 1,
-              thickness: 1,
-              color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
+            height: 1,
+            thickness: 1,
+            color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+          ),
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())

@@ -228,6 +228,31 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        automaticallyImplyLeading: true, // Zurück-Pfeil
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        title: Text(
+          l10n.workoutDetailsTitle,
+          style: textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        actions: [
+          if (!_isLoading && _log != null)
+            _isEditMode
+                ? TextButton(
+                    onPressed: _saveChanges,
+                    child: Text(l10n.save,
+                        style:
+                            TextStyle(color: Theme.of(context).primaryColor)),
+                  )
+                : IconButton(
+                    icon: const Icon(Icons.edit),
+                    onPressed: _toggleEditMode,
+                  ),
+        ],
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _log == null
@@ -235,25 +260,6 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
               : ListView(
                   padding: const EdgeInsets.all(16.0),
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(l10n.workoutDetailsTitle,
-                            style: textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.w900, fontSize: 28)),
-                        if (!_isLoading && _log != null)
-                          _isEditMode
-                              ? ElevatedButton(
-                                  onPressed: _saveChanges,
-                                  child: Text(l10n.save))
-                              : ElevatedButton.icon(
-                                  icon: const Icon(Icons.edit),
-                                  label: Text(l10n.edit),
-                                  onPressed: _toggleEditMode,
-                                ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
                     WorkoutSummaryBar(
                       duration: duration,
                       volume: totalVolume,
@@ -265,8 +271,10 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(_log!.routineName ?? l10n.freeWorkoutTitle,
-                              style: textTheme.headlineMedium),
+                          Text(
+                            _log!.routineName ?? l10n.freeWorkoutTitle,
+                            style: textTheme.headlineMedium,
+                          ),
                           Row(
                             children: [
                               Text(DateFormat.yMMMMd(locale)

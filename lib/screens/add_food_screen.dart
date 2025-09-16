@@ -6,6 +6,7 @@ import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/food_item.dart';
 import 'package:lightweight/screens/create_food_screen.dart';
 import 'package:lightweight/screens/food_detail_screen.dart';
+import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/off_attribution_widget.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 
@@ -192,22 +193,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
           ),
         ],
       ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 24.0, right: 16.0),
-        child: ElevatedButton.icon(
-          onPressed: _navigateAndCreateFood,
-          icon: const Icon(Icons.add),
-          label: Text(l10n.fabCreateOwnFood),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: colorScheme.primary,
-            foregroundColor: colorScheme.onPrimary,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0)),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          ),
+      floatingActionButton: GlassFab(
+          onPressed: _navigateAndCreateFood
         ),
-      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }

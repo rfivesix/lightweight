@@ -95,12 +95,19 @@ class _GoalsScreenState extends State<GoalsScreen> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        title: Text(l10n.profileDailyGoals), // KORREKTUR: Titel anpassen
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
-      ),
+  appBar: AppBar(
+    automaticallyImplyLeading: true,
+    elevation: 0,
+    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+    scrolledUnderElevation: 0,
+    centerTitle: false,
+    title: Text(
+      "Goals",
+      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w900,
+          ),
+    ),
+  ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(

@@ -1,4 +1,4 @@
-// lib/screens/workout_history_screen.dart (Final & De-Materialisiert)
+// lib/screens/workout_history_screen.dart (Final & De-Materialisiert mit AppBar)
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -7,7 +7,7 @@ import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/workout_log.dart';
 import 'package:lightweight/screens/workout_log_detail_screen.dart';
 import 'package:lightweight/util/time_util.dart';
-import 'package:lightweight/widgets/summary_card.dart'; // HINZUGEFÜGT
+import 'package:lightweight/widgets/summary_card.dart';
 
 class WorkoutHistoryScreen extends StatefulWidget {
   const WorkoutHistoryScreen({super.key});
@@ -28,20 +28,18 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
   Future<void> _loadHistory() async {
     setState(() => _isLoading = true);
     final data = await WorkoutDatabaseHelper.instance.getWorkoutLogs();
-    if (mounted)
+    if (mounted) {
       setState(() {
         _logs = data;
         _isLoading = false;
       });
+    }
   }
 
   Future<void> _deleteLog(int logId) async {
     await WorkoutDatabaseHelper.instance.deleteWorkoutLog(logId);
     _loadHistory();
   }
-
-  // Diese Methode ist jetzt in lib/util/time_util.dart
-  // String _formatDuration(Duration d) { /* ... */ }
 
   @override
   Widget build(BuildContext context) {
@@ -50,32 +48,34 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          l10n.workoutHistoryTitle,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+        ),
+      ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      // KORREKTUR 1: AppBar entfernt, Titel direkt im Body
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _logs.isEmpty
               ? Center(
-                  child: Text(l10n.emptyHistory,
-                      style: const TextStyle(fontSize: 18, color: Colors.grey)))
+                  child: Text(
+                    l10n.emptyHistory,
+                    style: const TextStyle(fontSize: 18, color: Colors.grey),
+                  ),
+                )
               : ListView.builder(
-                  padding: const EdgeInsets.all(16.0), // Padding für die Liste
-                  itemCount: _logs.length + 1, // +1 für den Titel
+                  padding: const EdgeInsets.all(16.0),
+                  itemCount: _logs.length,
                   itemBuilder: (context, index) {
-                    if (index == 0) {
-                      // Der erste Eintrag ist der Titel
-                      return Padding(
-                        padding: const EdgeInsets.only(
-                            bottom: 24.0), // Abstand nach dem Titel
-                        child: Text(l10n.workoutHistoryTitle,
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineMedium
-                                ?.copyWith(
-                                    fontWeight: FontWeight.w900, fontSize: 28)),
-                      );
-                    }
-                    final log = _logs[index - 1]; // -1 wegen des Titels
+                    final log = _logs[index];
                     final duration = log.endTime?.difference(log.startTime);
 
                     return Dismissible(
@@ -91,18 +91,19 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                         return await showDialog<bool>(
                               context: context,
                               builder: (ctx) => AlertDialog(
-                                // Nutzt globales DialogTheme
                                 title: Text(l10n.deleteConfirmTitle),
                                 content: Text(l10n.deleteWorkoutConfirmContent),
                                 actions: [
                                   TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(ctx).pop(false),
-                                      child: Text(l10n.cancel)),
+                                    onPressed: () =>
+                                        Navigator.of(ctx).pop(false),
+                                    child: Text(l10n.cancel),
+                                  ),
                                   TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(ctx).pop(true),
-                                      child: Text(l10n.delete)),
+                                    onPressed: () =>
+                                        Navigator.of(ctx).pop(true),
+                                    child: Text(l10n.delete),
+                                  ),
                                 ],
                               ),
                             ) ??
@@ -112,26 +113,34 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                         _deleteLog(log.id!);
                       },
                       child: SummaryCard(
-                        // KORREKTUR 2: Jetzt mit SummaryCard
                         child: ListTile(
                           leading: const Icon(Icons.event_note, size: 40),
-                          title: Text(log.routineName ?? l10n.freeWorkoutTitle,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text(DateFormat.yMMMMd(locale)
-                              .add_Hm()
-                              .format(log.startTime)),
-                          // KORREKTUR: Nutzt die globale formatDuration-Hilfsfunktion
+                          title: Text(
+                            log.routineName ?? l10n.freeWorkoutTitle,
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            DateFormat.yMMMMd(locale)
+                                .add_Hm()
+                                .format(log.startTime),
+                          ),
                           trailing: duration != null
-                              ? Text(formatDuration(duration),
+                              ? Text(
+                                  formatDuration(duration),
                                   style: TextStyle(
-                                      color: colorScheme.primary,
-                                      fontWeight: FontWeight.w500))
+                                    color: colorScheme.primary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                )
                               : null,
                           onTap: () => Navigator.of(context)
-                              .push(MaterialPageRoute(
+                              .push(
+                                MaterialPageRoute(
                                   builder: (context) =>
-                                      WorkoutLogDetailScreen(logId: log.id!)))
+                                      WorkoutLogDetailScreen(logId: log.id!),
+                                ),
+                              )
                               .then((_) => _loadHistory()),
                         ),
                       ),

@@ -127,22 +127,32 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
+@override
+Widget build(BuildContext context) {
+  final l10n = AppLocalizations.of(context)!;
+  final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Daten-Hub"),
-        backgroundColor: theme.colorScheme.primary,
-        foregroundColor: theme.colorScheme.onPrimary,
-      ),
-      body: SingleChildScrollView(
+  return Scaffold(
+  appBar: AppBar(
+    automaticallyImplyLeading: true, // <- zeigt den Zurück-Pfeil
+    elevation: 0,
+    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+    scrolledUnderElevation: 0,
+    centerTitle: false,
+    title: Text(
+      "Data Hub",
+      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w900,
+          ),
+    ),
+  ),
+    body: SafeArea(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // --- bestehender Inhalt bleibt unverändert ---
             _buildFullBackupCard(context, l10n, theme),
             const SizedBox(height: 16),
             _buildCsvExportCard(context, l10n, theme),
@@ -151,9 +161,9 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
           ],
         ),
       ),
-    );
-  }
-
+    ),
+  );
+}
   // --- WIDGET BUILDER ---
 
   Widget _buildFullBackupCard(

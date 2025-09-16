@@ -1,4 +1,4 @@
-// lib/screens/measurements_screen.dart (Final & De-Materialisiert - Korrigiert)
+// lib/screens/measurements_screen.dart (Final & De-Materialisiert - mit AppBar)
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +7,7 @@ import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/measurement.dart';
 import 'package:lightweight/models/measurement_session.dart';
 import 'package:lightweight/screens/add_measurement_screen.dart';
+import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/measurement_chart_widget.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 
@@ -20,7 +21,6 @@ class MeasurementsScreen extends StatefulWidget {
 class _MeasurementsScreenState extends State<MeasurementsScreen> {
   bool _isLoading = true;
   List<MeasurementSession> _sessions = [];
-  // Map<String, List<Measurement>> _measurementsByType = {}; // Nicht direkt verwendet
   String? _selectedChartType;
   List<String> _availableMeasurementTypes = [];
 
@@ -41,7 +41,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
     setState(() => _isLoading = true);
     final sessions = await DatabaseHelper.instance.getMeasurementSessions();
 
-    final Set<String> types = {}; // Sammelt nur die Typen
+    final Set<String> types = {};
     for (final session in sessions) {
       for (final measurement in session.measurements) {
         types.add(measurement.type);
@@ -51,9 +51,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
     if (mounted) {
       setState(() {
         _sessions = sessions;
-        _availableMeasurementTypes = types.toList();
-        _availableMeasurementTypes.sort();
-
+        _availableMeasurementTypes = types.toList()..sort();
         if (_selectedChartType == null &&
             _availableMeasurementTypes.isNotEmpty) {
           _selectedChartType = _availableMeasurementTypes.first;
@@ -88,10 +86,8 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
         start = now.subtract(const Duration(days: 29));
     }
 
-    final normalizedStart = DateTime(start.year, start.month, start.day);
-    if (!mounted) return;
     setState(() {
-      _currentChartDateRange = DateTimeRange(start: normalizedStart, end: end);
+      _currentChartDateRange = DateTimeRange(start: start, end: end);
     });
   }
 
@@ -111,9 +107,21 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          l10n.measurementsScreenTitle,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+        ),
+      ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -122,41 +130,21 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
               : ListView(
                   padding: const EdgeInsets.all(16.0),
                   children: [
-                    Text(l10n.measurementsScreenTitle,
-                        style: textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.w900, fontSize: 28)),
-                    const SizedBox(height: 24),
                     if (_availableMeasurementTypes.isNotEmpty) ...[
-                      _buildChartSection(l10n, colorScheme, textTheme),
+                      _buildChartSection(l10n, colorScheme,Theme.of(context).textTheme),
                       const SizedBox(height: 24),
                     ],
                     _buildSectionTitle(context, "Alle Messwerte"),
-                    ..._sessions
-                        .map((session) => _buildMeasurementSessionCard(
-                            l10n, colorScheme, session))
-                        .toList(),
+                    ..._sessions.map((session) =>
+                        _buildMeasurementSessionCard(l10n, colorScheme, session))
                   ],
                 ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 24.0, right: 16.0),
-        child: ElevatedButton.icon(
+      floatingActionButton: GlassFab(
           onPressed: _navigateToCreateMeasurement,
-          icon: const Icon(Icons.add),
-          label: Text(l10n.addMeasurement),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: colorScheme.primary,
-            foregroundColor: colorScheme.onPrimary,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0)),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          ),
-        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
-
   Widget _buildEmptyState(AppLocalizations l10n, BuildContext context) {
     return Center(
       child: Padding(

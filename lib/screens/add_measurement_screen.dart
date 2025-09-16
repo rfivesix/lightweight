@@ -161,8 +161,19 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
     final formattedTime = DateFormat.Hm().format(_selectedDateTime);
 
     return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.addMeasurementDialogTitle),
+        actions: [
+          TextButton(
+            onPressed: _saveSession,
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
+            ),
+            child: Text(l10n.save),
+          ),
+        ],
+      ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      // KORREKTUR 1: AppBar entfernt, Titel und Save-Button direkt im Body
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -170,21 +181,6 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header-Bereich mit Titel und Save-Button
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(l10n.addMeasurementDialogTitle,
-                      style: textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w900, fontSize: 28)),
-                  ElevatedButton(
-                    onPressed: _saveSession,
-                    child: Text(l10n.save),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
               // Datum & Uhrzeit Sektion
               Text("Datum & Uhrzeit der Messung",
                   style: textTheme.titleMedium), // TODO: Lokalisieren
