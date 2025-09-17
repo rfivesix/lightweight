@@ -42,8 +42,8 @@ class MyApp extends StatelessWidget {
     );
 
     // Feste Card-Farben (unabhängig von Material You)
-    const _cardDark = Color(0xFF171717); // tiefes Grau
-    const _cardLight = Color(0xFFF3F3F3); // sehr helles Grau
+    const cardDark = Color(0xFF171717); // tiefes Grau
+    const cardLight = Color(0xFFF3F3F3); // sehr helles Grau
 
     return DynamicColorBuilder(
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
@@ -56,17 +56,15 @@ class MyApp extends StatelessWidget {
           seedColor: lightSeed,
           brightness: Brightness.light,
         ).copyWith(
-          background: Colors.white,
           surface: Colors.white,
         );
 
         // --- Dark Scheme aus Seed + OLED-Schwarz ---
-        final _seededDark = ColorScheme.fromSeed(
+        final seededDark = ColorScheme.fromSeed(
           seedColor: darkSeed,
           brightness: Brightness.dark,
         );
-        final darkScheme = _seededDark.copyWith(
-          background: Colors.black,
+        final darkScheme = seededDark.copyWith(
           surface: Colors.black,
           surfaceDim: Colors.black,
           surfaceBright: Colors.black,
@@ -84,8 +82,7 @@ class MyApp extends StatelessWidget {
           primaryColor: lightScheme.primary, // Akzent in M2-Welten
           scaffoldBackgroundColor: Colors.white,
           canvasColor: Colors.white,
-          cardColor: _cardLight,
-          dialogBackgroundColor: _cardLight,
+          cardColor: cardLight,
           // NEU / ANGEPASST:
           splashFactory: NoSplash.splashFactory,
           splashColor: Colors.transparent,
@@ -117,9 +114,9 @@ class MyApp extends StatelessWidget {
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           ),
 
-          bottomSheetTheme: BottomSheetThemeData(
-            backgroundColor: _cardLight,
-            shape: const RoundedRectangleBorder(
+          bottomSheetTheme: const BottomSheetThemeData(
+            backgroundColor: cardLight,
+            shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
             elevation: 0,
@@ -174,19 +171,19 @@ class MyApp extends StatelessWidget {
             selectionHandleColor: lightScheme.primary,
           ),
           checkboxTheme: CheckboxThemeData(
-            fillColor: MaterialStateProperty.all(lightScheme.primary),
+            fillColor: WidgetStateProperty.all(lightScheme.primary),
           ),
           radioTheme: RadioThemeData(
-            fillColor: MaterialStateProperty.all(lightScheme.primary),
+            fillColor: WidgetStateProperty.all(lightScheme.primary),
           ),
           switchTheme: SwitchThemeData(
             thumbColor:
-                MaterialStateProperty.resolveWith((s) => lightScheme.primary),
-            trackColor: MaterialStateProperty.resolveWith(
+                WidgetStateProperty.resolveWith((s) => lightScheme.primary),
+            trackColor: WidgetStateProperty.resolveWith(
                 (s) => lightScheme.primary.withOpacity(0.5)),
           ),
           dialogTheme: DialogThemeData(
-            backgroundColor: _cardLight,
+            backgroundColor: cardLight,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           ),
@@ -199,8 +196,7 @@ class MyApp extends StatelessWidget {
           primaryColor: darkScheme.primary, // Akzent in M2-Welten
           scaffoldBackgroundColor: Colors.black,
           canvasColor: Colors.black,
-          cardColor: _cardDark,
-          dialogBackgroundColor: _cardDark,
+          cardColor: cardDark,
           // NEU / ANGEPASST:
           splashFactory: NoSplash.splashFactory,
           splashColor: Colors.transparent,
@@ -232,9 +228,9 @@ class MyApp extends StatelessWidget {
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           ),
 
-          bottomSheetTheme: BottomSheetThemeData(
-            backgroundColor: _cardDark,
-            shape: const RoundedRectangleBorder(
+          bottomSheetTheme: const BottomSheetThemeData(
+            backgroundColor: cardDark,
+            shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
             elevation: 0,
@@ -288,19 +284,19 @@ class MyApp extends StatelessWidget {
             selectionHandleColor: darkScheme.primary,
           ),
           checkboxTheme: CheckboxThemeData(
-            fillColor: MaterialStateProperty.all(darkScheme.primary),
+            fillColor: WidgetStateProperty.all(darkScheme.primary),
           ),
           radioTheme: RadioThemeData(
-            fillColor: MaterialStateProperty.all(darkScheme.primary),
+            fillColor: WidgetStateProperty.all(darkScheme.primary),
           ),
           switchTheme: SwitchThemeData(
             thumbColor:
-                MaterialStateProperty.resolveWith((s) => darkScheme.primary),
-            trackColor: MaterialStateProperty.resolveWith(
+                WidgetStateProperty.resolveWith((s) => darkScheme.primary),
+            trackColor: WidgetStateProperty.resolveWith(
                 (s) => darkScheme.primary.withOpacity(0.5)),
           ),
           dialogTheme: DialogThemeData(
-            backgroundColor: _cardDark,
+            backgroundColor: cardDark,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           ),
@@ -1354,8 +1350,9 @@ class ProductDatabaseHelper {
           where: 'barcode = ?',
           whereArgs: [barcode],
           limit: 1);
-      if (baseMaps.isNotEmpty)
+      if (baseMaps.isNotEmpty) {
         return FoodItem.fromMap(baseMaps.first, source: FoodItemSource.base);
+      }
     }
 
     if (_offDatabase != null) {
@@ -1364,8 +1361,9 @@ class ProductDatabaseHelper {
           where: 'barcode = ?',
           whereArgs: [barcode],
           limit: 1);
-      if (offMaps.isNotEmpty)
+      if (offMaps.isNotEmpty) {
         return FoodItem.fromMap(offMaps.first, source: FoodItemSource.off);
+      }
     }
 
     return null;
@@ -2208,8 +2206,8 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
         TextField(
             controller: _textController,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-                labelText: "Menge in Gramm", suffixText: 'g'),
+            decoration: InputDecoration(
+                labelText: l10n.amount_in_grams, suffixText: 'g'),
             autofocus: true),
         const SizedBox(height: 16),
         DropdownButtonFormField<String>(
@@ -2252,7 +2250,7 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
         ]),
         const SizedBox(height: 8),
         CheckboxListTile(
-            title: const Text("Zur Trinkmenge hinzufügen"),
+            title: Text(l10n.add_to_water_intake),
             value: _countAsWater,
             onChanged: (bool? newValue) {
               setState(() {
@@ -2273,6 +2271,7 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:lightweight/generated/app_localizations.dart';
 
 class WaterDialogContent extends StatefulWidget {
   const WaterDialogContent({super.key});
@@ -2283,6 +2282,7 @@ class WaterDialogContent extends StatefulWidget {
 class WaterDialogContentState extends State<WaterDialogContent> {
   late final TextEditingController _textController;
   late DateTime _selectedDateTime;
+  late final l10n = AppLocalizations.of(context)!;
 
   String get quantityText => _textController.text;
   DateTime get selectedDateTime => _selectedDateTime;
@@ -2340,8 +2340,8 @@ class WaterDialogContentState extends State<WaterDialogContent> {
         TextField(
             controller: _textController,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-                labelText: "Menge in Millilitern", suffixText: 'ml'),
+            decoration: InputDecoration(
+                labelText: l10n.amount_in_milliliters, suffixText: 'ml'),
             autofocus: true),
         const SizedBox(height: 16),
         Row(
@@ -3740,6 +3740,378 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Muscle Split'**
   String get muscleSplitLabel;
+
+  /// No description provided for @snackbar_could_not_open_open_link.
+  ///
+  /// In en, this message translates to:
+  /// **'Konnte Link nicht öffnen'**
+  String get snackbar_could_not_open_open_link;
+
+  /// No description provided for @chart_no_data_for_period.
+  ///
+  /// In en, this message translates to:
+  /// **'Keine Daten für diesen Zeitraum.'**
+  String get chart_no_data_for_period;
+
+  /// No description provided for @amount_in_milliliters.
+  ///
+  /// In en, this message translates to:
+  /// **'Menge in Millilitern'**
+  String get amount_in_milliliters;
+
+  /// No description provided for @amount_in_grams.
+  ///
+  /// In en, this message translates to:
+  /// **'Menge in Gramm'**
+  String get amount_in_grams;
+
+  /// No description provided for @meal_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Mahlzeit'**
+  String get meal_label;
+
+  /// No description provided for @add_to_water_intake.
+  ///
+  /// In en, this message translates to:
+  /// **'Zur Trinkmenge hinzufügen'**
+  String get add_to_water_intake;
+
+  /// No description provided for @create_exercise_screen_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Eigene Übung erstellen'**
+  String get create_exercise_screen_title;
+
+  /// No description provided for @exercise_name_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Name der Übung'**
+  String get exercise_name_label;
+
+  /// No description provided for @category_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Kategorie'**
+  String get category_label;
+
+  /// No description provided for @description_optional_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Beschreibung (optional)'**
+  String get description_optional_label;
+
+  /// No description provided for @primary_muscles_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Primäre Muskeln'**
+  String get primary_muscles_label;
+
+  /// No description provided for @primary_muscles_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'z.B. Brust, Trizeps'**
+  String get primary_muscles_hint;
+
+  /// No description provided for @secondary_muscles_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Sekundäre Muskeln (optional)'**
+  String get secondary_muscles_label;
+
+  /// No description provided for @secondary_muscles_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'z.B. Schultern'**
+  String get secondary_muscles_hint;
+
+  /// No description provided for @set_type_normal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get set_type_normal;
+
+  /// No description provided for @set_type_warmup.
+  ///
+  /// In en, this message translates to:
+  /// **'Warmup'**
+  String get set_type_warmup;
+
+  /// No description provided for @set_type_failure.
+  ///
+  /// In en, this message translates to:
+  /// **'Failure'**
+  String get set_type_failure;
+
+  /// No description provided for @set_type_dropset.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropset'**
+  String get set_type_dropset;
+
+  /// No description provided for @set_reps_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'8-12'**
+  String get set_reps_hint;
+
+  /// No description provided for @data_export_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Exportieren'**
+  String get data_export_button;
+
+  /// No description provided for @data_import_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Importieren'**
+  String get data_import_button;
+
+  /// No description provided for @snackbar_button_ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get snackbar_button_ok;
+
+  /// No description provided for @measurement_session_detail_view.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailansicht der Messsession.'**
+  String get measurement_session_detail_view;
+
+  /// No description provided for @unit_grams.
+  ///
+  /// In en, this message translates to:
+  /// **'g'**
+  String get unit_grams;
+
+  /// No description provided for @unit_kcal.
+  ///
+  /// In en, this message translates to:
+  /// **'kcal'**
+  String get unit_kcal;
+
+  /// No description provided for @delete_profile_picture_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Profilbild löschen'**
+  String get delete_profile_picture_button;
+
+  /// No description provided for @attribution_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Attribution'**
+  String get attribution_title;
+
+  /// No description provided for @add_liquid_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Flüssigkeit hinzufügen'**
+  String get add_liquid_title;
+
+  /// No description provided for @add_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Hinzufügen'**
+  String get add_button;
+
+  /// No description provided for @discard_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Verwerfen'**
+  String get discard_button;
+
+  /// No description provided for @continue_workout_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout fortsetzen'**
+  String get continue_workout_button;
+
+  /// No description provided for @soon_available_snackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Dieser Screen wird bald verfügbar sein!'**
+  String get soon_available_snackbar;
+
+  /// No description provided for @start_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get start_button;
+
+  /// No description provided for @today_overview_text.
+  ///
+  /// In en, this message translates to:
+  /// **'TODAY IN FOCUS'**
+  String get today_overview_text;
+
+  /// No description provided for @quick_add_text.
+  ///
+  /// In en, this message translates to:
+  /// **'QUICK ADD'**
+  String get quick_add_text;
+
+  /// No description provided for @scann_barcode_capslock.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan barcode'**
+  String get scann_barcode_capslock;
+
+  /// No description provided for @protocol_today_capslock.
+  ///
+  /// In en, this message translates to:
+  /// **'TODAY\'S PROTOCOL'**
+  String get protocol_today_capslock;
+
+  /// No description provided for @my_plans_capslock.
+  ///
+  /// In en, this message translates to:
+  /// **'MY PLANS'**
+  String get my_plans_capslock;
+
+  /// No description provided for @overview_capslock.
+  ///
+  /// In en, this message translates to:
+  /// **'OVERVIEW'**
+  String get overview_capslock;
+
+  /// No description provided for @manage_all_plans.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage all plans'**
+  String get manage_all_plans;
+
+  /// No description provided for @free_training.
+  ///
+  /// In en, this message translates to:
+  /// **'free training'**
+  String get free_training;
+
+  /// No description provided for @my_consistency.
+  ///
+  /// In en, this message translates to:
+  /// **'MY CONSISTENCY'**
+  String get my_consistency;
+
+  /// No description provided for @calendar_currently_not_available.
+  ///
+  /// In en, this message translates to:
+  /// **'The calendar view will be available soon.'**
+  String get calendar_currently_not_available;
+
+  /// No description provided for @in_depth_analysis.
+  ///
+  /// In en, this message translates to:
+  /// **'IN-DEPTH ANALYSIS'**
+  String get in_depth_analysis;
+
+  /// No description provided for @body_measurements.
+  ///
+  /// In en, this message translates to:
+  /// **'Body measurements'**
+  String get body_measurements;
+
+  /// No description provided for @measurements_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyze weight, body fat percentage and circumference.'**
+  String get measurements_description;
+
+  /// No description provided for @nutrition_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluate macros, calories and trends.'**
+  String get nutrition_description;
+
+  /// No description provided for @training_analysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Training analysis'**
+  String get training_analysis;
+
+  /// No description provided for @training_analysis_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Track volume, strength and progression.'**
+  String get training_analysis_description;
+
+  /// No description provided for @load_dots.
+  ///
+  /// In en, this message translates to:
+  /// **'loading...'**
+  String get load_dots;
+
+  /// No description provided for @profile_capslock.
+  ///
+  /// In en, this message translates to:
+  /// **'PROFILE'**
+  String get profile_capslock;
+
+  /// No description provided for @settings_capslock.
+  ///
+  /// In en, this message translates to:
+  /// **'SETTINGS'**
+  String get settings_capslock;
+
+  /// No description provided for @my_goals.
+  ///
+  /// In en, this message translates to:
+  /// **'My goals'**
+  String get my_goals;
+
+  /// No description provided for @my_goals_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust calories, macros and water.'**
+  String get my_goals_description;
+
+  /// No description provided for @backup_and_import.
+  ///
+  /// In en, this message translates to:
+  /// **'Data backup & import'**
+  String get backup_and_import;
+
+  /// No description provided for @backup_and_import_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Create backups, restore, and import data.'**
+  String get backup_and_import_description;
+
+  /// No description provided for @about_and_legal_capslock.
+  ///
+  /// In en, this message translates to:
+  /// **'ABOUT & LEGAL'**
+  String get about_and_legal_capslock;
+
+  /// No description provided for @attribution_and_license.
+  ///
+  /// In en, this message translates to:
+  /// **'Attribution & Licenses'**
+  String get attribution_and_license;
+
+  /// No description provided for @data_from_off_and_wger.
+  ///
+  /// In en, this message translates to:
+  /// **'Data from Open Food Facts and wger.'**
+  String get data_from_off_and_wger;
+
+  /// No description provided for @app_version.
+  ///
+  /// In en, this message translates to:
+  /// **'App version'**
+  String get app_version;
+
+  /// No description provided for @all_measurements.
+  ///
+  /// In en, this message translates to:
+  /// **'ALL MEASUREMENTS'**
+  String get all_measurements;
+
+  /// No description provided for @date_and_time_of_measurement.
+  ///
+  /// In en, this message translates to:
+  /// **'Date & time of measurement'**
+  String get date_and_time_of_measurement;
 }
 
 class _AppLocalizationsDelegate
@@ -4477,6 +4849,198 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get muscleSplitLabel => 'Muskel-Split';
+
+  @override
+  String get snackbar_could_not_open_open_link => 'Konnte Link nicht öffnen';
+
+  @override
+  String get chart_no_data_for_period => 'Keine Daten für diesen Zeitraum.';
+
+  @override
+  String get amount_in_milliliters => 'Menge in Millilitern';
+
+  @override
+  String get amount_in_grams => 'Menge in Gramm';
+
+  @override
+  String get meal_label => 'Mahlzeit';
+
+  @override
+  String get add_to_water_intake => 'Zur Trinkmenge hinzufügen';
+
+  @override
+  String get create_exercise_screen_title => 'Eigene Übung erstellen';
+
+  @override
+  String get exercise_name_label => 'Name der Übung';
+
+  @override
+  String get category_label => 'Kategorie';
+
+  @override
+  String get description_optional_label => 'Beschreibung (optional)';
+
+  @override
+  String get primary_muscles_label => 'Primäre Muskeln';
+
+  @override
+  String get primary_muscles_hint => 'z.B. Brust, Trizeps';
+
+  @override
+  String get secondary_muscles_label => 'Sekundäre Muskeln (optional)';
+
+  @override
+  String get secondary_muscles_hint => 'z.B. Schultern';
+
+  @override
+  String get set_type_normal => 'Normal';
+
+  @override
+  String get set_type_warmup => 'Warmup';
+
+  @override
+  String get set_type_failure => 'Failure';
+
+  @override
+  String get set_type_dropset => 'Dropset';
+
+  @override
+  String get set_reps_hint => '8-12';
+
+  @override
+  String get data_export_button => 'Exportieren';
+
+  @override
+  String get data_import_button => 'Importieren';
+
+  @override
+  String get snackbar_button_ok => 'OK';
+
+  @override
+  String get measurement_session_detail_view =>
+      'Detailansicht der Messsession.';
+
+  @override
+  String get unit_grams => 'g';
+
+  @override
+  String get unit_kcal => 'kcal';
+
+  @override
+  String get delete_profile_picture_button => 'Profilbild löschen';
+
+  @override
+  String get attribution_title => 'Attribution';
+
+  @override
+  String get add_liquid_title => 'Flüssigkeit hinzufügen';
+
+  @override
+  String get add_button => 'Hinzufügen';
+
+  @override
+  String get discard_button => 'Verwerfen';
+
+  @override
+  String get continue_workout_button => 'Workout fortsetzen';
+
+  @override
+  String get soon_available_snackbar =>
+      'Dieser Screen wird bald verfügbar sein!';
+
+  @override
+  String get start_button => 'Start';
+
+  @override
+  String get today_overview_text => 'HEUTE IM BLICK';
+
+  @override
+  String get quick_add_text => 'SCHNELLES HINZUFÜGEN';
+
+  @override
+  String get scann_barcode_capslock => 'Barcode scannen';
+
+  @override
+  String get protocol_today_capslock => 'HEUTIGES PROTOKOLL';
+
+  @override
+  String get my_plans_capslock => 'MEINE PLÄNE';
+
+  @override
+  String get overview_capslock => 'ÜBERBLICK';
+
+  @override
+  String get manage_all_plans => 'Alle Pläne verwalten';
+
+  @override
+  String get free_training => 'Freies Training';
+
+  @override
+  String get my_consistency => 'MEINE KONSISTENZ';
+
+  @override
+  String get calendar_currently_not_available =>
+      'Die Kalender-Ansicht ist in Kürze verfügbar.';
+
+  @override
+  String get in_depth_analysis => 'TIEFEN-ANALYSE';
+
+  @override
+  String get body_measurements => 'Körpermaße';
+
+  @override
+  String get measurements_description =>
+      'Gewicht, KFA und Umfänge analysieren.';
+
+  @override
+  String get nutrition_description => 'Makros, Kalorien und Trends auswerten.';
+
+  @override
+  String get training_analysis => 'Trainings-Analyse';
+
+  @override
+  String get training_analysis_description =>
+      'Volumen, Kraft und Progression verfolgen.';
+
+  @override
+  String get load_dots => 'lade...';
+
+  @override
+  String get profile_capslock => 'PROFIL';
+
+  @override
+  String get settings_capslock => 'EINSTELLUNGEN';
+
+  @override
+  String get my_goals => 'Meine Ziele';
+
+  @override
+  String get my_goals_description => 'Kalorien, Makros und Wasser anpassen.';
+
+  @override
+  String get backup_and_import => 'Datensicherung & Import';
+
+  @override
+  String get backup_and_import_description =>
+      'Backups erstellen, wiederherstellen und Daten importieren.';
+
+  @override
+  String get about_and_legal_capslock => 'ÜBER & RECHTLICHES';
+
+  @override
+  String get attribution_and_license => 'Attribution & Lizenzen';
+
+  @override
+  String get data_from_off_and_wger => 'Daten von Open Food Facts und wger.';
+
+  @override
+  String get app_version => 'App Version';
+
+  @override
+  String get all_measurements => 'ALLE MESSWERTE';
+
+  @override
+  String get date_and_time_of_measurement => 'Datum & Uhrzeit der Messung';
 }
 
 
@@ -5177,6 +5741,198 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get muscleSplitLabel => 'Muscle Split';
+
+  @override
+  String get snackbar_could_not_open_open_link => 'Konnte Link nicht öffnen';
+
+  @override
+  String get chart_no_data_for_period => 'Keine Daten für diesen Zeitraum.';
+
+  @override
+  String get amount_in_milliliters => 'Menge in Millilitern';
+
+  @override
+  String get amount_in_grams => 'Menge in Gramm';
+
+  @override
+  String get meal_label => 'Mahlzeit';
+
+  @override
+  String get add_to_water_intake => 'Zur Trinkmenge hinzufügen';
+
+  @override
+  String get create_exercise_screen_title => 'Eigene Übung erstellen';
+
+  @override
+  String get exercise_name_label => 'Name der Übung';
+
+  @override
+  String get category_label => 'Kategorie';
+
+  @override
+  String get description_optional_label => 'Beschreibung (optional)';
+
+  @override
+  String get primary_muscles_label => 'Primäre Muskeln';
+
+  @override
+  String get primary_muscles_hint => 'z.B. Brust, Trizeps';
+
+  @override
+  String get secondary_muscles_label => 'Sekundäre Muskeln (optional)';
+
+  @override
+  String get secondary_muscles_hint => 'z.B. Schultern';
+
+  @override
+  String get set_type_normal => 'Normal';
+
+  @override
+  String get set_type_warmup => 'Warmup';
+
+  @override
+  String get set_type_failure => 'Failure';
+
+  @override
+  String get set_type_dropset => 'Dropset';
+
+  @override
+  String get set_reps_hint => '8-12';
+
+  @override
+  String get data_export_button => 'Exportieren';
+
+  @override
+  String get data_import_button => 'Importieren';
+
+  @override
+  String get snackbar_button_ok => 'OK';
+
+  @override
+  String get measurement_session_detail_view =>
+      'Detailansicht der Messsession.';
+
+  @override
+  String get unit_grams => 'g';
+
+  @override
+  String get unit_kcal => 'kcal';
+
+  @override
+  String get delete_profile_picture_button => 'Profilbild löschen';
+
+  @override
+  String get attribution_title => 'Attribution';
+
+  @override
+  String get add_liquid_title => 'Flüssigkeit hinzufügen';
+
+  @override
+  String get add_button => 'Hinzufügen';
+
+  @override
+  String get discard_button => 'Verwerfen';
+
+  @override
+  String get continue_workout_button => 'Workout fortsetzen';
+
+  @override
+  String get soon_available_snackbar =>
+      'Dieser Screen wird bald verfügbar sein!';
+
+  @override
+  String get start_button => 'Start';
+
+  @override
+  String get today_overview_text => 'TODAY IN FOCUS';
+
+  @override
+  String get quick_add_text => 'QUICK ADD';
+
+  @override
+  String get scann_barcode_capslock => 'Scan barcode';
+
+  @override
+  String get protocol_today_capslock => 'TODAY\'S PROTOCOL';
+
+  @override
+  String get my_plans_capslock => 'MY PLANS';
+
+  @override
+  String get overview_capslock => 'OVERVIEW';
+
+  @override
+  String get manage_all_plans => 'Manage all plans';
+
+  @override
+  String get free_training => 'free training';
+
+  @override
+  String get my_consistency => 'MY CONSISTENCY';
+
+  @override
+  String get calendar_currently_not_available =>
+      'The calendar view will be available soon.';
+
+  @override
+  String get in_depth_analysis => 'IN-DEPTH ANALYSIS';
+
+  @override
+  String get body_measurements => 'Body measurements';
+
+  @override
+  String get measurements_description =>
+      'Analyze weight, body fat percentage and circumference.';
+
+  @override
+  String get nutrition_description => 'Evaluate macros, calories and trends.';
+
+  @override
+  String get training_analysis => 'Training analysis';
+
+  @override
+  String get training_analysis_description =>
+      'Track volume, strength and progression.';
+
+  @override
+  String get load_dots => 'loading...';
+
+  @override
+  String get profile_capslock => 'PROFILE';
+
+  @override
+  String get settings_capslock => 'SETTINGS';
+
+  @override
+  String get my_goals => 'My goals';
+
+  @override
+  String get my_goals_description => 'Adjust calories, macros and water.';
+
+  @override
+  String get backup_and_import => 'Data backup & import';
+
+  @override
+  String get backup_and_import_description =>
+      'Create backups, restore, and import data.';
+
+  @override
+  String get about_and_legal_capslock => 'ABOUT & LEGAL';
+
+  @override
+  String get attribution_and_license => 'Attribution & Licenses';
+
+  @override
+  String get data_from_off_and_wger => 'Data from Open Food Facts and wger.';
+
+  @override
+  String get app_version => 'App version';
+
+  @override
+  String get all_measurements => 'ALL MEASUREMENTS';
+
+  @override
+  String get date_and_time_of_measurement => 'Date & time of measurement';
 }
 
 
@@ -5364,7 +6120,6 @@ class FoodEntry {
     return {
       'id': id,
       'barcode': barcode,
-      // DOC: KORRIGIERTE ZEILE (Tippfehler "g" entfernt)
       'timestamp': timestamp.toIso8601String(),
       'quantity_in_grams': quantityInGrams,
       'meal_type': mealType,
@@ -5467,9 +6222,7 @@ import 'package:lightweight/models/food_item.dart';
 import 'package:lightweight/models/measurement.dart';
 import 'package:lightweight/models/measurement_session.dart';
 import 'package:lightweight/models/routine.dart';
-import 'package:lightweight/models/routine_exercise.dart';
 import 'package:lightweight/models/set_log.dart';
-import 'package:lightweight/models/set_template.dart';
 import 'package:lightweight/models/water_entry.dart';
 import 'package:lightweight/models/workout_log.dart';
 
@@ -6037,7 +6790,6 @@ import 'package:lightweight/data/product_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/food_item.dart';
 import 'package:lightweight/screens/create_food_screen.dart';
-import 'package:lightweight/screens/food_detail_screen.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/off_attribution_widget.dart';
 import 'package:lightweight/widgets/summary_card.dart';
@@ -6157,8 +6909,6 @@ class _AddFoodScreenState extends State<AddFoodScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
     final isLightMode = Theme.of(context).brightness == Brightness.light;
 
     return Scaffold(
@@ -6188,7 +6938,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                   isScrollable: false, // Verteilt Tabs gleichmäßig
                   indicator: const BoxDecoration(),
                   splashFactory: NoSplash.splashFactory,
-                  overlayColor: MaterialStateProperty.all(Colors.transparent),
+                  overlayColor: WidgetStateProperty.all(Colors.transparent),
                   // KORREKTUR: labelPadding: EdgeInsets.zero, für volle Breite der Tab-Labels
                   labelPadding: EdgeInsets.zero, // Wichtig für exaktes Layout
                   labelColor: isLightMode ? Colors.black : Colors.white,
@@ -6225,9 +6975,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
           ),
         ],
       ),
-      floatingActionButton: GlassFab(
-          onPressed: _navigateAndCreateFood
-        ),
+      floatingActionButton: GlassFab(onPressed: _navigateAndCreateFood),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
@@ -6293,8 +7041,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
   }
 
   Widget _buildFavoritesTab(AppLocalizations l10n) {
-    if (_isLoadingFavorites)
+    if (_isLoadingFavorites) {
       return const Center(child: CircularProgressIndicator());
+    }
     if (_favoriteFoodItems.isEmpty) {
       // KORREKTUR: Theme-konformer Stil
       return Center(
@@ -6319,8 +7068,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
   }
 
   Widget _buildRecentTab(AppLocalizations l10n) {
-    if (_isLoadingRecent)
+    if (_isLoadingRecent) {
       return const Center(child: CircularProgressIndicator());
+    }
     if (_recentFoodItems.isEmpty) {
       // KORREKTUR: Theme-konformer Stil
       return Center(
@@ -6567,8 +7317,8 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Datum & Uhrzeit Sektion
-              Text("Datum & Uhrzeit der Messung",
-                  style: textTheme.titleMedium), // TODO: Lokalisieren
+              Text(l10n.date_and_time_of_measurement,
+                  style: textTheme.titleMedium),
               const SizedBox(height: 8),
               SummaryCard(
                 // KORREKTUR 2: Datum/Uhrzeit in SummaryCard
@@ -6601,7 +7351,7 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
               const SizedBox(height: 24), // KORREKTUR 3: Abstand angepasst
 
               // Messwerte-Sektion
-              Text("Messwerte",
+              Text(l10n.drawerMeasurements,
                   style: textTheme.titleMedium), // TODO: Lokalisieren
               const SizedBox(height: 8),
               ..._measurementTypes.keys.map((key) {
@@ -6644,6 +7394,7 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
 import 'package:flutter/material.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/models/exercise.dart';
+import 'package:lightweight/generated/app_localizations.dart';
 
 class CreateExerciseScreen extends StatefulWidget {
   const CreateExerciseScreen({super.key});
@@ -6659,6 +7410,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
   final _secondaryMusclesController = TextEditingController();
 
   final List<String> _categories = ["Kraft", "Cardio", "Dehnen", "Sonstiges"];
+  late final l10n = AppLocalizations.of(context)!;
   late String _selectedCategory;
 
   @override
@@ -6707,7 +7459,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Eigene Übung erstellen"), // TODO: Lokalisieren
+        title: Text(l10n.create_exercise_screen_title),
         backgroundColor: colorScheme.primary,
         foregroundColor: colorScheme.onPrimary,
         actions: [
@@ -6726,7 +7478,8 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: "Name der Übung"),
+                decoration:
+                    InputDecoration(labelText: l10n.exercise_name_label),
                 validator: (value) => value == null || value.isEmpty
                     ? "Bitte einen Namen eingeben."
                     : null,
@@ -6734,7 +7487,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 initialValue: _selectedCategory,
-                decoration: const InputDecoration(labelText: "Kategorie"),
+                decoration: InputDecoration(labelText: l10n.category_label),
                 items: _categories
                     .map(
                         (cat) => DropdownMenuItem(value: cat, child: Text(cat)))
@@ -6747,22 +7500,22 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
               TextFormField(
                 controller: _descriptionController,
                 decoration:
-                    const InputDecoration(labelText: "Beschreibung (optional)"),
+                    InputDecoration(labelText: l10n.description_optional_label),
                 maxLines: 3,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _primaryMusclesController,
-                decoration: const InputDecoration(
-                    labelText: "Primäre Muskeln",
-                    hintText: "z.B. Brust, Trizeps"),
+                decoration: InputDecoration(
+                    labelText: l10n.primary_muscles_label,
+                    hintText: l10n.primary_muscles_hint),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _secondaryMusclesController,
-                decoration: const InputDecoration(
-                    labelText: "Sekundäre Muskeln (optional)",
-                    hintText: "z.B. Schultern"),
+                decoration: InputDecoration(
+                    labelText: l10n.secondary_muscles_label,
+                    hintText: l10n.secondary_muscles_hint),
               ),
             ],
           ),
@@ -6848,7 +7601,6 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
@@ -6946,7 +7698,7 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
           labelText: label,
           // Wir lassen die globalen Themes greifen
         ),
-        keyboardType: TextInputType.numberWithOptions(decimal: true),
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
         validator: (value) {
           if (isRequired && (value == null || value.isEmpty)) {
             return l10n.validatorPleaseEnterName; // Oder spezifischer Text
@@ -7095,43 +7847,43 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     }
   }
 
-@override
-Widget build(BuildContext context) {
-  final l10n = AppLocalizations.of(context)!;
-  final theme = Theme.of(context);
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
 
-  return Scaffold(
-  appBar: AppBar(
-    automaticallyImplyLeading: true, // <- zeigt den Zurück-Pfeil
-    elevation: 0,
-    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-    scrolledUnderElevation: 0,
-    centerTitle: false,
-    title: Text(
-      "Data Hub",
-      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w900,
-          ),
-    ),
-  ),
-    body: SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // --- bestehender Inhalt bleibt unverändert ---
-            _buildFullBackupCard(context, l10n, theme),
-            const SizedBox(height: 16),
-            _buildCsvExportCard(context, l10n, theme),
-            const SizedBox(height: 16),
-            _buildMigrationCard(context, l10n, theme),
-          ],
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: true, // <- zeigt den Zurück-Pfeil
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          "Data Hub",
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
         ),
       ),
-    ),
-  );
-}
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // --- bestehender Inhalt bleibt unverändert ---
+              _buildFullBackupCard(context, l10n, theme),
+              const SizedBox(height: 16),
+              _buildCsvExportCard(context, l10n, theme),
+              const SizedBox(height: 16),
+              _buildMigrationCard(context, l10n, theme),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
   // --- WIDGET BUILDER ---
 
   Widget _buildFullBackupCard(
@@ -7154,7 +7906,7 @@ Widget build(BuildContext context) {
                 Expanded(
                   child: OutlinedButton.icon(
                     icon: const Icon(Icons.upload_file),
-                    label: const Text("Exportieren"),
+                    label: Text(l10n.data_export_button),
                     onPressed: _isFullBackupRunning ? null : _performFullExport,
                   ),
                 ),
@@ -7162,7 +7914,7 @@ Widget build(BuildContext context) {
                 Expanded(
                   child: FilledButton.icon(
                     icon: const Icon(Icons.download_for_offline),
-                    label: const Text("Importieren"),
+                    label: Text(l10n.data_import_button),
                     style: FilledButton.styleFrom(
                         backgroundColor: theme.colorScheme.error),
                     onPressed: _isFullBackupRunning ? null : _performFullImport,
@@ -7295,7 +8047,7 @@ import 'package:lightweight/models/routine_exercise.dart';
 import 'package:lightweight/models/set_template.dart';
 import 'package:lightweight/screens/exercise_catalog_screen.dart';
 import 'package:lightweight/screens/exercise_detail_screen.dart';
-import 'package:lightweight/screens/live_workout_screen.dart'; // Zum Starten der Routine
+// Zum Starten der Routine
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/set_type_chip.dart';
 import 'package:lightweight/widgets/summary_card.dart'; // HINZUGEFÜGT
@@ -7412,9 +8164,10 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     FocusScope.of(context).unfocus();
 
     if (_nameController.text.trim().isEmpty) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(l10n.validatorPleaseEnterRoutineName)));
+      }
       return false;
     }
 
@@ -7431,9 +8184,10 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
           _originalName = newRoutine.name;
         });
       }
-      if (mounted && !isAddingExercise)
+      if (mounted && !isAddingExercise) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(l10n.snackbarRoutineCreated)));
+      }
     } else {
       if (_nameController.text.trim() != _originalName) {
         await WorkoutDatabaseHelper.instance
@@ -7611,66 +8365,67 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-  appBar: AppBar(
-    automaticallyImplyLeading: true,
-    elevation: 0,
-    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-    scrolledUnderElevation: 0,
-    centerTitle: false,
-    title: Text(
-      _isNewRoutine ? l10n.titleNewRoutine : l10n.titleEditRoutine,
-      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w900,
-          ),
-    ),
-    actions: [
-      TextButton(
-        onPressed: () => _saveRoutine(),
-        child: Text(
-          l10n.save,
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.primary,
-            fontWeight: FontWeight.bold,
-          ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          _isNewRoutine ? l10n.titleNewRoutine : l10n.titleEditRoutine,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => _saveRoutine(),
+            child: Text(
+              l10n.save,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
       ),
-    ],
-  ),
-  body: Column(
-    children: [
-      // Routine-Name Eingabe bleibt im Body
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        child: TextFormField(
-          controller: _nameController,
-          decoration: InputDecoration(labelText: l10n.formFieldRoutineName),
-          validator: (value) {
-            if (value == null || value.trim().isEmpty) {
-              return l10n.validatorPleaseEnterRoutineName;
-            }
-            return null;
-          },
-        ),
-      ),
-      const SizedBox(height: 12),
-      Divider(
-        height: 1,
-        thickness: 1,
-        color: colorScheme.onSurfaceVariant.withOpacity(0.1),
-      ),
-      // Rest: ListView mit Exercises (unverändert)
-      Expanded(
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _routineExercises.isEmpty
-                ? Center(
-                    child: Text(
-                      l10n.emptyStateAddFirstExercise,
-                      style: textTheme.titleMedium,
-                    ),
-                  )
-                : ReorderableListView.builder(
+      body: Column(
+        children: [
+          // Routine-Name Eingabe bleibt im Body
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: TextFormField(
+              controller: _nameController,
+              decoration: InputDecoration(labelText: l10n.formFieldRoutineName),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return l10n.validatorPleaseEnterRoutineName;
+                }
+                return null;
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+          ),
+          // Rest: ListView mit Exercises (unverändert)
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _routineExercises.isEmpty
+                    ? Center(
+                        child: Text(
+                          l10n.emptyStateAddFirstExercise,
+                          style: textTheme.titleMedium,
+                        ),
+                      )
+                    : ReorderableListView.builder(
                         padding: const EdgeInsets.all(16.0),
                         itemCount: _routineExercises.length,
                         // KORREKTUR: onReorderStart/End für Drag-Feedback
@@ -7843,8 +8598,9 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         ],
       ),
       floatingActionButton: GlassFab(
-          onPressed: _addExercises, // Fügt neue Übungen hinzu ODER speichert die Routine
-        ),
+        onPressed:
+            _addExercises, // Fügt neue Übungen hinzu ODER speichert die Routine
+      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
@@ -7895,8 +8651,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
             controller: _repsControllers[template.id!],
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-                hintText: "8-12", isDense: true), // TODO: hintText lokalisieren
+            decoration:
+                InputDecoration(hintText: l10n.set_reps_hint, isDense: true),
             validator: (value) {
               if (value != null &&
                   value.isNotEmpty &&
@@ -8227,84 +8983,84 @@ class ExerciseDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-return Scaffold(
-  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-  appBar: AppBar(
-    automaticallyImplyLeading: true, // <-- zeigt den Zurück-Pfeil
-    elevation: 0,
-    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-    title: Text(
-      exercise.getLocalizedName(context),
-      style: textTheme.headlineSmall?.copyWith(
-        fontWeight: FontWeight.w900,
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        automaticallyImplyLeading: true, // <-- zeigt den Zurück-Pfeil
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        title: Text(
+          exercise.getLocalizedName(context),
+          style: textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w900,
+          ),
+        ),
       ),
-    ),
-  ),
-  body: SingleChildScrollView(
-    padding: const EdgeInsets.all(16.0),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          exercise.categoryName,
-          style: textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
-        ),
-        const SizedBox(height: 24),
-        SummaryCard(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Beschreibung", style: textTheme.titleLarge),
-                const SizedBox(height: 8),
-                Text(
-                  exercise.getLocalizedDescription(context).isNotEmpty
-                      ? exercise.getLocalizedDescription(context)
-                      : l10n.noDescriptionAvailable,
-                  style: textTheme.bodyMedium,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              exercise.categoryName,
+              style: textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 24),
+            SummaryCard(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Beschreibung", style: textTheme.titleLarge),
+                    const SizedBox(height: 8),
+                    Text(
+                      exercise.getLocalizedDescription(context).isNotEmpty
+                          ? exercise.getLocalizedDescription(context)
+                          : l10n.noDescriptionAvailable,
+                      style: textTheme.bodyMedium,
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        SummaryCard(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Involvierte Muskeln", style: textTheme.titleLarge),
-                const SizedBox(height: 8),
-                if (exercise.primaryMuscles.isNotEmpty)
-                  _buildMuscleRow("Primär:",
-                      exercise.primaryMuscles.join(', '), textTheme),
-                if (exercise.secondaryMuscles.isNotEmpty)
-                  _buildMuscleRow("Sekundär:",
-                      exercise.secondaryMuscles.join(', '), textTheme),
-                if (exercise.primaryMuscles.isEmpty &&
-                    exercise.secondaryMuscles.isEmpty)
-                  Text("Keine Muskeln angegeben.",
-                      style: textTheme.bodyMedium
-                          ?.copyWith(color: Colors.grey[600])),
-              ],
+            const SizedBox(height: 12),
+            SummaryCard(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Involvierte Muskeln", style: textTheme.titleLarge),
+                    const SizedBox(height: 8),
+                    if (exercise.primaryMuscles.isNotEmpty)
+                      _buildMuscleRow("Primär:",
+                          exercise.primaryMuscles.join(', '), textTheme),
+                    if (exercise.secondaryMuscles.isNotEmpty)
+                      _buildMuscleRow("Sekundär:",
+                          exercise.secondaryMuscles.join(', '), textTheme),
+                    if (exercise.primaryMuscles.isEmpty &&
+                        exercise.secondaryMuscles.isEmpty)
+                      Text("Keine Muskeln angegeben.",
+                          style: textTheme.bodyMedium
+                              ?.copyWith(color: Colors.grey[600])),
+                  ],
+                ),
+              ),
             ),
-          ),
+            Padding(
+              padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
+              child: WgerAttributionWidget(
+                textStyle:
+                    textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+              ),
+            ),
+          ],
         ),
-        Padding(
-          padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
-          child: WgerAttributionWidget(
-            textStyle: textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-          ),
-        ),
-      ],
-    ),
-  ),
-);
+      ),
+    );
   }
 
   Widget _buildMuscleRow(String label, String muscles, TextTheme textTheme) {
@@ -8419,9 +9175,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
           IconButton(
             icon: Icon(
               _isFavorite ? Icons.favorite : Icons.favorite_border,
-              color: _isFavorite
-                  ? Colors.redAccent
-                  : colorScheme.onSurfaceVariant,
+              color:
+                  _isFavorite ? Colors.redAccent : colorScheme.onSurfaceVariant,
             ),
             onPressed: _toggleFavorite,
           )
@@ -8437,13 +9192,11 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                 _displayItem.brand,
                 style: textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
               ),
-
             Divider(
               height: 32,
               thickness: 1,
               color: colorScheme.onSurfaceVariant.withOpacity(0.1),
             ),
-
             if (_hasPortionInfo)
               SummaryCard(
                 child: Padding(
@@ -8461,11 +9214,9 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                 ),
               ),
             if (_hasPortionInfo) const SizedBox(height: 16),
-
             Text("Nährwerte pro ${displayQuantity}g",
                 style: textTheme.titleLarge),
             const SizedBox(height: 8),
-
             SummaryCard(
               child: Column(
                 children: [
@@ -8480,7 +9231,6 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                 ],
               ),
             ),
-
             if (_displayItem.sugar != null ||
                 _displayItem.fiber != null ||
                 _displayItem.salt != null) ...[
@@ -8501,7 +9251,6 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                 ),
               ),
             ],
-
             if (!_displayItem.barcode.startsWith('user_created_'))
               Padding(
                 padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
@@ -8690,7 +9439,7 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
                   isScrollable: false,
                   indicator: const BoxDecoration(),
                   splashFactory: NoSplash.splashFactory,
-                  overlayColor: MaterialStateProperty.all(Colors.transparent),
+                  overlayColor: WidgetStateProperty.all(Colors.transparent),
                   dividerColor: Colors.transparent,
                   // KORREKTUR: Dynamische Farbe basierend auf dem Theme-Modus
                   labelColor: isLightMode ? Colors.black : Colors.white,
@@ -8727,7 +9476,7 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
         ],
       ),
       floatingActionButton: GlassFab(
-          onPressed: _navigateAndCreateFood,
+        onPressed: _navigateAndCreateFood,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
@@ -8778,8 +9527,9 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
   }
 
   Widget _buildFavoritesTab(AppLocalizations l10n) {
-    if (_isLoadingFavorites)
+    if (_isLoadingFavorites) {
       return const Center(child: CircularProgressIndicator());
+    }
     if (_favoriteFoodItems.isEmpty) {
       return Center(
           child: Text(l10n.favoritesEmptyState,
@@ -8942,19 +9692,19 @@ class _GoalsScreenState extends State<GoalsScreen> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-  appBar: AppBar(
-    automaticallyImplyLeading: true,
-    elevation: 0,
-    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-    scrolledUnderElevation: 0,
-    centerTitle: false,
-    title: Text(
-      "Goals",
-      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w900,
-          ),
-    ),
-  ),
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          "Goals",
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+        ),
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -9045,14 +9795,11 @@ import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/chart_data_point.dart';
 import 'package:lightweight/models/daily_nutrition.dart';
-import 'package:lightweight/models/workout_log.dart';
-import 'package:lightweight/screens/live_workout_screen.dart';
 import 'package:lightweight/screens/measurements_screen.dart';
 import 'package:lightweight/screens/nutrition_screen.dart';
 import 'package:lightweight/widgets/measurement_chart_widget.dart';
 import 'package:lightweight/widgets/nutrition_summary_widget.dart';
 import 'package:lightweight/widgets/summary_card.dart';
-import 'package:lightweight/util/time_util.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -9065,7 +9812,7 @@ class HomeState extends State<Home> {
   DailyNutrition? _nutritionData;
   String _recommendationText = "";
   // KORREKTUR: _isLoading wird jetzt nur für den ERSTEN Ladevorgang auf true gesetzt
-  bool _isLoading = true; 
+  bool _isLoading = true;
 
   List<ChartDataPoint> _weightChartData = [];
   DateTimeRange _currentDateRange = DateTimeRange(
@@ -9075,9 +9822,8 @@ class HomeState extends State<Home> {
   Map<String, int> _workoutStats = {};
   bool _isFirstLoad = true;
 
-  List<String> _chartDateRangeKeys = ['30D', '90D', 'All'];
+  final List<String> _chartDateRangeKeys = ['30D', '90D', 'All'];
   String _selectedChartRangeKey = '30D';
-
 
   @override
   void initState() {
@@ -9088,15 +9834,18 @@ class HomeState extends State<Home> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_isFirstLoad) {
-      loadAllHomeScreenData(showLoadingIndicator: true); // KORREKTUR: Zeige Indikator nur beim ersten Mal
+      loadAllHomeScreenData(
+          showLoadingIndicator:
+              true); // KORREKTUR: Zeige Indikator nur beim ersten Mal
       _isFirstLoad = false;
     }
   }
 
   // KORREKTUR: loadAllHomeScreenData akzeptiert jetzt einen optionalen Parameter
-  Future<void> loadAllHomeScreenData({bool showLoadingIndicator = false}) async {
+  Future<void> loadAllHomeScreenData(
+      {bool showLoadingIndicator = false}) async {
     if (!mounted) return;
-    
+
     // KORREKTUR: Setze _isLoading nur, wenn der Indikator wirklich gezeigt werden soll
     if (showLoadingIndicator) {
       setState(() => _isLoading = true);
@@ -9111,8 +9860,10 @@ class HomeState extends State<Home> {
     final targetFat = prefs.getInt('targetFat') ?? 80;
     final targetWater = prefs.getInt('targetWater') ?? 3000;
 
-    final entries = await DatabaseHelper.instance.getEntriesForDate(DateTime.now());
-    final waterIntake = await DatabaseHelper.instance.getWaterForDate(DateTime.now());
+    final entries =
+        await DatabaseHelper.instance.getEntriesForDate(DateTime.now());
+    final waterIntake =
+        await DatabaseHelper.instance.getWaterForDate(DateTime.now());
     final newTodaysNutrition = DailyNutrition(
         targetCalories: targetCalories,
         targetProtein: targetProtein,
@@ -9121,31 +9872,42 @@ class HomeState extends State<Home> {
         targetWater: targetWater);
     newTodaysNutrition.water = waterIntake;
 
-    final newWorkoutStats = await _getWorkoutStats(); // KORREKTUR: Methode umbenannt
+    final newWorkoutStats =
+        await _getWorkoutStats(); // KORREKTUR: Methode umbenannt
     await _loadChartData(); // Lädt Chart-Daten und setzt _weightChartData
 
     for (final entry in entries) {
-      final foodItem = await ProductDatabaseHelper.instance.getProductByBarcode(entry.barcode);
+      final foodItem = await ProductDatabaseHelper.instance
+          .getProductByBarcode(entry.barcode);
       if (foodItem != null) {
-        newTodaysNutrition.calories += (foodItem.calories / 100 * entry.quantityInGrams).round();
-        newTodaysNutrition.protein += (foodItem.protein / 100 * entry.quantityInGrams).round();
-        newTodaysNutrition.carbs += (foodItem.carbs / 100 * entry.quantityInGrams).round();
-        newTodaysNutrition.fat += (foodItem.fat / 100 * entry.quantityInGrams).round();
+        newTodaysNutrition.calories +=
+            (foodItem.calories / 100 * entry.quantityInGrams).round();
+        newTodaysNutrition.protein +=
+            (foodItem.protein / 100 * entry.quantityInGrams).round();
+        newTodaysNutrition.carbs +=
+            (foodItem.carbs / 100 * entry.quantityInGrams).round();
+        newTodaysNutrition.fat +=
+            (foodItem.fat / 100 * entry.quantityInGrams).round();
       }
     }
 
     final today = DateTime.now();
     final sevenDaysAgo = today.subtract(const Duration(days: 6));
-    final recentEntries = await DatabaseHelper.instance.getEntriesForDateRange(sevenDaysAgo, today);
+    final recentEntries = await DatabaseHelper.instance
+        .getEntriesForDateRange(sevenDaysAgo, today);
     String newRecommendation = l10n.recommendationDefault;
     if (recentEntries.isNotEmpty) {
-      final uniqueDaysTracked = recentEntries.map((e) => DateFormat.yMd().format(e.timestamp)).toSet();
+      final uniqueDaysTracked = recentEntries
+          .map((e) => DateFormat.yMd().format(e.timestamp))
+          .toSet();
       final numberOfTrackedDays = uniqueDaysTracked.length;
       int totalRecentCalories = 0;
       for (final entry in recentEntries) {
-        final foodItem = await ProductDatabaseHelper.instance.getProductByBarcode(entry.barcode);
+        final foodItem = await ProductDatabaseHelper.instance
+            .getProductByBarcode(entry.barcode);
         if (foodItem != null) {
-          totalRecentCalories += (foodItem.calories / 100 * entry.quantityInGrams).round();
+          totalRecentCalories +=
+              (foodItem.calories / 100 * entry.quantityInGrams).round();
         }
       }
       final totalTargetCalories = targetCalories * numberOfTrackedDays;
@@ -9153,9 +9915,11 @@ class HomeState extends State<Home> {
       if (numberOfTrackedDays > 1) {
         final tolerance = totalTargetCalories * 0.05;
         if (difference > tolerance) {
-          newRecommendation = l10n.recommendationOverTarget(numberOfTrackedDays, difference.round());
+          newRecommendation = l10n.recommendationOverTarget(
+              numberOfTrackedDays, difference.round());
         } else if (difference < -tolerance) {
-          newRecommendation = l10n.recommendationUnderTarget(numberOfTrackedDays, (-difference).round());
+          newRecommendation = l10n.recommendationUnderTarget(
+              numberOfTrackedDays, (-difference).round());
         } else {
           newRecommendation = l10n.recommendationOnTarget(numberOfTrackedDays);
         }
@@ -9175,34 +9939,37 @@ class HomeState extends State<Home> {
     }
   }
 
-Future<void> _loadChartData() async {
-  // Hole alle Mess-Sessions und filtere auf den sichtbaren Bereich + Typ "weight"
-  final sessions = await DatabaseHelper.instance.getMeasurementSessions();
+  Future<void> _loadChartData() async {
+    // Hole alle Mess-Sessions und filtere auf den sichtbaren Bereich + Typ "weight"
+    final sessions = await DatabaseHelper.instance.getMeasurementSessions();
 
-  // Tagesgrenzen normalisieren (Start 00:00, Ende 23:59:59)
-  final start = DateTime(_currentDateRange.start.year, _currentDateRange.start.month, _currentDateRange.start.day);
-  final end = DateTime(_currentDateRange.end.year, _currentDateRange.end.month, _currentDateRange.end.day, 23, 59, 59);
+    // Tagesgrenzen normalisieren (Start 00:00, Ende 23:59:59)
+    final start = DateTime(_currentDateRange.start.year,
+        _currentDateRange.start.month, _currentDateRange.start.day);
+    final end = DateTime(_currentDateRange.end.year,
+        _currentDateRange.end.month, _currentDateRange.end.day, 23, 59, 59);
 
-  final points = <ChartDataPoint>[];
+    final points = <ChartDataPoint>[];
 
-  for (final s in sessions) {
-    if (s.timestamp.isBefore(start) || s.timestamp.isAfter(end)) continue;
+    for (final s in sessions) {
+      if (s.timestamp.isBefore(start) || s.timestamp.isAfter(end)) continue;
 
-    for (final m in s.measurements) {
-      if (m.type == _chartType) {
-        // Annahme: ChartDataPoint hat Felder/Named-Ctor "date" und "value"
-        points.add(ChartDataPoint(date: s.timestamp, value: m.value.toDouble()));
+      for (final m in s.measurements) {
+        if (m.type == _chartType) {
+          // Annahme: ChartDataPoint hat Felder/Named-Ctor "date" und "value"
+          points.add(
+              ChartDataPoint(date: s.timestamp, value: m.value.toDouble()));
+        }
       }
     }
+
+    points.sort((a, b) => a.date.compareTo(b.date));
+
+    if (!mounted) return;
+    setState(() {
+      _weightChartData = points;
+    });
   }
-
-  points.sort((a, b) => a.date.compareTo(b.date));
-
-  if (!mounted) return;
-  setState(() {
-    _weightChartData = points;
-  });
-}
 
   // KORREKTUR: Methode umbenannt, damit sie Daten ZURÜCKGIBT
   Future<Map<String, int>> _getWorkoutStats() async {
@@ -9231,58 +9998,33 @@ Future<void> _loadChartData() async {
     };
   }
 
-Future<void> _loadLatestWorkout() async {
-  // Beispiel: hole alle Logs und merke dir das Neueste (falls du es später anzeigen willst)
-  final logs = await WorkoutDatabaseHelper.instance.getWorkoutLogs();
-  if (logs.isEmpty) return;
+  void _navigateTimeRange(bool forward) {
+    // "All" deckt sowieso alles ab – kein Paging
+    if (_selectedChartRangeKey == 'All') return;
 
-  logs.sort((a, b) => b.startTime.compareTo(a.startTime));
-  final latest = logs.first;
+    final int days = _selectedChartRangeKey == '90D' ? 90 : 30;
+    final delta = Duration(days: days);
 
-  // Falls du später etwas im UI mit dem letzten Log machen willst,
-  // kannst du hier setState(...) nutzen und z.B. ein Feld speichern.
-  // Aktuell: kein sichtbarer Seiteneffekt nötig.
-}
+    final newStart = forward
+        ? _currentDateRange.start.add(delta)
+        : _currentDateRange.start.subtract(delta);
+    final newEnd = forward
+        ? _currentDateRange.end.add(delta)
+        : _currentDateRange.end.subtract(delta);
 
-void _navigateTimeRange(bool forward) {
-  // "All" deckt sowieso alles ab – kein Paging
-  if (_selectedChartRangeKey == 'All') return;
+    setState(() {
+      _currentDateRange = DateTimeRange(start: newStart, end: newEnd);
+    });
 
-  final int days = _selectedChartRangeKey == '90D' ? 90 : 30;
-  final delta = Duration(days: days);
-
-  final newStart = forward ? _currentDateRange.start.add(delta) : _currentDateRange.start.subtract(delta);
-  final newEnd   = forward ? _currentDateRange.end.add(delta)   : _currentDateRange.end.subtract(delta);
-
-  setState(() {
-    _currentDateRange = DateTimeRange(start: newStart, end: newEnd);
-  });
-
-  // Daten für die neue Range nachladen
-  _loadChartData();
-}
+    // Daten für die neue Range nachladen
+    _loadChartData();
+  }
 
   void _navigateToNutritionScreen() {
-  Navigator.of(context)
-      .push(MaterialPageRoute(builder: (context) => const NutritionScreen()))
-      .then((_) => loadAllHomeScreenData(showLoadingIndicator: false));
-}
-
-  void _repeatWorkout(WorkoutLog log) async {
-  // Startet ein neues (ggf. leeres) Workout mit dem gleichen Namen wie der Log.
-  // (Für 1:1-Übungs-Übernahme bräuchte man mehr Logik; so ist es "lightweight".)
-  final newWorkoutLog = await WorkoutDatabaseHelper.instance.startWorkout(
-    routineName: log.routineName ?? AppLocalizations.of(context)!.freeWorkoutTitle,
-  );
-
-  if (!mounted) return;
-  Navigator.of(context).push(
-    MaterialPageRoute(
-      builder: (context) => LiveWorkoutScreen(workoutLog: newWorkoutLog),
-    ),
-  );
-}
-
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) => const NutritionScreen()))
+        .then((_) => loadAllHomeScreenData(showLoadingIndicator: false));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -9298,22 +10040,30 @@ void _navigateTimeRange(bool forward) {
           // KORREKTUR: Der RefreshIndicator ist immer da, damit man ziehen kann.
           // Der Inhalt wird immer angezeigt, auch wenn _isLoading true ist (alte Daten).
           RefreshIndicator(
-            onRefresh: () => loadAllHomeScreenData(showLoadingIndicator: false), // KORREKTUR: Kein Ladeindikator bei manueller Aktualisierung
+            onRefresh: () => loadAllHomeScreenData(
+                showLoadingIndicator:
+                    false), // KORREKTUR: Kein Ladeindikator bei manueller Aktualisierung
             child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               children: [
                 _buildBannerCard(l10n),
                 const SizedBox(height: 8),
                 GestureDetector(
                     onTap: _navigateToNutritionScreen,
                     child: _nutritionData != null
-                        ? NutritionSummaryWidget(nutritionData: _nutritionData!, isExpandedView: false, l10n: l10n)
+                        ? NutritionSummaryWidget(
+                            nutritionData: _nutritionData!,
+                            isExpandedView: false,
+                            l10n: l10n)
                         : const SizedBox.shrink()),
-                if (_weightChartData.isNotEmpty)
-                const SizedBox(height: 8),
-                  GestureDetector(
-                      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const MeasurementsScreen())).then((_) => loadAllHomeScreenData()),
-                      child: _buildWeightChartCard(context, colorScheme, l10n)),
+                if (_weightChartData.isNotEmpty) const SizedBox(height: 8),
+                GestureDetector(
+                    onTap: () => Navigator.of(context)
+                        .push(MaterialPageRoute(
+                            builder: (context) => const MeasurementsScreen()))
+                        .then((_) => loadAllHomeScreenData()),
+                    child: _buildWeightChartCard(context, colorScheme, l10n)),
                 const SizedBox(height: 8),
                 _buildWorkoutStatsCard(l10n),
               ],
@@ -9331,7 +10081,6 @@ void _navigateTimeRange(bool forward) {
       ),
     );
   }
-
 
   Widget _buildBannerCard(AppLocalizations l10n) {
     // KORREKTUR: externalMargin wird jetzt gesetzt
@@ -9353,22 +10102,8 @@ void _navigateTimeRange(bool forward) {
     );
   }
 
-  // KORREKTUR: _buildNutritionCard wickelt jetzt das NutritionSummaryWidget in eine SummaryCard
-  Widget _buildNutritionCard(AppLocalizations l10n) {
-    return _nutritionData == null
-        ? const SizedBox.shrink()
-        : SummaryCard( // KORREKTUR: SummaryCard um das Widget
-            //internalPadding: const EdgeInsets.all(12.0), // Passender Padding
-            //externalMargin: EdgeInsets.zero, // Wichtig
-            child: NutritionSummaryWidget(
-              nutritionData: _nutritionData!,
-              isExpandedView: false,
-              l10n: l10n,
-            ),
-          );
-  }
-
-  Widget _buildWeightChartCard(BuildContext context, ColorScheme colorScheme, AppLocalizations l10n) {
+  Widget _buildWeightChartCard(
+      BuildContext context, ColorScheme colorScheme, AppLocalizations l10n) {
     // KORREKTUR: externalMargin wird jetzt gesetzt
     return SummaryCard(
       //externalMargin: EdgeInsets.zero, // Wichtig
@@ -9379,14 +10114,20 @@ void _navigateTimeRange(bool forward) {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Gewichtsverlauf", style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                Text("Gewichtsverlauf",
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.bold)),
                 Expanded(
                   child: Align(
                     alignment: Alignment.centerRight,
                     child: Wrap(
                       spacing: 8.0,
                       alignment: WrapAlignment.end,
-                      children: _chartDateRangeKeys.map((key) => _buildFilterButton(key, key)).toList(),
+                      children: _chartDateRangeKeys
+                          .map((key) => _buildFilterButton(key, key))
+                          .toList(),
                     ),
                   ),
                 ),
@@ -9395,7 +10136,9 @@ void _navigateTimeRange(bool forward) {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("${DateFormat.MMMd().format(_currentDateRange.start)} - ${DateFormat.MMMd().format(_currentDateRange.end)}", style: Theme.of(context).textTheme.bodySmall),
+                Text(
+                    "${DateFormat.MMMd().format(_currentDateRange.start)} - ${DateFormat.MMMd().format(_currentDateRange.end)}",
+                    style: Theme.of(context).textTheme.bodySmall),
               ],
             ),
             const SizedBox(height: 16),
@@ -9417,7 +10160,6 @@ void _navigateTimeRange(bool forward) {
     );
   }
 
-
   Widget _buildFilterButton(String label, String key) {
     final theme = Theme.of(context);
     final isSelected = _selectedChartRangeKey == key;
@@ -9431,13 +10173,17 @@ void _navigateTimeRange(bool forward) {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
         decoration: BoxDecoration(
-          color: isSelected ? theme.colorScheme.primary : theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+          color: isSelected
+              ? theme.colorScheme.primary
+              : theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
           borderRadius: BorderRadius.circular(8.0),
         ),
         child: Text(
           label,
           style: theme.textTheme.labelSmall?.copyWith(
-            color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
+            color: isSelected
+                ? theme.colorScheme.onPrimary
+                : theme.colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -9446,8 +10192,6 @@ void _navigateTimeRange(bool forward) {
   }
 
   Widget _buildWorkoutStatsCard(AppLocalizations l10n) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     // KORREKTUR: externalMargin wird jetzt gesetzt
     return SummaryCard(
       //externalMargin: EdgeInsets.zero, // Wichtig
@@ -9518,6 +10262,7 @@ void _navigateTimeRange(bool forward) {
   }
 }
 
+
 ===== Datei: D:\lightweight\lib\screens\live_workout_screen.dart =====
 
 // lib/screens/live_workout_screen.dart (Final & De-Materialisiert - Endgültig)
@@ -9525,7 +10270,6 @@ void _navigateTimeRange(bool forward) {
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
-import 'package:vibration/vibration.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/exercise.dart';
@@ -9537,12 +10281,11 @@ import 'package:lightweight/models/workout_log.dart';
 import 'package:lightweight/services/workout_session_manager.dart';
 import 'package:lightweight/widgets/set_type_chip.dart';
 import 'package:lightweight/widgets/summary_card.dart'; // HINZUGEFÜGT
-import 'package:lightweight/widgets/wger_attribution_widget.dart';
 import 'package:lightweight/widgets/workout_summary_bar.dart';
 import 'exercise_catalog_screen.dart';
 import 'exercise_detail_screen.dart';
 import 'package:provider/provider.dart';
-import 'package:lightweight/util/time_util.dart'; // Für formatDuration
+// Für formatDuration
 
 class LiveWorkoutScreen extends StatefulWidget {
   final Routine? routine;
@@ -9609,9 +10352,10 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     for (var routineExercise in _liveExercises) {
       final lastPerf = await WorkoutDatabaseHelper.instance
           .getLastPerformance(routineExercise.exercise.nameEn);
-      if (mounted)
+      if (mounted) {
         setState(() =>
             _lastPerformances[routineExercise.exercise.nameEn] = lastPerf);
+      }
       for (final template in routineExercise.setTemplates) {
         final templateId = template.id!;
         String initialReps =
@@ -10015,11 +10759,13 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                       for (final st in _liveExercises[index]
                                           .setTemplates) {
                                         if (st.id == setTemplate.id) break;
-                                        if (st.setType != 'warmup')
+                                        if (st.setType != 'warmup') {
                                           workingSetIndex++;
+                                        }
                                       }
-                                      if (setTemplate.setType != 'warmup')
+                                      if (setTemplate.setType != 'warmup') {
                                         workingSetIndex++;
+                                      }
 
                                       return _buildSetRow(
                                         workingSetIndex,
@@ -10032,7 +10778,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                             .exercise
                                             .nameEn],
                                       );
-                                    }).toList(),
+                                    }),
                                     const SizedBox(height: 8),
                                     TextButton.icon(
                                       onPressed: () =>
@@ -10052,7 +10798,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
               ],
             ),
       floatingActionButton: GlassFab(
-          onPressed: _addExercise,
+        onPressed: _addExercise,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       // KORREKTUR: BottomNavigationBar für Rest-Timer beibehalten und stylen
@@ -10221,7 +10967,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
               onPressed: () {
                 manager.cancelRest();
               },
-              child: const Text("OK"),
+              child: Text(l10n.snackbar_button_ok),
             ),
           ],
         ),
@@ -10253,7 +10999,6 @@ import 'package:lightweight/models/food_entry.dart';
 import 'package:lightweight/screens/add_food_screen.dart';
 import 'package:lightweight/screens/add_measurement_screen.dart';
 import 'package:lightweight/screens/routines_screen.dart';
-import 'package:lightweight/widgets/add_menu_sheet.dart';
 import 'package:lightweight/dialogs/quantity_dialog_content.dart';
 import 'package:lightweight/dialogs/water_dialog_content.dart';
 import 'package:lightweight/data/database_helper.dart';
@@ -10279,6 +11024,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   late final AnimationController _menuController;
   // Hilfsfunktion: NaN -> 0.0 und [0,1] clampen
   double _safe01(double v) => v.isNaN ? 0.0 : v.clamp(0.0, 1.0).toDouble();
+  late final l10n = AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -10356,37 +11102,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     _refreshHomeScreen();
   }
 
-  void _showAddMenu() async {
-    final result = await showModalBottomSheet<String>(
-      context: context,
-      builder: (BuildContext context) => const AddMenuSheet(),
-    );
-    if (!mounted || result == null) return;
-    switch (result) {
-      case 'start_workout':
-        Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const RoutinesScreen()));
-        break;
-      case 'add_measurement':
-        Navigator.of(context)
-            .push(MaterialPageRoute(
-                builder: (context) => const AddMeasurementScreen()))
-            .then((success) {
-          if (success == true) _refreshHomeScreen();
-        });
-        break;
-      case 'add_food':
-        final selectedFoodItem = await Navigator.of(context).push<FoodItem>(
-            MaterialPageRoute(builder: (context) => const AddFoodScreen()));
-        if (selectedFoodItem != null) _addFoodItem(selectedFoodItem);
-        break;
-      case 'add_liquid':
-        final waterResult = await _showWaterDialog();
-        if (waterResult != null) _addWater(waterResult.$1, waterResult.$2);
-        break;
-    }
-  }
-
   Future<(int, DateTime)?> _showWaterDialog() async {
     final GlobalKey<WaterDialogContentState> dialogStateKey =
         GlobalKey<WaterDialogContentState>();
@@ -10394,14 +11109,14 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Flüssigkeit hinzufügen"),
+          title: Text(l10n.add_liquid_title),
           content: WaterDialogContent(key: dialogStateKey),
           actions: [
             TextButton(
-                child: const Text("Abbrechen"),
+                child: Text(l10n.cancel),
                 onPressed: () => Navigator.of(context).pop(null)),
             FilledButton(
-              child: const Text("Hinzufügen"),
+              child: Text(l10n.add_button),
               onPressed: () {
                 final state = dialogStateKey.currentState;
                 if (state != null) {
@@ -10431,10 +11146,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           content: QuantityDialogContent(key: dialogStateKey, item: item),
           actions: [
             TextButton(
-                child: const Text("Abbrechen"),
+                child: Text(l10n.cancel),
                 onPressed: () => Navigator.of(context).pop(null)),
             FilledButton(
-              child: const Text("Hinzufügen"),
+              child: Text(l10n.add_button),
               onPressed: () {
                 final state = dialogStateKey.currentState;
                 if (state != null) {
@@ -10489,7 +11204,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isLightMode = theme.brightness == Brightness.light;
     final l10n = AppLocalizations.of(context)!;
 
     final List<Map<String, dynamic>> speedDialActions = [
@@ -10535,7 +11249,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
               indicatorColor: Colors.transparent,
               indicatorWeight: 0.0001,
               splashFactory: NoSplash.splashFactory,
-              overlayColor: MaterialStateProperty.all(Colors.transparent),
+              overlayColor: WidgetStateProperty.all(Colors.transparent),
               dividerColor: Colors.transparent,
               indicatorSize: TabBarIndicatorSize.label,
               labelColor: theme.brightness == Brightness.light
@@ -10650,7 +11364,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                   .shade600, // Auffälliges Rot für die Warnung
                               foregroundColor: Colors.white,
                             ),
-                            child: const Text('Verwerfen'),
+                            child: Text(l10n.discard_button),
                           ),
                           const SizedBox(
                               width: 8), // Abstand zwischen den Knöpfen
@@ -10672,7 +11386,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                               backgroundColor: theme.colorScheme.onPrimary,
                               foregroundColor: theme.colorScheme.primary,
                             ),
-                            child: const Text('Workout fortsetzen'),
+                            child: Text(l10n.continue_workout_button),
                           ),
                         ],
                       ),
@@ -10725,95 +11439,98 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                       bottom: 100.0,
                       right: 20.0,
                       child: Material(
-                        color: Colors.transparent, // eigener Ink-Kontext -> kein gelber Balken mehr
+                        color: Colors
+                            .transparent, // eigener Ink-Kontext -> kein gelber Balken mehr
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
-                          children: speedDialActions.asMap().entries.map((entry) {
+                          children:
+                              speedDialActions.asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final action = entry.value;
 
-                          final index = entry.key;
-                          final action = entry.value;
+                            final curved = CurvedAnimation(
+                              parent: _menuController,
+                              curve: Interval(
+                                (index * 0.12).clamp(0.0, 0.95),
+                                1.0,
+                                curve: Curves.easeOutBack,
+                              ),
+                            );
 
-                          final curved = CurvedAnimation(
-                            parent: _menuController,
-                            curve: Interval(
-                              (index * 0.12).clamp(0.0, 0.95),
-                              1.0,
-                              curve: Curves.easeOutBack,
-                            ),
-                          );
+                            final tv = _safe01(curved.value);
+                            final offsetY = 90.0 * (index + 1);
 
-                          final tv = _safe01(curved.value);
-                          final offsetY = 90.0 * (index + 1);
-
-                          return Transform.translate(
-                            offset: Offset(0, (1 - tv) * offsetY),
-                            child: Opacity(
-                              opacity: tv,
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 10.0),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    // Text links
-                                    Text(
-                                      action['label'],
-                                      style: TextStyle(
-                                        color: Theme.of(context).brightness ==
-                                                Brightness.light
-                                            ? Colors.black87
-                                            : Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18,
+                            return Transform.translate(
+                              offset: Offset(0, (1 - tv) * offsetY),
+                              child: Opacity(
+                                opacity: tv,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 10.0),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      // Text links
+                                      Text(
+                                        action['label'],
+                                        style: TextStyle(
+                                          color: Theme.of(context).brightness ==
+                                                  Brightness.light
+                                              ? Colors.black87
+                                              : Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    // Glas-Icon rechts
-                                    GestureDetector(
-                                      behavior: HitTestBehavior.opaque,
-                                      onTap: () {
-                                        setState(() {
-                                          _isAddMenuOpen = false;
-                                          _menuController.reverse();
-                                        });
-                                        _executeAddMenuAction(action['action']);
-                                      },
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(20),
-                                        child: BackdropFilter(
-                                          filter: ImageFilter.blur(
-                                              sigmaX: 12, sigmaY: 12),
-                                          child: Container(
-                                            width: 76,
-                                            height: 76,
-                                            decoration: BoxDecoration(
-                                              color: Colors.white
-                                                  .withOpacity(0.15),
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                              border: Border.all(
+                                      const SizedBox(width: 16),
+                                      // Glas-Icon rechts
+                                      GestureDetector(
+                                        behavior: HitTestBehavior.opaque,
+                                        onTap: () {
+                                          setState(() {
+                                            _isAddMenuOpen = false;
+                                            _menuController.reverse();
+                                          });
+                                          _executeAddMenuAction(
+                                              action['action']);
+                                        },
+                                        child: ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                          child: BackdropFilter(
+                                            filter: ImageFilter.blur(
+                                                sigmaX: 12, sigmaY: 12),
+                                            child: Container(
+                                              width: 76,
+                                              height: 76,
+                                              decoration: BoxDecoration(
                                                 color: Colors.white
-                                                    .withOpacity(0.3),
-                                                width: 1.5,
+                                                    .withOpacity(0.15),
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                                border: Border.all(
+                                                  color: Colors.white
+                                                      .withOpacity(0.3),
+                                                  width: 1.5,
+                                                ),
                                               ),
-                                            ),
-                                            child: Icon(
-                                              action['icon'],
-                                              size: 34,
-                                              color: Colors.white,
+                                              child: Icon(
+                                                action['icon'],
+                                                size: 34,
+                                                color: Colors.white,
+                                              ),
                                             ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                          );
-                        }).toList(),
+                            );
+                          }).toList(),
+                        ),
                       ),
-                    ),
                     ),
                   ],
                 ),
@@ -10835,7 +11552,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/measurement.dart';
 import 'package:lightweight/models/measurement_session.dart';
 import 'package:lightweight/screens/add_measurement_screen.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
@@ -10859,7 +11575,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
     start: DateTime.now().subtract(const Duration(days: 29)),
     end: DateTime.now(),
   );
-  List<String> _chartDateRangeKeys = ['30D', '90D', '180D', 'All'];
+  final List<String> _chartDateRangeKeys = ['30D', '90D', '180D', 'All'];
   String _selectedChartRangeKey = '30D';
 
   @override
@@ -10962,20 +11678,22 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
                   padding: const EdgeInsets.all(16.0),
                   children: [
                     if (_availableMeasurementTypes.isNotEmpty) ...[
-                      _buildChartSection(l10n, colorScheme,Theme.of(context).textTheme),
+                      _buildChartSection(
+                          l10n, colorScheme, Theme.of(context).textTheme),
                       const SizedBox(height: 24),
                     ],
-                    _buildSectionTitle(context, "Alle Messwerte"),
-                    ..._sessions.map((session) =>
-                        _buildMeasurementSessionCard(l10n, colorScheme, session))
+                    _buildSectionTitle(context, l10n.all_measurements),
+                    ..._sessions.map((session) => _buildMeasurementSessionCard(
+                        l10n, colorScheme, session))
                   ],
                 ),
       floatingActionButton: GlassFab(
-          onPressed: _navigateToCreateMeasurement,
+        onPressed: _navigateToCreateMeasurement,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
+
   Widget _buildEmptyState(AppLocalizations l10n, BuildContext context) {
     return Center(
       child: Padding(
@@ -11135,8 +11853,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text("Detailansicht der Messsession.")),
+                  SnackBar(content: Text(l10n.measurement_session_detail_view)),
                 );
               },
             ),
@@ -11144,18 +11861,16 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
                 height: 1,
                 thickness: 1,
                 color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
-            ...sortedMeasurements
-                .map((measurement) => ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16.0, vertical: 4.0),
-                      leading: _getMeasurementIcon(measurement.type),
-                      title: Text(_getLocalizedMeasurementType(
-                          l10n, measurement.type)), // l10n übergeben
-                      trailing: Text(
-                          "${measurement.value.toStringAsFixed(1)} ${measurement.unit}",
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
-                    ))
-                .toList(),
+            ...sortedMeasurements.map((measurement) => ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 4.0),
+                  leading: _getMeasurementIcon(measurement.type),
+                  title: Text(_getLocalizedMeasurementType(
+                      l10n, measurement.type)), // l10n übergeben
+                  trailing: Text(
+                      "${measurement.value.toStringAsFixed(1)} ${measurement.unit}",
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                )),
           ],
         ),
       ),
@@ -11299,7 +12014,6 @@ class MeasurementSessionDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -11346,7 +12060,6 @@ class MeasurementSessionDetailScreen extends StatelessWidget {
 // lib/screens/nutrition_hub_screen.dart (Final, nach deinem Feedback)
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/data/product_database_helper.dart';
 import 'package:lightweight/dialogs/quantity_dialog_content.dart';
@@ -11505,7 +12218,8 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final hasEntries = _todaysEntriesByMeal.values.any((list) => list.isNotEmpty);
+    final hasEntries =
+        _todaysEntriesByMeal.values.any((list) => list.isNotEmpty);
 
     return Scaffold(
       body: _isLoading
@@ -11515,29 +12229,48 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16.0),
                 children: [
-                  _buildSectionTitle(context, "HEUTE IM BLICK"),
+                  _buildSectionTitle(context, l10n.today_overview_text),
                   GestureDetector(
-                    onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const NutritionScreen())).then((_) => _loadTodaysData()),
+                    onTap: () => Navigator.of(context)
+                        .push(MaterialPageRoute(
+                            builder: (context) => const NutritionScreen()))
+                        .then((_) => _loadTodaysData()),
                     // KORREKTUR 1: Die umgebende SummaryCard entfernt.
                     // NutritionSummaryWidget ist bereits eine SummaryCard.
                     child: _todaysNutrition != null
-                      ? NutritionSummaryWidget(nutritionData: _todaysNutrition!, l10n: l10n, isExpandedView: false)
-                      : const SizedBox(),
+                        ? NutritionSummaryWidget(
+                            nutritionData: _todaysNutrition!,
+                            l10n: l10n,
+                            isExpandedView: false)
+                        : const SizedBox(),
                   ),
                   const SizedBox(height: 24),
-                  
-                  _buildSectionTitle(context, "SCHNELLES HINZUFÜGEN"),
-                  _buildQuickAddButton(context, l10n.addFoodOption, Icons.search, () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const AddFoodScreen())).then((_) => _loadTodaysData())),
+                  _buildSectionTitle(context, l10n.quick_add_text),
+                  _buildQuickAddButton(
+                      context,
+                      l10n.addFoodOption,
+                      Icons.search,
+                      () => Navigator.of(context)
+                          .push(MaterialPageRoute(
+                              builder: (context) => const AddFoodScreen()))
+                          .then((_) => _loadTodaysData())),
                   const SizedBox(height: 8),
-                  _buildQuickAddButton(context, "Barcode scannen", Icons.qr_code_scanner, () { /* TODO */ }),
+                  _buildQuickAddButton(context, l10n.scann_barcode_capslock,
+                      Icons.qr_code_scanner, () {/* TODO */}),
                   const SizedBox(height: 8),
-                  _buildQuickAddButton(context, l10n.fabCreateOwnFood, Icons.add, () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const CreateFoodScreen())).then((_) => _loadTodaysData())),
+                  _buildQuickAddButton(
+                      context,
+                      l10n.fabCreateOwnFood,
+                      Icons.add,
+                      () => Navigator.of(context)
+                          .push(MaterialPageRoute(
+                              builder: (context) => const CreateFoodScreen()))
+                          .then((_) => _loadTodaysData())),
                   const SizedBox(height: 24),
-
-                  _buildSectionTitle(context, "HEUTIGES PROTOKOLL"),
-                  hasEntries 
-                    ? _buildTodaysLog(l10n) 
-                    : _buildEmptyLogState(l10n),
+                  _buildSectionTitle(context, l10n.protocol_today_capslock),
+                  hasEntries
+                      ? _buildTodaysLog(l10n)
+                      : _buildEmptyLogState(l10n),
                 ],
               ),
             ),
@@ -11591,7 +12324,7 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
               child: Text(_getLocalizedMealName(l10n, mealKey),
                   style: Theme.of(context).textTheme.titleMedium),
             ),
-            ...entries.map((item) => _buildFoodEntryTile(l10n, item)).toList(),
+            ...entries.map((item) => _buildFoodEntryTile(l10n, item)),
           ],
         );
       }).toList(),
@@ -11735,10 +12468,13 @@ class _NutritionScreenState extends State<NutritionScreen> {
   List<dynamic> _displayItems = [];
   bool _isLoading = true;
   DateTimeRange _selectedDateRange = DateTime.now().isSameDate(DateTime.now())
-      ? DateTimeRange(start: DateTime.now(), end: DateTime.now()) // Einzeltag für heute
-      : DateTimeRange(start: DateTime.now().subtract(const Duration(days: 6)), end: DateTime.now()); // Standard: Letzte 7 Tage
+      ? DateTimeRange(
+          start: DateTime.now(), end: DateTime.now()) // Einzeltag für heute
+      : DateTimeRange(
+          start: DateTime.now().subtract(const Duration(days: 6)),
+          end: DateTime.now()); // Standard: Letzte 7 Tage
   bool _isSummaryExpanded = UiStateService.instance.isNutritionSummaryExpanded;
-  String _selectedRangeKey = '1D'; 
+  String _selectedRangeKey = '1D';
   bool _isHeaderVisible = true;
 
   @override
@@ -11749,7 +12485,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
 
   Future<void> _loadEntriesForDateRange(DateTimeRange range) async {
     if (!mounted) return;
-    setState(() { _isLoading = true; });
+    setState(() {
+      _isLoading = true;
+    });
 
     final prefs = await SharedPreferences.getInstance();
     final targetCalories = prefs.getInt('targetCalories') ?? 2500;
@@ -11761,11 +12499,14 @@ class _NutritionScreenState extends State<NutritionScreen> {
     final targetFiber = prefs.getInt('targetFiber') ?? 30;
     final targetSalt = prefs.getInt('targetSalt') ?? 6;
 
-    final foodEntries = await DatabaseHelper.instance.getEntriesForDateRange(range.start, range.end);
-    final waterEntries = await DatabaseHelper.instance.getWaterEntriesForDateRange(range.start, range.end);
-    
+    final foodEntries = await DatabaseHelper.instance
+        .getEntriesForDateRange(range.start, range.end);
+    final waterEntries = await DatabaseHelper.instance
+        .getWaterEntriesForDateRange(range.start, range.end);
+
     final numberOfDays = range.duration.inDays + 1;
-    final newNutritionSummary = DailyNutrition( // KORREKTUR: Neue Variable
+    final newNutritionSummary = DailyNutrition(
+      // KORREKTUR: Neue Variable
       targetCalories: targetCalories * numberOfDays,
       targetProtein: targetProtein * numberOfDays,
       targetCarbs: targetCarbs * numberOfDays,
@@ -11775,27 +12516,38 @@ class _NutritionScreenState extends State<NutritionScreen> {
       targetFiber: targetFiber * numberOfDays,
       targetSalt: targetSalt * numberOfDays,
     );
-    
+
     final List<FoodTimelineEntry> foodTimeline = [];
     for (final entry in foodEntries) {
-      final foodItem = await ProductDatabaseHelper.instance.getProductByBarcode(entry.barcode);
+      final foodItem = await ProductDatabaseHelper.instance
+          .getProductByBarcode(entry.barcode);
       if (foodItem != null) {
-        newNutritionSummary.calories += (foodItem.calories / 100 * entry.quantityInGrams).round();
-        newNutritionSummary.protein += (foodItem.protein / 100 * entry.quantityInGrams).round();
-        newNutritionSummary.carbs += (foodItem.carbs / 100 * entry.quantityInGrams).round();
-        newNutritionSummary.fat += (foodItem.fat / 100 * entry.quantityInGrams).round();
-        newNutritionSummary.sugar += (foodItem.sugar ?? 0) / 100 * entry.quantityInGrams;
-        newNutritionSummary.fiber += (foodItem.fiber ?? 0) / 100 * entry.quantityInGrams;
-        newNutritionSummary.salt += (foodItem.salt ?? 0) / 100 * entry.quantityInGrams;
-        foodTimeline.add(FoodTimelineEntry(TrackedFoodItem(entry: entry, item: foodItem)));
+        newNutritionSummary.calories +=
+            (foodItem.calories / 100 * entry.quantityInGrams).round();
+        newNutritionSummary.protein +=
+            (foodItem.protein / 100 * entry.quantityInGrams).round();
+        newNutritionSummary.carbs +=
+            (foodItem.carbs / 100 * entry.quantityInGrams).round();
+        newNutritionSummary.fat +=
+            (foodItem.fat / 100 * entry.quantityInGrams).round();
+        newNutritionSummary.sugar +=
+            (foodItem.sugar ?? 0) / 100 * entry.quantityInGrams;
+        newNutritionSummary.fiber +=
+            (foodItem.fiber ?? 0) / 100 * entry.quantityInGrams;
+        newNutritionSummary.salt +=
+            (foodItem.salt ?? 0) / 100 * entry.quantityInGrams;
+        foodTimeline.add(
+            FoodTimelineEntry(TrackedFoodItem(entry: entry, item: foodItem)));
       }
     }
-    
-    final waterTimeline = waterEntries.map((e) => WaterTimelineEntry(e)).toList();
-    newNutritionSummary.water = waterEntries.fold(0, (sum, entry) => sum + entry.quantityInMl);
+
+    final waterTimeline =
+        waterEntries.map((e) => WaterTimelineEntry(e)).toList();
+    newNutritionSummary.water =
+        waterEntries.fold(0, (sum, entry) => sum + entry.quantityInMl);
 
     final List<dynamic> finalDisplayList = [];
-    
+
     if (range.duration.inDays == 0) {
       final Map<String, List<FoodTimelineEntry>> groupedFood = {};
       for (final entry in foodTimeline) {
@@ -11806,25 +12558,34 @@ class _NutritionScreenState extends State<NutritionScreen> {
           groupedFood[mealType] = [entry];
         }
       }
-      
-      const mealOrder = ["mealtypeBreakfast", "mealtypeLunch", "mealtypeDinner", "mealtypeSnack"];
+
+      const mealOrder = [
+        "mealtypeBreakfast",
+        "mealtypeLunch",
+        "mealtypeDinner",
+        "mealtypeSnack"
+      ];
       for (final mealKey in mealOrder) {
         if (groupedFood.containsKey(mealKey)) {
           finalDisplayList.add(mealKey);
-          groupedFood[mealKey]!.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+          groupedFood[mealKey]!
+              .sort((a, b) => b.timestamp.compareTo(a.timestamp));
           finalDisplayList.addAll(groupedFood[mealKey]!);
         }
       }
-      
+
       if (waterTimeline.isNotEmpty) {
         finalDisplayList.add("waterHeader");
         waterTimeline.sort((a, b) => b.timestamp.compareTo(a.timestamp));
         finalDisplayList.addAll(waterTimeline);
       }
     } else {
-      final List<TimelineEntry> combinedList = [...foodTimeline, ...waterTimeline];
+      final List<TimelineEntry> combinedList = [
+        ...foodTimeline,
+        ...waterTimeline
+      ];
       combinedList.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-      
+
       DateTime? lastDate;
       for (final entry in combinedList) {
         final entryDate = entry.timestamp;
@@ -11836,9 +12597,10 @@ class _NutritionScreenState extends State<NutritionScreen> {
       }
     }
 
-    if(mounted) {
+    if (mounted) {
       setState(() {
-        _nutritionData = newNutritionSummary; // KORREKTUR: Die Variable korrekt zuweisen
+        _nutritionData =
+            newNutritionSummary; // KORREKTUR: Die Variable korrekt zuweisen
         _displayItems = finalDisplayList;
         _isLoading = false;
       });
@@ -11952,7 +12714,6 @@ class _NutritionScreenState extends State<NutritionScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -11975,12 +12736,13 @@ class _NutritionScreenState extends State<NutritionScreen> {
                 Container(
                   color: Theme.of(context).scaffoldBackgroundColor,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
-                    //padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0), 
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 0.0),
+                    //padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        //const SizedBox(height: 16), // <- DIESE ZEILE 
+                        //const SizedBox(height: 16), // <- DIESE ZEILE
                         Text(
                           l10n.nutritionScreenTitle,
                           style: textTheme.headlineMedium?.copyWith(
@@ -11993,11 +12755,17 @@ class _NutritionScreenState extends State<NutritionScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            IconButton(icon: const Icon(Icons.chevron_left), onPressed: () => _navigateDay(false)),
+                            IconButton(
+                                icon: const Icon(Icons.chevron_left),
+                                onPressed: () => _navigateDay(false)),
                             Expanded(
                               child: InkWell(
                                 onTap: () async {
-                                  final picked = await showDateRangePicker(context: context, initialDateRange: _selectedDateRange, firstDate: DateTime(2020), lastDate: DateTime.now());
+                                  final picked = await showDateRangePicker(
+                                      context: context,
+                                      initialDateRange: _selectedDateRange,
+                                      firstDate: DateTime(2020),
+                                      lastDate: DateTime.now());
                                   if (picked != null) {
                                     setState(() {
                                       _selectedDateRange = picked;
@@ -12007,14 +12775,20 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                   }
                                 },
                                 child: Text(
-                                  rangeText, 
-                                  style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                                  rangeText,
+                                  style: textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.bold),
                                   textAlign: TextAlign.center,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ),
-                            IconButton(icon: const Icon(Icons.chevron_right), onPressed: _selectedDateRange.end.isSameDate(DateTime.now()) ? null : () => _navigateDay(true)),
+                            IconButton(
+                                icon: const Icon(Icons.chevron_right),
+                                onPressed: _selectedDateRange.end
+                                        .isSameDate(DateTime.now())
+                                    ? null
+                                    : () => _navigateDay(true)),
                           ],
                         ),
                         const SizedBox(height: 16),
@@ -12026,13 +12800,15 @@ class _NutritionScreenState extends State<NutritionScreen> {
                             _buildFilterButton(l10n.filterAll, 'All'),
                           ],
                         ),
-                        const SizedBox(height: 16), // <- DIESE ZEILE 
+                        const SizedBox(height: 16), // <- DIESE ZEILE
                       ],
                     ),
                   ),
                 ),
-                Divider(height: 1, thickness: 1, color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
-                
+                Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
                 AnimatedSize(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
@@ -12044,27 +12820,35 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                 children: [
                                   // KORREKTUR: NutritionSummaryWidget in einem Padding, das dem horizontalen ListView-Padding entspricht.
                                   Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 0.0), // <- Dieser Padding ist wichtig!
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal:
+                                            16.0), // <- Dieser Padding ist wichtig!
                                     child: NutritionSummaryWidget(
-                                      nutritionData: _nutritionData!, 
-                                      isExpandedView: _isSummaryExpanded,
-                                      l10n: l10n
-                                    ),
+                                        nutritionData: _nutritionData!,
+                                        isExpandedView: _isSummaryExpanded,
+                                        l10n: l10n),
                                   ),
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
                                     children: [
                                       TextButton(
                                         onPressed: () {
                                           setState(() {
-                                            _isSummaryExpanded = !_isSummaryExpanded;
-                                            UiStateService.instance.isNutritionSummaryExpanded = _isSummaryExpanded;
+                                            _isSummaryExpanded =
+                                                !_isSummaryExpanded;
+                                            UiStateService.instance
+                                                    .isNutritionSummaryExpanded =
+                                                _isSummaryExpanded;
                                           });
                                         },
-                                        child: Text(_isSummaryExpanded ? l10n.showLess : l10n.showMoreDetails),
+                                        child: Text(_isSummaryExpanded
+                                            ? l10n.showLess
+                                            : l10n.showMoreDetails),
                                       ),
                                       TextButton(
-                                        onPressed: () => setState(() => _isHeaderVisible = false),
+                                        onPressed: () => setState(
+                                            () => _isHeaderVisible = false),
                                         child: Text(l10n.hideSummary),
                                       ),
                                     ],
@@ -12076,51 +12860,69 @@ class _NutritionScreenState extends State<NutritionScreen> {
                       : Align(
                           alignment: Alignment.centerRight,
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
                             child: TextButton(
-                              onPressed: () => setState(() => _isHeaderVisible = true),
+                              onPressed: () =>
+                                  setState(() => _isHeaderVisible = true),
                               child: Text(l10n.showSummary),
                             ),
                           ),
                         ),
                 ),
-                Divider(height: 1, thickness: 1, color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
-                
+                Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
                 Expanded(
                   child: _displayItems.isEmpty
                       ? Center(child: Text(l10n.noEntriesForPeriod))
                       : ListView.separated(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0, vertical: 8.0),
                           itemCount: _displayItems.length,
-                          separatorBuilder: (context, index) => const SizedBox(height: 12), // KORREKTUR: Trenner
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 12), // KORREKTUR: Trenner
                           itemBuilder: (context, index) {
                             final item = _displayItems[index];
 
-                            String getLocalizedMealName(String key) { 
+                            String getLocalizedMealName(String key) {
                               switch (key) {
-                                case "mealtypeBreakfast": return l10n.mealtypeBreakfast;
-                                case "mealtypeLunch": return l10n.mealtypeLunch;
-                                case "mealtypeDinner": return l10n.mealtypeDinner;
-                                case "mealtypeSnack": return l10n.mealtypeSnack;
-                                case "waterHeader": return l10n.waterHeader;
-                                default: return key;
+                                case "mealtypeBreakfast":
+                                  return l10n.mealtypeBreakfast;
+                                case "mealtypeLunch":
+                                  return l10n.mealtypeLunch;
+                                case "mealtypeDinner":
+                                  return l10n.mealtypeDinner;
+                                case "mealtypeSnack":
+                                  return l10n.mealtypeSnack;
+                                case "waterHeader":
+                                  return l10n.waterHeader;
+                                default:
+                                  return key;
                               }
                             }
+
                             if (item is DateTime) {
                               return Padding(
-                                padding: const EdgeInsets.only(top: 24.0, bottom: 8.0, left: 8.0),
+                                padding: const EdgeInsets.only(
+                                    top: 24.0, bottom: 8.0, left: 8.0),
                                 child: Text(
                                   DateFormat.yMMMMEEEEd(locale).format(item),
-                                  style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.primary),
+                                  style: textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: colorScheme.primary),
                                 ),
                               );
                             }
 
                             if (item is String) {
                               return Padding(
-                                padding: const EdgeInsets.only(top: 24.0, bottom: 8.0, left: 8.0),
+                                padding: const EdgeInsets.only(
+                                    top: 24.0, bottom: 8.0, left: 8.0),
                                 child: Text(getLocalizedMealName(item),
-                                    style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                                    style: textTheme.titleLarge?.copyWith(
+                                        fontWeight: FontWeight.bold)),
                               );
                             }
 
@@ -12129,43 +12931,75 @@ class _NutritionScreenState extends State<NutritionScreen> {
                               return Dismissible(
                                 key: Key('food_${trackedItem.entry.id}'),
                                 background: Container(
-                                  color: Colors.blueAccent, alignment: Alignment.centerLeft, padding: const EdgeInsets.symmetric(horizontal: 20), child: const Icon(Icons.edit, color: Colors.white)),
+                                    color: Colors.blueAccent,
+                                    alignment: Alignment.centerLeft,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20),
+                                    child: const Icon(Icons.edit,
+                                        color: Colors.white)),
                                 secondaryBackground: Container(
-                                  color: Colors.redAccent, alignment: Alignment.centerRight, padding: const EdgeInsets.symmetric(horizontal: 20), child: const Icon(Icons.delete, color: Colors.white)),
+                                    color: Colors.redAccent,
+                                    alignment: Alignment.centerRight,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20),
+                                    child: const Icon(Icons.delete,
+                                        color: Colors.white)),
                                 confirmDismiss: (direction) async {
-                                  if (direction == DismissDirection.startToEnd) {
+                                  if (direction ==
+                                      DismissDirection.startToEnd) {
                                     _editFoodEntry(trackedItem);
-                                    return false; 
+                                    return false;
                                   } else {
                                     return await showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return AlertDialog(
-                                          title: Text(l10n.deleteConfirmTitle),
-                                          content: Text(l10n.deleteConfirmContent),
-                                          actions: <Widget>[
-                                            TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
-                                            TextButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.delete)),
-                                          ],
-                                        );
-                                      },
-                                    ) ?? false;
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              title:
+                                                  Text(l10n.deleteConfirmTitle),
+                                              content: Text(
+                                                  l10n.deleteConfirmContent),
+                                              actions: <Widget>[
+                                                TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.of(context)
+                                                            .pop(false),
+                                                    child: Text(l10n.cancel)),
+                                                TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.of(context)
+                                                            .pop(true),
+                                                    child: Text(l10n.delete)),
+                                              ],
+                                            );
+                                          },
+                                        ) ??
+                                        false;
                                   }
                                 },
                                 onDismissed: (direction) {
-                                  if (direction == DismissDirection.endToStart) {
+                                  if (direction ==
+                                      DismissDirection.endToStart) {
                                     _deleteFoodEntry(trackedItem.entry.id!);
                                   }
                                 },
-                                child: SummaryCard(//externalMargin: EdgeInsets.zero,
+                                child: SummaryCard(
+                                  //externalMargin: EdgeInsets.zero,
                                   child: ListTile(
                                     leading: const Icon(Icons.restaurant),
                                     title: Text(trackedItem.item.name),
-                                    subtitle: Text(l10n.foodListSubtitle(trackedItem.entry.quantityInGrams, DateFormat.Hm(locale).format(trackedItem.entry.timestamp))),
-                                    trailing: Text(l10n.foodListTrailingKcal(trackedItem.calculatedCalories)),
-                                    onTap: () => Navigator.of(context).push(
-                                      MaterialPageRoute(builder: (context) => FoodDetailScreen(trackedItem: trackedItem))
-                                    ).then((_) => _loadEntriesForDateRange(_selectedDateRange)),
+                                    subtitle: Text(l10n.foodListSubtitle(
+                                        trackedItem.entry.quantityInGrams,
+                                        DateFormat.Hm(locale).format(
+                                            trackedItem.entry.timestamp))),
+                                    trailing: Text(l10n.foodListTrailingKcal(
+                                        trackedItem.calculatedCalories)),
+                                    onTap: () => Navigator.of(context)
+                                        .push(MaterialPageRoute(
+                                            builder: (context) =>
+                                                FoodDetailScreen(
+                                                    trackedItem: trackedItem)))
+                                        .then((_) => _loadEntriesForDateRange(
+                                            _selectedDateRange)),
                                   ),
                                 ),
                               );
@@ -12176,14 +13010,28 @@ class _NutritionScreenState extends State<NutritionScreen> {
                               return Dismissible(
                                 key: Key('water_${waterEntry.id}'),
                                 direction: DismissDirection.endToStart,
-                                onDismissed: (direction) => _deleteWaterEntry(waterEntry.id!),
-                                background: Container(color: Colors.red, alignment: Alignment.centerRight, padding: const EdgeInsets.symmetric(horizontal: 20), child: const Icon(Icons.delete, color: Colors.white)),
-                                child: SummaryCard(//externalMargin: EdgeInsets.zero,
+                                onDismissed: (direction) =>
+                                    _deleteWaterEntry(waterEntry.id!),
+                                background: Container(
+                                    color: Colors.red,
+                                    alignment: Alignment.centerRight,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20),
+                                    child: const Icon(Icons.delete,
+                                        color: Colors.white)),
+                                child: SummaryCard(
+                                  //externalMargin: EdgeInsets.zero,
                                   child: ListTile(
-                                    leading: Icon(Icons.local_drink, color: colorScheme.primary),
+                                    leading: Icon(Icons.local_drink,
+                                        color: colorScheme.primary),
                                     title: Text(l10n.waterEntryTitle),
-                                    subtitle: Text(DateFormat.Hm(locale).format(waterEntry.timestamp)),
-                                    trailing: Text(l10n.waterListTrailingMl(waterEntry.quantityInMl), style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    subtitle: Text(DateFormat.Hm(locale)
+                                        .format(waterEntry.timestamp)),
+                                    trailing: Text(
+                                        l10n.waterListTrailingMl(
+                                            waterEntry.quantityInMl),
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold)),
                                   ),
                                 ),
                               );
@@ -12206,8 +13054,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
       ),
     );
   }
-  
-  
+
   Widget _buildFilterButton(String label, String key) {
     final theme = Theme.of(context);
     final isSelected = _selectedRangeKey == key;
@@ -12218,14 +13065,18 @@ class _NutritionScreenState extends State<NutritionScreen> {
           margin: const EdgeInsets.symmetric(horizontal: 4.0),
           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
           decoration: BoxDecoration(
-            color: isSelected ? theme.colorScheme.primary : theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
             borderRadius: BorderRadius.circular(10.0),
           ),
           child: Text(
             label,
             textAlign: TextAlign.center,
             style: theme.textTheme.labelLarge?.copyWith(
-              color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
+              color: isSelected
+                  ? theme.colorScheme.onPrimary
+                  : theme.colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -12241,6 +13092,7 @@ extension DateOnlyCompare on DateTime {
   }
 }
 
+
 ===== Datei: D:\lightweight\lib\screens\profile_screen.dart =====
 
 // lib/screens/profile_screen.dart (Der neue "Profil-Hub")
@@ -12252,7 +13104,7 @@ import 'package:lightweight/screens/goals_screen.dart'; // HINZUGEFÜGT: Import 
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:lightweight/services/profile_service.dart'; // HINZUGEFÜGT
-import 'package:image_picker/image_picker.dart'; // HINZUGEFÜGT
+// HINZUGEFÜGT
 import 'dart:io';
 
 import 'package:provider/provider.dart'; // HINZUGEFÜGT
@@ -12267,7 +13119,8 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   // KORREKTUR: State-Klasse
-  String _appVersion = "Lade..."; // Wird dynamisch geladen
+  late final l10n = AppLocalizations.of(context)!;
+  late String _appVersion = l10n.load_dots; // Wird dynamisch geladen
 
   @override
   void initState() {
@@ -12294,7 +13147,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.all(16.0),
         children: [
           // HINZUGEFÜGT: Profilbild-Sektion
-          _buildSectionTitle(context, "PROFIL"),
+          _buildSectionTitle(context, l10n.profile_capslock),
           SummaryCard(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -12325,7 +13178,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       onPressed: () async {
                         await profileService.deleteProfileImage();
                       },
-                      child: const Text("Profilbild löschen"),
+                      child: Text(l10n.delete_profile_picture_button),
                     ),
                 ],
               ),
@@ -12333,12 +13186,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 24),
           // Sektion 1: "EINSTELLUNGEN"
-          _buildSectionTitle(context, "EINSTELLUNGEN"),
+          _buildSectionTitle(context, l10n.settings_capslock),
           _buildNavigationCard(
             context: context,
             icon: Icons.flag_outlined,
-            title: "Meine Ziele",
-            subtitle: "Kalorien, Makros und Wasser anpassen.",
+            title: l10n.my_goals,
+            subtitle: l10n.my_goals_description,
             onTap: () {
               // KORREKTUR: Navigation zum neuen GoalsScreen
               Navigator.of(context).push(
@@ -12349,9 +13202,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _buildNavigationCard(
             context: context,
             icon: Icons.import_export_rounded,
-            title: "Datensicherung & Import",
-            subtitle:
-                "Backups erstellen, wiederherstellen und Daten importieren.",
+            title: l10n.backup_and_import,
+            subtitle: l10n.backup_and_import_description,
             onTap: () {
               Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => const DataManagementScreen()));
@@ -12360,17 +13212,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 24),
 
           // Sektion 2: "ÜBER & RECHTLICHES"
-          _buildSectionTitle(context, "ÜBER & RECHTLICHES"),
+          _buildSectionTitle(context, l10n.about_and_legal_capslock),
           _buildNavigationCard(
             context: context,
             icon: Icons.info_outline_rounded,
-            title: "Attribution & Lizenzen",
-            subtitle: "Daten von Open Food Facts und wger.",
+            title: l10n.attribution_and_license,
+            subtitle: l10n.data_from_off_and_wger,
             onTap: () {
               showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
-                        title: const Text("Attribution"),
+                        title: Text(l10n.attribution_title),
                         content: const SingleChildScrollView(
                           child: Text(
                               "Diese App verwendet Daten von externen Quellen:\n\n"
@@ -12380,7 +13232,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         actions: [
                           TextButton(
                               onPressed: () => Navigator.of(context).pop(),
-                              child: const Text("OK")),
+                              child: Text(l10n.snackbar_button_ok)),
                         ],
                       ));
             },
@@ -12389,8 +13241,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SummaryCard(
             child: ListTile(
               leading: const Icon(Icons.code_rounded),
-              title: const Text("App-Version",
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+              title: Text(l10n.app_version,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
               subtitle: Text(
                   _appVersion), // KORREKTUR: Zeigt die dynamische Version an
             ),
@@ -12448,10 +13300,8 @@ import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/routine.dart';
 import 'package:lightweight/screens/edit_routine_screen.dart';
 import 'package:lightweight/screens/live_workout_screen.dart';
-import 'package:lightweight/screens/workout_history_screen.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/summary_card.dart';
-import 'package:lightweight/util/time_util.dart';
 
 class RoutinesScreen extends StatefulWidget {
   final int? initialRoutineId;
@@ -12567,36 +13417,35 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme; // Hier definiert
 
     return Scaffold(
-  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-  appBar: AppBar(
-    automaticallyImplyLeading: true,
-    elevation: 0,
-    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-    scrolledUnderElevation: 0,
-    centerTitle: false,
-    title: Text(
-      l10n.workoutRoutinesTitle,
-      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w900,
-          ),
-    ),
-  ),
-  body: _isLoading
-      ? const Center(child: CircularProgressIndicator())
-      : _routines.isEmpty
-          ? _buildEmptyState(context, l10n, textTheme)
-          : ListView.builder(
-              padding: const EdgeInsets.all(16.0),
-              itemCount: _routines.length + 1, // statt +2
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return _buildStartEmptyWorkoutCard(context, l10n);
-                }
-                final routine = _routines[index - 1];
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          l10n.workoutRoutinesTitle,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+        ),
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _routines.isEmpty
+              ? _buildEmptyState(context, l10n, textTheme)
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16.0),
+                  itemCount: _routines.length + 1, // statt +2
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return _buildStartEmptyWorkoutCard(context, l10n);
+                    }
+                    final routine = _routines[index - 1];
                     return Dismissible(
                       key: Key('routine_${routine.id}'),
                       direction: DismissDirection.endToStart,
@@ -12672,7 +13521,7 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
                   },
                 ),
       floatingActionButton: GlassFab(
-          onPressed: _createNewRoutine,
+        onPressed: _createNewRoutine,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
@@ -12754,7 +13603,7 @@ class StatisticsHubScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         children: [
           // Sektion 1: "MEINE KONSISTENZ" (Platzhalter)
-          _buildSectionTitle(context, "MEINE KONSISTENZ"),
+          _buildSectionTitle(context, l10n.my_consistency),
           SummaryCard(
             child: Padding(
               padding: const EdgeInsets.all(20.0),
@@ -12764,7 +13613,7 @@ class StatisticsHubScreen extends StatelessWidget {
                   const SizedBox(width: 16),
                   Expanded(
                     child: Text(
-                      "Die Kalender-Ansicht ist in Kürze verfügbar.",
+                      l10n.calendar_currently_not_available,
                       style: Theme.of(context)
                           .textTheme
                           .bodyLarge
@@ -12778,12 +13627,12 @@ class StatisticsHubScreen extends StatelessWidget {
           const SizedBox(height: 24),
 
           // Sektion 2: "TIEFEN-ANALYSE" (Voll funktionsfähig)
-          _buildSectionTitle(context, "TIEFEN-ANALYSE"),
+          _buildSectionTitle(context, l10n.in_depth_analysis),
           _buildAnalysisGateway(
             context: context,
             icon: Icons.monitor_weight_outlined,
-            title: "Körpermaße",
-            subtitle: "Gewicht, KFA und Umfänge analysieren.",
+            title: l10n.body_measurements,
+            subtitle: l10n.measurements_description,
             onTap: () {
               Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => const MeasurementsScreen()));
@@ -12793,8 +13642,8 @@ class StatisticsHubScreen extends StatelessWidget {
           _buildAnalysisGateway(
             context: context,
             icon: Icons.pie_chart_outline_rounded,
-            title: "Ernährungs-Analyse",
-            subtitle: "Makros, Kalorien und Trends auswerten.",
+            title: l10n.nutritionScreenTitle,
+            subtitle: l10n.nutrition_description,
             onTap: () {
               Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => const NutritionScreen()));
@@ -12804,13 +13653,12 @@ class StatisticsHubScreen extends StatelessWidget {
           _buildAnalysisGateway(
             context: context,
             icon: Icons.bar_chart_rounded,
-            title: "Trainings-Analyse",
-            subtitle: "Volumen, Kraft und Progression verfolgen.",
+            title: l10n.training_analysis,
+            subtitle: l10n.training_analysis_description,
             onTap: () {
               // Platzhalter für den zukünftigen Trainings-Analyse-Screen
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text("Dieser Screen wird bald verfügbar sein!")),
+                SnackBar(content: Text(l10n.soon_available_snackbar)),
               );
             },
           ),
@@ -12978,8 +13826,7 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                           leading: const Icon(Icons.event_note, size: 40),
                           title: Text(
                             log.routineName ?? l10n.freeWorkoutTitle,
-                            style:
-                                const TextStyle(fontWeight: FontWeight.bold),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Text(
                             DateFormat.yMMMMd(locale)
@@ -13018,10 +13865,10 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
 // lib/screens/workout_hub_screen.dart (Final, mit einheitlichem Design)
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/routine.dart';
+import 'package:lightweight/screens/edit_routine_screen.dart';
 import 'package:lightweight/screens/exercise_catalog_screen.dart';
 import 'package:lightweight/screens/live_workout_screen.dart';
 import 'package:lightweight/screens/routines_screen.dart';
@@ -13038,6 +13885,7 @@ class WorkoutHubScreen extends StatefulWidget {
 class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
   bool _isLoading = true;
   List<Routine> _routines = [];
+  late final l10n = AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -13058,7 +13906,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
 
   void _startEmptyWorkout() async {
     final newLog = await WorkoutDatabaseHelper.instance
-        .startWorkout(routineName: "Freies Training");
+        .startWorkout(routineName: l10n.free_training);
     if (mounted) {
       Navigator.of(context)
           .push(MaterialPageRoute(
@@ -13097,7 +13945,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16.0),
                 children: [
-                  _buildSectionTitle(context, "START"),
+                  _buildSectionTitle(context, l10n.start_button),
                   SummaryCard(
                     child: InkWell(
                       onTap: _startEmptyWorkout,
@@ -13117,7 +13965,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  _buildSectionTitle(context, "MEINE PLÄNE"),
+                  _buildSectionTitle(context, l10n.my_plans_capslock),
                   _routines.isEmpty
                       ? _buildEmptyRoutinesCard(context, l10n)
                       : SizedBox(
@@ -13133,7 +13981,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                           ),
                         ),
                   const SizedBox(height: 24),
-                  _buildSectionTitle(context, "ÜBERBLICK"),
+                  _buildSectionTitle(context, l10n.overview_capslock),
                   _buildNavigationTile(
                     context: context,
                     icon: Icons.history,
@@ -13145,7 +13993,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                   _buildNavigationTile(
                     context: context,
                     icon: Icons.list_alt_rounded,
-                    title: "Alle Pläne verwalten",
+                    title: l10n.manage_all_plans,
                     onTap: () => Navigator.of(context)
                         .push(MaterialPageRoute(
                             builder: (context) => const RoutinesScreen()))
@@ -13190,7 +14038,11 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
         child: SummaryCard(
           child: InkWell(
             onTap: () {
-              // ... (Navigation zur Detailansicht)
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => EditRoutineScreen(routine: routine),
+                ),
+              );
             },
             borderRadius: BorderRadius.circular(12.0),
             child: Padding(
@@ -13208,7 +14060,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                       overflow: TextOverflow.ellipsis),
                   ElevatedButton(
                       onPressed: () => _startRoutine(routine),
-                      child: const Text("Start")),
+                      child: Text(l10n.start_button)),
                 ],
               ),
             ),
@@ -13270,7 +14122,6 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
 
 // lib/screens/workout_log_detail_screen.dart (Final & Korrigiert - Edit Mode)
 
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
@@ -13283,7 +14134,6 @@ import 'package:lightweight/widgets/set_type_chip.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/widgets/wger_attribution_widget.dart';
 import 'package:lightweight/widgets/workout_summary_bar.dart';
-import 'package:lightweight/util/time_util.dart';
 
 class WorkoutLogDetailScreen extends StatefulWidget {
   final int logId;
@@ -13472,9 +14322,10 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
       await dbHelper.insertSetLog(set.copyWith(workoutLogId: widget.logId));
     }
 
-    if (mounted)
+    if (mounted) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(l10n.snackbarGoalsSaved)));
+    }
 
     setState(() => _isEditMode = false);
     _loadDetails();
@@ -13753,7 +14604,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                   ),
                 );
               }
-            }).toList(),
+            }),
             if (_isEditMode)
               Padding(
                 padding:
@@ -13784,17 +14635,6 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
         ),
       );
     }).toList();
-  }
-
-  // KORREKTUR 8: WgerAttributionWidget anpassen
-  Widget _buildWgerAttributionWidget(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
-      child: WgerAttributionWidget(
-        textStyle: textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-      ),
-    );
   }
 }
 
@@ -13838,7 +14678,7 @@ class ProfileService extends ChangeNotifier {
 
     if (pickedFile != null) {
       final appDir = await getApplicationDocumentsDirectory();
-      final String fileName = 'profile_image.jpg';
+      const String fileName = 'profile_image.jpg';
       final String localPath = '${appDir.path}/$fileName';
 
       final File newImage = await File(pickedFile.path).copy(localPath);
@@ -14146,11 +14986,10 @@ extension L10nX on BuildContext {
   AppLocalizations get l10n => AppLocalizations.of(this)!;
 }
 
+
 ===== Datei: D:\lightweight\lib\util\time_util.dart =====
 
 // lib/util/time_util.dart
-
-import 'package:flutter/material.dart';
 
 /// Formatiert eine Duration in einen String wie "HH:MM:SS" oder "MM:SS".
 String formatDuration(Duration d) {
@@ -14662,10 +15501,11 @@ class _GlassMenuState extends State<GlassMenu>
                         const SizedBox(height: 12),
                         Text(
                           item.label,
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                       ],
                     ),
@@ -14726,7 +15566,6 @@ class KeepAlivePage extends StatefulWidget {
 
 class _KeepAlivePageState extends State<KeepAlivePage>
     with AutomaticKeepAliveClientMixin<KeepAlivePage> {
-
   @override
   bool get wantKeepAlive => true;
 
@@ -14751,6 +15590,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/models/chart_data_point.dart';
 import 'package:intl/intl.dart'; // Für das Datumsformat im Chart
+import 'package:lightweight/generated/app_localizations.dart';
 
 class MeasurementChartWidget extends StatefulWidget {
   final String chartType;
@@ -14773,6 +15613,7 @@ class MeasurementChartWidget extends StatefulWidget {
 class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
   List<ChartDataPoint> _dataPoints = [];
   bool _isLoadingChart = true;
+  late final l10n = AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -14811,9 +15652,9 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
       );
     }
     if (_dataPoints.isEmpty) {
-      return const SizedBox(
+      return SizedBox(
         height: 200,
-        child: Center(child: Text("Keine Daten für diesen Zeitraum.")),
+        child: Center(child: Text(l10n.chart_no_data_for_period)),
       );
     }
 
@@ -15196,7 +16037,7 @@ class OffAttributionWidget extends StatelessWidget {
               await launchUrl(uri);
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Konnte Link nicht öffnen")),
+                SnackBar(content: Text(l10n.snackbar_could_not_open_open_link)),
               );
             }
           },
@@ -15291,22 +16132,26 @@ class ShadowContainer extends StatelessWidget {
       margin: margin,
       decoration: BoxDecoration(
         borderRadius: borderRadius,
-        boxShadow: boxShadow ?? [ // Standard-Schatten, wenn keiner angegeben ist
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 15,
-            spreadRadius: 0,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: boxShadow ??
+            [
+              // Standard-Schatten, wenn keiner angegeben ist
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 15,
+                spreadRadius: 0,
+                offset: const Offset(0, 8),
+              ),
+            ],
       ),
-      child: ClipRRect( // ClipRRect, um den Inhalt innerhalb der Ecken zu halten
+      child: ClipRRect(
+        // ClipRRect, um den Inhalt innerhalb der Ecken zu halten
         borderRadius: borderRadius,
         child: child,
       ),
     );
   }
 }
+
 
 ===== Datei: D:\lightweight\lib\widgets\summary_card.dart =====
 
@@ -15328,7 +16173,8 @@ class SummaryCard extends StatelessWidget {
 
     final background = brightness == Brightness.dark
         ? const Color.fromARGB(255, 22, 22, 22) // tiefes Grau für Dark Mode
-        : const Color.fromARGB(255, 253, 253, 253); // sehr helles Grau für Light Mode
+        : const Color.fromARGB(
+            255, 253, 253, 253); // sehr helles Grau für Light Mode
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6.0),
@@ -15348,6 +16194,7 @@ class SummaryCard extends StatelessWidget {
     );
   }
 }
+
 
 ===== Datei: D:\lightweight\lib\widgets\wger_attribution_widget.dart =====
 
@@ -15379,7 +16226,7 @@ class WgerAttributionWidget extends StatelessWidget {
               await launchUrl(uri);
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Konnte Link nicht öffnen")),
+                SnackBar(content: Text(l10n.snackbar_could_not_open_open_link)),
               );
             }
           },
@@ -15419,7 +16266,6 @@ class WorkoutSummaryBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(
         context)!; // Annahme: AppLocalizations ist verfügbar
 
