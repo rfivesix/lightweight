@@ -71,11 +71,20 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      // KORREKTUR 1: AppBar entfernt, Titel und Save-Button direkt in die ListView
+      // KORREKTUR: Eine AppBar hinzugefügt, die den Titel und den Speicher-Button enthält
+      appBar: AppBar(
+        title: Text(l10n.createFoodScreenTitle),
+        actions: [
+          // Speicher-Button ist jetzt ein Action-Button in der AppBar
+          TextButton(
+            onPressed: _saveFoodItem,
+            child: Text(l10n.buttonSave),
+          )
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -83,22 +92,9 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header-Bereich mit Titel und Save-Button
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(l10n.createFoodScreenTitle,
-                      style: textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w900, fontSize: 28)),
-                  ElevatedButton(
-                    onPressed: _saveFoodItem,
-                    child: Text(l10n.buttonSave),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
+              // KORREKTUR: Der alte Header wurde aus dem Body entfernt
 
-              // Formularfelder
+              // Formularfelder (unverändert)
               _buildFoodInputField(
                   controller: _nameController,
                   label: l10n.formFieldName,
@@ -107,8 +103,7 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
                   controller: _brandController, label: l10n.formFieldBrand),
 
               const SizedBox(height: 24),
-              _buildSectionTitle(context,
-                  l10n.formSectionMainNutrients), // KORREKTUR 2: Sektionstitel
+              _buildSectionTitle(context, l10n.formSectionMainNutrients),
               const SizedBox(height: 16),
               _buildFoodInputField(
                   controller: _caloriesController,
@@ -121,8 +116,7 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
                   controller: _fatController, label: l10n.formFieldFat),
 
               const SizedBox(height: 24),
-              _buildSectionTitle(context,
-                  l10n.formSectionOptionalNutrients), // KORREKTUR 2: Sektionstitel
+              _buildSectionTitle(context, l10n.formSectionOptionalNutrients),
               const SizedBox(height: 16),
               _buildFoodInputField(
                   controller: _sugarController, label: l10n.formFieldSugar),
@@ -131,7 +125,7 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
               _buildFoodInputField(
                   controller: _saltController, label: l10n.formFieldSalt),
 
-              const SizedBox(height: 32), // Abstand zum Ende
+              const SizedBox(height: 32),
             ],
           ),
         ),
@@ -139,7 +133,7 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
     );
   }
 
-  // KORREKTUR 3: Helfer-Methode für konsistente Sektionstitel
+  // ... (die restlichen _build-Methoden bleiben unverändert hier drin)
   Widget _buildSectionTitle(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
@@ -153,7 +147,6 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
     );
   }
 
-  // KORREKTUR 4: Angepasstes Input-Feld, das auf globale Themes reagiert
   Widget _buildFoodInputField({
     required TextEditingController controller,
     required String label,
@@ -166,12 +159,11 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
         controller: controller,
         decoration: InputDecoration(
           labelText: label,
-          // Wir lassen die globalen Themes greifen
         ),
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         validator: (value) {
           if (isRequired && (value == null || value.isEmpty)) {
-            return l10n.validatorPleaseEnterName; // Oder spezifischer Text
+            return l10n.validatorPleaseEnterName;
           }
           if (value != null &&
               value.isNotEmpty &&

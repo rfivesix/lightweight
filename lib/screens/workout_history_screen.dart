@@ -65,10 +65,32 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _logs.isEmpty
+              // KORREKTUR: Aufgewerteter "Empty State"
               ? Center(
-                  child: Text(
-                    l10n.emptyHistory,
-                    style: const TextStyle(fontSize: 18, color: Colors.grey),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.history_toggle_off_outlined,
+                            size: 80, color: Colors.grey.shade400),
+                        const SizedBox(height: 16),
+                        Text(
+                          "Dein Verlauf ist leer",
+                          style: Theme.of(context).textTheme.headlineSmall,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.emptyHistory,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyLarge
+                              ?.copyWith(color: Colors.grey.shade600),
+                        ),
+                      ],
+                    ),
                   ),
                 )
               : ListView.builder(

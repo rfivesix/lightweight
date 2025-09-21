@@ -248,7 +248,6 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
     );
   }
 
-  // KORREKTUR: _buildEmptyState akzeptiert jetzt TextTheme als Parameter
   Widget _buildEmptyState(
       BuildContext context, AppLocalizations l10n, TextTheme textTheme) {
     return Center(
@@ -257,27 +256,31 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.list_alt, size: 80, color: Colors.grey),
+            Icon(Icons.list_alt_outlined,
+                size: 80, color: Colors.grey.shade400),
             const SizedBox(height: 16),
-            Text(l10n.emptyRoutinesTitle,
-                style: textTheme
-                    .headlineMedium), // Jetzt kann TextTheme verwendet werden
+            Text(
+              l10n.emptyRoutinesTitle,
+              style: textTheme.headlineSmall,
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 8),
-            Text(l10n.emptyRoutinesSubtitle,
-                textAlign: TextAlign.center,
-                style: textTheme.bodyMedium?.copyWith(
-                    color:
-                        Colors.grey)), // Jetzt kann TextTheme verwendet werden
+            Text(
+              l10n.emptyRoutinesSubtitle,
+              textAlign: TextAlign.center,
+              style: textTheme.bodyLarge?.copyWith(color: Colors.grey.shade600),
+            ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
               onPressed: _createNewRoutine,
               icon: const Icon(Icons.add),
-              label: Text(l10n.createFirstRoutineButton),
-            ),
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: _startEmptyWorkout,
-              child: Text(l10n.startEmptyWorkoutButton),
+              label: Text(l10n.createFirstRoutineButton,
+                  style: textTheme.titleMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onPrimary)),
             ),
           ],
         ),

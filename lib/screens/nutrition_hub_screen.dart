@@ -7,11 +7,13 @@ import 'package:lightweight/dialogs/quantity_dialog_content.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/daily_nutrition.dart';
 import 'package:lightweight/models/food_entry.dart';
+import 'package:lightweight/models/food_item.dart';
 import 'package:lightweight/models/tracked_food_item.dart';
 import 'package:lightweight/screens/add_food_screen.dart';
 import 'package:lightweight/screens/create_food_screen.dart';
 import 'package:lightweight/screens/food_detail_screen.dart';
 import 'package:lightweight/screens/nutrition_screen.dart';
+import 'package:lightweight/screens/scanner_screen.dart';
 import 'package:lightweight/widgets/nutrition_summary_widget.dart'; // HINZUGEFÜGT
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -197,7 +199,7 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
                           .then((_) => _loadTodaysData())),
                   const SizedBox(height: 8),
                   _buildQuickAddButton(context, l10n.scann_barcode_capslock,
-                      Icons.qr_code_scanner, () {/* TODO */}),
+                      Icons.qr_code_scanner, _scanBarcodeAndAddFood),
                   const SizedBox(height: 8),
                   _buildQuickAddButton(
                       context,
@@ -372,6 +374,85 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
         return l10n.mealtypeSnack;
       default:
         return key;
+    }
+  }
+
+  // DIESE METHODE HINZUFÜGEN
+  Future<void> _scanBarcodeAndAddFood() async {
+    final String? barcode = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (context) => const ScannerScreen()),
+    );
+
+    if (barcode != null && mounted) {
+      final foodItem =
+          await ProductDatabaseHelper.instance.getProductByBarcode(barcode);
+
+      if (foodItem != null) {
+        _addFoodItem(foodItem);
+      } else {
+        // Produkt nicht gefunden, zeige eine Meldung. Optional kannst du hier anbieten,
+        // den `CreateFoodScreen` zu öffnen.
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Kein Produkt für Barcode "$barcode" gefunden.')),
+          );
+        }
+      }
+    }
+  }
+
+  // DIESE METHODE EBENFALLS HINZUFÜGEN (Code-Duplizierung, aber für den Moment am einfachsten)
+  Future<void> _addFoodItem(FoodItem item) async {
+    final l10n = AppLocalizations.of(context)!;
+    final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
+
+    final result = await showDialog<(int, DateTime, bool, String)?>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(item.name, maxLines: 2, overflow: TextOverflow.ellipsis),
+          content: QuantityDialogContent(key: dialogStateKey, item: item),
+          actions: [
+            TextButton(
+                child: Text(l10n.cancel),
+                onPressed: () => Navigator.of(context).pop(null)),
+            FilledButton(
+              child: Text(l10n.add_button),
+              onPressed: () {
+                final state = dialogStateKey.currentState;
+                if (state != null) {
+                  final quantity = int.tryParse(state.quantityText);
+                  if (quantity != null && quantity > 0) {
+                    Navigator.of(context).pop((
+                      quantity,
+                      state.selectedDateTime,
+                      state.countAsWater,
+                      state.selectedMealType
+                    ));
+                  }
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result != null && mounted) {
+      final newEntry = FoodEntry(
+        barcode: item.barcode,
+        quantityInGrams: result.$1,
+        timestamp: result.$2,
+        mealType: result.$4,
+      );
+      await DatabaseHelper.instance.insertFoodEntry(newEntry);
+
+      if (result.$3) {
+        // countAsWater
+        await DatabaseHelper.instance.insertWaterEntry(result.$1, result.$2);
+      }
+      _loadTodaysData(); // Lade die Daten neu, um die UI zu aktualisieren
     }
   }
 }

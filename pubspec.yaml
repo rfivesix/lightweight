@@ -1,7 +1,7 @@
 name: lightweight
 description: "A modern, privacy-first fitness and nutrition tracking app. Offline-first, no cloud dependency, built with Flutter."
 publish_to: 'none' 
-version: 0.0.3+0
+version: 0.0.4+0
 
 environment:
   sdk: '>=3.0.0 <4.0.0' # Angepasst für moderne SDKs
@@ -23,7 +23,7 @@ dependencies:
   flutter_gen: ^5.11.0
   shared_preferences: ^2.2.3
   dynamic_color: ^1.7.0 
-  url_launcher: ^6.3.2
+  url_launcher: ^6.2.6
   path_provider: ^2.1.5
   file_picker: ^10.3.2
   share_plus: ^11.1.0
@@ -34,6 +34,7 @@ dependencies:
   google_fonts: ^6.3.1
   package_info_plus: ^9.0.0 # oder die neueste Version
   image_picker: ^1.2.0
+  mobile_scanner: ^5.1.0 # Füge diese Zeile hinzu
 
 dev_dependencies:
   flutter_test:
@@ -49,3 +50,24 @@ flutter:
   assets:
     - assets/images/max_mustermann.png
     - assets/db/
+
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400 # Regular
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500 # Medium
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600 # SemiBold
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700 # Bold
+        - asset: assets/fonts/Inter-ExtraBold.ttf
+          weight: 800 # ExtraBold
+        - asset: assets/fonts/Inter-Black.ttf
+          weight: 900 # Black        
+        - asset: assets/fonts/Inter-Italic.ttf
+          style: italic
+        - asset: assets/fonts/Inter-BoldItalic.ttf
+          weight: 700
+          style: italic

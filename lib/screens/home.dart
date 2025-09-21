@@ -14,6 +14,7 @@ import 'package:lightweight/screens/nutrition_screen.dart';
 import 'package:lightweight/widgets/measurement_chart_widget.dart';
 import 'package:lightweight/widgets/nutrition_summary_widget.dart';
 import 'package:lightweight/widgets/summary_card.dart';
+import 'package:lightweight/util/date_util.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -350,23 +351,30 @@ class HomeState extends State<Home> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                // Zurück-Button
+                IconButton(
+                  icon: const Icon(Icons.chevron_left),
+                  onPressed: () => _navigateTimeRange(false),
+                ),
+                // Datumsanzeige
                 Text(
                     "${DateFormat.MMMd().format(_currentDateRange.start)} - ${DateFormat.MMMd().format(_currentDateRange.end)}",
                     style: Theme.of(context).textTheme.bodySmall),
+                // Vorwärts-Button (deaktiviert, wenn das End-Datum heute ist)
+                IconButton(
+                  icon: const Icon(Icons.chevron_right),
+                  onPressed: _currentDateRange.end.isSameDate(DateTime.now())
+                      ? null
+                      : () => _navigateTimeRange(true),
+                ),
               ],
             ),
             const SizedBox(height: 16),
-            GestureDetector(
-              onHorizontalDragEnd: (details) {
-                if (details.primaryVelocity! > 0) _navigateTimeRange(false);
-                if (details.primaryVelocity! < 0) _navigateTimeRange(true);
-              },
-              child: MeasurementChartWidget(
-                chartType: _chartType,
-                dateRange: _currentDateRange,
-                lineColor: colorScheme.secondary,
-                unit: "kg",
-              ),
+            MeasurementChartWidget(
+              chartType: _chartType,
+              dateRange: _currentDateRange,
+              lineColor: colorScheme.secondary,
+              unit: "kg",
             ),
           ],
         ),

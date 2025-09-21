@@ -355,7 +355,6 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
       ),
       body: Column(
         children: [
-          // Routine-Name Eingabe bleibt im Body
           Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -376,7 +375,6 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
             thickness: 1,
             color: colorScheme.onSurfaceVariant.withOpacity(0.1),
           ),
-          // Rest: ListView mit Exercises (unverändert)
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -388,41 +386,29 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                         ),
                       )
                     : ReorderableListView.builder(
-                        padding: const EdgeInsets.all(16.0),
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
                         itemCount: _routineExercises.length,
-                        // KORREKTUR: onReorderStart/End für Drag-Feedback
-                        onReorderStart: (index) {
-                          setState(() {
-                            // Alle Elemente einklappen (im LiveWorkoutScreen ist es auch so)
-                            for (final ex in _routineExercises) {
-                              _exerciseExpanded[ex.id!] = false;
-                            }
-                          });
-                        },
-                        onReorderEnd: (index) {
-                          setState(() {
-                            // Alle Elemente wieder aufklappen
-                            for (final ex in _routineExercises) {
-                              _exerciseExpanded[ex.id!] = true;
-                            }
-                          });
+                        proxyDecorator: (Widget child, int index,
+                            Animation<double> animation) {
+                          return Material(
+                            elevation: 4.0,
+                            color: Theme.of(context).scaffoldBackgroundColor,
+                            child: child,
+                          );
                         },
                         onReorder: _onReorder,
                         itemBuilder: (context, index) {
                           final routineExercise = _routineExercises[index];
-                          final bool isExpanded =
-                              _exerciseExpanded[routineExercise.id!] ??
-                                  true; // Standard ist aufgeklappt
 
-                          return SummaryCard(
-                            // KORREKTUR 2: Übungsblock in SummaryCard
-                            key: ValueKey(routineExercise
-                                .id), // Wichtig für ReorderableListView
+                          // KORREKTUR: SummaryCard wurde entfernt
+                          return Container(
+                            key: ValueKey(routineExercise.id),
+                            color: Theme.of(context).scaffoldBackgroundColor,
+                            margin: const EdgeInsets.symmetric(vertical: 8.0),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 ListTile(
-                                  // Übungstitel mit Drag-Handle und Aktionen
                                   contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 16.0, vertical: 8.0),
                                   title: InkWell(
@@ -442,7 +428,6 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                                     ),
                                   ),
                                   leading: ReorderableDragStartListener(
-                                    // KORREKTUR: Drag Handle
                                     index: index,
                                     child: const Icon(Icons.drag_handle),
                                   ),
@@ -450,14 +435,12 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       IconButton(
-                                        // Pause bearbeiten
                                         icon: const Icon(Icons.timer_outlined),
                                         tooltip: l10n.editPauseTime,
                                         onPressed: () =>
                                             _editPauseTime(routineExercise),
                                       ),
                                       IconButton(
-                                        // Übung löschen
                                         icon: const Icon(Icons.delete_outline,
                                             color: Colors.redAccent),
                                         tooltip: l10n.removeExercise,
@@ -467,90 +450,74 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                                     ],
                                   ),
                                 ),
-                                // KORREKTUR: Details ein/ausklappbar
-                                AnimatedSize(
-                                  duration: const Duration(milliseconds: 300),
-                                  child: isExpanded
-                                      ? Padding(
-                                          padding: const EdgeInsets.all(
-                                              16.0), // Padding für den Inhalt
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              // Pausenzeit anzeigen
-                                              if (routineExercise
-                                                          .pauseSeconds !=
-                                                      null &&
-                                                  routineExercise
-                                                          .pauseSeconds! >
-                                                      0)
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          bottom: 12.0),
-                                                  child: Text(
-                                                    l10n.pauseDuration(
-                                                        routineExercise
-                                                            .pauseSeconds!),
-                                                    style: textTheme.bodyMedium
-                                                        ?.copyWith(
-                                                            color: Colors
-                                                                .grey[600],
-                                                            fontStyle: FontStyle
-                                                                .italic),
-                                                  ),
-                                                ),
-                                              // Header für Sets
-                                              Row(
-                                                children: [
-                                                  _buildHeader(l10n.setLabel),
-                                                  const Spacer(),
-                                                  _buildHeader(l10n.kgLabel),
-                                                  _buildHeader(l10n.repsLabel),
-                                                  const SizedBox(
-                                                      width:
-                                                          48), // Platzhalter für Delete-Button
-                                                ],
-                                              ),
-                                              Divider(
-                                                  height: 1,
-                                                  thickness: 1,
-                                                  color: colorScheme
-                                                      .onSurfaceVariant
-                                                      .withOpacity(0.1)),
-                                              // Sets bearbeiten
-                                              ...routineExercise.setTemplates
-                                                  .asMap()
-                                                  .entries
-                                                  .map((entry) {
-                                                final setIndex = entry.key;
-                                                final setTemplate = entry.value;
-                                                return _buildSetRow(
-                                                    setIndex + 1,
-                                                    routineExercise,
-                                                    setTemplate,
-                                                    setIndex); // setIndex + 1 für Lesbarkeit
-                                              }),
-                                              const SizedBox(height: 8),
-                                              TextButton.icon(
-                                                onPressed: () =>
-                                                    _addSet(routineExercise),
-                                                icon: const Icon(Icons.add),
-                                                label: Text(l10n.addSetButton),
-                                              ),
-                                            ],
+                                Divider(
+                                    height: 1,
+                                    thickness: 1,
+                                    color: colorScheme.onSurfaceVariant
+                                        .withOpacity(0.1),
+                                    indent: 16,
+                                    endIndent: 16),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      if (routineExercise.pauseSeconds !=
+                                              null &&
+                                          routineExercise.pauseSeconds! > 0)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                              top: 12.0, bottom: 12.0),
+                                          child: Text(
+                                            l10n.pauseDuration(
+                                                routineExercise.pauseSeconds!),
+                                            style: textTheme.bodyMedium
+                                                ?.copyWith(
+                                                    color: Colors.grey[600],
+                                                    fontStyle:
+                                                        FontStyle.italic),
                                           ),
-                                        )
-                                      : const SizedBox.shrink(),
-                                ),
+                                        ),
+                                      Row(
+                                        children: [
+                                          _buildHeader(l10n.setLabel),
+                                          const Spacer(),
+                                          _buildHeader(l10n.kgLabel),
+                                          _buildHeader(l10n.repsLabel),
+                                          const SizedBox(width: 48),
+                                        ],
+                                      ),
+                                      const Divider(),
+                                      ...routineExercise.setTemplates
+                                          .asMap()
+                                          .entries
+                                          .map((entry) {
+                                        final setIndex = entry.key;
+                                        final setTemplate = entry.value;
+                                        return _buildSetTemplateRow(
+                                            setIndex + 1,
+                                            routineExercise,
+                                            setTemplate,
+                                            setIndex);
+                                      }),
+                                      const SizedBox(height: 8),
+                                      TextButton.icon(
+                                        onPressed: () =>
+                                            _addSet(routineExercise),
+                                        icon: const Icon(Icons.add),
+                                        label: Text(l10n.addSetButton),
+                                      ),
+                                    ],
+                                  ),
+                                )
                               ],
                             ),
                           );
                         },
                       ),
           ),
-          // KORREKTUR: WgerAttributionWidget außerhalb der Liste
           Padding(
             padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
             child: WgerAttributionWidget(
@@ -560,70 +527,64 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         ],
       ),
       floatingActionButton: GlassFab(
-        onPressed:
-            _addExercises, // Fügt neue Übungen hinzu ODER speichert die Routine
+        onPressed: _addExercises,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
-  Widget _buildHeader(String text) => Expanded(
-      child: Text(text,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontWeight: FontWeight.bold)));
-
-  // KORREKTUR: _buildSetRow für das Bearbeiten der Set-Templates
-  Widget _buildSetRow(
+  Widget _buildSetTemplateRow(
       int setIndex, RoutineExercise re, SetTemplate template, int listIndex) {
     final l10n = AppLocalizations.of(context)!;
     return Padding(
-      padding: const EdgeInsets.symmetric(
-          vertical: 4.0), // Padding für konsistentes Aussehen
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
         children: [
           Expanded(
+            flex: 2,
             child: SetTypeChip(
               setType: template.setType,
               setIndex: (template.setType == 'warmup') ? null : setIndex,
               onTap: () => _showSetTypePicker(template),
             ),
           ),
-          const Spacer(), // Spacer für flexible Trennung
+          const Spacer(),
           Expanded(
+              flex: 3,
               child: TextFormField(
-            controller: _weightControllers[template.id!],
-            textAlign: TextAlign.center,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration:
-                InputDecoration(hintText: l10n.kgLabelShort, isDense: true),
-            validator: (value) {
-              if (value != null &&
-                  value.isNotEmpty &&
-                  double.tryParse(value.replaceAll(',', '.')) == null) {
-                return "!"; // Oder l10n.validatorPleaseEnterNumber
-              }
-              return null;
-            },
-          )),
+                controller: _weightControllers[template.id!],
+                textAlign: TextAlign.center,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration:
+                    InputDecoration(hintText: l10n.kgLabelShort, isDense: true),
+                validator: (value) {
+                  if (value != null &&
+                      value.isNotEmpty &&
+                      double.tryParse(value.replaceAll(',', '.')) == null) {
+                    return "!";
+                  }
+                  return null;
+                },
+              )),
+          const SizedBox(width: 8),
           Expanded(
+              flex: 3,
               child: TextFormField(
-            controller: _repsControllers[template.id!],
-            textAlign: TextAlign.center,
-            keyboardType: TextInputType.number,
-            decoration:
-                InputDecoration(hintText: l10n.set_reps_hint, isDense: true),
-            validator: (value) {
-              if (value != null &&
-                  value.isNotEmpty &&
-                  int.tryParse(value) == null) {
-                return "!"; // Oder l10n.validatorPleaseEnterNumber
-              }
-              return null;
-            },
-          )),
+                controller: _repsControllers[template.id!],
+                textAlign: TextAlign.center,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                    hintText: l10n.set_reps_hint, isDense: true),
+                validator: (value) {
+                  if (value != null &&
+                      value.isNotEmpty &&
+                      int.tryParse(value) == null) {
+                    return "!";
+                  }
+                  return null;
+                },
+              )),
           SizedBox(
               width: 48,
               child: IconButton(
@@ -634,4 +595,12 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
       ),
     );
   }
+
+  Widget _buildHeader(String text) => Expanded(
+      child: Text(text,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontWeight: FontWeight.bold)));
 }

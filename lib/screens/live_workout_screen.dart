@@ -13,12 +13,11 @@ import 'package:lightweight/models/set_template.dart';
 import 'package:lightweight/models/workout_log.dart';
 import 'package:lightweight/services/workout_session_manager.dart';
 import 'package:lightweight/widgets/set_type_chip.dart';
-import 'package:lightweight/widgets/summary_card.dart'; // HINZUGEFÜGT
 import 'package:lightweight/widgets/workout_summary_bar.dart';
 import 'exercise_catalog_screen.dart';
 import 'exercise_detail_screen.dart';
 import 'package:provider/provider.dart';
-// Für formatDuration
+import 'package:lightweight/screens/workout_summary_screen.dart';
 
 class LiveWorkoutScreen extends StatefulWidget {
   final Routine? routine;
@@ -37,7 +36,6 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
   final Map<int, TextEditingController> _repsControllers = {};
   final Map<String, SetLog?> _lastPerformances = {};
   bool _isLoading = true;
-  final Map<int, bool> _exerciseExpanded = {};
 
   @override
   void initState() {
@@ -123,11 +121,38 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
   }
 
   Future<void> _finishWorkout() async {
-    // Wichtig: über den Session-Manager beenden, damit notifyListeners() feuert
-    await WorkoutSessionManager().finishWorkout();
+    final l10n = AppLocalizations.of(context)!;
+    // Frage den Nutzer zuerst, ob er wirklich beenden will.
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.finishWorkoutButton), // Titel: "Beenden"
+        content: const Text("Möchtest du dieses Workout wirklich abschließen?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.finishWorkoutButton),
+          ),
+        ],
+      ),
+    );
 
-    if (mounted) {
-      Navigator.of(context).pop(); // zurück zum Home-Screen
+    // Nur wenn der Nutzer bestätigt hat (confirmed == true)...
+    if (confirmed == true && mounted) {
+      final logId = widget.workoutLog.id;
+      await WorkoutSessionManager().finishWorkout();
+
+      if (mounted && logId != null) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => WorkoutSummaryScreen(logId: logId),
+          ),
+        );
+      }
     }
   }
 
@@ -147,10 +172,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     setState(() {
       routineExercise.setTemplates.removeWhere((st) => st.id == setTemplateId);
       _setUIData.remove(setTemplateId);
-
-      // Statt lokal jetzt über den Manager
       WorkoutSessionManager().completedSets.remove(setTemplateId);
-
       _weightControllers.remove(setTemplateId)?.dispose();
       _repsControllers.remove(setTemplateId)?.dispose();
     });
@@ -177,8 +199,6 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         );
 
         _liveExercises.add(newRoutineExercise);
-
-        // ⬇️ Statt lokal → über den SessionManager
         WorkoutSessionManager().pauseTimes[newRoutineExercise.id!] = null;
 
         final templateId = newTemplate.id!;
@@ -259,9 +279,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     setState(() {
       for (var template in exerciseToRemove.setTemplates) {
         _setUIData.remove(template.id!);
-        WorkoutSessionManager()
-            .completedSets
-            .remove(template.id!); // ⬅️ geändert
+        WorkoutSessionManager().completedSets.remove(template.id!);
         _weightControllers.remove(template.id!)?.dispose();
         _repsControllers.remove(template.id!)?.dispose();
       }
@@ -341,191 +359,147 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                     thickness: 1,
                     color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
                 Expanded(
-                  child: ReorderableListView(
+                  child: ReorderableListView.builder(
+                    //padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    padding: EdgeInsets.zero,
                     proxyDecorator:
                         (Widget child, int index, Animation<double> animation) {
-                      final exercise = _liveExercises[index];
+                      // KORREKTUR: Flaches Design für das Drag-Feedback
                       return Material(
                         elevation: 4.0,
-                        borderRadius: BorderRadius.circular(12.0),
-                        child: ListTile(
-                          tileColor: Theme.of(context).cardColor,
-                          title: Text(
-                            exercise.exercise.getLocalizedName(context),
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          trailing: const Icon(Icons.drag_handle),
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                        child: child,
+                      );
+                    },
+                    onReorder: _onReorder,
+                    itemCount: _liveExercises.length,
+                    itemBuilder: (context, index) {
+                      final routineExercise = _liveExercises[index];
+                      // KORREKTUR: SummaryCard wurde hier entfernt
+                      return Container(
+                        key: ValueKey(routineExercise.id),
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                        margin: const EdgeInsets.symmetric(
+                            vertical: 8.0, horizontal: 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0, vertical: 8.0),
+                              title: InkWell(
+                                onTap: () => Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            ExerciseDetailScreen(
+                                                exercise:
+                                                    routineExercise.exercise))),
+                                child: Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 4.0),
+                                  child: Text(
+                                    routineExercise.exercise
+                                        .getLocalizedName(context),
+                                    style: textTheme.titleLarge
+                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ),
+                              leading: ReorderableDragStartListener(
+                                index: index,
+                                child: const Icon(Icons.drag_handle),
+                              ),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (manager.pauseTimes[routineExercise.id!] !=
+                                          null &&
+                                      manager.pauseTimes[routineExercise.id!]! >
+                                          0)
+                                    Padding(
+                                      padding:
+                                          const EdgeInsets.only(right: 4.0),
+                                      child: Text(
+                                        "${manager.pauseTimes[routineExercise.id!]}s",
+                                        style: textTheme.bodyMedium?.copyWith(
+                                            color: colorScheme.primary,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  IconButton(
+                                    icon: const Icon(Icons.timer_outlined),
+                                    tooltip: l10n.editPauseTime,
+                                    onPressed: () =>
+                                        _editPauseTime(routineExercise),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline,
+                                        color: Colors.redAccent),
+                                    tooltip: l10n.removeExercise,
+                                    onPressed: () =>
+                                        _removeExercise(routineExercise),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Divider(indent: 16, endIndent: 16),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      _buildHeader(l10n.setLabel),
+                                      _buildHeader(l10n.lastTimeLabel),
+                                      _buildHeader(l10n.kgLabel),
+                                      _buildHeader(l10n.repsLabel),
+                                      const SizedBox(width: 48),
+                                    ],
+                                  ),
+                                  const Divider(),
+                                  ...routineExercise.setTemplates
+                                      .asMap()
+                                      .entries
+                                      .map((setEntry) {
+                                    final setTemplate = setEntry.value;
+                                    int workingSetIndex = 0;
+                                    for (final st
+                                        in routineExercise.setTemplates) {
+                                      if (st.id == setTemplate.id) break;
+                                      if (st.setType != 'warmup') {
+                                        workingSetIndex++;
+                                      }
+                                    }
+                                    if (setTemplate.setType != 'warmup') {
+                                      workingSetIndex++;
+                                    }
+
+                                    return _buildSetRow(
+                                      workingSetIndex,
+                                      routineExercise,
+                                      setTemplate,
+                                      manager.completedSets
+                                          .contains(setTemplate.id!),
+                                      colorScheme,
+                                      _lastPerformances[
+                                          routineExercise.exercise.nameEn],
+                                    );
+                                  }),
+                                  const SizedBox(height: 8),
+                                  TextButton.icon(
+                                    onPressed: () => _addSet(routineExercise),
+                                    icon: const Icon(Icons.add),
+                                    label: Text(l10n.addSetButton),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       );
                     },
-                    onReorderStart: (index) {
-                      setState(() {
-                        // SCHRITT 2: Diese Logik klappt alle Elemente in der LISTE ein.
-                        for (final key in _exerciseExpanded.keys) {
-                          _exerciseExpanded[key] = false;
-                        }
-                      });
-                    },
-                    onReorderEnd: (index) {
-                      setState(() {
-                        // Klappe alles wieder auf, wenn der Drag beendet ist.
-                        for (final key in _exerciseExpanded.keys) {
-                          _exerciseExpanded[key] = true;
-                        }
-                      });
-                    },
-                    onReorder: _onReorder,
-                    padding: const EdgeInsets.all(8.0),
-                    children: [
-                      for (int index = 0;
-                          index < _liveExercises.length;
-                          index++)
-                        SummaryCard(
-                          // KORREKTUR 2: Übungsblock in SummaryCard
-                          key: ValueKey(_liveExercises[index].id),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              ListTile(
-                                // Übungstitel mit Drag-Handle und Aktionen
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16.0, vertical: 8.0),
-                                title: InkWell(
-                                  // KORREKTUR: InkWell, um den Titel klickbar zu machen
-                                  onTap: () => Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              ExerciseDetailScreen(
-                                                  exercise:
-                                                      _liveExercises[index]
-                                                          .exercise))),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 4.0),
-                                    child: Text(
-                                      _liveExercises[index]
-                                          .exercise
-                                          .getLocalizedName(context),
-                                      style: textTheme.titleLarge?.copyWith(
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                ),
-                                leading: ReorderableDragStartListener(
-                                  index: index,
-                                  child: const Icon(Icons.drag_handle),
-                                ),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    // Pausezeit anzeigen
-                                    if (manager.pauseTimes[
-                                                _liveExercises[index].id!] !=
-                                            null &&
-                                        manager.pauseTimes[
-                                                _liveExercises[index].id!]! >
-                                            0)
-                                      Padding(
-                                        padding:
-                                            const EdgeInsets.only(right: 4.0),
-                                        child: Text(
-                                          "${manager.pauseTimes[_liveExercises[index].id!]}s",
-                                          style: textTheme.bodyMedium?.copyWith(
-                                              color: colorScheme.primary,
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                    // Bearbeiten-Button für Pause
-                                    IconButton(
-                                      icon: const Icon(Icons.timer_outlined),
-                                      tooltip: l10n.editPauseTime,
-                                      onPressed: () =>
-                                          _editPauseTime(_liveExercises[index]),
-                                    ),
-                                    // Löschen-Button für Übung
-                                    IconButton(
-                                      icon: const Icon(Icons.delete_outline,
-                                          color: Colors.redAccent),
-                                      tooltip: l10n.removeExercise,
-                                      onPressed: () => _removeExercise(
-                                          _liveExercises[index]),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              // Trennlinie nach dem Titel
-                              Divider(
-                                  height: 1,
-                                  thickness: 1,
-                                  color: colorScheme.onSurfaceVariant
-                                      .withOpacity(0.1),
-                                  indent: 16,
-                                  endIndent: 16),
-                              // Sets und "Satz hinzufügen"-Button
-                              Padding(
-                                padding: const EdgeInsets.all(
-                                    16.0), // Padding für den Inhalt der Übung
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        _buildHeader(l10n.setLabel),
-                                        _buildHeader(l10n.lastTimeLabel),
-                                        _buildHeader(l10n.kgLabel),
-                                        _buildHeader(l10n.repsLabel),
-                                        const SizedBox(width: 48),
-                                      ],
-                                    ),
-                                    Divider(
-                                        height: 1,
-                                        thickness: 1,
-                                        color: colorScheme.onSurfaceVariant
-                                            .withOpacity(0.1)),
-                                    ..._liveExercises[index]
-                                        .setTemplates
-                                        .asMap()
-                                        .entries
-                                        .map((setEntry) {
-                                      final setTemplate = setEntry.value;
-                                      int workingSetIndex = 0; // Neu berechnen
-                                      for (final st in _liveExercises[index]
-                                          .setTemplates) {
-                                        if (st.id == setTemplate.id) break;
-                                        if (st.setType != 'warmup') {
-                                          workingSetIndex++;
-                                        }
-                                      }
-                                      if (setTemplate.setType != 'warmup') {
-                                        workingSetIndex++;
-                                      }
-
-                                      return _buildSetRow(
-                                        workingSetIndex,
-                                        _liveExercises[index],
-                                        setTemplate,
-                                        manager.completedSets
-                                            .contains(setTemplate.id!),
-                                        colorScheme,
-                                        _lastPerformances[_liveExercises[index]
-                                            .exercise
-                                            .nameEn],
-                                      );
-                                    }),
-                                    const SizedBox(height: 8),
-                                    TextButton.icon(
-                                      onPressed: () =>
-                                          _addSet(_liveExercises[index]),
-                                      icon: const Icon(Icons.add),
-                                      label: Text(l10n.addSetButton),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
                   ),
                 ),
               ],
@@ -534,12 +508,10 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         onPressed: _addExercise,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      // KORREKTUR: BottomNavigationBar für Rest-Timer beibehalten und stylen
       bottomNavigationBar: AnimatedBuilder(
         animation: manager,
         builder: (context, _) {
-          final bar =
-              _buildRestBottomBar(l10n, colorScheme); // colorScheme übergeben
+          final bar = _buildRestBottomBar(l10n, colorScheme);
           return bar ?? const SizedBox.shrink();
         },
       ),
@@ -556,6 +528,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
   ) {
     final setType = _setUIData[template.id!]!['setType'];
 
+    // KORREKTUR: Das Dismissible umschließt jetzt den Container mit dem Hintergrund,
+    // und das Padding ist innerhalb des Dismissible.
     return Dismissible(
       key: ValueKey(template.id),
       direction:
@@ -571,29 +545,31 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         decoration: BoxDecoration(
           color:
               isCompleted ? Colors.green.withOpacity(0.1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(4),
         ),
-        padding: const EdgeInsets.symmetric(vertical: 2.0),
+        //padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 16.0),
         child: Row(
           children: [
             Expanded(
+              flex: 2,
               child: SetTypeChip(
                 setType: setType,
-                setIndex: (setType == 'warmup') ? null : setIndex, // 🔥 hier!
+                setIndex: (setType == 'warmup') ? null : setIndex,
                 isCompleted: isCompleted,
                 onTap: () => _showSetTypePicker(template.id!),
               ),
             ),
             Expanded(
+              flex: 3,
               child: Text(
                 lastPerf != null
-                    ? "${lastPerf.weightKg}kg x ${lastPerf.reps}"
+                    ? "${lastPerf.weightKg?.toStringAsFixed(1).replaceAll('.0', '')}kg x ${lastPerf.reps}"
                     : "-",
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.grey[500], fontSize: 12),
               ),
             ),
             Expanded(
+              flex: 2,
               child: TextFormField(
                 controller: _weightControllers[template.id!],
                 textAlign: TextAlign.center,
@@ -604,7 +580,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                 enabled: !isCompleted,
               ),
             ),
+            const SizedBox(width: 8),
             Expanded(
+              flex: 2,
               child: TextFormField(
                 controller: _repsControllers[template.id!],
                 textAlign: TextAlign.center,

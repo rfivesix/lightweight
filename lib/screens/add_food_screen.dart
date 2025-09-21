@@ -5,6 +5,7 @@ import 'package:lightweight/data/product_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/food_item.dart';
 import 'package:lightweight/screens/create_food_screen.dart';
+import 'package:lightweight/screens/scanner_screen.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/off_attribution_widget.dart';
 import 'package:lightweight/widgets/summary_card.dart';
@@ -204,22 +205,41 @@ class _AddFoodScreenState extends State<AddFoodScreen>
           horizontal: 16.0, vertical: 0), // Vertikalen Padding auf 0 setzen
       child: Column(
         children: [
-          TextField(
-              controller: _searchController,
-              onChanged: (value) => _runFilter(value),
-              decoration: InputDecoration(
-                  hintText: l10n.searchHintText,
-                  prefixIcon: Icon(Icons.search,
-                      color: colorScheme.onSurfaceVariant, size: 20),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: Icon(Icons.clear,
-                              color: colorScheme.onSurfaceVariant),
-                          onPressed: () {
-                            _searchController.clear();
-                            _runFilter('');
-                          })
-                      : null)),
+          Row(
+            children: [
+              // Die Suchleiste füllt jetzt den verfügbaren Platz
+              Expanded(
+                child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) => _runFilter(value),
+                    decoration: InputDecoration(
+                        hintText: l10n.searchHintText,
+                        prefixIcon: Icon(Icons.search,
+                            color: colorScheme.onSurfaceVariant, size: 20),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: Icon(Icons.clear,
+                                    color: colorScheme.onSurfaceVariant),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  _runFilter('');
+                                })
+                            : null)),
+              ),
+              const SizedBox(width: 8), // Kleiner Abstand
+              // Der neue Scanner-Button
+              IconButton(
+                style: IconButton.styleFrom(
+                  backgroundColor: colorScheme.surfaceContainerHighest,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: Icon(Icons.qr_code_scanner, color: colorScheme.primary),
+                onPressed: _scanBarcodeAndPop, // Ruft die neue Methode auf
+              ),
+            ],
+          ),
           const SizedBox(height: 20),
           Expanded(
             child: _isLoadingSearch
@@ -240,17 +260,29 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     );
   }
 
-  // PLATZHALTER FÜR DEN NEUEN TAB
   Widget _buildBaseFoodsTab(AppLocalizations l10n) {
-    // Hier wird später die Logik zum Anzeigen der Kategorien (Obst, Gemüse etc.) implementiert
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Text(
-          l10n.baseFoodsEmptyState,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.eco_outlined, size: 80, color: Colors.grey.shade400),
+          const SizedBox(height: 16),
+          Text(
+            "In Kürze verfügbar",
+            style: Theme.of(context).textTheme.headlineSmall,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.baseFoodsEmptyState,
+            textAlign: TextAlign.center,
+            style: Theme.of(context)
+                .textTheme
+                .bodyLarge
+                ?.copyWith(color: Colors.grey.shade600),
+          ),
+        ],
       ),
     );
   }
@@ -260,20 +292,39 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       return const Center(child: CircularProgressIndicator());
     }
     if (_favoriteFoodItems.isEmpty) {
-      // KORREKTUR: Theme-konformer Stil
+      // NEUER, AUFGEWERTETER EMPTY STATE
       return Center(
-          child: Text(l10n.favoritesEmptyState,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withOpacity(0.6))));
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.favorite_border,
+                  size: 80, color: Colors.grey.shade400),
+              const SizedBox(height: 16),
+              Text(
+                "Keine Favoriten",
+                style: Theme.of(context).textTheme.headlineSmall,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.favoritesEmptyState,
+                textAlign: TextAlign.center,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyLarge
+                    ?.copyWith(color: Colors.grey.shade600),
+              ),
+            ],
+          ),
+        ),
+      );
     }
     return Column(children: [
       Expanded(
           child: ListView.builder(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
               itemCount: _favoriteFoodItems.length,
               itemBuilder: (context, index) =>
                   _buildFoodListItem(_favoriteFoodItems[index]))),
@@ -287,20 +338,38 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       return const Center(child: CircularProgressIndicator());
     }
     if (_recentFoodItems.isEmpty) {
-      // KORREKTUR: Theme-konformer Stil
+      // NEUER, AUFGEWERTETER EMPTY STATE
       return Center(
-          child: Text(l10n.recentEmptyState,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withOpacity(0.6))));
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.history, size: 80, color: Colors.grey.shade400),
+              const SizedBox(height: 16),
+              Text(
+                "Noch nichts erfasst",
+                style: Theme.of(context).textTheme.headlineSmall,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.recentEmptyState,
+                textAlign: TextAlign.center,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyLarge
+                    ?.copyWith(color: Colors.grey.shade600),
+              ),
+            ],
+          ),
+        ),
+      );
     }
     return Column(children: [
       Expanded(
           child: ListView.builder(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
               itemCount: _recentFoodItems.length,
               itemBuilder: (context, index) =>
                   _buildFoodListItem(_recentFoodItems[index]))),
@@ -342,5 +411,34 @@ class _AddFoodScreenState extends State<AddFoodScreen>
             .pop(item), // KORREKTUR: Direkt Pop, da wir hier nur auswählen
       ),
     );
+  }
+
+  // FÜGE DIESE NEUE METHODE HINZU
+  void _scanBarcodeAndPop() async {
+    // Öffne den Scanner und warte auf einen Barcode (String) als Ergebnis
+    final String? barcode = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (context) => const ScannerScreen()),
+    );
+
+    // Wenn ein Barcode zurückgegeben wurde und der Screen noch existiert...
+    if (barcode != null && mounted) {
+      // ...suche das Produkt in der Datenbank.
+      final foodItem =
+          await ProductDatabaseHelper.instance.getProductByBarcode(barcode);
+
+      // Wenn das Produkt gefunden wurde...
+      if (foodItem != null) {
+        // ...schließe den AddFoodScreen und gib das gefundene Item zurück.
+        Navigator.of(context).pop(foodItem);
+      } else {
+        // Wenn nicht, zeige eine kurze Info-Nachricht.
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Kein Produkt für Barcode "$barcode" gefunden.')),
+          );
+        }
+      }
+    }
   }
 }

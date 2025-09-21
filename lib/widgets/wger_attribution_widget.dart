@@ -20,18 +20,26 @@ class WgerAttributionWidget extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: GestureDetector(
+          // Macht den Text klickbar
           onTap: () async {
-            final uri = Uri.parse("https://wger.de/");
-            if (await canLaunchUrl(uri)) {
-              await launchUrl(uri);
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.snackbar_could_not_open_open_link)),
-              );
+            final uri = Uri.parse("https://wger.de/"); // <-- Geänderte URL
+            try {
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri);
+              } else {
+                throw 'Could not launch $uri';
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content: Text(l10n.snackbar_could_not_open_open_link)),
+                );
+              }
             }
           },
           child: Text(
-            l10n.exerciseDataAttribution,
+            l10n.exerciseDataAttribution, // <-- Geänderter Text
             style: currentTextStyle,
             textAlign: TextAlign.center,
           ),

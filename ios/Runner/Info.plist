@@ -51,5 +51,7 @@
 	<string>Diese App benötigt Zugriff auf Ihre Kamera, um ein Profilbild aufnehmen zu können.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Diese App benötigt keinen Zugriff auf Ihr Mikrofon.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Diese App benötigt Zugriff auf die Kamera, um Produkt-Barcodes zu scannen.</string>
 </dict>
 </plist>

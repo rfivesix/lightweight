@@ -15,6 +15,7 @@ import 'package:lightweight/services/ui_state_service.dart';
 import 'package:lightweight/widgets/nutrition_summary_widget.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import './food_detail_screen.dart';
+import 'package:lightweight/util/date_util.dart';
 
 class NutritionScreen extends StatefulWidget {
   const NutritionScreen({super.key});
@@ -286,6 +287,22 @@ class _NutritionScreenState extends State<NutritionScreen> {
         : "${DateFormat.yMMMMd(locale).format(_selectedDateRange.start)} - ${DateFormat.yMMMMd(locale).format(_selectedDateRange.end)}";
 
     return Scaffold(
+      appBar: AppBar(
+        // Diese Zeile sorgt für den Zurück-Pfeil, wenn man von einem anderen Screen kommt
+        automaticallyImplyLeading: true,
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          l10n.nutritionScreenTitle,
+          style: textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.w900,
+            fontSize: 28,
+            color: textTheme.headlineMedium?.color,
+          ),
+        ),
+      ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         top: true,
@@ -303,15 +320,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         //const SizedBox(height: 16), // <- DIESE ZEILE
-                        Text(
-                          l10n.nutritionScreenTitle,
-                          style: textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.w900,
-                            fontSize: 28,
-                            color: textTheme.headlineMedium?.color,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
+                        //const SizedBox(height: 24),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -643,11 +652,5 @@ class _NutritionScreenState extends State<NutritionScreen> {
         ),
       ),
     );
-  }
-}
-
-extension DateOnlyCompare on DateTime {
-  bool isSameDate(DateTime other) {
-    return year == other.year && month == other.month && day == other.day;
   }
 }

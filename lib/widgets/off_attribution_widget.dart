@@ -1,4 +1,4 @@
-// lib/widgets/off_attribution_widget.dart (Endgültige Korrektur)
+// lib/widgets/off_attribution_widget.dart
 
 import 'package:flutter/material.dart';
 import 'package:lightweight/generated/app_localizations.dart';
@@ -7,7 +7,6 @@ import 'package:url_launcher/url_launcher.dart';
 class OffAttributionWidget extends StatelessWidget {
   final TextStyle? textStyle;
 
-  // KORREKTUR: Der Konstruktor akzeptiert jetzt den 'textStyle'-Parameter
   const OffAttributionWidget({super.key, this.textStyle});
 
   @override
@@ -22,14 +21,22 @@ class OffAttributionWidget extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: GestureDetector(
+          // Macht den Text klickbar
           onTap: () async {
             final uri = Uri.parse("https://openfoodfacts.org/");
-            if (await canLaunchUrl(uri)) {
-              await launchUrl(uri);
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.snackbar_could_not_open_open_link)),
-              );
+            try {
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri);
+              } else {
+                throw 'Could not launch $uri';
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content: Text(l10n.snackbar_could_not_open_open_link)),
+                );
+              }
             }
           },
           child: Text(

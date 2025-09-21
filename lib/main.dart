@@ -3,7 +3,6 @@
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/screens/main_screen.dart';
 import 'package:lightweight/services/profile_service.dart';
@@ -142,10 +141,11 @@ class MyApp extends StatelessWidget {
             foregroundColor: Colors.black,
             centerTitle: false,
           ),
-          textTheme: GoogleFonts.interTextTheme().apply(
-            bodyColor: Colors.black87,
-            displayColor: Colors.black87,
-          ),
+          textTheme: ThemeData.light().textTheme.apply(
+                fontFamily: 'Inter', // Das ist weiterhin korrekt
+                bodyColor: Colors.black87,
+                displayColor: Colors.black87,
+              ),
           // Stellen sicher, dass Akzent sichtbar "lebt"
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
@@ -256,10 +256,11 @@ class MyApp extends StatelessWidget {
             foregroundColor: Colors.white,
             centerTitle: false,
           ),
-          textTheme: GoogleFonts.interTextTheme().apply(
-            bodyColor: Colors.white,
-            displayColor: Colors.white,
-          ),
+          textTheme: ThemeData.dark().textTheme.apply(
+                fontFamily: 'Inter', // Das ist weiterhin korrekt
+                bodyColor: Colors.white,
+                displayColor: Colors.white,
+              ),
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
               backgroundColor: darkScheme.primary,
