@@ -7,6 +7,10 @@ import 'package:lightweight/screens/goals_screen.dart'; // HINZUGEFÜGT: Import 
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:lightweight/services/profile_service.dart'; // HINZUGEFÜGT
+import 'package:lightweight/widgets/summary_card.dart';
+import 'package:lightweight/generated/app_localizations.dart';
+import 'package:lightweight/screens/onboarding_screen.dart';
+
 // HINZUGEFÜGT
 import 'dart:io';
 
@@ -23,6 +27,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   // KORREKTUR: State-Klasse
   late final l10n = AppLocalizations.of(context)!;
+  late final theme = Theme.of(context);
   late String _appVersion = l10n.load_dots; // Wird dynamisch geladen
 
   @override
@@ -112,6 +117,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   builder: (context) => const DataManagementScreen()));
             },
           ),
+          const SizedBox(height: 12),
+          _buildOnboardingCard(context, l10n, theme),
           const SizedBox(height: 24),
 
           // Sektion 2: "ÜBER & RECHTLICHES"
@@ -187,6 +194,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
         onTap: onTap,
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0)),
+      ),
+    );
+  }
+
+  Widget _buildOnboardingCard(
+      BuildContext context, AppLocalizations l10n, ThemeData theme) {
+    return SummaryCard(
+      child: ListTile(
+        leading: Icon(Icons.school_outlined, color: theme.colorScheme.primary),
+        title: Text(
+          l10n.onbShowTutorialAgain,
+          style: theme.textTheme.titleMedium
+              ?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        subtitle: Text(
+          l10n.onbFinishBody, // kurzer Erklärungstext wiederverwendet
+          style: theme.textTheme.bodyMedium,
+        ),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+          );
+        },
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }

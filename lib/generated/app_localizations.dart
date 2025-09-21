@@ -1735,6 +1735,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Date & time of measurement'**
   String get date_and_time_of_measurement;
+
+  /// Onboarding slide 1 title
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Lightweight'**
+  String get onbWelcomeTitle;
+
+  /// Onboarding slide 1 description
+  ///
+  /// In en, this message translates to:
+  /// **'Let’s start by setting personal goals to guide training and nutrition.'**
+  String get onbWelcomeBody;
+
+  /// Onboarding slide 2 title
+  ///
+  /// In en, this message translates to:
+  /// **'Track everything'**
+  String get onbTrackTitle;
+
+  /// Onboarding slide 2 description
+  ///
+  /// In en, this message translates to:
+  /// **'Log nutrition, workouts, and measurements — all in one place.'**
+  String get onbTrackBody;
+
+  /// Onboarding slide 3 title
+  ///
+  /// In en, this message translates to:
+  /// **'Offline-first & privacy'**
+  String get onbPrivacyTitle;
+
+  /// Onboarding slide 3 description
+  ///
+  /// In en, this message translates to:
+  /// **'Your data stays on the device. No cloud accounts, no background sync.'**
+  String get onbPrivacyBody;
+
+  /// Onboarding final slide title
+  ///
+  /// In en, this message translates to:
+  /// **'All set'**
+  String get onbFinishTitle;
+
+  /// Onboarding final slide description
+  ///
+  /// In en, this message translates to:
+  /// **'You’re ready to explore the app. You can adjust settings anytime.'**
+  String get onbFinishBody;
+
+  /// Final button label to finish onboarding
+  ///
+  /// In en, this message translates to:
+  /// **'Let’s go!'**
+  String get onbFinishCta;
+
+  /// Settings item to reopen onboarding
+  ///
+  /// In en, this message translates to:
+  /// **'Show tutorial again'**
+  String get onbShowTutorialAgain;
+
+  /// Optional CTA linking to Goals screen from onboarding
+  ///
+  /// In en, this message translates to:
+  /// **'Set goals'**
+  String get onbSetGoalsCta;
+
+  /// Onboarding header title
+  ///
+  /// In en, this message translates to:
+  /// **'Tutorial'**
+  String get onbHeaderTitle;
+
+  /// Skip button label in onboarding header
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get onbHeaderSkip;
+
+  /// Back button in onboarding footer
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get onbBack;
+
+  /// Next button in onboarding footer
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get onbNext;
+
+  /// Guide banner title in onboarding
+  ///
+  /// In en, this message translates to:
+  /// **'How this tutorial works'**
+  String get onbGuideTitle;
+
+  /// Guide banner description in onboarding
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe between slides or use Next. Tap the buttons on each slide to try features. You can finish anytime with Skip.'**
+  String get onbGuideBody;
+
+  /// CTA to open nutrition tracking from onboarding
+  ///
+  /// In en, this message translates to:
+  /// **'Open nutrition'**
+  String get onbCtaOpenNutrition;
+
+  /// CTA to learn more about privacy/offline
+  ///
+  /// In en, this message translates to:
+  /// **'Learn more'**
+  String get onbCtaLearnMore;
+
+  /// Badge label shown after completing CTA
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get onbBadgeDone;
+
+  /// Hint text on goals slide
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: adjust targets first'**
+  String get onbTipSetGoals;
+
+  /// Hint text on nutrition slide
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: add one entry today'**
+  String get onbTipAddEntry;
+
+  /// Hint on privacy slide about local data control
+  ///
+  /// In en, this message translates to:
+  /// **'You control all data locally'**
+  String get onbTipLocalControl;
+
+  /// Onboarding slide 2 replacement body: step-by-step nutrition logging instructions
+  ///
+  /// In en, this message translates to:
+  /// **'How to log nutrition:\n• Open the Food tab.\n• Tap the + button.\n• Search products or scan a barcode.\n• Adjust portion and time.\n• Save to your diary.'**
+  String get onbTrackHowBody;
+
+  /// Onboarding slide title for measurements
+  ///
+  /// In en, this message translates to:
+  /// **'Track measurements'**
+  String get onbMeasureTitle;
+
+  /// Step-by-step instructions for adding measurements
+  ///
+  /// In en, this message translates to:
+  /// **'How to add measurements:\n• Open the Stats tab.\n• Tap the + button.\n• Choose a metric (e.g., weight, waist, body fat).\n• Enter value and time.\n• Save to your history.'**
+  String get onbMeasureBody;
+
+  /// Hint for measurements slide
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: add today’s weight to start your graph'**
+  String get onbTipMeasureToday;
+
+  /// Onboarding slide title for training routines
+  ///
+  /// In en, this message translates to:
+  /// **'Train with routines'**
+  String get onbTrainTitle;
+
+  /// Instructions for creating a routine and starting a workout
+  ///
+  /// In en, this message translates to:
+  /// **'Create a routine and start a workout:\n• Open the Train tab.\n• Tap Create routine to add exercises and sets.\n• Save the routine.\n• Tap Start to begin, or use “Start empty workout”.'**
+  String get onbTrainBody;
+
+  /// Hint for training slide
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: start an empty workout to log a quick session'**
+  String get onbTipStartWorkout;
 }
 
 class _AppLocalizationsDelegate

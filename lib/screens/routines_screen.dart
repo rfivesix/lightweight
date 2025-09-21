@@ -248,6 +248,8 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
     );
   }
 
+// In RoutinesScreen: _buildEmptyState ersetzen/erweitern
+
   Widget _buildEmptyState(
       BuildContext context, AppLocalizations l10n, TextTheme textTheme) {
     return Center(
@@ -271,6 +273,8 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
               style: textTheme.bodyLarge?.copyWith(color: Colors.grey.shade600),
             ),
             const SizedBox(height: 24),
+
+            // Bestehender Button: Routine erstellen
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 padding:
@@ -278,9 +282,25 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
               ),
               onPressed: _createNewRoutine,
               icon: const Icon(Icons.add),
-              label: Text(l10n.createFirstRoutineButton,
-                  style: textTheme.titleMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onPrimary)),
+              label: Text(
+                l10n.createFirstRoutineButton,
+                style: textTheme.titleMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // NEU: Freies Training starten (sichtbar auch im Empty-State)
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              onPressed: _startEmptyWorkout,
+              icon: const Icon(Icons.play_circle_fill),
+              label: Text(l10n.startEmptyWorkoutButton),
             ),
           ],
         ),

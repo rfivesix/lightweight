@@ -5,7 +5,11 @@ import 'package:file_picker/file_picker.dart';
 import 'package:lightweight/data/backup_manager.dart';
 import 'package:lightweight/data/import_manager.dart';
 import 'package:lightweight/generated/app_localizations.dart';
+import 'package:lightweight/screens/exercise_mapping_screen.dart';
 import 'package:lightweight/widgets/summary_card.dart';
+import 'package:lightweight/data/workout_database_helper.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // NEU
+import 'package:flutter/services.dart'; // NEU (Clipboard)
 
 class DataManagementScreen extends StatefulWidget {
   const DataManagementScreen({super.key});
@@ -19,6 +23,19 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
   bool _isFullBackupRunning = false;
   bool _isCsvExportRunning = false;
   bool _isMigrationRunning = false;
+  String? _autoBackupDir; // NEU
+  @override
+  void initState() {
+    super.initState();
+    _loadAutoBackupDir(); // NEU
+  }
+
+  Future<void> _loadAutoBackupDir() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _autoBackupDir = prefs.getString('auto_backup_dir');
+    });
+  }
 
   // --- UNVERÄNDERT: Logik für Komplett-Backup ---
   void _performFullExport() async {
@@ -67,11 +84,32 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
 
     if (confirmed == true) {
       setState(() => _isFullBackupRunning = true);
-      final success = await BackupManager().importFullBackup(filePath);
+      bool success = await BackupManager().importFullBackupAuto(filePath);
+      if (!success) {
+        // ggf. verschlüsselte Datei – Passwort abfragen und erneut versuchen
+        final pw = await _askPassword(title: 'Enter password to import backup');
+        if (pw != null && pw.isNotEmpty) {
+          success = await BackupManager()
+              .importFullBackupAuto(filePath, passphrase: pw);
+        }
+      }
+      if (!mounted) return;
+      setState(() => _isFullBackupRunning = false);
       if (!mounted) return;
       setState(() => _isFullBackupRunning = false);
 
       if (success) {
+        // Neu: Unbekannte Übungsnamen ermitteln und ggf. Mapping anbieten
+        final unknown =
+            await WorkoutDatabaseHelper.instance.findUnknownExerciseNames();
+        if (mounted && unknown.isNotEmpty) {
+          final bool? changed = await Navigator.of(context).push<bool>(
+            MaterialPageRoute(
+                builder: (_) => ExerciseMappingScreen(unknownNames: unknown)),
+          );
+          // Optional: Nach Anwendung erneut prüfen/refreshen, aber keine Pflicht.
+        }
+
         await showDialog(
           context: context,
           barrierDismissible: false,
@@ -80,8 +118,9 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
             content: Text(l10n.snackbarImportSuccessContent),
             actions: [
               FilledButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(l10n.snackbarButtonOK))
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(l10n.snackbarButtonOK),
+              ),
             ],
           ),
         );
@@ -100,6 +139,16 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     if (!mounted) return;
     setState(() => _isMigrationRunning = false);
 
+    if (count > 0) {
+      final unknown =
+          await WorkoutDatabaseHelper.instance.findUnknownExerciseNames();
+      if (mounted && unknown.isNotEmpty) {
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+              builder: (_) => ExerciseMappingScreen(unknownNames: unknown)),
+        );
+      }
+    }
     final l10n = AppLocalizations.of(context)!;
     if (count > 0) {
       ScaffoldMessenger.of(context)
@@ -155,9 +204,13 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
               // --- bestehender Inhalt bleibt unverändert ---
               _buildFullBackupCard(context, l10n, theme),
               const SizedBox(height: 16),
+              _buildAutoBackupCard(context, l10n, theme),
+              const SizedBox(height: 16),
               _buildCsvExportCard(context, l10n, theme),
               const SizedBox(height: 16),
               _buildMigrationCard(context, l10n, theme),
+              const SizedBox(height: 16),
+              _buildExerciseMappingCard(context, l10n, theme),
             ],
           ),
         ),
@@ -202,6 +255,34 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                 ),
               ],
             ),
+            const SizedBox(height: 8),
+// NEU: Verschlüsselt exportieren
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.lock_outline),
+                label: const Text('Verschlüsselt exportieren'),
+                onPressed: _isFullBackupRunning
+                    ? null
+                    : () async {
+                        final pw = await _askPassword(
+                            title: 'Password for encrypted export');
+                        if (pw == null || pw.isEmpty) return;
+                        setState(() => _isFullBackupRunning = true);
+                        final ok =
+                            await BackupManager().exportFullBackupEncrypted(pw);
+                        if (!mounted) return;
+                        setState(() => _isFullBackupRunning = false);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text(ok
+                                  ? 'Verschlüsseltes Backup geteilt.'
+                                  : 'Export fehlgeschlagen.')),
+                        );
+                      },
+              ),
+            ),
+
             if (_isFullBackupRunning)
               const Padding(
                 padding: EdgeInsets.only(top: 16.0),
@@ -309,6 +390,183 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
       trailing: const Icon(Icons.chevron_right),
       onTap: onTap,
       contentPadding: EdgeInsets.zero,
+    );
+  }
+
+  Widget _buildExerciseMappingCard(
+      BuildContext context, AppLocalizations l10n, ThemeData theme) {
+    return SummaryCard(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Übungen zuordnen', style: theme.textTheme.headlineSmall),
+            const SizedBox(height: 8),
+            Text(
+              'Unbekannte Namen aus Logs auf wger-Übungen mappen.',
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.rule_folder_outlined),
+                label: const Text('Mapping starten'),
+                onPressed: _openExerciseMapping,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+// lib/screens/data_management_screen.dart – Auszug: neue Card
+  Widget _buildAutoBackupCard(
+      BuildContext context, AppLocalizations l10n, ThemeData theme) {
+    return SummaryCard(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Automatische Backups', style: theme.textTheme.headlineSmall),
+            const SizedBox(height: 8),
+            Text(
+              'Legt periodisch eine Sicherung im Ordner ab. Derzeitiger Ordner:',
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 8),
+            SelectableText(
+              _autoBackupDir ?? 'App-Dokumente/Backups (Standard)',
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.folder_open),
+                    label: const Text('Ordner wählen'),
+                    onPressed: _pickAutoBackupDirectory,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.copy),
+                    label: const Text('Pfad kopieren'),
+                    onPressed:
+                        (_autoBackupDir == null || _autoBackupDir!.isEmpty)
+                            ? null
+                            : _copyAutoBackupPathToClipboard,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.backup),
+                label: const Text('Jetzt Auto-Backup prüfen & ausführen'),
+                onPressed: () async {
+                  final ok = await BackupManager().runAutoBackupIfDue(
+                    interval: const Duration(days: 1),
+                    encrypted: false,
+                    passphrase: null,
+                    retention: 7,
+                    dirPath: _autoBackupDir,
+                    force: true, // NEU: sofort ausführen
+                  );
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text(ok
+                            ? 'Auto-Backup durchgeführt.'
+                            : 'Auto-Backup fehlgeschlagen oder abgebrochen.')),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openExerciseMapping() async {
+    final unknown =
+        await WorkoutDatabaseHelper.instance.findUnknownExerciseNames();
+    if (!mounted) return;
+    if (unknown.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Keine unbekannten Übungen gefunden')),
+      );
+      return;
+    }
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+          builder: (_) => ExerciseMappingScreen(unknownNames: unknown)),
+    );
+  }
+
+  Future<void> _pickAutoBackupDirectory() async {
+    // Directory-Picker (FilePicker unterstützt getDirectoryPath)
+    final path = await FilePicker.platform.getDirectoryPath();
+    if (path == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auto_backup_dir', path);
+    setState(() => _autoBackupDir = path);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Auto-Backup-Ordner gesetzt:\n$path')),
+    );
+  }
+
+  Future<void> _copyAutoBackupPathToClipboard() async {
+    final path = _autoBackupDir;
+    if (path == null || path.isEmpty) return;
+    await Clipboard.setData(ClipboardData(text: path));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Pfad kopiert')),
+    );
+  }
+
+  Future<String?> _askPassword({required String title}) async {
+    final controller = TextEditingController();
+    bool obscure = true;
+    return showDialog<String>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(title),
+          content: TextField(
+            controller: controller,
+            obscureText: obscure,
+            decoration: InputDecoration(
+              labelText: 'Password',
+              suffixIcon: IconButton(
+                icon: Icon(obscure ? Icons.visibility_off : Icons.visibility),
+                onPressed: () => setState(() => obscure = !obscure),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(null),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () =>
+                  Navigator.of(context).pop(controller.text.trim()),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -889,4 +889,104 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get date_and_time_of_measurement => 'Datum & Uhrzeit der Messung';
+
+  @override
+  String get onbWelcomeTitle => 'Willkommen bei Lightweight';
+
+  @override
+  String get onbWelcomeBody =>
+      'Starte mit deinen persönlichen Zielen für Training und Ernährung.';
+
+  @override
+  String get onbTrackTitle => 'Alles tracken';
+
+  @override
+  String get onbTrackBody =>
+      'Erfasse Ernährung, Workouts und Messwerte — alles an einem Ort.';
+
+  @override
+  String get onbPrivacyTitle => 'Offline-first & Privatsphäre';
+
+  @override
+  String get onbPrivacyBody =>
+      'Deine Daten bleiben auf dem Gerät. Keine Cloud-Konten, kein Hintergrund-Sync.';
+
+  @override
+  String get onbFinishTitle => 'Alles bereit';
+
+  @override
+  String get onbFinishBody =>
+      'Du kannst loslegen. Einstellungen lassen sich jederzeit anpassen.';
+
+  @override
+  String get onbFinishCta => 'Los geht’s!';
+
+  @override
+  String get onbShowTutorialAgain => 'Tutorial erneut anzeigen';
+
+  @override
+  String get onbSetGoalsCta => 'Ziele festlegen';
+
+  @override
+  String get onbHeaderTitle => 'Tutorial';
+
+  @override
+  String get onbHeaderSkip => 'Überspringen';
+
+  @override
+  String get onbBack => 'Zurück';
+
+  @override
+  String get onbNext => 'Weiter';
+
+  @override
+  String get onbGuideTitle => 'So funktioniert das Tutorial';
+
+  @override
+  String get onbGuideBody =>
+      'Wische zwischen den Folien oder nutze Weiter. Tippe die Buttons auf jeder Folie, um Funktionen auszuprobieren. Du kannst jederzeit über Überspringen beenden.';
+
+  @override
+  String get onbCtaOpenNutrition => 'Ernährung öffnen';
+
+  @override
+  String get onbCtaLearnMore => 'Mehr erfahren';
+
+  @override
+  String get onbBadgeDone => 'Erledigt';
+
+  @override
+  String get onbTipSetGoals => 'Tipp: Lege zuerst deine Ziele fest';
+
+  @override
+  String get onbTipAddEntry => 'Tipp: Füge heute einen Eintrag hinzu';
+
+  @override
+  String get onbTipLocalControl => 'Du kontrollierst alle Daten lokal';
+
+  @override
+  String get onbTrackHowBody =>
+      'So erfasst du Ernährung:\n• Öffne den Tab „Food“.\n• Tippe auf das + Symbol.\n• Suche Produkte oder scanne einen Barcode.\n• Passe Portion und Uhrzeit an.\n• Speichere in deinem Tagebuch.';
+
+  @override
+  String get onbMeasureTitle => 'Messwerte erfassen';
+
+  @override
+  String get onbMeasureBody =>
+      'So fügst du Messungen hinzu:\n• Öffne den Tab „Stats“.\n• Tippe auf das + Symbol.\n• Wähle eine Messgröße (z. B. Gewicht, Taille, KFA).\n• Gib Wert und Uhrzeit ein.\n• Speichere deinen Eintrag.';
+
+  @override
+  String get onbTipMeasureToday =>
+      'Tipp: Trage dein heutiges Gewicht ein, um den Graphen zu starten';
+
+  @override
+  String get onbTrainTitle => 'Trainieren mit Routinen';
+
+  @override
+  String get onbTrainBody =>
+      'Routine erstellen und Workout starten:\n• Öffne den Tab „Train“.\n• Tippe auf Routine erstellen und füge Übungen und Sätze hinzu.\n• Speichere die Routine.\n• Tippe auf Start, um zu beginnen – oder nutze „Freies Training starten“.';
+
+  @override
+  String get onbTipStartWorkout =>
+      'Tipp: Starte ein freies Training für eine schnelle Einheit';
 }

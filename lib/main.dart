@@ -8,6 +8,8 @@ import 'package:lightweight/screens/main_screen.dart';
 import 'package:lightweight/services/profile_service.dart';
 import 'package:lightweight/services/workout_session_manager.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:lightweight/screens/onboarding_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,6 +28,11 @@ void main() {
       child: const MyApp(),
     ),
   );
+}
+
+Future<bool> _hasSeenOnboarding() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool('hasSeenOnboarding') == true;
 }
 
 class MyApp extends StatelessWidget {
@@ -310,7 +317,18 @@ class MyApp extends StatelessWidget {
           theme: baseLightTheme,
           darkTheme: baseDarkTheme,
           themeMode: ThemeMode.system,
-          home: const MainScreen(),
+          home: FutureBuilder<bool>(
+            future: _hasSeenOnboarding(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+              final seen = snapshot.data ?? false;
+              return seen ? const MainScreen() : const OnboardingScreen();
+            },
+          ),
         );
       },
     );

@@ -885,4 +885,104 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get date_and_time_of_measurement => 'Date & time of measurement';
+
+  @override
+  String get onbWelcomeTitle => 'Welcome to Lightweight';
+
+  @override
+  String get onbWelcomeBody =>
+      'Let’s start by setting personal goals to guide training and nutrition.';
+
+  @override
+  String get onbTrackTitle => 'Track everything';
+
+  @override
+  String get onbTrackBody =>
+      'Log nutrition, workouts, and measurements — all in one place.';
+
+  @override
+  String get onbPrivacyTitle => 'Offline-first & privacy';
+
+  @override
+  String get onbPrivacyBody =>
+      'Your data stays on the device. No cloud accounts, no background sync.';
+
+  @override
+  String get onbFinishTitle => 'All set';
+
+  @override
+  String get onbFinishBody =>
+      'You’re ready to explore the app. You can adjust settings anytime.';
+
+  @override
+  String get onbFinishCta => 'Let’s go!';
+
+  @override
+  String get onbShowTutorialAgain => 'Show tutorial again';
+
+  @override
+  String get onbSetGoalsCta => 'Set goals';
+
+  @override
+  String get onbHeaderTitle => 'Tutorial';
+
+  @override
+  String get onbHeaderSkip => 'Skip';
+
+  @override
+  String get onbBack => 'Back';
+
+  @override
+  String get onbNext => 'Next';
+
+  @override
+  String get onbGuideTitle => 'How this tutorial works';
+
+  @override
+  String get onbGuideBody =>
+      'Swipe between slides or use Next. Tap the buttons on each slide to try features. You can finish anytime with Skip.';
+
+  @override
+  String get onbCtaOpenNutrition => 'Open nutrition';
+
+  @override
+  String get onbCtaLearnMore => 'Learn more';
+
+  @override
+  String get onbBadgeDone => 'Done';
+
+  @override
+  String get onbTipSetGoals => 'Tip: adjust targets first';
+
+  @override
+  String get onbTipAddEntry => 'Tip: add one entry today';
+
+  @override
+  String get onbTipLocalControl => 'You control all data locally';
+
+  @override
+  String get onbTrackHowBody =>
+      'How to log nutrition:\n• Open the Food tab.\n• Tap the + button.\n• Search products or scan a barcode.\n• Adjust portion and time.\n• Save to your diary.';
+
+  @override
+  String get onbMeasureTitle => 'Track measurements';
+
+  @override
+  String get onbMeasureBody =>
+      'How to add measurements:\n• Open the Stats tab.\n• Tap the + button.\n• Choose a metric (e.g., weight, waist, body fat).\n• Enter value and time.\n• Save to your history.';
+
+  @override
+  String get onbTipMeasureToday =>
+      'Tip: add today’s weight to start your graph';
+
+  @override
+  String get onbTrainTitle => 'Train with routines';
+
+  @override
+  String get onbTrainBody =>
+      'Create a routine and start a workout:\n• Open the Train tab.\n• Tap Create routine to add exercises and sets.\n• Save the routine.\n• Tap Start to begin, or use “Start empty workout”.';
+
+  @override
+  String get onbTipStartWorkout =>
+      'Tip: start an empty workout to log a quick session';
 }

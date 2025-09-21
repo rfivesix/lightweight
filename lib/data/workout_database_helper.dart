@@ -663,4 +663,35 @@ class WorkoutDatabaseHelper {
       }
     });
   }
+
+  Future<List<String>> findUnknownExerciseNames() async {
+    final db = await database;
+    final rows = await db.rawQuery('''
+    SELECT DISTINCT sl.exercise_name
+    FROM set_logs sl
+    LEFT JOIN exercises e
+      ON e.name_de = sl.exercise_name OR e.name_en = sl.exercise_name
+    WHERE e.id IS NULL
+    ORDER BY sl.exercise_name COLLATE NOCASE ASC
+  ''');
+    return rows
+        .map((r) => (r['exercise_name'] as String?) ?? '')
+        .where((s) => s.isNotEmpty)
+        .toList();
+  }
+
+  Future<void> applyExerciseNameMapping(Map<String, String> map) async {
+    if (map.isEmpty) return;
+    final db = await database;
+    await db.transaction((txn) async {
+      for (final e in map.entries) {
+        await txn.update(
+          'set_logs',
+          {'exercise_name': e.value},
+          where: 'exercise_name = ?',
+          whereArgs: [e.key],
+        );
+      }
+    });
+  }
 }

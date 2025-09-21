@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/models/set_log.dart';
+import 'package:lightweight/util/mapping_prefs.dart';
 
 class ImportManager {
   Future<int> importHevyCsv() async {
@@ -46,6 +47,7 @@ class ImportManager {
 
       final db = WorkoutDatabaseHelper.instance;
       int importedWorkouts = 0;
+      final knownMap = await MappingPrefs.load();
       for (var group in workoutGroups.values) {
         final firstRow = group.first;
         final newLog = await db.startWorkout(routineName: firstRow['title']);
@@ -66,9 +68,12 @@ class ImportManager {
 
         int setOrder = 0;
         for (var row in group) {
+          final rawName = row['exercise_title']?.toString() ?? '';
+          final mappedName = knownMap[rawName.trim().toLowerCase()] ?? rawName;
+
           final setLog = SetLog(
             workoutLogId: newLog.id!,
-            exerciseName: row['exercise_title'],
+            exerciseName: mappedName, // <— statt rawName
             setType: row['set_type'] ?? 'normal',
             weightKg: double.tryParse(row['weight_kg']?.toString() ?? ''),
             reps: int.tryParse(row['reps']?.toString() ?? ''),
