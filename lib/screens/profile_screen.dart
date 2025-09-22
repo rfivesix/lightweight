@@ -4,11 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/screens/data_management_screen.dart';
 import 'package:lightweight/screens/goals_screen.dart'; // HINZUGEFÜGT: Import für den neuen GoalsScreen
+import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:lightweight/services/profile_service.dart'; // HINZUGEFÜGT
-import 'package:lightweight/widgets/summary_card.dart';
-import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/screens/onboarding_screen.dart';
 
 // HINZUGEFÜGT
@@ -52,13 +51,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       body: ListView(
-        padding: const EdgeInsets.all(16.0),
+        padding: DesignConstants.cardPadding,
         children: [
           // HINZUGEFÜGT: Profilbild-Sektion
           _buildSectionTitle(context, l10n.profile_capslock),
           SummaryCard(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: DesignConstants.cardPadding,
               child: Column(
                 children: [
                   GestureDetector(
@@ -92,7 +91,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: DesignConstants.spacingXL),
           // Sektion 1: "EINSTELLUNGEN"
           _buildSectionTitle(context, l10n.settings_capslock),
           _buildNavigationCard(
@@ -106,7 +105,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   MaterialPageRoute(builder: (context) => const GoalsScreen()));
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: DesignConstants.spacingM),
           _buildNavigationCard(
             context: context,
             icon: Icons.import_export_rounded,
@@ -117,9 +116,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   builder: (context) => const DataManagementScreen()));
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: DesignConstants.spacingM),
           _buildOnboardingCard(context, l10n, theme),
-          const SizedBox(height: 24),
+          const SizedBox(height: DesignConstants.spacingXL),
 
           // Sektion 2: "ÜBER & RECHTLICHES"
           _buildSectionTitle(context, l10n.about_and_legal_capslock),
@@ -133,11 +132,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   context: context,
                   builder: (context) => AlertDialog(
                         title: Text(l10n.attribution_title),
-                        content: const SingleChildScrollView(
-                          child: Text(
-                              "Diese App verwendet Daten von externen Quellen:\n\n"
-                              "● Übungsdaten und Bilder von wger (wger.de), lizenziert unter der CC-BY-SA 4.0 Lizenz.\n\n"
-                              "● Lebensmittel-Datenbank von Open Food Facts (openfoodfacts.org), verfügbar unter der Open Database License (ODbL)."),
+                        content: SingleChildScrollView(
+                          child: Text(l10n.attributionText),
                         ),
                         actions: [
                           TextButton(
@@ -147,7 +143,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ));
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: DesignConstants.spacingM),
           SummaryCard(
             child: ListTile(
               leading: const Icon(Icons.code_rounded),

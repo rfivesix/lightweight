@@ -1,11 +1,14 @@
 // lib/models/lightweight_backup.dart
 
+import 'package:lightweight/models/exercise.dart';
 import 'package:lightweight/models/food_entry.dart';
 import 'package:lightweight/models/food_item.dart';
 import 'package:lightweight/models/measurement.dart';
 import 'package:lightweight/models/measurement_session.dart';
 import 'package:lightweight/models/routine.dart';
+import 'package:lightweight/models/routine_exercise.dart';
 import 'package:lightweight/models/set_log.dart';
+import 'package:lightweight/models/set_template.dart';
 import 'package:lightweight/models/water_entry.dart';
 import 'package:lightweight/models/workout_log.dart';
 
@@ -33,11 +36,10 @@ class LightweightBackup {
     required this.userPreferences, // HINZUGEFÜGT
   });
 
-  // Diese Factory nutzt jetzt die exakten Konstruktoren und .fromMap-Methoden deiner Modelle
+  // KORRIGIERTE VERSION
   factory LightweightBackup.fromJson(Map<String, dynamic> json) {
     return LightweightBackup(
       schemaVersion: json['schemaVersion'] as int? ?? 1,
-
       foodEntries: (json['foodEntries'] as List<dynamic>?)
               ?.map((e) => FoodEntry(
                     id: e['id'],
@@ -48,21 +50,16 @@ class LightweightBackup {
                   ))
               .toList() ??
           [],
-
       waterEntries: (json['waterEntries'] as List<dynamic>?)
               ?.map((e) => WaterEntry.fromMap(e as Map<String, dynamic>))
               .toList() ??
           [],
-
       favoriteBarcodes: List<String>.from(json['favoriteBarcodes'] ?? []),
-
-      // Hier wird die Sonderregel für 'source' beachtet
       customFoodItems: (json['customFoodItems'] as List<dynamic>?)
               ?.map((e) => FoodItem.fromMap(e as Map<String, dynamic>,
                   source: FoodItemSource.user))
               .toList() ??
           [],
-
       measurementSessions: (json['measurementSessions'] as List<dynamic>?)
               ?.map((s) {
             final sessionMap = s as Map<String, dynamic>;
@@ -78,15 +75,28 @@ class LightweightBackup {
           }).toList() ??
           [],
 
+      // KORRIGIERT: Detaillierte Deserialisierung für Routinen
       routines: (json['routines'] as List<dynamic>?)?.map((r) {
             final routineMap = r as Map<String, dynamic>;
-            // Hier müssten wir die Routine und ihre Kinder (Exercises, Sets) manuell zusammenbauen
-            // Dies ist ein Platzhalter und muss ggf. verfeinert werden, je nachdem,
-            // wie detailliert die Routine-Modelle sind.
             return Routine(
               id: routineMap['id'],
               name: routineMap['name'],
-              exercises: [], // TODO: Detaillierte Deserialisierung für Routine-Exercises
+              exercises: (routineMap['exercises'] as List<dynamic>?)?.map((re) {
+                    final reMap = re as Map<String, dynamic>;
+                    return RoutineExercise(
+                      id: reMap['id'],
+                      // Rekursiver Aufruf der .fromMap Konstruktoren
+                      exercise: Exercise.fromMap(
+                          reMap['exercise'] as Map<String, dynamic>),
+                      setTemplates: (reMap['setTemplates'] as List<dynamic>?)
+                              ?.map((st) => SetTemplate.fromMap(
+                                  st as Map<String, dynamic>))
+                              .toList() ??
+                          [],
+                      pauseSeconds: reMap['pause_seconds'],
+                    );
+                  }).toList() ??
+                  [],
             );
           }).toList() ??
           [],

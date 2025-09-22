@@ -1,10 +1,10 @@
-// lib/screens/goals_screen.dart (Der umbenannte "Meine Ziele"-Screen)
+// lib/screens/goals_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:lightweight/util/design_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 
-// KORREKTUR: Der Klassenname wurde zu GoalsScreen geändert
 class GoalsScreen extends StatefulWidget {
   const GoalsScreen({super.key});
 
@@ -12,7 +12,6 @@ class GoalsScreen extends StatefulWidget {
   State<GoalsScreen> createState() => _GoalsScreenState();
 }
 
-// KORREKTUR: Der State-Klassenname wurde zu _GoalsScreenState geändert
 class _GoalsScreenState extends State<GoalsScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = true;
@@ -23,19 +22,31 @@ class _GoalsScreenState extends State<GoalsScreen> {
   final _fatController = TextEditingController();
   final _waterController = TextEditingController();
   final _heightController = TextEditingController();
-
   final _sugarController = TextEditingController();
   final _fiberController = TextEditingController();
   final _saltController = TextEditingController();
+
+  double _proteinPercent = 40;
+  double _carbsPercent = 40;
+  double _fatPercent = 20;
+
+  // KORREKTUR: Farben zentral definieren, passend zum NutritionSummaryWidget
+  final Map<String, Color> _macroColors = {
+    'protein': Colors.red.shade400,
+    'carbs': Colors.green.shade400,
+    'fat': Colors.purple.shade300,
+  };
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
+    _caloriesController.addListener(_recalculateGramsFromSliders);
   }
 
   @override
   void dispose() {
+    _caloriesController.removeListener(_recalculateGramsFromSliders);
     _caloriesController.dispose();
     _proteinController.dispose();
     _carbsController.dispose();
@@ -89,46 +100,102 @@ class _GoalsScreenState extends State<GoalsScreen> {
     }
   }
 
+  void _recalculateGramsFromSliders() {
+    final totalCalories = int.tryParse(_caloriesController.text) ?? 0;
+    if (totalCalories <= 0) return;
+
+    final proteinGrams = (totalCalories * (_proteinPercent / 100)) / 4;
+    final carbsGrams = (totalCalories * (_carbsPercent / 100)) / 4;
+    final fatGrams = (totalCalories * (_fatPercent / 100)) / 9;
+
+    _proteinController.text = proteinGrams.round().toString();
+    _carbsController.text = carbsGrams.round().toString();
+    _fatController.text = fatGrams.round().toString();
+  }
+
+  void _updateSliderValues(String changedMacro, double value) {
+    setState(() {
+      if (changedMacro == 'protein') {
+        _proteinPercent = value;
+      } else if (changedMacro == 'carbs') {
+        _carbsPercent = value;
+      } else if (changedMacro == 'fat') {
+        _fatPercent = value;
+      }
+
+      double sum = _proteinPercent + _carbsPercent + _fatPercent;
+      if (sum.round() != 100) {
+        double diff = 100 - sum;
+        if (changedMacro == 'protein') {
+          _carbsPercent += diff / 2;
+          _fatPercent += diff / 2;
+        } else if (changedMacro == 'carbs') {
+          _proteinPercent += diff / 2;
+          _fatPercent += diff / 2;
+        } else {
+          _proteinPercent += diff / 2;
+          _carbsPercent += diff / 2;
+        }
+      }
+
+      // Clamp values between 0 and 100
+      _proteinPercent = _proteinPercent.clamp(0, 100);
+      _carbsPercent = _carbsPercent.clamp(0, 100);
+      _fatPercent = _fatPercent.clamp(0, 100);
+    });
+    _recalculateGramsFromSliders();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: true,
-        elevation: 0,
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
         title: Text(
-          "Goals",
+          l10n.my_goals,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w900,
               ),
         ),
+        // KORREKTUR: Save-Button in die AppBar verschoben
+        actions: [
+          TextButton(
+            onPressed: _saveSettings,
+            child: Text(
+              l10n.buttonSave,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          )
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+              padding: DesignConstants.cardPadding,
               child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text("Persönliche Daten",
+                    Text(l10n.personalData,
                         style: Theme.of(context).textTheme.headlineSmall),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: DesignConstants.spacingL),
                     _buildSettingsField(
                         controller: _heightController,
                         label: l10n.profileUserHeight),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: DesignConstants.spacingXL),
                     Text(l10n.profileDailyGoals,
                         style: Theme.of(context).textTheme.headlineSmall),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: DesignConstants.spacingL),
                     _buildSettingsField(
                         controller: _caloriesController, label: l10n.calories),
+                    const SizedBox(height: DesignConstants.spacingL),
+                    _buildMacroCalculator(),
+                    const SizedBox(height: DesignConstants.spacingL),
                     _buildSettingsField(
                         controller: _proteinController, label: l10n.protein),
                     _buildSettingsField(
@@ -137,30 +204,80 @@ class _GoalsScreenState extends State<GoalsScreen> {
                         controller: _fatController, label: l10n.fat),
                     _buildSettingsField(
                         controller: _waterController, label: l10n.water),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: DesignConstants.spacingXL),
                     Text("Detail-Nährwerte",
                         style: Theme.of(context).textTheme.headlineSmall),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: DesignConstants.spacingL),
                     _buildSettingsField(
                         controller: _sugarController, label: l10n.sugar),
                     _buildSettingsField(
                         controller: _fiberController, label: l10n.fiber),
                     _buildSettingsField(
                         controller: _saltController, label: l10n.salt),
-                    const SizedBox(height: 32),
-                    ElevatedButton(
-                      onPressed: _saveSettings,
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.primary,
-                          foregroundColor: colorScheme.onPrimary,
-                          padding: const EdgeInsets.symmetric(vertical: 16)),
-                      child: Text(l10n.buttonSave,
-                          style: const TextStyle(fontSize: 18)),
-                    ),
+
+                    // KORREKTUR: Der untere Button wurde entfernt
                   ],
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _buildMacroCalculator() {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Text(l10n.macroDistribution,
+              style: Theme.of(context).textTheme.titleMedium),
+          _buildMacroSliderRow(
+              l10n.protein, _proteinPercent, _macroColors['protein']!),
+          _buildMacroSliderRow(
+              l10n.carbs, _carbsPercent, _macroColors['carbs']!),
+          _buildMacroSliderRow(l10n.fat, _fatPercent, _macroColors['fat']!),
+        ],
+      ),
+    );
+  }
+
+  // KORREKTUR: Das ist die neue Methode zum Stylen der Slider
+  Widget _buildMacroSliderRow(String macro, double value, Color color) {
+    return Row(
+      children: [
+        SizedBox(width: 70, child: Text("${macro.capitalize()}:")),
+        Expanded(
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              trackHeight: 12.0, // Dicke des Sliders
+              thumbShape: const RoundSliderThumbShape(
+                  enabledThumbRadius: 8.0), // Kleinerer Kreis
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 16.0),
+              activeTrackColor: color, // Farbe für den aktiven Teil
+              inactiveTrackColor: color.withOpacity(0.2), // Hintergrundfarbe
+              thumbColor: color, // Farbe des Kreises
+              trackShape:
+                  const RoundedRectSliderTrackShape(), // Abgerundete Ecken
+            ),
+            child: Slider(
+              value: value,
+              min: 0,
+              max: 100,
+              label: '${value.round()}%',
+              onChanged: (newValue) {
+                _updateSliderValues(macro, newValue);
+              },
+            ),
+          ),
+        ),
+        SizedBox(
+            width: 50,
+            child: Text("${value.round()}%", textAlign: TextAlign.right)),
+      ],
     );
   }
 
@@ -181,5 +298,12 @@ class _GoalsScreenState extends State<GoalsScreen> {
         },
       ),
     );
+  }
+}
+
+extension StringExtension on String {
+  String capitalize() {
+    if (isEmpty) return this;
+    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

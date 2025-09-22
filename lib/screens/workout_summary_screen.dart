@@ -1,11 +1,10 @@
 // lib/screens/workout_summary_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/workout_log.dart';
-import 'package:lightweight/util/time_util.dart';
+import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/widgets/workout_summary_bar.dart';
 
@@ -66,7 +65,7 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         automaticallyImplyLeading: false, // Verhindert den Zurück-Pfeil
-        title: Text("Workout Abgeschlossen",
+        title: Text(l10n.workoutSummaryTitle,
             style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -76,7 +75,7 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
           : _log == null
               ? Center(child: Text(l10n.workoutNotFound))
               : Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: DesignConstants.cardPadding,
                   child: Column(
                     children: [
                       // Gesamt-Statistiken
@@ -86,15 +85,15 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
                             _volumePerExercise.values.fold(0, (a, b) => a + b),
                         sets: _log!.sets.length,
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: DesignConstants.spacingXL),
 
                       // Liste der Übungen
                       Expanded(
                         child: ListView(
                           children: [
-                            Text("Übersicht der Übungen",
+                            Text(l10n.workoutSummaryExerciseOverview,
                                 style: textTheme.titleMedium),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: DesignConstants.spacingS),
                             ..._volumePerExercise.entries.map((entry) {
                               return SummaryCard(
                                 child: ListTile(
@@ -110,7 +109,7 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: DesignConstants.spacingXL),
 
                       // Fertig-Button
                       SizedBox(

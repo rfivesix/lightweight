@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:lightweight/generated/app_localizations.dart';
+import 'package:lightweight/util/design_constants.dart';
 
 class AddMenuSheet extends StatelessWidget {
   const AddMenuSheet({super.key});
@@ -23,7 +24,7 @@ class AddMenuSheet extends StatelessWidget {
               style: Theme.of(context).textTheme.titleLarge,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: DesignConstants.spacingXL),
             _buildMenuOption(
               context: context,
               colorScheme: colorScheme,
@@ -31,7 +32,7 @@ class AddMenuSheet extends StatelessWidget {
               title: l10n.startWorkout,
               onTap: () => Navigator.of(context).pop('start_workout'),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: DesignConstants.spacingM),
             _buildMenuOption(
               context: context,
               colorScheme: colorScheme,
@@ -47,7 +48,7 @@ class AddMenuSheet extends StatelessWidget {
               title: l10n.addFoodOption,
               onTap: () => Navigator.of(context).pop('add_food'),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: DesignConstants.spacingM),
             _buildMenuOption(
               context: context,
               colorScheme: colorScheme,

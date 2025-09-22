@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:lightweight/util/design_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/data/product_database_helper.dart';
@@ -288,7 +289,6 @@ class _NutritionScreenState extends State<NutritionScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        // Diese Zeile sorgt für den Zurück-Pfeil, wenn man von einem anderen Screen kommt
         automaticallyImplyLeading: true,
         elevation: 0,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -296,11 +296,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
         centerTitle: false,
         title: Text(
           l10n.nutritionScreenTitle,
-          style: textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.w900,
-            fontSize: 28,
-            color: textTheme.headlineMedium?.color,
-          ),
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
         ),
       ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -319,8 +317,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        //const SizedBox(height: 16), // <- DIESE ZEILE
-                        //const SizedBox(height: 24),
+                        //SizedBox(height: DesignConstants.spacingL), // <- DIESE ZEILE
+                        //SizedBox(height: DesignConstants.spacingXL),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -360,7 +358,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                     : () => _navigateDay(true)),
                           ],
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: DesignConstants.spacingL),
                         Row(
                           children: [
                             _buildFilterButton(l10n.filterToday, '1D'),
@@ -369,7 +367,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
                             _buildFilterButton(l10n.filterAll, 'All'),
                           ],
                         ),
-                        const SizedBox(height: 16), // <- DIESE ZEILE
+                        const SizedBox(
+                            height: DesignConstants.spacingL), // <- DIESE ZEILE
                       ],
                     ),
                   ),
@@ -450,8 +449,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16.0, vertical: 8.0),
                           itemCount: _displayItems.length,
-                          separatorBuilder: (context, index) =>
-                              const SizedBox(height: 12), // KORREKTUR: Trenner
+                          separatorBuilder: (context, index) => const SizedBox(
+                              height: DesignConstants
+                                  .spacingM), // KORREKTUR: Trenner
                           itemBuilder: (context, index) {
                             final item = _displayItems[index];
 

@@ -1676,6 +1676,12 @@ abstract class AppLocalizations {
   /// **'SETTINGS'**
   String get settings_capslock;
 
+  /// No description provided for @settingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsTitle;
+
   /// No description provided for @my_goals.
   ///
   /// In en, this message translates to:
@@ -1915,6 +1921,336 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tip: start an empty workout to log a quick session'**
   String get onbTipStartWorkout;
+
+  /// No description provided for @unitsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'units'**
+  String get unitsSection;
+
+  /// No description provided for @weightUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight units'**
+  String get weightUnit;
+
+  /// No description provided for @lengthUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'unit of length'**
+  String get lengthUnit;
+
+  /// No description provided for @comingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get comingSoon;
+
+  /// No description provided for @noFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'No Favorites'**
+  String get noFavorites;
+
+  /// No description provided for @nothingTrackedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing tracked yet'**
+  String get nothingTrackedYet;
+
+  /// No description provided for @snackbarBarcodeNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No product found for barcode \"{barcode}\".'**
+  String snackbarBarcodeNotFound(String barcode);
+
+  /// No description provided for @categoryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Chest, Back, Legs...'**
+  String get categoryHint;
+
+  /// No description provided for @validatorPleaseEnterCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a category.'**
+  String get validatorPleaseEnterCategory;
+
+  /// No description provided for @dialogEnterPasswordImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter password to import backup'**
+  String get dialogEnterPasswordImport;
+
+  /// No description provided for @dataManagementBackupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lightweight Data Backup'**
+  String get dataManagementBackupTitle;
+
+  /// No description provided for @dataManagementBackupDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up or restore all your app data. Ideal for changing devices.'**
+  String get dataManagementBackupDescription;
+
+  /// No description provided for @exportEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Encrypted'**
+  String get exportEncrypted;
+
+  /// No description provided for @dialogPasswordForExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Password for encrypted export'**
+  String get dialogPasswordForExport;
+
+  /// No description provided for @snackbarEncryptedBackupShared.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted backup shared.'**
+  String get snackbarEncryptedBackupShared;
+
+  /// No description provided for @exportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed.'**
+  String get exportFailed;
+
+  /// No description provided for @csvExportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Data Export (CSV)'**
+  String get csvExportTitle;
+
+  /// No description provided for @csvExportDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Export parts of your data as a CSV file for analysis in other programs.'**
+  String get csvExportDescription;
+
+  /// No description provided for @snackbarSharingNutrition.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing nutrition diary...'**
+  String get snackbarSharingNutrition;
+
+  /// No description provided for @snackbarExportFailedNoEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed. There may be no entries yet.'**
+  String get snackbarExportFailedNoEntries;
+
+  /// No description provided for @snackbarSharingMeasurements.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing measurements...'**
+  String get snackbarSharingMeasurements;
+
+  /// No description provided for @snackbarSharingWorkouts.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing workout history...'**
+  String get snackbarSharingWorkouts;
+
+  /// No description provided for @mapExercisesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Map Exercises'**
+  String get mapExercisesTitle;
+
+  /// No description provided for @mapExercisesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Map unknown names from logs to wger exercises.'**
+  String get mapExercisesDescription;
+
+  /// No description provided for @mapExercisesButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Mapping'**
+  String get mapExercisesButton;
+
+  /// No description provided for @autoBackupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic Backups'**
+  String get autoBackupTitle;
+
+  /// No description provided for @autoBackupDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Periodically saves a backup in the folder. Current folder:'**
+  String get autoBackupDescription;
+
+  /// No description provided for @autoBackupDefaultFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'App-Documents/Backups (Default)'**
+  String get autoBackupDefaultFolder;
+
+  /// No description provided for @autoBackupChooseFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Folder'**
+  String get autoBackupChooseFolder;
+
+  /// No description provided for @autoBackupCopyPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Path'**
+  String get autoBackupCopyPath;
+
+  /// No description provided for @autoBackupRunNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Check & Run Auto-Backup Now'**
+  String get autoBackupRunNow;
+
+  /// No description provided for @snackbarAutoBackupSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-Backup completed.'**
+  String get snackbarAutoBackupSuccess;
+
+  /// No description provided for @snackbarAutoBackupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-Backup failed or was canceled.'**
+  String get snackbarAutoBackupFailed;
+
+  /// No description provided for @noUnknownExercisesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No unknown exercises found'**
+  String get noUnknownExercisesFound;
+
+  /// No description provided for @snackbarAutoBackupFolderSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-backup folder set:\n{path}'**
+  String snackbarAutoBackupFolderSet(String path);
+
+  /// No description provided for @snackbarPathCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Path copied'**
+  String get snackbarPathCopied;
+
+  /// No description provided for @passwordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get passwordLabel;
+
+  /// No description provided for @descriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get descriptionLabel;
+
+  /// No description provided for @involvedMuscles.
+  ///
+  /// In en, this message translates to:
+  /// **'Involved Muscles'**
+  String get involvedMuscles;
+
+  /// No description provided for @primaryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary:'**
+  String get primaryLabel;
+
+  /// No description provided for @secondaryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Secondary:'**
+  String get secondaryLabel;
+
+  /// No description provided for @noMusclesSpecified.
+  ///
+  /// In en, this message translates to:
+  /// **'No muscles specified.'**
+  String get noMusclesSpecified;
+
+  /// No description provided for @noSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'No selection'**
+  String get noSelection;
+
+  /// No description provided for @selectButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Select'**
+  String get selectButton;
+
+  /// No description provided for @applyingChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Applying changes...'**
+  String get applyingChanges;
+
+  /// No description provided for @applyMapping.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply Mapping'**
+  String get applyMapping;
+
+  /// No description provided for @personalData.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal Data'**
+  String get personalData;
+
+  /// No description provided for @macroDistribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Macronutrient Distribution'**
+  String get macroDistribution;
+
+  /// No description provided for @dialogFinishWorkoutBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to finish this workout?'**
+  String get dialogFinishWorkoutBody;
+
+  /// No description provided for @attributionText.
+  ///
+  /// In en, this message translates to:
+  /// **'This app uses data from external sources:\n\n● Exercise data and images from wger (wger.de), licensed under CC-BY-SA 4.0.\n\n● Food database from Open Food Facts (openfoodfacts.org), available under the Open Database License (ODbL).'**
+  String get attributionText;
+
+  /// No description provided for @errorRoutineNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Routine not found'**
+  String get errorRoutineNotFound;
+
+  /// No description provided for @workoutHistoryEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your history is empty'**
+  String get workoutHistoryEmptyTitle;
+
+  /// No description provided for @workoutSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout Complete'**
+  String get workoutSummaryTitle;
+
+  /// No description provided for @workoutSummaryExerciseOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise Overview'**
+  String get workoutSummaryExerciseOverview;
+
+  /// No description provided for @nutritionDiary.
+  ///
+  /// In en, this message translates to:
+  /// **'nutrition diary'**
+  String get nutritionDiary;
 }
 
 class _AppLocalizationsDelegate

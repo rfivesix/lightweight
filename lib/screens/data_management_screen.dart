@@ -6,6 +6,7 @@ import 'package:lightweight/data/backup_manager.dart';
 import 'package:lightweight/data/import_manager.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/screens/exercise_mapping_screen.dart';
+import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // NEU
@@ -87,7 +88,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
       bool success = await BackupManager().importFullBackupAuto(filePath);
       if (!success) {
         // ggf. verschlüsselte Datei – Passwort abfragen und erneut versuchen
-        final pw = await _askPassword(title: 'Enter password to import backup');
+        final pw = await _askPassword(title: l10n.dialogEnterPasswordImport);
         if (pw != null && pw.isNotEmpty) {
           success = await BackupManager()
               .importFullBackupAuto(filePath, passphrase: pw);
@@ -197,19 +198,19 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
+          padding: DesignConstants.cardPadding,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // --- bestehender Inhalt bleibt unverändert ---
               _buildFullBackupCard(context, l10n, theme),
-              const SizedBox(height: 16),
+              const SizedBox(height: DesignConstants.spacingL),
               _buildAutoBackupCard(context, l10n, theme),
-              const SizedBox(height: 16),
+              const SizedBox(height: DesignConstants.spacingL),
               _buildCsvExportCard(context, l10n, theme),
-              const SizedBox(height: 16),
+              const SizedBox(height: DesignConstants.spacingL),
               _buildMigrationCard(context, l10n, theme),
-              const SizedBox(height: 16),
+              const SizedBox(height: DesignConstants.spacingL),
               _buildExerciseMappingCard(context, l10n, theme),
             ],
           ),
@@ -223,17 +224,16 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
       BuildContext context, AppLocalizations l10n, ThemeData theme) {
     return SummaryCard(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: DesignConstants.cardPadding,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Lightweight Datensicherung",
+            Text(l10n.dataManagementBackupTitle,
                 style: theme.textTheme.headlineSmall),
-            const SizedBox(height: 8),
-            Text(
-                "Sichere oder wiederherstelle alle deine App-Daten. Ideal für einen Gerätewechsel.",
+            const SizedBox(height: DesignConstants.spacingS),
+            Text(l10n.dataManagementBackupDescription,
                 style: theme.textTheme.bodyMedium),
-            const SizedBox(height: 16),
+            const SizedBox(height: DesignConstants.spacingL),
             Row(
               children: [
                 Expanded(
@@ -255,18 +255,18 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: DesignConstants.spacingS),
 // NEU: Verschlüsselt exportieren
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
                 icon: const Icon(Icons.lock_outline),
-                label: const Text('Verschlüsselt exportieren'),
+                label: Text(l10n.exportEncrypted),
                 onPressed: _isFullBackupRunning
                     ? null
                     : () async {
                         final pw = await _askPassword(
-                            title: 'Password for encrypted export');
+                            title: l10n.dialogPasswordForExport);
                         if (pw == null || pw.isEmpty) return;
                         setState(() => _isFullBackupRunning = true);
                         final ok =
@@ -276,8 +276,8 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                               content: Text(ok
-                                  ? 'Verschlüsseltes Backup geteilt.'
-                                  : 'Export fehlgeschlagen.')),
+                                  ? l10n.snackbarEncryptedBackupShared
+                                  : l10n.exportFailed)),
                         );
                       },
               ),
@@ -298,45 +298,43 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
       BuildContext context, AppLocalizations l10n, ThemeData theme) {
     return SummaryCard(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: DesignConstants.cardPadding,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Daten-Export (CSV)", style: theme.textTheme.headlineSmall),
-            const SizedBox(height: 8),
-            Text(
-                "Exportiere Teile deiner Daten als CSV-Datei zur Analyse in anderen Programmen.",
-                style: theme.textTheme.bodyMedium),
-            const SizedBox(height: 8),
+            Text(l10n.csvExportTitle, style: theme.textTheme.headlineSmall),
+            const SizedBox(height: DesignConstants.spacingS),
+            Text(l10n.csvExportDescription, style: theme.textTheme.bodyMedium),
+            const SizedBox(height: DesignConstants.spacingS),
             _buildExportTile(
               icon: Icons.restaurant_menu,
-              title: "Ernährungstagebuch",
+              title: l10n.nutritionDiary,
               onTap: _isCsvExportRunning
                   ? null
                   : () => _exportCsv(
                       BackupManager().exportNutritionAsCsv,
-                      "Ernährungstagebuch wird geteilt...",
-                      "Export fehlgeschlagen. Eventuell existieren noch keine Einträge."),
+                      l10n.snackbarSharingNutrition,
+                      l10n.snackbarExportFailedNoEntries),
             ),
             _buildExportTile(
               icon: Icons.monitor_weight_outlined,
-              title: "Messwerte",
+              title: l10n.drawerMeasurements,
               onTap: _isCsvExportRunning
                   ? null
                   : () => _exportCsv(
                       BackupManager().exportMeasurementsAsCsv,
-                      "Messwerte werden geteilt...",
-                      "Export fehlgeschlagen. Eventuell existieren noch keine Einträge."),
+                      l10n.snackbarSharingMeasurements,
+                      l10n.snackbarExportFailedNoEntries),
             ),
             _buildExportTile(
               icon: Icons.fitness_center,
-              title: "Trainingsverlauf",
+              title: l10n.workoutHistoryTitle,
               onTap: _isCsvExportRunning
                   ? null
                   : () => _exportCsv(
                       BackupManager().exportWorkoutsAsCsv,
-                      "Trainingsverlauf wird geteilt...",
-                      "Export fehlgeschlagen. Eventuell existieren noch keine Einträge."),
+                      l10n.snackbarSharingWorkouts,
+                      l10n.snackbarExportFailedNoEntries),
             ),
             if (_isCsvExportRunning)
               const Padding(
@@ -353,14 +351,14 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
       BuildContext context, AppLocalizations l10n, ThemeData theme) {
     return SummaryCard(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: DesignConstants.cardPadding,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(l10n.hevyImportTitle, style: theme.textTheme.headlineSmall),
-            const SizedBox(height: 8),
+            const SizedBox(height: DesignConstants.spacingS),
             Text(l10n.hevyImportDescription, style: theme.textTheme.bodyMedium),
-            const SizedBox(height: 16),
+            const SizedBox(height: DesignConstants.spacingL),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -397,22 +395,22 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
       BuildContext context, AppLocalizations l10n, ThemeData theme) {
     return SummaryCard(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: DesignConstants.cardPadding,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Übungen zuordnen', style: theme.textTheme.headlineSmall),
-            const SizedBox(height: 8),
+            Text(l10n.mapExercisesTitle, style: theme.textTheme.headlineSmall),
+            const SizedBox(height: DesignConstants.spacingS),
             Text(
-              'Unbekannte Namen aus Logs auf wger-Übungen mappen.',
+              l10n.mapExercisesDescription,
               style: theme.textTheme.bodyMedium,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: DesignConstants.spacingL),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.rule_folder_outlined),
-                label: const Text('Mapping starten'),
+                label: Text(l10n.mapExercisesButton),
                 onPressed: _openExerciseMapping,
               ),
             ),
@@ -431,24 +429,24 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Automatische Backups', style: theme.textTheme.headlineSmall),
-            const SizedBox(height: 8),
+            Text(l10n.autoBackupTitle, style: theme.textTheme.headlineSmall),
+            const SizedBox(height: DesignConstants.spacingS),
             Text(
-              'Legt periodisch eine Sicherung im Ordner ab. Derzeitiger Ordner:',
+              l10n.autoBackupDescription,
               style: theme.textTheme.bodyMedium,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: DesignConstants.spacingS),
             SelectableText(
-              _autoBackupDir ?? 'App-Dokumente/Backups (Standard)',
+              _autoBackupDir ?? l10n.autoBackupDefaultFolder,
               style: theme.textTheme.bodySmall,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: DesignConstants.spacingM),
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
                     icon: const Icon(Icons.folder_open),
-                    label: const Text('Ordner wählen'),
+                    label: Text(l10n.autoBackupChooseFolder),
                     onPressed: _pickAutoBackupDirectory,
                   ),
                 ),
@@ -456,7 +454,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                 Expanded(
                   child: OutlinedButton.icon(
                     icon: const Icon(Icons.copy),
-                    label: const Text('Pfad kopieren'),
+                    label: Text(l10n.autoBackupCopyPath),
                     onPressed:
                         (_autoBackupDir == null || _autoBackupDir!.isEmpty)
                             ? null
@@ -465,12 +463,12 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: DesignConstants.spacingM),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.backup),
-                label: const Text('Jetzt Auto-Backup prüfen & ausführen'),
+                label: Text(l10n.autoBackupRunNow),
                 onPressed: () async {
                   final ok = await BackupManager().runAutoBackupIfDue(
                     interval: const Duration(days: 1),
@@ -484,8 +482,8 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                         content: Text(ok
-                            ? 'Auto-Backup durchgeführt.'
-                            : 'Auto-Backup fehlgeschlagen oder abgebrochen.')),
+                            ? l10n.snackbarAutoBackupSuccess
+                            : l10n.snackbarAutoBackupFailed)),
                   );
                 },
               ),
@@ -499,10 +497,11 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
   Future<void> _openExerciseMapping() async {
     final unknown =
         await WorkoutDatabaseHelper.instance.findUnknownExerciseNames();
+    final l10n = AppLocalizations.of(context)!;
     if (!mounted) return;
     if (unknown.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Keine unbekannten Übungen gefunden')),
+        SnackBar(content: Text(l10n.noUnknownExercisesFound)),
       );
       return;
     }
@@ -514,6 +513,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
 
   Future<void> _pickAutoBackupDirectory() async {
     // Directory-Picker (FilePicker unterstützt getDirectoryPath)
+    final l10n = AppLocalizations.of(context)!;
     final path = await FilePicker.platform.getDirectoryPath();
     if (path == null) return;
     final prefs = await SharedPreferences.getInstance();
@@ -521,23 +521,25 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     setState(() => _autoBackupDir = path);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Auto-Backup-Ordner gesetzt:\n$path')),
+      SnackBar(content: Text(l10n.snackbarAutoBackupFolderSet(path))),
     );
   }
 
   Future<void> _copyAutoBackupPathToClipboard() async {
     final path = _autoBackupDir;
+    final l10n = AppLocalizations.of(context)!;
     if (path == null || path.isEmpty) return;
     await Clipboard.setData(ClipboardData(text: path));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Pfad kopiert')),
+      SnackBar(content: Text(l10n.snackbarPathCopied)),
     );
   }
 
   Future<String?> _askPassword({required String title}) async {
     final controller = TextEditingController();
     bool obscure = true;
+    final l10n = AppLocalizations.of(context)!;
     return showDialog<String>(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -547,7 +549,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
             controller: controller,
             obscureText: obscure,
             decoration: InputDecoration(
-              labelText: 'Password',
+              labelText: l10n.passwordLabel,
               suffixIcon: IconButton(
                 icon: Icon(obscure ? Icons.visibility_off : Icons.visibility),
                 onPressed: () => setState(() => obscure = !obscure),
@@ -557,12 +559,12 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(null),
-              child: const Text('Cancel'),
+              child: Text(l10n.dialogButtonCancel),
             ),
             FilledButton(
               onPressed: () =>
                   Navigator.of(context).pop(controller.text.trim()),
-              child: const Text('OK'),
+              child: Text(l10n.snackbarButtonOK),
             ),
           ],
         ),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:lightweight/data/product_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/food_item.dart';
+import 'package:lightweight/util/design_constants.dart';
 
 class CreateFoodScreen extends StatefulWidget {
   const CreateFoodScreen({super.key});
@@ -75,18 +76,26 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       // KORREKTUR: Eine AppBar hinzugefügt, die den Titel und den Speicher-Button enthält
+
       appBar: AppBar(
         title: Text(l10n.createFoodScreenTitle),
         actions: [
-          // Speicher-Button ist jetzt ein Action-Button in der AppBar
           TextButton(
             onPressed: _saveFoodItem,
-            child: Text(l10n.buttonSave),
+            // Hier stellen wir sicher, dass der Text die Primärfarbe nutzt
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.primary,
+            ),
+
+            child: Text(
+              l10n.buttonSave,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
           )
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: DesignConstants.cardPadding,
         child: Form(
           key: _formKey,
           child: Column(
@@ -102,9 +111,9 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
               _buildFoodInputField(
                   controller: _brandController, label: l10n.formFieldBrand),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: DesignConstants.spacingXL),
               _buildSectionTitle(context, l10n.formSectionMainNutrients),
-              const SizedBox(height: 16),
+              const SizedBox(height: DesignConstants.spacingL),
               _buildFoodInputField(
                   controller: _caloriesController,
                   label: l10n.formFieldCalories),
@@ -115,9 +124,9 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
               _buildFoodInputField(
                   controller: _fatController, label: l10n.formFieldFat),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: DesignConstants.spacingXL),
               _buildSectionTitle(context, l10n.formSectionOptionalNutrients),
-              const SizedBox(height: 16),
+              const SizedBox(height: DesignConstants.spacingL),
               _buildFoodInputField(
                   controller: _sugarController, label: l10n.formFieldSugar),
               _buildFoodInputField(

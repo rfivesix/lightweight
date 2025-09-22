@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/food_item.dart';
+import 'package:lightweight/util/design_constants.dart';
 
 class QuantityDialogContent extends StatefulWidget {
   final FoodItem item;
@@ -116,7 +117,7 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
             decoration: InputDecoration(
                 labelText: l10n.amount_in_grams, suffixText: 'g'),
             autofocus: true),
-        const SizedBox(height: 16),
+        const SizedBox(height: DesignConstants.spacingL),
         DropdownButtonFormField<String>(
           initialValue: _selectedMealType,
           decoration: const InputDecoration(labelText: 'Mahlzeit'),
@@ -134,12 +135,12 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
             }
           },
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: DesignConstants.spacingL),
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           InkWell(
               onTap: _selectDate,
               child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  padding: DesignConstants.cardMargin,
                   child: Row(children: [
                     const Icon(Icons.calendar_today, size: 20),
                     const SizedBox(width: 8),
@@ -148,14 +149,14 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
           InkWell(
               onTap: _selectTime,
               child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  padding: DesignConstants.cardMargin,
                   child: Row(children: [
                     const Icon(Icons.access_time, size: 20),
                     const SizedBox(width: 8),
                     Text(formattedTime, style: const TextStyle(fontSize: 16))
                   ]))),
         ]),
-        const SizedBox(height: 8),
+        const SizedBox(height: DesignConstants.spacingS),
         CheckboxListTile(
             title: Text(l10n.add_to_water_intake),
             value: _countAsWater,

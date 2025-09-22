@@ -455,4 +455,28 @@ class DatabaseHelper {
       }
     });
   }
+
+  /// Gibt ein Set von Tagen (1-31) zurück, an denen im gegebenen Monat Ernährungseinträge existieren.
+  Future<Set<int>> getNutritionLogDaysInMonth(DateTime month) async {
+    final db = await database;
+    final firstDayOfMonth = DateTime(month.year, month.month, 1);
+    final lastDayOfMonth = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
+
+    final maps = await db.query(
+      'food_entries',
+      columns: ['timestamp'],
+      where: 'timestamp BETWEEN ? AND ?',
+      whereArgs: [
+        firstDayOfMonth.toIso8601String(),
+        lastDayOfMonth.toIso8601String()
+      ],
+    );
+
+    if (maps.isEmpty) return {};
+
+    // Extrahiere den Tag aus jedem Timestamp und füge ihn einem Set hinzu, um Duplikate zu vermeiden.
+    return maps
+        .map((map) => DateTime.parse(map['timestamp'] as String).day)
+        .toSet();
+  }
 }

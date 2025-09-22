@@ -395,9 +395,9 @@ class BackupManager {
       for (final e in backup.userPreferences.entries) {
         final k = e.key;
         final v = e.value;
-        if (v is bool)
+        if (v is bool) {
           await prefs.setBool(k, v);
-        else if (v is int)
+        } else if (v is int)
           await prefs.setInt(k, v);
         else if (v is double)
           await prefs.setDouble(k, v);

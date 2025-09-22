@@ -1,9 +1,10 @@
 // lib/screens/exercise_mapping_screen.dart
 import 'package:flutter/material.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
+import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/exercise.dart';
 import 'package:lightweight/screens/exercise_catalog_screen.dart';
-import 'package:lightweight/util/mapping_prefs.dart';
+import 'package:lightweight/util/design_constants.dart';
 
 class ExerciseMappingScreen extends StatefulWidget {
   final List<String> unknownNames;
@@ -35,11 +36,8 @@ class _ExerciseMappingScreenState extends State<ExerciseMappingScreen> {
     setState(() => _applying = true);
     final mapping = <String, String>{
       for (final e in _selection.entries)
-        e.key: (e.value.nameEn.isNotEmpty ? e.value.nameEn : e.value.nameDe),
+        e.key: e.value.nameDe.isNotEmpty ? e.value.nameDe : e.value.nameEn,
     };
-// NEU: persistent speichern
-    await MappingPrefs.upsert(mapping); // <— hinzufügen
-// Bestehendes: DB-Update anwenden
     await WorkoutDatabaseHelper.instance.applyExerciseNameMapping(mapping);
     if (mounted) {
       setState(() => _applying = false);
@@ -49,11 +47,12 @@ class _ExerciseMappingScreenState extends State<ExerciseMappingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Übungen zuordnen')),
+      appBar: AppBar(title: Text(l10n.mapExercisesTitle)),
       body: Column(
         children: [
-          const SizedBox(height: 8),
+          const SizedBox(height: DesignConstants.spacingS),
           Expanded(
             child: ListView.builder(
               itemCount: widget.unknownNames.length,
@@ -63,11 +62,11 @@ class _ExerciseMappingScreenState extends State<ExerciseMappingScreen> {
                 return ListTile(
                   title: Text(src),
                   subtitle: picked == null
-                      ? const Text('Keine Auswahl')
+                      ? Text(l10n.noSelection)
                       : Text('→ ${picked.nameDe} / ${picked.nameEn}'),
                   trailing: TextButton.icon(
                     icon: const Icon(Icons.search),
-                    label: const Text('Auswählen'),
+                    label: Text(l10n.selectButton),
                     onPressed: () => _pickTarget(src),
                   ),
                 );
@@ -88,7 +87,7 @@ class _ExerciseMappingScreenState extends State<ExerciseMappingScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2))
                       : const Icon(Icons.check),
                   label: Text(
-                      _applying ? 'Wird angewendet...' : 'Zuordnung anwenden'),
+                      _applying ? l10n.applyingChanges : l10n.applyMapping),
                 ),
               ),
             ),

@@ -1,6 +1,7 @@
 // lib/screens/scanner_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:lightweight/generated/app_localizations.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 class ScannerScreen extends StatefulWidget {
@@ -25,6 +26,8 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final textTheme = Theme.of(context).textTheme; // Hier definiert
     final scanWindow = Rect.fromCenter(
       center: MediaQuery.of(context).size.center(Offset.zero),
       width: 250,
@@ -33,9 +36,17 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Barcode scannen"),
-        backgroundColor: Colors.transparent,
+        automaticallyImplyLeading: true,
         elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          l10n.scann_barcode_capslock,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+        ),
       ),
       backgroundColor: Colors.black,
       body: Stack(

@@ -1,47 +1,147 @@
 // lib/screens/statistics_hub_screen.dart
-
 import 'package:flutter/material.dart';
+import 'package:lightweight/data/database_helper.dart';
+import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/screens/measurements_screen.dart';
 import 'package:lightweight/screens/nutrition_screen.dart';
+import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/summary_card.dart';
+import 'package:table_calendar/table_calendar.dart'; // NEUER IMPORT
 
-class StatisticsHubScreen extends StatelessWidget {
+// KORREKTUR: Umwandlung in ein StatefulWidget
+class StatisticsHubScreen extends StatefulWidget {
   const StatisticsHubScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+  State<StatisticsHubScreen> createState() => _StatisticsHubScreenState();
+}
 
+class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
+  // State-Variablen für den Kalender
+  late final l10n = AppLocalizations.of(context)!;
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _selectedDay;
+  bool _isLoadingCalendar = true;
+
+  // Sets zur Speicherung der aktiven Tage des Monats
+  Set<int> _workoutDays = {};
+  Set<int> _nutritionLogDays = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDay = _focusedDay;
+    _loadMonthData(_focusedDay); // Lade Daten für den aktuellen Monat
+  }
+
+  /// Lädt Workout- und Ernährungs-Tage für den gegebenen Monat.
+  Future<void> _loadMonthData(DateTime month) async {
+    setState(() {
+      _isLoadingCalendar = true;
+    });
+
+    final workoutDays =
+        await WorkoutDatabaseHelper.instance.getWorkoutDaysInMonth(month);
+    final nutritionDays =
+        await DatabaseHelper.instance.getNutritionLogDaysInMonth(month);
+
+    if (mounted) {
+      setState(() {
+        _workoutDays = workoutDays;
+        _nutritionLogDays = nutritionDays;
+        _isLoadingCalendar = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: ListView(
-        padding: const EdgeInsets.all(16.0),
+        padding: DesignConstants.cardPadding,
         children: [
-          // Sektion 1: "MEINE KONSISTENZ" (Platzhalter)
+          // Sektion 1: "MEINE KONSISTENZ" mit dem neuen Kalender
           _buildSectionTitle(context, l10n.my_consistency),
           SummaryCard(
             child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Row(
-                children: [
-                  Icon(Icons.calendar_today_outlined, color: Colors.grey[600]),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Text(
-                      l10n.calendar_currently_not_available,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyLarge
-                          ?.copyWith(color: Colors.grey[600]),
-                    ),
-                  ),
-                ],
+              padding: const EdgeInsets.all(8.0),
+              child: TableCalendar(
+                locale: Localizations.localeOf(context).toString(),
+                firstDay: DateTime.utc(2020, 1, 1),
+                lastDay: DateTime.now().add(const Duration(days: 365)),
+                focusedDay: _focusedDay,
+                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                calendarFormat: CalendarFormat.month,
+                headerStyle: HeaderStyle(
+                  formatButtonVisible: false, // Versteckt den "2 Weeks"-Button
+                  titleCentered: true,
+                  titleTextStyle: Theme.of(context).textTheme.titleMedium!,
+                ),
+                onDaySelected: (selectedDay, focusedDay) {
+                  setState(() {
+                    _selectedDay = selectedDay;
+                    _focusedDay = focusedDay;
+                  });
+                  // Hier könnte in Zukunft die Detail-Anzeige für den Tag geladen werden
+                },
+                onPageChanged: (focusedDay) {
+                  _focusedDay = focusedDay;
+                  _loadMonthData(focusedDay); // Lade Daten für den neuen Monat
+                },
+                // HIER PASSIERT DIE MAGIE: Das Aussehen der Tage wird angepasst
+                calendarBuilders: CalendarBuilders(
+                  // Builder für die Marker (die kleinen Punkte)
+                  markerBuilder: (context, day, events) {
+                    final isNutritionDay = _nutritionLogDays.contains(day.day);
+                    if (isNutritionDay) {
+                      return Positioned(
+                        bottom: 4,
+                        child: Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.blueAccent,
+                          ),
+                        ),
+                      );
+                    }
+                    return null;
+                  },
+                  // Builder für die Tages-Zellen selbst
+                  defaultBuilder: (context, day, focusedDay) {
+                    final isWorkoutDay = _workoutDays.contains(day.day);
+                    if (isWorkoutDay) {
+                      return Center(
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${day.day}',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onPrimary,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+                    // Wenn kein Workout-Tag, wird der Standard-Look verwendet
+                    return null;
+                  },
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: DesignConstants.spacingXL),
 
-          // Sektion 2: "TIEFEN-ANALYSE" (Voll funktionsfähig)
+          // Sektion 2: "TIEFEN-ANALYSE" (bleibt unverändert)
           _buildSectionTitle(context, l10n.in_depth_analysis),
           _buildAnalysisGateway(
             context: context,
@@ -53,7 +153,7 @@ class StatisticsHubScreen extends StatelessWidget {
                   builder: (context) => const MeasurementsScreen()));
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: DesignConstants.spacingM),
           _buildAnalysisGateway(
             context: context,
             icon: Icons.pie_chart_outline_rounded,
@@ -64,14 +164,13 @@ class StatisticsHubScreen extends StatelessWidget {
                   builder: (context) => const NutritionScreen()));
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: DesignConstants.spacingM),
           _buildAnalysisGateway(
             context: context,
             icon: Icons.bar_chart_rounded,
             title: l10n.training_analysis,
             subtitle: l10n.training_analysis_description,
             onTap: () {
-              // Platzhalter für den zukünftigen Trainings-Analyse-Screen
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(l10n.soon_available_snackbar)),
               );
@@ -82,6 +181,7 @@ class StatisticsHubScreen extends StatelessWidget {
     );
   }
 
+  // Diese Helfer-Methoden bleiben unverändert
   Widget _buildSectionTitle(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),

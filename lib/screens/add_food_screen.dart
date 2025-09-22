@@ -6,6 +6,7 @@ import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/food_item.dart';
 import 'package:lightweight/screens/create_food_screen.dart';
 import 'package:lightweight/screens/scanner_screen.dart';
+import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/off_attribution_widget.dart';
 import 'package:lightweight/widgets/summary_card.dart';
@@ -267,13 +268,13 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.eco_outlined, size: 80, color: Colors.grey.shade400),
-          const SizedBox(height: 16),
+          const SizedBox(height: DesignConstants.spacingL),
           Text(
-            "In Kürze verfügbar",
+            l10n.comingSoon,
             style: Theme.of(context).textTheme.headlineSmall,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: DesignConstants.spacingS),
           Text(
             l10n.baseFoodsEmptyState,
             textAlign: TextAlign.center,
@@ -301,13 +302,13 @@ class _AddFoodScreenState extends State<AddFoodScreen>
             children: [
               Icon(Icons.favorite_border,
                   size: 80, color: Colors.grey.shade400),
-              const SizedBox(height: 16),
+              const SizedBox(height: DesignConstants.spacingL),
               Text(
-                "Keine Favoriten",
+                l10n.noFavorites,
                 style: Theme.of(context).textTheme.headlineSmall,
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: DesignConstants.spacingS),
               Text(
                 l10n.favoritesEmptyState,
                 textAlign: TextAlign.center,
@@ -346,13 +347,13 @@ class _AddFoodScreenState extends State<AddFoodScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.history, size: 80, color: Colors.grey.shade400),
-              const SizedBox(height: 16),
+              const SizedBox(height: DesignConstants.spacingL),
               Text(
-                "Noch nichts erfasst",
+                l10n.nothingTrackedYet,
                 style: Theme.of(context).textTheme.headlineSmall,
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: DesignConstants.spacingS),
               Text(
                 l10n.recentEmptyState,
                 textAlign: TextAlign.center,
@@ -415,6 +416,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
 
   // FÜGE DIESE NEUE METHODE HINZU
   void _scanBarcodeAndPop() async {
+    final l10n = AppLocalizations.of(context)!;
     // Öffne den Scanner und warte auf einen Barcode (String) als Ergebnis
     final String? barcode = await Navigator.of(context).push<String>(
       MaterialPageRoute(builder: (context) => const ScannerScreen()),
@@ -433,10 +435,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       } else {
         // Wenn nicht, zeige eine kurze Info-Nachricht.
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text('Kein Produkt für Barcode "$barcode" gefunden.')),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(l10n.snackbarBarcodeNotFound(barcode)),
+          ));
         }
       }
     }

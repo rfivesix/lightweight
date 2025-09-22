@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:lightweight/models/daily_nutrition.dart';
+import 'package:lightweight/util/design_constants.dart';
 
 class CompactNutritionBar extends StatelessWidget {
   final DailyNutrition nutritionData;
@@ -10,7 +11,7 @@ class CompactNutritionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: DesignConstants.cardMargin,
       child: Column(
         children: [
           _buildProgressBar(
@@ -21,7 +22,7 @@ class CompactNutritionBar extends StatelessWidget {
             unit: 'kcal',
             color: Colors.orange,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: DesignConstants.spacingM),
           _buildProgressBar(
             context: context,
             label: 'Protein',
@@ -30,7 +31,7 @@ class CompactNutritionBar extends StatelessWidget {
             unit: 'g',
             color: Colors.red.shade400,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: DesignConstants.spacingM),
           _buildProgressBar(
               context: context,
               label: 'Wasser',

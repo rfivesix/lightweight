@@ -377,6 +377,7 @@
   "load_dots":"lade...",
   "profile_capslock":"PROFIL",
   "settings_capslock":"EINSTELLUNGEN",
+  "settingsTitle":"Einstellungen",
   "my_goals":"Meine Ziele",
   "my_goals_description":"Kalorien, Makros und Wasser anpassen.",
   "backup_and_import":"Datensicherung & Import",
@@ -456,5 +457,74 @@
   "onbTrainBody": "Routine erstellen und Workout starten:\n• Öffne den Tab „Train“.\n• Tippe auf Routine erstellen und füge Übungen und Sätze hinzu.\n• Speichere die Routine.\n• Tippe auf Start, um zu beginnen – oder nutze „Freies Training starten“.",
   "@onbTrainBody": { "description": "Anleitung zum Erstellen einer Routine und Starten eines Workouts" },
   "onbTipStartWorkout": "Tipp: Starte ein freies Training für eine schnelle Einheit",
-  "@onbTipStartWorkout": { "description": "Hinweis für Training-Folie" }
+  "@onbTipStartWorkout": { "description": "Hinweis für Training-Folie" },
+  "unitsSection": "Einheiten",
+  "weightUnit": "Gewichtseinheit",
+  "lengthUnit": "Längeneinheit",
+  "comingSoon": "In Kürze verfügbar",
+  "noFavorites": "Keine Favoriten",
+  "nothingTrackedYet": "Noch nichts erfasst",
+  "snackbarBarcodeNotFound": "Kein Produkt für Barcode \"{barcode}\" gefunden.",
+  "@snackbarBarcodeNotFound": {
+    "placeholders": {
+      "barcode": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryHint": "z.B. Brust, Rücken, Beine...",
+  "validatorPleaseEnterCategory": "Bitte eine Kategorie angeben.",
+  "dialogEnterPasswordImport": "Passwort für den Import eingeben",
+  "dataManagementBackupTitle": "Lightweight Datensicherung",
+  "dataManagementBackupDescription": "Sichere oder wiederherstelle alle deine App-Daten. Ideal für einen Gerätewechsel.",
+  "exportEncrypted": "Verschlüsselt exportieren",
+  "dialogPasswordForExport": "Passwort für verschlüsselten Export",
+  "snackbarEncryptedBackupShared": "Verschlüsseltes Backup geteilt.",
+  "exportFailed": "Export fehlgeschlagen.",
+  "csvExportTitle": "Daten-Export (CSV)",
+  "csvExportDescription": "Exportiere Teile deiner Daten als CSV-Datei zur Analyse in anderen Programmen.",
+  "snackbarSharingNutrition": "Ernährungstagebuch wird geteilt...",
+  "snackbarExportFailedNoEntries": "Export fehlgeschlagen. Eventuell existieren noch keine Einträge.",
+  "snackbarSharingMeasurements": "Messwerte werden geteilt...",
+  "snackbarSharingWorkouts": "Trainingsverlauf wird geteilt...",
+  "mapExercisesTitle": "Übungen zuordnen",
+  "mapExercisesDescription": "Unbekannte Namen aus Logs auf wger-Übungen mappen.",
+  "mapExercisesButton": "Mapping starten",
+  "autoBackupTitle": "Automatische Backups",
+  "autoBackupDescription": "Legt periodisch eine Sicherung im Ordner ab. Derzeitiger Ordner:",
+  "autoBackupDefaultFolder": "App-Dokumente/Backups (Standard)",
+  "autoBackupChooseFolder": "Ordner wählen",
+  "autoBackupCopyPath": "Pfad kopieren",
+  "autoBackupRunNow": "Jetzt Auto-Backup prüfen & ausführen",
+  "snackbarAutoBackupSuccess": "Auto-Backup durchgeführt.",
+  "snackbarAutoBackupFailed": "Auto-Backup fehlgeschlagen oder abgebrochen.",
+  "noUnknownExercisesFound": "Keine unbekannten Übungen gefunden",
+  "snackbarAutoBackupFolderSet": "Auto-Backup-Ordner gesetzt:\n{path}",
+  "@snackbarAutoBackupFolderSet": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "snackbarPathCopied": "Pfad kopiert",
+  "passwordLabel": "Passwort",
+  "descriptionLabel": "Beschreibung",
+  "involvedMuscles": "Involvierte Muskeln",
+  "primaryLabel": "Primär:",
+  "secondaryLabel": "Sekundär:",
+  "noMusclesSpecified": "Keine Muskeln angegeben.",
+  "noSelection": "Keine Auswahl",
+  "selectButton": "Auswählen",
+  "applyingChanges": "Wird angewendet...",
+  "applyMapping": "Zuordnung anwenden",
+  "personalData": "Persönliche Daten",
+  "macroDistribution": "Makronährstoff-Verteilung",
+  "dialogFinishWorkoutBody": "Möchtest du dieses Workout wirklich abschließen?",
+  "attributionText": "Diese App verwendet Daten von externen Quellen:\n\n● Übungsdaten und Bilder von wger (wger.de), lizenziert unter der CC-BY-SA 4.0 Lizenz.\n\n● Lebensmittel-Datenbank von Open Food Facts (openfoodfacts.org), verfügbar unter der Open Database License (ODbL).",
+  "errorRoutineNotFound": "Routine nicht gefunden",
+  "workoutHistoryEmptyTitle": "Dein Verlauf ist leer",
+  "workoutSummaryTitle": "Workout Abgeschlossen",
+  "workoutSummaryExerciseOverview": "Übersicht der Übungen",
+  "nutritionDiary":"Ernährungstagebuch"
 }

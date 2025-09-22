@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/daily_nutrition.dart';
+import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 
 class _NutrientSpec {
@@ -98,7 +99,7 @@ class NutritionSummaryWidget extends StatelessWidget {
               child: Column(
                 children: [
                   Expanded(child: _InfoBox(spec: specs['calories']!)),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: DesignConstants.spacingS),
                   Expanded(child: _InfoBox(spec: specs['water']!)),
                 ],
               ),
@@ -109,9 +110,9 @@ class NutritionSummaryWidget extends StatelessWidget {
               child: Column(
                 children: [
                   Expanded(child: _InfoBox(spec: specs['protein']!)),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: DesignConstants.spacingS),
                   Expanded(child: _InfoBox(spec: specs['carbs']!)),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: DesignConstants.spacingS),
                   Expanded(child: _InfoBox(spec: specs['fat']!)),
                 ],
               ),
@@ -123,9 +124,9 @@ class NutritionSummaryWidget extends StatelessWidget {
                 child: Column(
                   children: [
                     Expanded(child: _InfoBox(spec: specs['sugar']!)),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: DesignConstants.spacingS),
                     Expanded(child: _InfoBox(spec: specs['fiber']!)),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: DesignConstants.spacingS),
                     Expanded(child: _InfoBox(spec: specs['salt']!)),
                   ],
                 ),

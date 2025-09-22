@@ -6,9 +6,11 @@ import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/measurement_session.dart';
 import 'package:lightweight/screens/add_measurement_screen.dart';
+import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/measurement_chart_widget.dart';
 import 'package:lightweight/widgets/summary_card.dart';
+import 'package:lightweight/util/l10n_ext.dart';
 
 class MeasurementsScreen extends StatefulWidget {
   const MeasurementsScreen({super.key});
@@ -127,12 +129,12 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
           : _sessions.isEmpty
               ? _buildEmptyState(l10n, context)
               : ListView(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: DesignConstants.cardPadding,
                   children: [
                     if (_availableMeasurementTypes.isNotEmpty) ...[
                       _buildChartSection(
                           l10n, colorScheme, Theme.of(context).textTheme),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: DesignConstants.spacingXL),
                     ],
                     _buildSectionTitle(context, l10n.all_measurements),
                     ..._sessions.map((session) => _buildMeasurementSessionCard(
@@ -149,14 +151,14 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
   Widget _buildEmptyState(AppLocalizations l10n, BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: DesignConstants.cardPadding,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(l10n.measurementsEmptyState,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 24),
+            const SizedBox(height: DesignConstants.spacingXL),
             ElevatedButton.icon(
               onPressed: _navigateToCreateMeasurement,
               icon: const Icon(Icons.add),
@@ -187,7 +189,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
 
     return SummaryCard(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: DesignConstants.cardPadding,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -211,8 +213,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
                           .map<DropdownMenuItem<String>>((String value) {
                         return DropdownMenuItem<String>(
                           value: value,
-                          child:
-                              Text(_getLocalizedMeasurementType(l10n, value)),
+                          child: Text(l10n.getLocalizedMeasurementName(value)),
                         );
                       }).toList(),
                       style: textTheme.titleMedium
@@ -230,7 +231,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: DesignConstants.spacingL),
             MeasurementChartWidget(
               chartType: _selectedChartType!,
               dateRange: _currentChartDateRange,
@@ -295,8 +296,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ListTile(
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              contentPadding: DesignConstants.screenPadding,
               title: Text(
                   DateFormat.yMMMMEEEEd(locale)
                       .add_Hm()
@@ -317,8 +317,8 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
                   contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16.0, vertical: 4.0),
                   leading: _getMeasurementIcon(measurement.type),
-                  title: Text(_getLocalizedMeasurementType(
-                      l10n, measurement.type)), // l10n übergeben
+                  title:
+                      Text(l10n.getLocalizedMeasurementName(measurement.type)),
                   trailing: Text(
                       "${measurement.value.toStringAsFixed(1)} ${measurement.unit}",
                       style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -327,46 +327,6 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
         ),
       ),
     );
-  }
-
-  // HINZUGEFÜGT: Helfermethoden für Lokalisierung, Einheit und Icons
-  String _getLocalizedMeasurementType(AppLocalizations l10n, String type) {
-    switch (type) {
-      case 'weight':
-        return l10n.measurementWeight;
-      case 'fat_percent':
-        return l10n.measurementFatPercent;
-      case 'neck':
-        return l10n.measurementNeck;
-      case 'shoulder':
-        return l10n.measurementShoulder;
-      case 'chest':
-        return l10n.measurementChest;
-      case 'left_bicep':
-        return l10n.measurementLeftBicep;
-      case 'right_bicep':
-        return l10n.measurementRightBicep;
-      case 'left_forearm':
-        return l10n.measurementLeftForearm;
-      case 'right_forearm':
-        return l10n.measurementRightForearm;
-      case 'abdomen':
-        return l10n.measurementAbdomen;
-      case 'waist':
-        return l10n.measurementWaist;
-      case 'hips':
-        return l10n.measurementHips;
-      case 'left_thigh':
-        return l10n.measurementLeftThigh;
-      case 'right_thigh':
-        return l10n.measurementRightThigh;
-      case 'left_calf':
-        return l10n.measurementLeftCalf;
-      case 'right_calf':
-        return l10n.measurementRightCalf;
-      default:
-        return type;
-    }
   }
 
   String _getMeasurementUnit(String type) {

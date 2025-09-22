@@ -6,6 +6,7 @@ import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/routine.dart';
 import 'package:lightweight/screens/edit_routine_screen.dart';
 import 'package:lightweight/screens/live_workout_screen.dart';
+import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 
@@ -27,6 +28,7 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
   }
 
   Future<void> _loadRoutines() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _isLoading = true);
     final data = await WorkoutDatabaseHelper.instance.getAllRoutines();
     if (mounted) {
@@ -38,7 +40,7 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
       if (widget.initialRoutineId != null) {
         final routineToEdit = _routines.firstWhere(
             (r) => r.id == widget.initialRoutineId,
-            orElse: () => throw Exception("Routine not found"));
+            orElse: () => throw Exception(l10n.errorRoutineNotFound));
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Navigator.of(context)
               .push(MaterialPageRoute(
@@ -145,7 +147,7 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
           : _routines.isEmpty
               ? _buildEmptyState(context, l10n, textTheme)
               : ListView.builder(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: DesignConstants.cardPadding,
                   itemCount: _routines.length + 1, // statt +2
                   itemBuilder: (context, index) {
                     if (index == 0) {
@@ -242,8 +244,8 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
         title: Text(l10n.startEmptyWorkoutButton,
             style: const TextStyle(fontWeight: FontWeight.bold)),
         onTap: _startEmptyWorkout,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(DesignConstants.borderRadiusM)),
       ),
     );
   }
@@ -260,19 +262,19 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
           children: [
             Icon(Icons.list_alt_outlined,
                 size: 80, color: Colors.grey.shade400),
-            const SizedBox(height: 16),
+            const SizedBox(height: DesignConstants.spacingL),
             Text(
               l10n.emptyRoutinesTitle,
               style: textTheme.headlineSmall,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: DesignConstants.spacingS),
             Text(
               l10n.emptyRoutinesSubtitle,
               textAlign: TextAlign.center,
               style: textTheme.bodyLarge?.copyWith(color: Colors.grey.shade600),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: DesignConstants.spacingXL),
 
             // Bestehender Button: Routine erstellen
             ElevatedButton.icon(
@@ -290,7 +292,7 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
               ),
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: DesignConstants.spacingM),
 
             // NEU: Freies Training starten (sichtbar auch im Empty-State)
             OutlinedButton.icon(

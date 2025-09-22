@@ -377,6 +377,7 @@
   "load_dots":"loading...",
   "profile_capslock":"PROFILE",
   "settings_capslock":"SETTINGS",
+  "settingsTitle":"Settings",
   "my_goals":"My goals",
   "my_goals_description":"Adjust calories, macros and water.",
   "backup_and_import":"Data backup & import",
@@ -451,5 +452,74 @@
   "onbTrainBody": "Create a routine and start a workout:\n• Open the Train tab.\n• Tap Create routine to add exercises and sets.\n• Save the routine.\n• Tap Start to begin, or use “Start empty workout”.",
   "@onbTrainBody": { "description": "Instructions for creating a routine and starting a workout" },
   "onbTipStartWorkout": "Tip: start an empty workout to log a quick session",
-  "@onbTipStartWorkout": { "description": "Hint for training slide" }
+  "@onbTipStartWorkout": { "description": "Hint for training slide" },
+  "unitsSection": "units",
+  "weightUnit": "Weight units",
+  "lengthUnit": "unit of length",
+  "comingSoon": "Coming soon",
+  "noFavorites": "No Favorites",
+  "nothingTrackedYet": "Nothing tracked yet",
+  "snackbarBarcodeNotFound": "No product found for barcode \"{barcode}\".",
+  "@snackbarBarcodeNotFound": {
+    "placeholders": {
+      "barcode": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryHint": "e.g. Chest, Back, Legs...",
+  "validatorPleaseEnterCategory": "Please enter a category.",
+  "dialogEnterPasswordImport": "Enter password to import backup",
+  "dataManagementBackupTitle": "Lightweight Data Backup",
+  "dataManagementBackupDescription": "Back up or restore all your app data. Ideal for changing devices.",
+  "exportEncrypted": "Export Encrypted",
+  "dialogPasswordForExport": "Password for encrypted export",
+  "snackbarEncryptedBackupShared": "Encrypted backup shared.",
+  "exportFailed": "Export failed.",
+  "csvExportTitle": "Data Export (CSV)",
+  "csvExportDescription": "Export parts of your data as a CSV file for analysis in other programs.",
+  "snackbarSharingNutrition": "Sharing nutrition diary...",
+  "snackbarExportFailedNoEntries": "Export failed. There may be no entries yet.",
+  "snackbarSharingMeasurements": "Sharing measurements...",
+  "snackbarSharingWorkouts": "Sharing workout history...",
+  "mapExercisesTitle": "Map Exercises",
+  "mapExercisesDescription": "Map unknown names from logs to wger exercises.",
+  "mapExercisesButton": "Start Mapping",
+  "autoBackupTitle": "Automatic Backups",
+  "autoBackupDescription": "Periodically saves a backup in the folder. Current folder:",
+  "autoBackupDefaultFolder": "App-Documents/Backups (Default)",
+  "autoBackupChooseFolder": "Choose Folder",
+  "autoBackupCopyPath": "Copy Path",
+  "autoBackupRunNow": "Check & Run Auto-Backup Now",
+  "snackbarAutoBackupSuccess": "Auto-Backup completed.",
+  "snackbarAutoBackupFailed": "Auto-Backup failed or was canceled.",
+  "noUnknownExercisesFound": "No unknown exercises found",
+  "snackbarAutoBackupFolderSet": "Auto-backup folder set:\n{path}",
+  "@snackbarAutoBackupFolderSet": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "snackbarPathCopied": "Path copied",
+  "passwordLabel": "Password",
+  "descriptionLabel": "Description",
+  "involvedMuscles": "Involved Muscles",
+  "primaryLabel": "Primary:",
+  "secondaryLabel": "Secondary:",
+  "noMusclesSpecified": "No muscles specified.",
+  "noSelection": "No selection",
+  "selectButton": "Select",
+  "applyingChanges": "Applying changes...",
+  "applyMapping": "Apply Mapping",
+  "personalData": "Personal Data",
+  "macroDistribution": "Macronutrient Distribution",
+  "dialogFinishWorkoutBody": "Are you sure you want to finish this workout?",
+  "attributionText": "This app uses data from external sources:\n\n● Exercise data and images from wger (wger.de), licensed under CC-BY-SA 4.0.\n\n● Food database from Open Food Facts (openfoodfacts.org), available under the Open Database License (ODbL).",
+  "errorRoutineNotFound": "Routine not found",
+  "workoutHistoryEmptyTitle": "Your history is empty",
+  "workoutSummaryTitle": "Workout Complete",
+  "workoutSummaryExerciseOverview": "Exercise Overview",
+  "nutritionDiary":"nutrition diary"
 }

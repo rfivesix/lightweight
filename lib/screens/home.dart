@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:lightweight/util/design_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/data/product_database_helper.dart';
@@ -155,23 +156,45 @@ class HomeState extends State<Home> {
   }
 
   Future<void> _loadChartData() async {
-    // Hole alle Mess-Sessions und filtere auf den sichtbaren Bereich + Typ "weight"
+    // KORRIGIERT: Die Logik zur Berechnung des Zeitraums wird hierher verschoben.
+    final now = DateTime.now();
+    DateTime start;
+    DateTime end = DateTime(now.year, now.month, now.day, 23, 59, 59);
+
+    switch (_selectedChartRangeKey) {
+      case '90D':
+        start = now.subtract(const Duration(days: 89));
+        break;
+      case 'All':
+        // Für "Alle" holen wir das früheste Datum aus der Datenbank
+        final earliest =
+            await DatabaseHelper.instance.getEarliestMeasurementDate();
+        start = earliest ?? now;
+        break;
+      case '30D':
+      default:
+        start = now.subtract(const Duration(days: 29));
+    }
+
+    final normalizedStart = DateTime(start.year, start.month, start.day);
+
+    // Wichtig: Den State für den Datumsbereich hier aktualisieren!
+    if (!mounted) return;
+    setState(() {
+      _currentDateRange = DateTimeRange(start: normalizedStart, end: end);
+    });
+
+    // Der Rest der Methode bleibt gleich, lädt aber jetzt mit dem korrekten Zeitbereich.
     final sessions = await DatabaseHelper.instance.getMeasurementSessions();
-
-    // Tagesgrenzen normalisieren (Start 00:00, Ende 23:59:59)
-    final start = DateTime(_currentDateRange.start.year,
-        _currentDateRange.start.month, _currentDateRange.start.day);
-    final end = DateTime(_currentDateRange.end.year,
-        _currentDateRange.end.month, _currentDateRange.end.day, 23, 59, 59);
-
     final points = <ChartDataPoint>[];
 
     for (final s in sessions) {
-      if (s.timestamp.isBefore(start) || s.timestamp.isAfter(end)) continue;
+      if (s.timestamp.isBefore(normalizedStart) || s.timestamp.isAfter(end)) {
+        continue;
+      }
 
       for (final m in s.measurements) {
         if (m.type == _chartType) {
-          // Annahme: ChartDataPoint hat Felder/Named-Ctor "date" und "value"
           points.add(
               ChartDataPoint(date: s.timestamp, value: m.value.toDouble()));
         }
@@ -259,11 +282,10 @@ class HomeState extends State<Home> {
                 showLoadingIndicator:
                     false), // KORREKTUR: Kein Ladeindikator bei manueller Aktualisierung
             child: ListView(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              padding: DesignConstants.screenPadding,
               children: [
                 _buildBannerCard(l10n),
-                const SizedBox(height: 8),
+                const SizedBox(height: DesignConstants.spacingS),
                 GestureDetector(
                     onTap: _navigateToNutritionScreen,
                     child: _nutritionData != null
@@ -272,14 +294,15 @@ class HomeState extends State<Home> {
                             isExpandedView: false,
                             l10n: l10n)
                         : const SizedBox.shrink()),
-                if (_weightChartData.isNotEmpty) const SizedBox(height: 8),
+                if (_weightChartData.isNotEmpty)
+                  const SizedBox(height: DesignConstants.spacingS),
                 GestureDetector(
                     onTap: () => Navigator.of(context)
                         .push(MaterialPageRoute(
                             builder: (context) => const MeasurementsScreen()))
                         .then((_) => loadAllHomeScreenData()),
                     child: _buildWeightChartCard(context, colorScheme, l10n)),
-                const SizedBox(height: 8),
+                const SizedBox(height: DesignConstants.spacingS),
                 _buildWorkoutStatsCard(l10n),
               ],
             ),
@@ -323,13 +346,13 @@ class HomeState extends State<Home> {
     return SummaryCard(
       //externalMargin: EdgeInsets.zero, // Wichtig
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: DesignConstants.cardPadding,
         child: Column(
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Gewichtsverlauf",
+                Text(l10n.weightHistoryTitle,
                     style: Theme.of(context)
                         .textTheme
                         .titleMedium
@@ -369,7 +392,7 @@ class HomeState extends State<Home> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: DesignConstants.spacingL),
             MeasurementChartWidget(
               chartType: _chartType,
               dateRange: _currentDateRange,
@@ -418,7 +441,7 @@ class HomeState extends State<Home> {
     return SummaryCard(
       //externalMargin: EdgeInsets.zero, // Wichtig
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: DesignConstants.cardPadding,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -426,7 +449,7 @@ class HomeState extends State<Home> {
               l10n.workoutStatsTitle,
               style: Theme.of(context).textTheme.titleLarge,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: DesignConstants.spacingM),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [

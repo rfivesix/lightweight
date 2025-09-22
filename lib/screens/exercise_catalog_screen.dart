@@ -5,8 +5,11 @@ import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/exercise.dart';
 import 'package:lightweight/screens/exercise_detail_screen.dart';
+import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/summary_card.dart';
-import 'package:lightweight/widgets/wger_attribution_widget.dart'; // HINZUGEFÜGT
+import 'package:lightweight/widgets/wger_attribution_widget.dart';
+import 'package:lightweight/screens/create_exercise_screen.dart';
+import 'package:lightweight/widgets/glass_fab.dart';
 
 class ExerciseCatalogScreen extends StatefulWidget {
   final bool isSelectionMode;
@@ -157,7 +160,7 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
                       child: Text(l10n.doneButtonLabel),
                     ),
                   ),
-                const SizedBox(height: 8),
+                const SizedBox(height: DesignConstants.spacingS),
                 TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
@@ -173,7 +176,7 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
                         : null,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: DesignConstants.spacingL),
                 _buildFilterButton(context, l10n),
               ],
             ),
@@ -191,7 +194,7 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
                         child: Text(l10n.noExercisesFound,
                             style: textTheme.titleMedium))
                     : ListView.builder(
-                        padding: const EdgeInsets.all(16.0),
+                        padding: DesignConstants.cardPadding,
                         itemCount: _foundExercises.length,
                         itemBuilder: (context, index) {
                           final exercise = _foundExercises[index];
@@ -239,6 +242,23 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
           ),
         ],
       ),
+      floatingActionButton: GlassFab(
+        onPressed: () {
+          Navigator.of(context)
+              .push(
+            MaterialPageRoute(
+                builder: (context) => const CreateExerciseScreen()),
+          )
+              .then((wasCreated) {
+            // Wenn der Screen mit 'true' zurückkehrt, wurde eine Übung erstellt.
+            // Lade die Liste neu, um die neue Übung anzuzeigen.
+            if (wasCreated == true) {
+              _runFilter(_searchController.text);
+            }
+          });
+        },
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 

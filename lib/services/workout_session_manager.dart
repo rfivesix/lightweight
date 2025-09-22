@@ -74,8 +74,8 @@ class WorkoutSessionManager extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> logSet(
-      int templateId, RoutineExercise re, double weight, int reps) async {
+  Future<void> logSet(int templateId, RoutineExercise re, double weight,
+      int reps, String setType) async {
     if (_workoutLog == null || _workoutLog!.id == null) {
       debugPrint(
           "[ERROR] logSet aufgerufen, aber workoutLog ist null oder hat keine ID!");
@@ -87,12 +87,11 @@ class WorkoutSessionManager extends ChangeNotifier {
     final setLogToSave = SetLog(
       workoutLogId: _workoutLog!.id!,
       exerciseName: re.exercise.nameEn,
-      setType: 'normal',
+      setType: setType, // <- Hier den übergebenen setType verwenden
       weightKg: weight,
       reps: reps,
       restTimeSeconds: restTime,
       isCompleted: true,
-      // KORREKTUR: Der Parametername ist jetzt korrekt (snake_case).
       log_order: _exercises.indexOf(re),
     );
 
@@ -101,7 +100,6 @@ class WorkoutSessionManager extends ChangeNotifier {
     _templateIdToSetLogId[templateId] = newSetLogId;
     completedSets.add(templateId);
 
-    // HINZUGEFÜGT: Statistiken aktualisieren
     _totalVolume += weight * reps;
     _totalSets++;
 
@@ -220,5 +218,21 @@ class WorkoutSessionManager extends ChangeNotifier {
 
   void _stopWorkoutTimer() {
     _workoutDurationTimer?.cancel();
+  }
+
+  /// Ändert das Gewicht für ein laufendes Set (in kg).
+  void updateWeight(int templateId, double newWeight) {
+    // Hier solltest du sowohl den Controller-Text als auch die interne Logik aktualisieren
+    // Beispiel: Wenn du inline die Controller-Map verwenden willst, dann:
+    // _weightControllers[templateId]?.text = newWeight.toStringAsFixed(1);
+
+    // Optional: setze eine Interims-Statistik-Aktualisierung auf
+    notifyListeners();
+  }
+
+  /// Ändert die Reps für ein laufendes Set.
+  void updateReps(int templateId, int newReps) {
+    // Beispiel: _repsControllers[templateId]?.text = newReps.toString();
+    notifyListeners();
   }
 }

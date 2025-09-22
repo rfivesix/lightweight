@@ -6,6 +6,7 @@ import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/food_item.dart';
 import 'package:lightweight/screens/create_food_screen.dart';
 import 'package:lightweight/screens/food_detail_screen.dart';
+import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/off_attribution_widget.dart';
 import 'package:lightweight/widgets/summary_card.dart'; // HINZUGEFÜGT
@@ -115,7 +116,7 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
                 Text(l10n.drawerFoodExplorer,
                     style: textTheme.headlineMedium
                         ?.copyWith(fontWeight: FontWeight.w900, fontSize: 28)),
-                const SizedBox(height: 16),
+                const SizedBox(height: DesignConstants.spacingL),
                 TabBar(
                   controller: _tabController,
                   isScrollable: false,
@@ -168,7 +169,7 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: DesignConstants.cardPadding,
       child: Column(
         children: [
           // KORREKTUR 4: TextField nutzt globale InputDecorationTheme
@@ -225,7 +226,7 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
     return Column(children: [
       Expanded(
           child: ListView.builder(
-              padding: const EdgeInsets.all(16.0),
+              padding: DesignConstants.cardPadding,
               itemCount: _favoriteFoodItems.length,
               itemBuilder: (context, index) =>
                   _buildFoodListItem(_favoriteFoodItems[index]))),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/measurement_session.dart';
+import 'package:lightweight/util/design_constants.dart';
 
 class MeasurementSessionDetailScreen extends StatelessWidget {
   final MeasurementSession session;
@@ -46,7 +47,7 @@ class MeasurementSessionDetailScreen extends StatelessWidget {
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16.0),
+        padding: DesignConstants.cardPadding,
         children: [
           ...session.measurements.map((measurement) {
             return Card(

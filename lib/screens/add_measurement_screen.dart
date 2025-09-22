@@ -6,6 +6,7 @@ import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/measurement.dart';
 import 'package:lightweight/models/measurement_session.dart';
+import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/summary_card.dart'; // HINZUGEFÜGT
 
 class AddMeasurementScreen extends StatefulWidget {
@@ -175,7 +176,7 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
       ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: DesignConstants.cardPadding,
         child: Form(
           key: _formKey,
           child: Column(
@@ -184,7 +185,7 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
               // Datum & Uhrzeit Sektion
               Text(l10n.date_and_time_of_measurement,
                   style: textTheme.titleMedium),
-              const SizedBox(height: 8),
+              const SizedBox(height: DesignConstants.spacingS),
               SummaryCard(
                 // KORREKTUR 2: Datum/Uhrzeit in SummaryCard
                 child: Padding(
@@ -213,12 +214,14 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 24), // KORREKTUR 3: Abstand angepasst
+              const SizedBox(
+                  height: DesignConstants
+                      .spacingXL), // KORREKTUR 3: Abstand angepasst
 
               // Messwerte-Sektion
               Text(l10n.drawerMeasurements,
                   style: textTheme.titleMedium), // TODO: Lokalisieren
-              const SizedBox(height: 8),
+              const SizedBox(height: DesignConstants.spacingS),
               ..._measurementTypes.keys.map((key) {
                 return Padding(
                   padding: const EdgeInsets.only(
@@ -243,7 +246,7 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
                   ),
                 );
               }),
-              const SizedBox(height: 16), // Abstand zum Ende
+              const SizedBox(height: DesignConstants.spacingL), // Abstand zum Ende
             ],
           ),
         ),

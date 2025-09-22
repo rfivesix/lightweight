@@ -6,11 +6,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/models/set_log.dart';
-import 'package:lightweight/util/mapping_prefs.dart';
 
 class ImportManager {
   Future<int> importHevyCsv() async {
-    // ... (Diese Methode bleibt unverändert, sie ist bereits korrekt)
     try {
       final result = await FilePicker.platform
           .pickFiles(type: FileType.custom, allowedExtensions: ['csv']);
@@ -47,7 +45,7 @@ class ImportManager {
 
       final db = WorkoutDatabaseHelper.instance;
       int importedWorkouts = 0;
-      final knownMap = await MappingPrefs.load();
+      final knownMap = await db.getExerciseMappings();
       for (var group in workoutGroups.values) {
         final firstRow = group.first;
         final newLog = await db.startWorkout(routineName: firstRow['title']);

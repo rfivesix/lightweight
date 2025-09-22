@@ -1,7 +1,9 @@
 // lib/data/workout_database_helper.dart
 
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/services.dart';
+import 'package:lightweight/util/mapping_prefs.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:lightweight/models/exercise.dart';
@@ -42,7 +44,7 @@ class WorkoutDatabaseHelper {
     // FINALE LÖSUNG: Wir verwenden NUR onUpgrade.
     return await openDatabase(
       path,
-      version: 8,
+      version: 9,
       onUpgrade: _upgradeDB,
     );
   }
@@ -107,30 +109,67 @@ class WorkoutDatabaseHelper {
         // Schritt 4: Alte Tabelle löschen
         await txn.execute('DROP TABLE set_logs_old');
       });
-      // NEUE MIGRATION
-      if (oldVersion < 7) {
-        print("Upgrade DB auf v7: Füge Detail-Spalten zu set_logs hinzu...");
-        await db
-            .execute("ALTER TABLE set_logs ADD COLUMN notes TEXT")
-            .catchError((_) {});
-        await db
-            .execute("ALTER TABLE set_logs ADD COLUMN distance_km REAL")
-            .catchError((_) {});
-        await db
-            .execute("ALTER TABLE set_logs ADD COLUMN duration_seconds INTEGER")
-            .catchError((_) {});
-        await db
-            .execute("ALTER TABLE set_logs ADD COLUMN rpe INTEGER")
-            .catchError((_) {});
-      }
-      if (oldVersion < 8) {
-        print("Upgrade DB auf v8: Füge superset_id zu set_logs hinzu...");
-        await db
-            .execute("ALTER TABLE set_logs ADD COLUMN superset_id INTEGER")
-            .catchError((_) {});
-      }
-      print("Migration auf v8 erfolgreich abgeschlossen.");
     }
+    // NEUE MIGRATION
+    if (oldVersion < 7) {
+      print("Upgrade DB auf v7: Füge Detail-Spalten zu set_logs hinzu...");
+      await db
+          .execute("ALTER TABLE set_logs ADD COLUMN notes TEXT")
+          .catchError((_) {});
+      await db
+          .execute("ALTER TABLE set_logs ADD COLUMN distance_km REAL")
+          .catchError((_) {});
+      await db
+          .execute("ALTER TABLE set_logs ADD COLUMN duration_seconds INTEGER")
+          .catchError((_) {});
+      await db
+          .execute("ALTER TABLE set_logs ADD COLUMN rpe INTEGER")
+          .catchError((_) {});
+    }
+    if (oldVersion < 8) {
+      print("Upgrade DB auf v8: Füge superset_id zu set_logs hinzu...");
+      await db
+          .execute("ALTER TABLE set_logs ADD COLUMN superset_id INTEGER")
+          .catchError((_) {});
+    }
+    if (oldVersion < 9) {
+      print("Upgrade DB auf v9: Erstelle exercise_mapping Tabelle...");
+      await db.execute('''
+        CREATE TABLE exercise_mapping (
+          external_name TEXT PRIMARY KEY COLLATE NOCASE,
+          target_name TEXT NOT NULL
+        )
+      ''');
+
+      // Migriere bestehende Mappings aus SharedPreferences
+      final oldMappings = await MappingPrefs.load();
+      if (oldMappings.isNotEmpty) {
+        print("Migriere ${oldMappings.length} bestehende Mappings...");
+        final batch = db.batch();
+        for (final entry in oldMappings.entries) {
+          batch.insert(
+            'exercise_mapping',
+            {'external_name': entry.key, 'target_name': entry.value},
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+        await batch.commit(noResult: true);
+        print("Migration abgeschlossen.");
+      }
+    }
+
+    print("DB-Upgrade auf v$newVersion erfolgreich abgeschlossen.");
+  }
+
+  // 3. NEUE METHODE
+  /// Ruft alle gespeicherten Übungs-Mappings aus der Datenbank ab.
+  Future<Map<String, String>> getExerciseMappings() async {
+    final db = await database;
+    final maps = await db.query('exercise_mapping');
+    return {
+      for (var map in maps)
+        (map['external_name'] as String): (map['target_name'] as String)
+    };
   }
 
   // --- EXERCISE MANAGEMENT ---
@@ -680,10 +719,23 @@ class WorkoutDatabaseHelper {
         .toList();
   }
 
+  /// Speichert die Mappings dauerhaft UND wendet sie auf bestehende Logs an.
   Future<void> applyExerciseNameMapping(Map<String, String> map) async {
     if (map.isEmpty) return;
     final db = await database;
     await db.transaction((txn) async {
+      // Schritt 1: Mappings in der neuen Tabelle speichern/aktualisieren
+      final batch = txn.batch();
+      for (final e in map.entries) {
+        batch.insert(
+          'exercise_mapping',
+          {'external_name': e.key, 'target_name': e.value},
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      await batch.commit(noResult: true);
+
+      // Schritt 2: Mappings auf die bestehenden set_logs anwenden
       for (final e in map.entries) {
         await txn.update(
           'set_logs',
@@ -693,5 +745,62 @@ class WorkoutDatabaseHelper {
         );
       }
     });
+  }
+
+  /// Ruft alle einzigartigen Muskelgruppen aus der Datenbank ab.
+  Future<List<String>> getAllMuscleGroups() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'exercises',
+      columns: ['primaryMuscles', 'secondaryMuscles'],
+      distinct: true,
+    );
+
+    final Set<String> allMuscles = {};
+
+    // Helferfunktion zum sicheren Parsen des JSON-Strings
+    List<String> parseMuscles(String? jsonString) {
+      if (jsonString == null || jsonString.isEmpty) return [];
+      try {
+        return (jsonDecode(jsonString) as List)
+            .map((item) => item.toString())
+            .toList();
+      } catch (e) {
+        return [];
+      }
+    }
+
+    for (final map in maps) {
+      final primary = parseMuscles(map['primaryMuscles'] as String?);
+      final secondary = parseMuscles(map['secondaryMuscles'] as String?);
+      allMuscles.addAll(primary);
+      allMuscles.addAll(secondary);
+    }
+
+    final sortedList = allMuscles.toList()..sort();
+    return sortedList;
+  }
+
+  /// Gibt ein Set von Tagen (1-31) zurück, an denen im gegebenen Monat Workouts geloggt wurden.
+  Future<Set<int>> getWorkoutDaysInMonth(DateTime month) async {
+    final db = await database;
+    final firstDayOfMonth = DateTime(month.year, month.month, 1);
+    final lastDayOfMonth = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
+
+    final maps = await db.query(
+      'workout_logs',
+      columns: ['start_time'],
+      where: 'start_time BETWEEN ? AND ?',
+      whereArgs: [
+        firstDayOfMonth.toIso8601String(),
+        lastDayOfMonth.toIso8601String()
+      ],
+    );
+
+    if (maps.isEmpty) return {};
+
+    return maps
+        .map((map) => DateTime.parse(map['start_time'] as String).day)
+        .toSet();
   }
 }

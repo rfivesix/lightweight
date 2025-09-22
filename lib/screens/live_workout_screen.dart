@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
@@ -12,12 +13,12 @@ import 'package:lightweight/models/set_log.dart';
 import 'package:lightweight/models/set_template.dart';
 import 'package:lightweight/models/workout_log.dart';
 import 'package:lightweight/services/workout_session_manager.dart';
-import 'package:lightweight/widgets/set_type_chip.dart';
 import 'package:lightweight/widgets/workout_summary_bar.dart';
 import 'exercise_catalog_screen.dart';
 import 'exercise_detail_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:lightweight/screens/workout_summary_screen.dart';
+import 'package:lightweight/widgets/workout_card.dart';
 
 class LiveWorkoutScreen extends StatefulWidget {
   final Routine? routine;
@@ -109,8 +110,10 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
             _weightControllers[setTemplateId]!.text.replaceAll(',', '.')) ??
         0.0;
     final reps = int.tryParse(_repsControllers[setTemplateId]!.text) ?? 0;
+    final setType = _setUIData[setTemplateId]!['setType'] as String;
 
-    await WorkoutSessionManager().logSet(setTemplateId, re, weight, reps);
+    await WorkoutSessionManager()
+        .logSet(setTemplateId, re, weight, reps, setType);
 
     setState(() {}); // UI refresh
   }
@@ -127,7 +130,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.finishWorkoutButton), // Titel: "Beenden"
-        content: const Text("Möchtest du dieses Workout wirklich abschließen?"),
+        content: Text(l10n.dialogFinishWorkoutBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -306,6 +309,20 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
               fontSize: 12,
               fontWeight: FontWeight.bold)));
 
+  /// Gibt den anzuzeigenden Text für den Set zurück
+  String _getSetDisplayText(String setType, int setIndex) {
+    switch (setType) {
+      case 'warmup':
+        return 'W';
+      case 'failure':
+        return 'F';
+      case 'dropset':
+        return 'D';
+      default:
+        return '$setIndex';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -360,7 +377,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                     color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
                 Expanded(
                   child: ReorderableListView.builder(
-                    //padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    //padding: DesignConstants.cardMargin,
                     padding: EdgeInsets.zero,
                     proxyDecorator:
                         (Widget child, int index, Animation<double> animation) {
@@ -376,11 +393,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                     itemBuilder: (context, index) {
                       final routineExercise = _liveExercises[index];
                       // KORREKTUR: SummaryCard wurde hier entfernt
-                      return Container(
+                      return WorkoutCard(
                         key: ValueKey(routineExercise.id),
-                        color: Theme.of(context).scaffoldBackgroundColor,
-                        margin: const EdgeInsets.symmetric(
-                            vertical: 8.0, horizontal: 0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -442,38 +456,93 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                 ],
                               ),
                             ),
-                            const Divider(indent: 16, endIndent: 16),
+                            //const Divider(indent: 16, endIndent: 16),
                             Padding(
                               padding:
-                                  const EdgeInsets.symmetric(horizontal: 16.0),
+                                  const EdgeInsets.symmetric(horizontal: 0.0),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
                                     children: [
-                                      _buildHeader(l10n.setLabel),
-                                      _buildHeader(l10n.lastTimeLabel),
-                                      _buildHeader(l10n.kgLabel),
-                                      _buildHeader(l10n.repsLabel),
+                                      // Set-Label (wie in BuildSetRow flex:2)
+                                      Expanded(
+                                        flex: 2,
+                                        child: Center(
+                                            child: Text(
+                                          l10n.setLabel,
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        )),
+                                      ),
+                                      // Last Time (flex:3)
+                                      Expanded(
+                                        flex: 3,
+                                        child: Center(
+                                            child: Text(
+                                          l10n.lastTimeLabel,
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        )),
+                                      ),
+                                      // KG (flex:2)
+                                      Expanded(
+                                        flex: 2,
+                                        child: Center(
+                                            child: Text(
+                                          l10n.kgLabel,
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        )),
+                                      ),
+                                      // Reps (flex:2)
+                                      Expanded(
+                                        flex: 2,
+                                        child: Center(
+                                            child: Text(
+                                          l10n.repsLabel,
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        )),
+                                      ),
+                                      // Platzhalter für Prüf‐Button (48px breit)
                                       const SizedBox(width: 48),
                                     ],
                                   ),
-                                  const Divider(),
+
+                                  //const Divider(),
                                   ...routineExercise.setTemplates
                                       .asMap()
                                       .entries
                                       .map((setEntry) {
                                     final setTemplate = setEntry.value;
                                     int workingSetIndex = 0;
-                                    for (final st
-                                        in routineExercise.setTemplates) {
-                                      if (st.id == setTemplate.id) break;
-                                      if (st.setType != 'warmup') {
+                                    for (int i = 0; i <= setEntry.key; i++) {
+                                      final currentTemplate =
+                                          routineExercise.setTemplates[i];
+                                      final currentSetType = _setUIData[
+                                          currentTemplate.id!]!['setType'];
+                                      if (currentSetType != 'warmup') {
                                         workingSetIndex++;
                                       }
-                                    }
-                                    if (setTemplate.setType != 'warmup') {
-                                      workingSetIndex++;
                                     }
 
                                     return _buildSetRow(
@@ -487,7 +556,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                           routineExercise.exercise.nameEn],
                                     );
                                   }),
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: DesignConstants.spacingS),
                                   TextButton.icon(
                                     onPressed: () => _addSet(routineExercise),
                                     icon: const Icon(Icons.add),
@@ -528,8 +597,6 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
   ) {
     final setType = _setUIData[template.id!]!['setType'];
 
-    // KORREKTUR: Das Dismissible umschließt jetzt den Container mit dem Hintergrund,
-    // und das Padding ist innerhalb des Dismissible.
     return Dismissible(
       key: ValueKey(template.id),
       direction:
@@ -544,30 +611,59 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       child: Container(
         decoration: BoxDecoration(
           color:
-              isCompleted ? Colors.green.withOpacity(0.1) : Colors.transparent,
+              isCompleted ? Colors.green.withOpacity(0.4) : Colors.transparent,
         ),
-        //padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 16.0),
         child: Row(
           children: [
+            // Set-Index als große farbige Zahl
             Expanded(
               flex: 2,
-              child: SetTypeChip(
-                setType: setType,
-                setIndex: (setType == 'warmup') ? null : setIndex,
-                isCompleted: isCompleted,
-                onTap: () => _showSetTypePicker(template.id!),
+              child: Center(
+                child: Builder(
+                  builder: (_) {
+                    Color textColor;
+                    switch (setType) {
+                      case 'warmup':
+                        textColor = Colors.orange;
+                        break;
+                      case 'dropset':
+                        textColor = Colors.blue;
+                        break;
+                      case 'failure':
+                        textColor = Colors.red;
+                        break;
+                      default:
+                        textColor = Colors.grey;
+                    }
+                    return GestureDetector(
+                      onTap: () {
+                        if (!isCompleted) _showSetTypePicker(template.id!);
+                      },
+                      child: Text(
+                        _getSetDisplayText(setType, setIndex),
+                        style: TextStyle(
+                          color: textColor,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
+            // Last Time
             Expanded(
               flex: 3,
               child: Text(
                 lastPerf != null
-                    ? "${lastPerf.weightKg?.toStringAsFixed(1).replaceAll('.0', '')}kg x ${lastPerf.reps}"
+                    ? "${lastPerf.weightKg?.toStringAsFixed(1).replaceAll('.0', '')}kg × ${lastPerf.reps}"
                     : "-",
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.grey[500], fontSize: 12),
               ),
             ),
+            // Weight input
             Expanded(
               flex: 2,
               child: TextFormField(
@@ -576,11 +672,14 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
                 decoration: const InputDecoration(
-                    border: InputBorder.none, isDense: true),
+                    border: InputBorder.none,
+                    isDense: true,
+                    fillColor: Colors.transparent),
                 enabled: !isCompleted,
               ),
             ),
             const SizedBox(width: 8),
+            // Reps input
             Expanded(
               flex: 2,
               child: TextFormField(
@@ -588,24 +687,32 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                 textAlign: TextAlign.center,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
-                    border: InputBorder.none, isDense: true),
+                    border: InputBorder.none,
+                    isDense: true,
+                    fillColor: Colors.transparent),
                 enabled: !isCompleted,
               ),
             ),
-            SizedBox(
-              width: 48,
-              child: IconButton(
-                icon: Icon(
-                  isCompleted ? Icons.check_circle : Icons.check_circle_outline,
-                  color: isCompleted ? Colors.green : Colors.grey,
+            // Erledigt-Button mit Abstand zum Rand
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: SizedBox(
+                width: 48,
+                child: IconButton(
+                  icon: Icon(
+                    isCompleted
+                        ? Icons.check_circle
+                        : Icons.check_circle_outline,
+                    color: isCompleted ? Colors.green : Colors.grey,
+                  ),
+                  onPressed: () {
+                    if (isCompleted) {
+                      _unlogSet(template.id!);
+                    } else {
+                      _logSet(template.id!, re);
+                    }
+                  },
                 ),
-                onPressed: () {
-                  if (isCompleted) {
-                    _unlogSet(template.id!);
-                  } else {
-                    _logSet(template.id!, re);
-                  }
-                },
               ),
             ),
           ],

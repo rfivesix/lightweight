@@ -5,6 +5,7 @@ import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/food_item.dart';
 import 'package:lightweight/models/tracked_food_item.dart';
+import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/off_attribution_widget.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 
@@ -94,7 +95,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: DesignConstants.cardPadding,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -124,10 +125,10 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                   ),
                 ),
               ),
-            if (_hasPortionInfo) const SizedBox(height: 16),
+            if (_hasPortionInfo) const SizedBox(height: DesignConstants.spacingL),
             Text("Nährwerte pro ${displayQuantity}g",
                 style: textTheme.titleLarge),
-            const SizedBox(height: 8),
+            const SizedBox(height: DesignConstants.spacingS),
             SummaryCard(
               child: Column(
                 children: [
@@ -145,7 +146,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
             if (_displayItem.sugar != null ||
                 _displayItem.fiber != null ||
                 _displayItem.salt != null) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: DesignConstants.spacingM),
               SummaryCard(
                 child: Column(
                   children: [
@@ -183,14 +184,14 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
     return Expanded(
       child: InkWell(
         onTap: () => setState(() => _showPer100g = is100gOption),
-        borderRadius: BorderRadius.circular(12.0),
+        borderRadius: BorderRadius.circular(DesignConstants.borderRadiusM),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
           decoration: BoxDecoration(
             color: isSelected
                 ? theme.colorScheme.primary.withOpacity(0.2)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(12.0),
+            borderRadius: BorderRadius.circular(DesignConstants.borderRadiusM),
             border: Border.all(
               color: isSelected
                   ? theme.colorScheme.primary

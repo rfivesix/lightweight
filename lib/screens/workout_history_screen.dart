@@ -6,6 +6,7 @@ import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/workout_log.dart';
 import 'package:lightweight/screens/workout_log_detail_screen.dart';
+import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/util/time_util.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 
@@ -74,13 +75,13 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                       children: [
                         Icon(Icons.history_toggle_off_outlined,
                             size: 80, color: Colors.grey.shade400),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: DesignConstants.spacingL),
                         Text(
-                          "Dein Verlauf ist leer",
+                          l10n.workoutHistoryEmptyTitle,
                           style: Theme.of(context).textTheme.headlineSmall,
                           textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: DesignConstants.spacingS),
                         Text(
                           l10n.emptyHistory,
                           textAlign: TextAlign.center,
@@ -94,7 +95,7 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                   ),
                 )
               : ListView.builder(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: DesignConstants.cardPadding,
                   itemCount: _logs.length,
                   itemBuilder: (context, index) {
                     final log = _logs[index];

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lightweight/generated/app_localizations.dart';
+import 'package:lightweight/util/design_constants.dart';
 
 class WaterDialogContent extends StatefulWidget {
   const WaterDialogContent({super.key});
@@ -74,14 +75,14 @@ class WaterDialogContentState extends State<WaterDialogContent> {
             decoration: InputDecoration(
                 labelText: l10n.amount_in_milliliters, suffixText: 'ml'),
             autofocus: true),
-        const SizedBox(height: 16),
+        const SizedBox(height: DesignConstants.spacingL),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             InkWell(
                 onTap: _selectDate,
                 child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    padding: DesignConstants.cardMargin,
                     child: Row(children: [
                       const Icon(Icons.calendar_today, size: 20),
                       const SizedBox(width: 8),
@@ -90,7 +91,7 @@ class WaterDialogContentState extends State<WaterDialogContent> {
             InkWell(
                 onTap: _selectTime,
                 child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    padding: DesignConstants.cardMargin,
                     child: Row(children: [
                       const Icon(Icons.access_time, size: 20),
                       const SizedBox(width: 8),

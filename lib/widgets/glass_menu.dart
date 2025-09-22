@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:lightweight/util/design_constants.dart';
 
 class GlassMenuItem {
   final IconData icon;
@@ -76,7 +77,7 @@ class _GlassMenuState extends State<GlassMenu>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         _buildGlassIcon(item.icon),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: DesignConstants.spacingM),
                         Text(
                           item.label,
                           style:

@@ -9,10 +9,11 @@ import 'package:lightweight/models/routine_exercise.dart';
 import 'package:lightweight/models/set_template.dart';
 import 'package:lightweight/screens/exercise_catalog_screen.dart';
 import 'package:lightweight/screens/exercise_detail_screen.dart';
+import 'package:lightweight/util/design_constants.dart';
 // Zum Starten der Routine
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/set_type_chip.dart';
-import 'package:lightweight/widgets/summary_card.dart'; // HINZUGEFÜGT
+// HINZUGEFÜGT
 import 'package:lightweight/widgets/wger_attribution_widget.dart'; // HINZUGEFÜGT
 
 class EditRoutineScreen extends StatefulWidget {
@@ -356,8 +357,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
       body: Column(
         children: [
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding: DesignConstants.screenPadding,
             child: TextFormField(
               controller: _nameController,
               decoration: InputDecoration(labelText: l10n.formFieldRoutineName),
@@ -369,7 +369,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
               },
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: DesignConstants.spacingM),
           Divider(
             height: 1,
             thickness: 1,
@@ -386,7 +386,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                         ),
                       )
                     : ReorderableListView.builder(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        padding: DesignConstants.cardMargin,
                         itemCount: _routineExercises.length,
                         proxyDecorator: (Widget child, int index,
                             Animation<double> animation) {
@@ -404,7 +404,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                           return Container(
                             key: ValueKey(routineExercise.id),
                             color: Theme.of(context).scaffoldBackgroundColor,
-                            margin: const EdgeInsets.symmetric(vertical: 8.0),
+                            margin: DesignConstants.cardMargin,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -502,7 +502,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                                             setTemplate,
                                             setIndex);
                                       }),
-                                      const SizedBox(height: 8),
+                                      const SizedBox(
+                                          height: DesignConstants.spacingS),
                                       TextButton.icon(
                                         onPressed: () =>
                                             _addSet(routineExercise),

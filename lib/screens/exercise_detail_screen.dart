@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/exercise.dart';
+import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/widgets/wger_attribution_widget.dart';
 
@@ -29,7 +30,7 @@ class ExerciseDetailScreen extends StatelessWidget {
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: DesignConstants.cardPadding,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -37,15 +38,15 @@ class ExerciseDetailScreen extends StatelessWidget {
               exercise.categoryName,
               style: textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: DesignConstants.spacingXL),
             SummaryCard(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: DesignConstants.cardPadding,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Beschreibung", style: textTheme.titleLarge),
-                    const SizedBox(height: 8),
+                    Text(l10n.descriptionLabel, style: textTheme.titleLarge),
+                    const SizedBox(height: DesignConstants.spacingS),
                     Text(
                       exercise.getLocalizedDescription(context).isNotEmpty
                           ? exercise.getLocalizedDescription(context)
@@ -56,24 +57,24 @@ class ExerciseDetailScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: DesignConstants.spacingM),
             SummaryCard(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: DesignConstants.cardPadding,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Involvierte Muskeln", style: textTheme.titleLarge),
-                    const SizedBox(height: 8),
+                    Text(l10n.involvedMuscles, style: textTheme.titleLarge),
+                    const SizedBox(height: DesignConstants.spacingS),
                     if (exercise.primaryMuscles.isNotEmpty)
-                      _buildMuscleRow("Primär:",
+                      _buildMuscleRow(l10n.primaryLabel,
                           exercise.primaryMuscles.join(', '), textTheme),
                     if (exercise.secondaryMuscles.isNotEmpty)
-                      _buildMuscleRow("Sekundär:",
+                      _buildMuscleRow(l10n.secondaryLabel,
                           exercise.secondaryMuscles.join(', '), textTheme),
                     if (exercise.primaryMuscles.isEmpty &&
                         exercise.secondaryMuscles.isEmpty)
-                      Text("Keine Muskeln angegeben.",
+                      Text(l10n.noMusclesSpecified,
                           style: textTheme.bodyMedium
                               ?.copyWith(color: Colors.grey[600])),
                   ],

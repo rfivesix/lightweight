@@ -1,13 +1,12 @@
 // lib/screens/onboarding_screen.dart
 import 'package:flutter/material.dart';
+import 'package:lightweight/util/design_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 
 // TODO: Ersetze diese Imports durch deine echten Screens/Routes
 import 'package:lightweight/screens/main_screen.dart';
-import 'package:lightweight/screens/routines_screen.dart';
 import 'package:lightweight/screens/goals_screen.dart';
-import 'package:lightweight/screens/nutrition_hub_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -19,8 +18,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _page = PageController();
   int _index = 0;
   bool _goalVisited = false;
-  bool _foodVisited = false;
-  bool _trainVisited = false;
+  final bool _foodVisited = false;
+  final bool _trainVisited = false;
 
   Future<void> _finish() async {
     final prefs = await SharedPreferences.getInstance();
@@ -265,14 +264,14 @@ class _Slide extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, size: 72, color: theme.colorScheme.primary),
-          const SizedBox(height: 16),
+          const SizedBox(height: DesignConstants.spacingL),
           Text(title,
               style: theme.textTheme.headlineSmall,
               textAlign: TextAlign.center),
-          const SizedBox(height: 8),
+          const SizedBox(height: DesignConstants.spacingS),
           Text(body,
               textAlign: TextAlign.center, style: theme.textTheme.bodyLarge),
-          const SizedBox(height: 24),
+          const SizedBox(height: DesignConstants.spacingXL),
           if (primaryCta != null)
             SizedBox(
               width: double.infinity,
@@ -283,7 +282,7 @@ class _Slide extends StatelessWidget {
               ),
             ),
           if (footer != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: DesignConstants.spacingM),
             footer!,
           ],
         ],
@@ -311,14 +310,14 @@ class _FinalSlide extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.rocket_launch, size: 72, color: theme.colorScheme.primary),
-          const SizedBox(height: 16),
+          const SizedBox(height: DesignConstants.spacingL),
           Text(title,
               style: theme.textTheme.headlineSmall,
               textAlign: TextAlign.center),
-          const SizedBox(height: 8),
+          const SizedBox(height: DesignConstants.spacingS),
           Text(body,
               textAlign: TextAlign.center, style: theme.textTheme.bodyLarge),
-          const SizedBox(height: 24),
+          const SizedBox(height: DesignConstants.spacingXL),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(

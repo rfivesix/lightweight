@@ -9,6 +9,7 @@ import 'package:lightweight/screens/exercise_catalog_screen.dart';
 import 'package:lightweight/screens/live_workout_screen.dart';
 import 'package:lightweight/screens/routines_screen.dart';
 import 'package:lightweight/screens/workout_history_screen.dart';
+import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 
 class WorkoutHubScreen extends StatefulWidget {
@@ -79,13 +80,14 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
           : RefreshIndicator(
               onRefresh: _loadData,
               child: ListView(
-                padding: const EdgeInsets.all(16.0),
+                padding: DesignConstants.cardPadding,
                 children: [
                   _buildSectionTitle(context, l10n.start_button),
                   SummaryCard(
                     child: InkWell(
                       onTap: _startEmptyWorkout,
-                      borderRadius: BorderRadius.circular(12.0),
+                      borderRadius:
+                          BorderRadius.circular(DesignConstants.borderRadiusM),
                       child: Padding(
                         padding: const EdgeInsets.all(20.0),
                         child: Row(
@@ -100,7 +102,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: DesignConstants.spacingXL),
                   _buildSectionTitle(context, l10n.my_plans_capslock),
                   _routines.isEmpty
                       ? _buildEmptyRoutinesCard(context, l10n)
@@ -116,7 +118,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                             },
                           ),
                         ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: DesignConstants.spacingXL),
                   _buildSectionTitle(context, l10n.overview_capslock),
                   _buildNavigationTile(
                     context: context,
@@ -125,7 +127,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                     onTap: () => Navigator.of(context).push(MaterialPageRoute(
                         builder: (context) => const WorkoutHistoryScreen())),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: DesignConstants.spacingM),
                   _buildNavigationTile(
                     context: context,
                     icon: Icons.list_alt_rounded,
@@ -135,7 +137,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                             builder: (context) => const RoutinesScreen()))
                         .then((_) => _loadData()),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: DesignConstants.spacingM),
                   _buildNavigationTile(
                     context: context,
                     icon: Icons.folder_open_outlined,
@@ -180,9 +182,9 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                 ),
               );
             },
-            borderRadius: BorderRadius.circular(12.0),
+            borderRadius: BorderRadius.circular(DesignConstants.borderRadiusM),
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: DesignConstants.cardPadding,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -209,16 +211,16 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
   Widget _buildEmptyRoutinesCard(BuildContext context, AppLocalizations l10n) {
     return SummaryCard(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: DesignConstants.cardPadding,
         child: Column(
           children: [
             Text(l10n.emptyRoutinesTitle,
                 style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
+            const SizedBox(height: DesignConstants.spacingS),
             Text(l10n.emptyRoutinesSubtitle,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall),
-            const SizedBox(height: 16),
+            const SizedBox(height: DesignConstants.spacingL),
             TextButton.icon(
               onPressed: () => Navigator.of(context)
                   .push(MaterialPageRoute(
@@ -246,8 +248,8 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         trailing: const Icon(Icons.chevron_right),
         onTap: onTap,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(DesignConstants.borderRadiusM)),
       ),
     );
   }

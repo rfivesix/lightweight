@@ -14,6 +14,7 @@ import 'package:lightweight/screens/create_food_screen.dart';
 import 'package:lightweight/screens/food_detail_screen.dart';
 import 'package:lightweight/screens/nutrition_screen.dart';
 import 'package:lightweight/screens/scanner_screen.dart';
+import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/nutrition_summary_widget.dart'; // HINZUGEFÜGT
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -170,7 +171,7 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
           : RefreshIndicator(
               onRefresh: _loadTodaysData,
               child: ListView(
-                padding: const EdgeInsets.all(16.0),
+                padding: DesignConstants.cardPadding,
                 children: [
                   _buildSectionTitle(context, l10n.today_overview_text),
                   GestureDetector(
@@ -187,7 +188,7 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
                             isExpandedView: false)
                         : const SizedBox(),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: DesignConstants.spacingXL),
                   _buildSectionTitle(context, l10n.quick_add_text),
                   _buildQuickAddButton(
                       context,
@@ -197,10 +198,10 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
                           .push(MaterialPageRoute(
                               builder: (context) => const AddFoodScreen()))
                           .then((_) => _loadTodaysData())),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: DesignConstants.spacingS),
                   _buildQuickAddButton(context, l10n.scann_barcode_capslock,
                       Icons.qr_code_scanner, _scanBarcodeAndAddFood),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: DesignConstants.spacingS),
                   _buildQuickAddButton(
                       context,
                       l10n.fabCreateOwnFood,
@@ -209,7 +210,7 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
                           .push(MaterialPageRoute(
                               builder: (context) => const CreateFoodScreen()))
                           .then((_) => _loadTodaysData())),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: DesignConstants.spacingXL),
                   _buildSectionTitle(context, l10n.protocol_today_capslock),
                   hasEntries
                       ? _buildTodaysLog(l10n)
@@ -379,6 +380,7 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
 
   // DIESE METHODE HINZUFÜGEN
   Future<void> _scanBarcodeAndAddFood() async {
+    final l10n = AppLocalizations.of(context)!;
     final String? barcode = await Navigator.of(context).push<String>(
       MaterialPageRoute(builder: (context) => const ScannerScreen()),
     );
@@ -394,8 +396,7 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
         // den `CreateFoodScreen` zu öffnen.
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text('Kein Produkt für Barcode "$barcode" gefunden.')),
+            SnackBar(content: Text(l10n.snackbarBarcodeNotFound(barcode))),
           );
         }
       }

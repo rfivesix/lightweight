@@ -860,6 +860,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settings_capslock => 'EINSTELLUNGEN';
 
   @override
+  String get settingsTitle => 'Einstellungen';
+
+  @override
   String get my_goals => 'Meine Ziele';
 
   @override
@@ -989,4 +992,181 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get onbTipStartWorkout =>
       'Tipp: Starte ein freies Training für eine schnelle Einheit';
+
+  @override
+  String get unitsSection => 'Einheiten';
+
+  @override
+  String get weightUnit => 'Gewichtseinheit';
+
+  @override
+  String get lengthUnit => 'Längeneinheit';
+
+  @override
+  String get comingSoon => 'In Kürze verfügbar';
+
+  @override
+  String get noFavorites => 'Keine Favoriten';
+
+  @override
+  String get nothingTrackedYet => 'Noch nichts erfasst';
+
+  @override
+  String snackbarBarcodeNotFound(String barcode) {
+    return 'Kein Produkt für Barcode \"$barcode\" gefunden.';
+  }
+
+  @override
+  String get categoryHint => 'z.B. Brust, Rücken, Beine...';
+
+  @override
+  String get validatorPleaseEnterCategory => 'Bitte eine Kategorie angeben.';
+
+  @override
+  String get dialogEnterPasswordImport => 'Passwort für den Import eingeben';
+
+  @override
+  String get dataManagementBackupTitle => 'Lightweight Datensicherung';
+
+  @override
+  String get dataManagementBackupDescription =>
+      'Sichere oder wiederherstelle alle deine App-Daten. Ideal für einen Gerätewechsel.';
+
+  @override
+  String get exportEncrypted => 'Verschlüsselt exportieren';
+
+  @override
+  String get dialogPasswordForExport => 'Passwort für verschlüsselten Export';
+
+  @override
+  String get snackbarEncryptedBackupShared => 'Verschlüsseltes Backup geteilt.';
+
+  @override
+  String get exportFailed => 'Export fehlgeschlagen.';
+
+  @override
+  String get csvExportTitle => 'Daten-Export (CSV)';
+
+  @override
+  String get csvExportDescription =>
+      'Exportiere Teile deiner Daten als CSV-Datei zur Analyse in anderen Programmen.';
+
+  @override
+  String get snackbarSharingNutrition => 'Ernährungstagebuch wird geteilt...';
+
+  @override
+  String get snackbarExportFailedNoEntries =>
+      'Export fehlgeschlagen. Eventuell existieren noch keine Einträge.';
+
+  @override
+  String get snackbarSharingMeasurements => 'Messwerte werden geteilt...';
+
+  @override
+  String get snackbarSharingWorkouts => 'Trainingsverlauf wird geteilt...';
+
+  @override
+  String get mapExercisesTitle => 'Übungen zuordnen';
+
+  @override
+  String get mapExercisesDescription =>
+      'Unbekannte Namen aus Logs auf wger-Übungen mappen.';
+
+  @override
+  String get mapExercisesButton => 'Mapping starten';
+
+  @override
+  String get autoBackupTitle => 'Automatische Backups';
+
+  @override
+  String get autoBackupDescription =>
+      'Legt periodisch eine Sicherung im Ordner ab. Derzeitiger Ordner:';
+
+  @override
+  String get autoBackupDefaultFolder => 'App-Dokumente/Backups (Standard)';
+
+  @override
+  String get autoBackupChooseFolder => 'Ordner wählen';
+
+  @override
+  String get autoBackupCopyPath => 'Pfad kopieren';
+
+  @override
+  String get autoBackupRunNow => 'Jetzt Auto-Backup prüfen & ausführen';
+
+  @override
+  String get snackbarAutoBackupSuccess => 'Auto-Backup durchgeführt.';
+
+  @override
+  String get snackbarAutoBackupFailed =>
+      'Auto-Backup fehlgeschlagen oder abgebrochen.';
+
+  @override
+  String get noUnknownExercisesFound => 'Keine unbekannten Übungen gefunden';
+
+  @override
+  String snackbarAutoBackupFolderSet(String path) {
+    return 'Auto-Backup-Ordner gesetzt:\n$path';
+  }
+
+  @override
+  String get snackbarPathCopied => 'Pfad kopiert';
+
+  @override
+  String get passwordLabel => 'Passwort';
+
+  @override
+  String get descriptionLabel => 'Beschreibung';
+
+  @override
+  String get involvedMuscles => 'Involvierte Muskeln';
+
+  @override
+  String get primaryLabel => 'Primär:';
+
+  @override
+  String get secondaryLabel => 'Sekundär:';
+
+  @override
+  String get noMusclesSpecified => 'Keine Muskeln angegeben.';
+
+  @override
+  String get noSelection => 'Keine Auswahl';
+
+  @override
+  String get selectButton => 'Auswählen';
+
+  @override
+  String get applyingChanges => 'Wird angewendet...';
+
+  @override
+  String get applyMapping => 'Zuordnung anwenden';
+
+  @override
+  String get personalData => 'Persönliche Daten';
+
+  @override
+  String get macroDistribution => 'Makronährstoff-Verteilung';
+
+  @override
+  String get dialogFinishWorkoutBody =>
+      'Möchtest du dieses Workout wirklich abschließen?';
+
+  @override
+  String get attributionText =>
+      'Diese App verwendet Daten von externen Quellen:\n\n● Übungsdaten und Bilder von wger (wger.de), lizenziert unter der CC-BY-SA 4.0 Lizenz.\n\n● Lebensmittel-Datenbank von Open Food Facts (openfoodfacts.org), verfügbar unter der Open Database License (ODbL).';
+
+  @override
+  String get errorRoutineNotFound => 'Routine nicht gefunden';
+
+  @override
+  String get workoutHistoryEmptyTitle => 'Dein Verlauf ist leer';
+
+  @override
+  String get workoutSummaryTitle => 'Workout Abgeschlossen';
+
+  @override
+  String get workoutSummaryExerciseOverview => 'Übersicht der Übungen';
+
+  @override
+  String get nutritionDiary => 'Ernährungstagebuch';
 }
