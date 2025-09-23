@@ -521,5 +521,7 @@
   "workoutHistoryEmptyTitle": "Your history is empty",
   "workoutSummaryTitle": "Workout Complete",
   "workoutSummaryExerciseOverview": "Exercise Overview",
-  "nutritionDiary":"nutrition diary"
+  "nutritionDiary":"nutrition diary",
+  "delete_profile_picture_button":"Delete profile picture",
+  "detailedNutrientGoals": "Detailed Nutrients"
 }

@@ -771,7 +771,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unit_kcal => 'kcal';
 
   @override
-  String get delete_profile_picture_button => 'Profilbild löschen';
+  String get delete_profile_picture_button => 'Delete profile picture';
 
   @override
   String get attribution_title => 'Attribution';
@@ -1164,4 +1164,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nutritionDiary => 'nutrition diary';
+
+  @override
+  String get detailedNutrientGoals => 'Detailed Nutrients';
 }

@@ -441,18 +441,33 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
   }
 
   Widget _buildSetRow(
-      SetLog setLog, int setIndex, String exerciseName, AppLocalizations l10n) {
+    SetLog setLog,
+    int rowIndex, // Der Index in der Liste der Sätze für DIESE Übung
+    int workingSetIndex, // Der "Arbeitssatz"-Index
+    String exerciseName,
+    AppLocalizations l10n,
+  ) {
     final setType = setLog.setType;
+    final isLightMode = Theme.of(context).brightness == Brightness.light;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Container(
-        decoration: const BoxDecoration(
-          color: Colors.transparent,
-        ),
+    final bool isColoredRow = rowIndex > 0 && rowIndex.isOdd;
+    final Color rowColor;
+    if (isColoredRow) {
+      rowColor = isLightMode
+          ? Colors.grey.withOpacity(0.1)
+          // HIER DIE ÄNDERUNG: Erhöhte Opazität für Dark Mode
+          : Colors.white.withOpacity(0.1);
+    } else {
+      rowColor = Colors.transparent;
+    }
+
+    return Container(
+      color: rowColor,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4.0),
         child: Row(
           children: [
-            // Set-Index als große farbige Zahl (KLICKBAR im Edit-Modus)
+            // ... restlicher Code der Methode bleibt unverändert
             Expanded(
               flex: 2,
               child: Center(
@@ -477,7 +492,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                         if (_isEditMode) _showSetTypePicker(setLog.id!);
                       },
                       child: Text(
-                        _getSetDisplayText(setType, setIndex),
+                        _getSetDisplayText(setType, workingSetIndex),
                         style: TextStyle(
                           color: textColor,
                           fontSize: 20,
@@ -489,18 +504,16 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                 ),
               ),
             ),
-            // Last Time (leer in History View)
-            Expanded(
+            const Expanded(
               flex: 3,
               child: Center(
                 child: Text(
                   "-",
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
                 ),
               ),
             ),
-            // Weight
             Expanded(
               flex: 2,
               child: _isEditMode
@@ -515,13 +528,15 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                           fillColor: Colors.transparent),
                     )
                   : Text(
-                      setLog.weightKg?.toStringAsFixed(1).replaceAll('.0', '') ?? '0',
+                      setLog.weightKg
+                              ?.toStringAsFixed(1)
+                              .replaceAll('.0', '') ??
+                          '0',
                       textAlign: TextAlign.center,
                       style: const TextStyle(fontSize: 16),
                     ),
             ),
             const SizedBox(width: 8),
-            // Reps
             Expanded(
               flex: 2,
               child: _isEditMode
@@ -540,7 +555,6 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                       style: const TextStyle(fontSize: 16),
                     ),
             ),
-            // Delete/Done Button
             Padding(
               padding: const EdgeInsets.only(right: 8.0),
               child: SizedBox(
@@ -734,18 +748,20 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                 // Set Rows
                 ...sets.asMap().entries.map((setEntry) {
                   final setLog = setEntry.value;
+                  final rowIndex = setEntry
+                      .key; // Der Index in der Liste der Sätze für DIESE Übung
 
                   // Normale Sätze zählen (ohne Warmup)
                   int workingSetIndex = 0;
-                  for (int i = 0; i <= setEntry.key; i++) {
+                  for (int i = 0; i <= rowIndex; i++) {
                     if (sets[i].setType != 'warmup') {
                       workingSetIndex++;
                     }
                   }
 
                   return _buildSetRow(
-                      setLog, workingSetIndex, exerciseName, l10n);
-                }),
+                      setLog, rowIndex, workingSetIndex, exerciseName, l10n);
+                }).toList(),
 
                 // Add Set Button
                 if (_isEditMode)

@@ -246,7 +246,8 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
                   ),
                 );
               }),
-              const SizedBox(height: DesignConstants.spacingL), // Abstand zum Ende
+              const SizedBox(
+                  height: DesignConstants.spacingL), // Abstand zum Ende
             ],
           ),
         ),

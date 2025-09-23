@@ -1169,4 +1169,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get nutritionDiary => 'Ernährungstagebuch';
+
+  @override
+  String get detailedNutrientGoals => 'Detail-Nährwerte';
 }

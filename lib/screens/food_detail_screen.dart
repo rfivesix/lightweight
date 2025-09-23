@@ -125,7 +125,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                   ),
                 ),
               ),
-            if (_hasPortionInfo) const SizedBox(height: DesignConstants.spacingL),
+            if (_hasPortionInfo)
+              const SizedBox(height: DesignConstants.spacingL),
             Text("Nährwerte pro ${displayQuantity}g",
                 style: textTheme.titleLarge),
             const SizedBox(height: DesignConstants.spacingS),

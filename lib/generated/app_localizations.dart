@@ -1517,7 +1517,7 @@ abstract class AppLocalizations {
   /// No description provided for @delete_profile_picture_button.
   ///
   /// In en, this message translates to:
-  /// **'Profilbild löschen'**
+  /// **'Delete profile picture'**
   String get delete_profile_picture_button;
 
   /// No description provided for @attribution_title.
@@ -2251,6 +2251,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'nutrition diary'**
   String get nutritionDiary;
+
+  /// No description provided for @detailedNutrientGoals.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed Nutrients'**
+  String get detailedNutrientGoals;
 }
 
 class _AppLocalizationsDelegate

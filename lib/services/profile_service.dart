@@ -1,4 +1,5 @@
 // lib/services/profile_service.dart
+// VEREINFACHTE UND KORRIGIERTE VERSION
 
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -13,10 +14,11 @@ class ProfileService extends ChangeNotifier {
 
   String? _profileImagePath;
   String? get profileImagePath => _profileImagePath;
+  int _cacheBuster = 0;
 
+  bool _isPickerActive = false;
   static const String _profileImageKey = 'profileImagePath';
 
-  // Units
   bool _useKg = true;
   bool get useKg => _useKg;
   bool _useCm = true;
@@ -44,21 +46,35 @@ class ProfileService extends ChangeNotifier {
     await prefs.setBool('useCm', value);
   }
 
+// Ersetze diese Methode in lib/services/profile_service.dart
   Future<void> pickAndSaveProfileImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      final appDir = await getApplicationDocumentsDirectory();
-      const fileName = 'profile_image.jpg';
-      final localPath = '${appDir.path}/$fileName';
-      final newImage = await File(pickedFile.path).copy(localPath);
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_profileImageKey, newImage.path);
-      _profileImagePath = newImage.path;
-      notifyListeners();
+    if (_isPickerActive) return;
+    _isPickerActive = true;
+
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+      if (pickedFile != null) {
+        final appDir = await getApplicationDocumentsDirectory();
+        const fileName = 'profile_image.jpg';
+        final localPath = '${appDir.path}/$fileName';
+        
+        final newImage = await File(pickedFile.path).copy(localPath);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(_profileImageKey, newImage.path);
+        _profileImagePath = newImage.path;
+
+        // Erhöhe den Cache-Buster, um einen Rebuild zu erzwingen
+        _cacheBuster++;
+        notifyListeners();
+      }
+    } finally {
+      _isPickerActive = false;
     }
   }
 
+// Ersetze diese Methode in lib/services/profile_service.dart
   Future<void> deleteProfileImage() async {
     final prefs = await SharedPreferences.getInstance();
     final currentPath = prefs.getString(_profileImageKey);
@@ -66,16 +82,18 @@ class ProfileService extends ChangeNotifier {
       try {
         await File(currentPath).delete();
       } catch (e) {
-        debugPrint('Fehler beim Löschen des Profilbildes: $e');
+        debugPrint('Fehler beim Löschen der Profildatei: $e');
       }
       await prefs.remove(_profileImageKey);
       _profileImagePath = null;
+      
+      // Erhöhe den Cache-Buster, um einen Rebuild zu erzwingen
+      _cacheBuster++;
       notifyListeners();
     }
   }
-} // <-- Klasse hier schließen
+}
 
-// Extension außerhalb der Klasse deklarieren
 extension UnitConverter on ProfileService {
   double toDisplayWeight(double kg) => useKg ? kg : kg * 2.20462;
   double toStorageWeight(double display) => useKg ? display : display / 2.20462;

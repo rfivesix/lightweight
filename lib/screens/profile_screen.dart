@@ -70,8 +70,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           .colorScheme
                           .primary
                           .withOpacity(0.1),
+                      // Wir erstellen das backgroundImage jetzt so:
                       backgroundImage: profileService.profileImagePath != null
-                          ? FileImage(File(profileService.profileImagePath!))
+                          ? Image.file(
+                              File(profileService.profileImagePath!),
+                              // Dieser Key ist jetzt korrekt am Image-Widget
+                              key: ValueKey(
+                                  '${profileService.profileImagePath}${profileService.hashCode}'),
+                            ).image // Wir greifen auf die .image Eigenschaft zu, die der CircleAvatar braucht
                           : null,
                       child: profileService.profileImagePath == null
                           ? Icon(Icons.camera_alt,

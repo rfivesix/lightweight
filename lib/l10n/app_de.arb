@@ -526,5 +526,7 @@
   "workoutHistoryEmptyTitle": "Dein Verlauf ist leer",
   "workoutSummaryTitle": "Workout Abgeschlossen",
   "workoutSummaryExerciseOverview": "Übersicht der Übungen",
-  "nutritionDiary":"Ernährungstagebuch"
+  "nutritionDiary":"Ernährungstagebuch",
+  "delete_profile_picture_button":"Profilbild löschen",
+  "detailedNutrientGoals": "Detail-Nährwerte" 
 }

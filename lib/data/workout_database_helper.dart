@@ -1,4 +1,5 @@
 // lib/data/workout_database_helper.dart
+// VOLLSTÄNDIGER CODE
 
 import 'dart:convert';
 import 'dart:io';
@@ -41,7 +42,6 @@ class WorkoutDatabaseHelper {
       }
     }
 
-    // FINALE LÖSUNG: Wir verwenden NUR onUpgrade.
     return await openDatabase(
       path,
       version: 9,
@@ -49,10 +49,8 @@ class WorkoutDatabaseHelper {
     );
   }
 
-  // Diese Methode bringt eine alte, existierende DB auf den neuesten Stand.
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
     print("Führe DB-Upgrade von v$oldVersion auf v$newVersion aus...");
-    // Gestaffeltes Upgrade. catchError fängt Fehler ab, falls Spalte schon existiert.
     if (oldVersion < 2) {
       await db
           .execute('ALTER TABLE set_logs ADD COLUMN rest_time_seconds INTEGER')
@@ -78,14 +76,10 @@ class WorkoutDatabaseHelper {
           .execute("ALTER TABLE set_logs ADD COLUMN log_order INTEGER")
           .catchError((_) {});
     }
-    // NEUE MIGRATION
     if (oldVersion < 6) {
       print("Upgrade DB auf v6: Entferne set_index aus set_logs...");
       await db.transaction((txn) async {
-        // Schritt 1: Umbenennen
         await txn.execute('ALTER TABLE set_logs RENAME TO set_logs_old');
-
-        // Schritt 2: Neu erstellen
         await txn.execute('''
           CREATE TABLE set_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -99,18 +93,13 @@ class WorkoutDatabaseHelper {
             log_order INTEGER
           )
         ''');
-
-        // Schritt 3: Daten kopieren
         await txn.execute('''
           INSERT INTO set_logs (id, workout_log_id, exercise_name, set_type, weight_kg, reps, rest_time_seconds, is_completed, log_order)
           SELECT id, workout_log_id, exercise_name, set_type, weight_kg, reps, rest_time_seconds, is_completed, log_order FROM set_logs_old
         ''');
-
-        // Schritt 4: Alte Tabelle löschen
         await txn.execute('DROP TABLE set_logs_old');
       });
     }
-    // NEUE MIGRATION
     if (oldVersion < 7) {
       print("Upgrade DB auf v7: Füge Detail-Spalten zu set_logs hinzu...");
       await db
@@ -140,8 +129,6 @@ class WorkoutDatabaseHelper {
           target_name TEXT NOT NULL
         )
       ''');
-
-      // Migriere bestehende Mappings aus SharedPreferences
       final oldMappings = await MappingPrefs.load();
       if (oldMappings.isNotEmpty) {
         print("Migriere ${oldMappings.length} bestehende Mappings...");
@@ -157,12 +144,29 @@ class WorkoutDatabaseHelper {
         print("Migration abgeschlossen.");
       }
     }
-
     print("DB-Upgrade auf v$newVersion erfolgreich abgeschlossen.");
   }
 
-  // 3. NEUE METHODE
-  /// Ruft alle gespeicherten Übungs-Mappings aus der Datenbank ab.
+  // HINZUGEFÜGT: Neue Methode zur Wiederherstellung
+  /// Sucht nach einem laufenden Workout in der DB. Es sollte immer nur eines geben.
+  Future<WorkoutLog?> getOngoingWorkout() async {
+    final db = await database;
+    final maps = await db.query(
+      'workout_logs',
+      where: "status = 'ongoing'",
+      orderBy: 'start_time DESC',
+      limit: 1,
+    );
+
+    if (maps.isNotEmpty) {
+      // Wenn ein laufendes Workout gefunden wird, holen wir auch alle zugehörigen Sätze.
+      final logId = maps.first['id'] as int;
+      return getWorkoutLogById(logId);
+    }
+
+    return null;
+  }
+
   Future<Map<String, String>> getExerciseMappings() async {
     final db = await database;
     final maps = await db.query('exercise_mapping');
@@ -206,7 +210,7 @@ class WorkoutDatabaseHelper {
     final String sql = '''
       SELECT e.*, CASE WHEN sl.id IS NOT NULL THEN 0 ELSE 1 END as sort_priority
       FROM exercises e
-      LEFT JOIN (SELECT exercise_name, MAX(id) as id FROM set_logs GROUP BY exercise_name) sl 
+      LEFT JOIN (SELECT exercise_name, MAX(id) as id FROM set_logs GROUP BY exercise_name) sl
       ON e.name_de = sl.exercise_name OR e.name_en = sl.exercise_name
       ${finalWhere.isNotEmpty ? 'WHERE $finalWhere' : ''}
       ORDER BY sort_priority ASC, e.name_de ASC
@@ -425,8 +429,7 @@ class WorkoutDatabaseHelper {
       'start_time': now.toIso8601String(),
       'status': 'ongoing'
     });
-    return WorkoutLog(
-        id: id, routineName: routineName, startTime: now, status: 'ongoing');
+    return WorkoutLog(id: id, routineName: routineName, startTime: now);
   }
 
   Future<int> insertSetLog(SetLog setLog) async {
@@ -445,7 +448,7 @@ class WorkoutDatabaseHelper {
     final id = await db.insert(
       'set_logs',
       setLog.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace, // <- statt ignore
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
     print(
         "--- DEBUG: Insert SetLog (${setLog.exerciseName}, ${setLog.weightKg}kg x ${setLog.reps}) → ID=$id ---");
@@ -502,7 +505,6 @@ class WorkoutDatabaseHelper {
     final setMaps = await db.query('set_logs',
         where: 'workout_log_id = ?', whereArgs: [id], orderBy: 'id ASC');
 
-    // *** DER ENTSCHEIDENDE DEBUG-PUNKT ***
     print(
         "--- DEBUG: Für workout_log_id $id wurden ${setMaps.length} Sätze in der DB gefunden.");
     if (setMaps.isNotEmpty) {
@@ -512,16 +514,6 @@ class WorkoutDatabaseHelper {
     final sets = setMaps.map((map) => SetLog.fromMap(map)).toList();
 
     return WorkoutLog.fromMap(logMaps.first, sets: sets);
-  }
-
-  Future<WorkoutLog?> getOngoingWorkout() async {
-    final db = await database;
-    final maps = await db.query('workout_logs',
-        where: "status = 'ongoing'", orderBy: 'start_time DESC', limit: 1);
-    if (maps.isNotEmpty) {
-      return getWorkoutLogById(maps.first['id'] as int);
-    }
-    return null;
   }
 
   Future<WorkoutLog?> getLatestWorkoutLog() async {
@@ -608,10 +600,8 @@ class WorkoutDatabaseHelper {
     final routines = await getAllRoutines();
     final detailedRoutines = <Routine>[];
     for (final routine in routines) {
-      // KORREKTUR 1: Prüfe auf Null, bevor die ID verwendet wird.
       if (routine.id != null) {
-        final detailedRoutine =
-            await getRoutineById(routine.id!); // routine.id! ist jetzt sicher
+        final detailedRoutine = await getRoutineById(routine.id!);
         if (detailedRoutine != null) {
           detailedRoutines.add(detailedRoutine);
         }
@@ -662,12 +652,10 @@ class WorkoutDatabaseHelper {
             'pause_seconds': re.pauseSeconds,
           });
           for (final st in re.setTemplates) {
-            // KORREKTUR: Map erstellen und alte ID entfernen
             final stMap = st.toMap();
             stMap.remove('id');
             stMap['routine_exercise_id'] = newReId;
-            stMap['set_index'] =
-                re.setTemplates.indexOf(st); // Index für die Reihenfolge setzen
+            stMap['set_index'] = re.setTemplates.indexOf(st);
             await txn.insert('routine_set_templates', stMap);
           }
         }
@@ -675,28 +663,15 @@ class WorkoutDatabaseHelper {
 
       // Workout Logs importieren
       for (final log in workoutLogs) {
-        // KORREKTUR 1: Erstelle eine neue Map aus dem WorkoutLog-Objekt.
         final logMap = log.toMap();
-
-        // KORREKTUR 2: Entferne die alte ID. Dies ist SEHR WICHTIG,
-        // damit die Datenbank eine neue, eindeutige ID per AUTOINCREMENT vergeben kann.
         logMap.remove('id');
-
-        // KORREKTUR 3: Setze den Status explizit auf 'completed'.
-        // Das stellt sicher, dass importierte Workouts im Verlauf erscheinen,
-        // da der Verlauf nur Einträge mit diesem Status anzeigt.
         logMap['status'] = 'completed';
-
         final newLogId = await txn.insert('workout_logs', logMap);
 
         for (final setLog in log.sets) {
-          // Wiederhole den Prozess für jeden Satz (SetLog).
           final setMap = setLog.toMap();
-          setMap.remove('id'); // Alte ID entfernen
-
-          // Die workout_log_id MUSS auf die ID des GERADE ERSTELLTEN Logs zeigen.
+          setMap.remove('id');
           setMap['workout_log_id'] = newLogId;
-
           await txn.insert('set_logs', setMap);
         }
       }
@@ -719,12 +694,10 @@ class WorkoutDatabaseHelper {
         .toList();
   }
 
-  /// Speichert die Mappings dauerhaft UND wendet sie auf bestehende Logs an.
   Future<void> applyExerciseNameMapping(Map<String, String> map) async {
     if (map.isEmpty) return;
     final db = await database;
     await db.transaction((txn) async {
-      // Schritt 1: Mappings in der neuen Tabelle speichern/aktualisieren
       final batch = txn.batch();
       for (final e in map.entries) {
         batch.insert(
@@ -735,7 +708,6 @@ class WorkoutDatabaseHelper {
       }
       await batch.commit(noResult: true);
 
-      // Schritt 2: Mappings auf die bestehenden set_logs anwenden
       for (final e in map.entries) {
         await txn.update(
           'set_logs',
@@ -747,7 +719,6 @@ class WorkoutDatabaseHelper {
     });
   }
 
-  /// Ruft alle einzigartigen Muskelgruppen aus der Datenbank ab.
   Future<List<String>> getAllMuscleGroups() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -758,7 +729,6 @@ class WorkoutDatabaseHelper {
 
     final Set<String> allMuscles = {};
 
-    // Helferfunktion zum sicheren Parsen des JSON-Strings
     List<String> parseMuscles(String? jsonString) {
       if (jsonString == null || jsonString.isEmpty) return [];
       try {
@@ -781,7 +751,6 @@ class WorkoutDatabaseHelper {
     return sortedList;
   }
 
-  /// Gibt ein Set von Tagen (1-31) zurück, an denen im gegebenen Monat Workouts geloggt wurden.
   Future<Set<int>> getWorkoutDaysInMonth(DateTime month) async {
     final db = await database;
     final firstDayOfMonth = DateTime(month.year, month.month, 1);
@@ -802,5 +771,37 @@ class WorkoutDatabaseHelper {
     return maps
         .map((map) => DateTime.parse(map['start_time'] as String).day)
         .toSet();
+  }
+
+    /// Findet das letzte Workout, das eine bestimmte Übung enthielt,
+  /// und gibt alle Sätze dieser Übung aus jenem Workout zurück.
+  Future<List<SetLog>> getLastSetsForExercise(String exerciseName) async {
+    final db = await database;
+
+    // Schritt 1: Finde die ID des letzten Workout-Logs, das diese Übung enthält.
+    final latestLogResult = await db.rawQuery('''
+      SELECT l.id
+      FROM workout_logs l
+      INNER JOIN set_logs s ON l.id = s.workout_log_id
+      WHERE s.exercise_name = ? AND l.status = 'completed'
+      ORDER BY l.start_time DESC
+      LIMIT 1
+    ''', [exerciseName]);
+
+    if (latestLogResult.isEmpty) {
+      return []; // Kein vorheriges Workout mit dieser Übung gefunden.
+    }
+
+    final logId = latestLogResult.first['id'] as int;
+
+    // Schritt 2: Hole alle Sätze für diese Übung aus genau diesem Workout-Log.
+    final setMaps = await db.query(
+      'set_logs',
+      where: 'workout_log_id = ? AND exercise_name = ?',
+      whereArgs: [logId, exerciseName],
+      orderBy: 'id ASC', // Sortiert nach der Reihenfolge der Erstellung
+    );
+
+    return setMaps.map((map) => SetLog.fromMap(map)).toList();
   }
 }

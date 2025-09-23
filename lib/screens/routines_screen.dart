@@ -20,15 +20,24 @@ class RoutinesScreen extends StatefulWidget {
 class _RoutinesScreenState extends State<RoutinesScreen> {
   bool _isLoading = true;
   List<Routine> _routines = [];
+  // final l10n wurde entfernt, da es in didChangeDependencies instanziiert wird
 
   @override
   void initState() {
     super.initState();
-    _loadRoutines();
+    // _loadRoutines wird jetzt von didChangeDependencies aufgerufen
   }
 
-  Future<void> _loadRoutines() async {
-    final l10n = AppLocalizations.of(context)!;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Sicherstellen, dass l10n verfügbar ist, bevor _loadRoutines aufgerufen wird.
+    // l10n wird hier instanziiert, wo context sicher verfügbar ist.
+    _loadRoutines(AppLocalizations.of(context)!);
+  }
+
+  Future<void> _loadRoutines(AppLocalizations l10n) async {
+    // l10n als Parameter hinzugefügt
     setState(() => _isLoading = true);
     final data = await WorkoutDatabaseHelper.instance.getAllRoutines();
     if (mounted) {
@@ -40,13 +49,14 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
       if (widget.initialRoutineId != null) {
         final routineToEdit = _routines.firstWhere(
             (r) => r.id == widget.initialRoutineId,
-            orElse: () => throw Exception(l10n.errorRoutineNotFound));
+            orElse: () => throw Exception(
+                l10n.errorRoutineNotFound)); // l10n hier verwenden
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Navigator.of(context)
               .push(MaterialPageRoute(
                   builder: (context) =>
                       EditRoutineScreen(routine: routineToEdit)))
-              .then((_) => _loadRoutines());
+              .then((_) => _loadRoutines(l10n)); // l10n hier übergeben
         });
       }
     }
@@ -64,12 +74,13 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
     if (!mounted) return;
     Navigator.of(context).pop();
     if (fullRoutine != null) {
+      final l10n = AppLocalizations.of(context)!; // l10n im Build-Kontext holen
       Navigator.of(context)
           .push(MaterialPageRoute(
             builder: (context) => LiveWorkoutScreen(
                 routine: fullRoutine, workoutLog: newWorkoutLog),
           ))
-          .then((_) => _loadRoutines());
+          .then((_) => _loadRoutines(l10n)); // l10n hier übergeben
     }
   }
 
@@ -82,20 +93,22 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
         .push(MaterialPageRoute(
           builder: (context) => LiveWorkoutScreen(workoutLog: newWorkoutLog),
         ))
-        .then((_) => _loadRoutines());
+        .then((_) => _loadRoutines(l10n)); // l10n hier übergeben
   }
 
   void _createNewRoutine() {
+    final l10n = AppLocalizations.of(context)!; // l10n im Build-Kontext holen
     Navigator.of(context)
         .push(
             MaterialPageRoute(builder: (context) => const EditRoutineScreen()))
-        .then((_) => _loadRoutines());
+        .then((_) => _loadRoutines(l10n)); // l10n hier übergeben
   }
 
 // NEUE METHODEN FÜR DAS MENÜ
   void _duplicateRoutine(int routineId) async {
     await WorkoutDatabaseHelper.instance.duplicateRoutine(routineId);
-    _loadRoutines();
+    final l10n = AppLocalizations.of(context)!; // l10n im Build-Kontext holen
+    _loadRoutines(l10n); // l10n hier übergeben
   }
 
   void _deleteRoutine(BuildContext context, Routine routine) async {
@@ -118,7 +131,7 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
 
     if (confirmed == true) {
       await WorkoutDatabaseHelper.instance.deleteRoutine(routine.id!);
-      _loadRoutines();
+      _loadRoutines(l10n); // l10n hier übergeben
     }
   }
 
@@ -221,7 +234,8 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
                                 .push(MaterialPageRoute(
                                     builder: (context) =>
                                         EditRoutineScreen(routine: routine)))
-                                .then((_) => _loadRoutines());
+                                .then((_) =>
+                                    _loadRoutines(l10n)); // l10n hier übergeben
                           },
                         ),
                       ),

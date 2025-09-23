@@ -5,6 +5,7 @@ import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/daily_nutrition.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/summary_card.dart';
+import 'dart:ui'; // Für den ImageFilter.blur
 
 class _NutrientSpec {
   final String label;
@@ -138,6 +139,7 @@ class NutritionSummaryWidget extends StatelessWidget {
     );
   }
 }
+// Ersetze die komplette _InfoBox Klasse in lib/widgets/nutrition_summary_widget.dart
 
 class _InfoBox extends StatelessWidget {
   final _NutrientSpec spec;
@@ -145,69 +147,85 @@ class _InfoBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final brightness = theme.brightness;
+    final colorScheme = theme.colorScheme;
+
     final hasTarget = spec.target > 0;
     final rawProgress = hasTarget ? (spec.value / spec.target) : 0.0;
     final progress = rawProgress.clamp(0.0, 1.0);
 
+    // Farben für den Glas-Effekt, identisch zur SummaryCard
+    final backgroundColor = brightness == Brightness.dark
+        ? Colors.white.withOpacity(0.10)
+        : Colors.white.withOpacity(0.65);
+
+    final borderColor = brightness == Brightness.dark
+        ? Colors.white.withOpacity(0.20)
+        : Colors.black.withOpacity(0.12);
+
     return Container(
+      // Die Dekoration ist jetzt die Glas-Dekoration
       decoration: BoxDecoration(
-        color: colorScheme.surface.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(9),
-        // KORREKTUR: Schatten für _InfoBox entfernt
-        // boxShadow: [ ... ], // Diese Zeilen können entfernt oder auskommentiert werden
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(9), // Etwas weniger Rundung für die kleinen Boxen
+        border: Border.all(
+          color: borderColor,
+          width: 1.0, // Etwas dünnerer Rand
+        ),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(9),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Container(color: colorScheme.onSurface.withOpacity(0.12)),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: progress),
-                duration: const Duration(milliseconds: 350),
-                curve: Curves.easeOutCubic,
-                builder: (context, p, child) =>
-                    FractionallySizedBox(widthFactor: p, child: child),
-                child: Container(color: spec.color),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0), // Etwas weniger Blur
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Der animierte Füllbalken bleibt erhalten
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0, end: progress),
+                  duration: const Duration(milliseconds: 350),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, p, child) =>
+                      FractionallySizedBox(widthFactor: p, child: child),
+                  child: Container(color: spec.color),
+                ),
               ),
-            ),
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      spec.label,
-                      maxLines: 1,
+              // Der Text-Inhalt liegt über dem Füllbalken
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        spec.label,
+                        maxLines: 1,
+                        style: TextStyle(
+                            color: colorScheme.onSurface,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      hasTarget
+                          ? '${spec.value.toStringAsFixed(1)} / ${spec.target.toStringAsFixed(0)} ${spec.unit}'
+                          : '${spec.value.toStringAsFixed(1)} ${spec.unit}',
                       style: TextStyle(
-                          color: colorScheme.onSurface,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold),
+                        color: colorScheme.onSurface.withOpacity(0.8),
+                        fontSize: 14,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    hasTarget
-                        ? '${spec.value.toStringAsFixed(1)} / ${spec.target.toStringAsFixed(0)} ${spec.unit}'
-                        : '${spec.value.toStringAsFixed(1)} ${spec.unit}',
-                    style: TextStyle(
-                      color: colorScheme.onSurface.withOpacity(0.8),
-                      fontSize: 14,
-                      // KORREKTUR: Schatten für Text in _InfoBox entfernt
-                      // shadows: [Shadow(blurRadius: 1.0, color: colorScheme.surface.withOpacity(0.7), offset: const Offset(1.0, 1.0))],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

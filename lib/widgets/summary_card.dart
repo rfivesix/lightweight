@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 class SummaryCard extends StatelessWidget {
@@ -9,7 +11,7 @@ class SummaryCard extends StatelessWidget {
     required this.child,
     this.padding = const EdgeInsets.all(12.0),
   });
-
+/*
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
@@ -34,6 +36,53 @@ class SummaryCard extends StatelessWidget {
         ],
       ),
       child: child,
+    );
+  }
+  */
+  // Ersetze die komplette build-Methode in lib/widgets/summary_card.dart
+
+// Ersetze die komplette build-Methode in lib/widgets/summary_card.dart
+
+  @override
+  Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+
+    // KORREKTUR: Hintergrund im Light Mode weniger transparent für besseren Kontrast
+    final backgroundColor = brightness == Brightness.dark
+        ? Colors.white.withOpacity(0.10)
+        : Colors.white.withOpacity(0.65); // War 0.40, jetzt weniger durchsichtig
+
+    // KORREKTUR: Randfarbe im Light Mode ist jetzt ein dunkles Grau statt Weiß
+    final borderColor = brightness == Brightness.dark
+        ? Colors.white.withOpacity(0.20)
+        : Colors.black.withOpacity(0.12); // War Weiß, jetzt dunkles Grau mit Transparenz
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6.0),
+      // WICHTIG: Kein Padding mehr direkt hier, wird jetzt vom Child gesteuert
+      // padding: padding, // Diese Zeile entfernen oder auskommentieren
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: borderColor,
+          width: 1.5,
+        ),
+        boxShadow: const [],
+      ),
+      // WICHTIG: ClipRRect, damit der Blur-Effekt die Ecken respektiert
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          // Der eigentliche "Frostglas"-Effekt
+          filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+          child: Padding(
+            // Das Padding wird jetzt innerhalb des Blur-Effekts angewendet
+            padding: padding,
+            child: child,
+          ),
+        ),
+      ),
     );
   }
 }

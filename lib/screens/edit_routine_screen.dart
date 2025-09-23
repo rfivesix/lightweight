@@ -1,4 +1,4 @@
-// lib/screens/edit_routine_screen.dart (Final & De-Materialisiert)
+// lib/screens/edit_routine_screen.dart (Final & De-Materialisiert - Endgültig)
 
 import 'package:flutter/material.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
@@ -15,6 +15,7 @@ import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/set_type_chip.dart';
 // HINZUGEFÜGT
 import 'package:lightweight/widgets/wger_attribution_widget.dart'; // HINZUGEFÜGT
+import 'package:lightweight/widgets/workout_card.dart'; // NEUER IMPORT
 
 class EditRoutineScreen extends StatefulWidget {
   final Routine? routine;
@@ -33,7 +34,6 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
   bool _isLoading = false;
   final Map<int, TextEditingController> _repsControllers = {};
   final Map<int, TextEditingController> _weightControllers = {};
-  // HINZUGEFÜGT: Für die Animation der Übungsblöcke (eingeklappt beim Drag)
   final Map<int, bool> _exerciseExpanded = {};
 
   @override
@@ -66,7 +66,6 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     final routineWithExercises =
         await WorkoutDatabaseHelper.instance.getRoutineById(_routineId!);
     if (mounted && routineWithExercises != null) {
-      // Bereinige alte Controller, bevor neue erstellt werden
       for (var c in _repsControllers.values) {
         c.dispose();
       }
@@ -105,11 +104,9 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                 const ExerciseCatalogScreen(isSelectionMode: true)));
 
     if (selectedExercise != null && _routineId != null) {
-      // KORREKTUR: Lade nicht die ganze Liste neu. Füge nur die neue Übung zum lokalen State hinzu.
       final newRoutineExercise = await WorkoutDatabaseHelper.instance
           .addExerciseToRoutine(_routineId!, selectedExercise.id!);
       if (newRoutineExercise != null) {
-        // Erstelle die Controller für die neuen Sätze
         for (var st in newRoutineExercise.setTemplates) {
           _repsControllers[st.id!] = TextEditingController(text: st.targetReps);
           _weightControllers[st.id!] =
@@ -158,10 +155,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
       }
     }
 
-    // KORREKTUR: Robuste Speicherlogik für Sätze
     final db = WorkoutDatabaseHelper.instance;
     for (var re in _routineExercises) {
-      // 1. Sammle den aktuellen Zustand der Sätze aus den Controllern
       final List<SetTemplate> currentTemplates = [];
       for (var set in re.setTemplates) {
         currentTemplates.add(set.copyWith(
@@ -169,7 +164,6 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
             targetWeight: double.tryParse(
                 _weightControllers[set.id!]!.text.replaceAll(',', '.'))));
       }
-      // 2. Ersetze alle Sätze in der DB mit dem aktuellen Zustand
       await db.replaceSetTemplatesForExercise(re.id!, currentTemplates);
     }
 
@@ -181,7 +175,6 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     return true;
   }
 
-  // --- NEUE METHODEN FÜR DIE DIREKTE BEARBEITUNG ---
   void _addSet(RoutineExercise routineExercise) {
     setState(() {
       final newSet = SetTemplate(
@@ -201,14 +194,11 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
       routineExercise.setTemplates.removeAt(index);
       _repsControllers.remove(setTemplateId)?.dispose();
       _weightControllers.remove(setTemplateId)?.dispose();
-      // TODO: Markiere für späteres Löschen aus DB in _saveRoutine
-      // _setsToDelete.add(setTemplateId);
     });
   }
 
   void _changeSetType(SetTemplate setTemplate, String newType) {
     setState(() {
-      // Da SetTemplate immutable ist, müssen wir die Liste modifizieren
       final re = _routineExercises
           .firstWhere((re) => re.setTemplates.contains(setTemplate));
       final setIndex = re.setTemplates.indexOf(setTemplate);
@@ -241,7 +231,6 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     );
   }
 
-  // NEUE METHODE: Zeigt den Dialog zum Bearbeiten der Pausenzeit
   void _editPauseTime(RoutineExercise routineExercise) async {
     final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController(
@@ -275,11 +264,10 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     if (result != null) {
       await WorkoutDatabaseHelper.instance
           .updatePauseTime(routineExercise.id!, result);
-      _loadExercisesForRoutine(); // Lade neu, um die Anzeige zu aktualisieren
+      _loadExercisesForRoutine();
     }
   }
 
-  // NEUE METHODE: Kapselt die Logik zum Löschen einer Übung
   void _deleteSingleExercise(RoutineExercise exerciseToDelete) async {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
@@ -306,7 +294,6 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     }
   }
 
-  // KORREKTUR: onReorder-Logik für Drag-Feedback
   void _onReorder(int oldIndex, int newIndex) {
     setState(() {
       if (newIndex > oldIndex) {
@@ -386,7 +373,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                         ),
                       )
                     : ReorderableListView.builder(
-                        padding: DesignConstants.cardMargin,
+                        padding: EdgeInsets.zero,
                         itemCount: _routineExercises.length,
                         proxyDecorator: (Widget child, int index,
                             Animation<double> animation) {
@@ -400,11 +387,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                         itemBuilder: (context, index) {
                           final routineExercise = _routineExercises[index];
 
-                          // KORREKTUR: SummaryCard wurde entfernt
-                          return Container(
+                          return WorkoutCard(
                             key: ValueKey(routineExercise.id),
-                            color: Theme.of(context).scaffoldBackgroundColor,
-                            margin: DesignConstants.cardMargin,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -424,7 +408,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                                       child: Text(
                                           routineExercise.exercise
                                               .getLocalizedName(context),
-                                          style: textTheme.titleLarge),
+                                          style: textTheme.titleLarge?.copyWith(
+                                              fontWeight: FontWeight.bold)),
                                     ),
                                   ),
                                   leading: ReorderableDragStartListener(
@@ -450,16 +435,9 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                                     ],
                                   ),
                                 ),
-                                Divider(
-                                    height: 1,
-                                    thickness: 1,
-                                    color: colorScheme.onSurfaceVariant
-                                        .withOpacity(0.1),
-                                    indent: 16,
-                                    endIndent: 16),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 16.0),
+                                      horizontal: 0.0),
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -468,8 +446,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                                               null &&
                                           routineExercise.pauseSeconds! > 0)
                                         Padding(
-                                          padding: const EdgeInsets.only(
-                                              top: 12.0, bottom: 12.0),
+                                          padding: const EdgeInsets.fromLTRB(
+                                              16, 12, 16, 12),
                                           child: Text(
                                             l10n.pauseDuration(
                                                 routineExercise.pauseSeconds!),
@@ -482,33 +460,49 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                                         ),
                                       Row(
                                         children: [
-                                          _buildHeader(l10n.setLabel),
-                                          const Spacer(),
-                                          _buildHeader(l10n.kgLabel),
-                                          _buildHeader(l10n.repsLabel),
+                                          _buildHeader(l10n.setLabel, flex: 2),
+                                          const Spacer(flex: 3),
+                                          _buildHeader(l10n.kgLabel, flex: 2),
+                                          const SizedBox(width: 8),
+                                          _buildHeader(l10n.repsLabel, flex: 2),
                                           const SizedBox(width: 48),
                                         ],
                                       ),
-                                      const Divider(),
                                       ...routineExercise.setTemplates
                                           .asMap()
                                           .entries
                                           .map((entry) {
                                         final setIndex = entry.key;
                                         final setTemplate = entry.value;
+
+                                        // HIER IST DIE NEUE LOGIK
+                                        int workingSetIndex = 0;
+                                        for (int i = 0; i <= setIndex; i++) {
+                                          if (routineExercise
+                                                  .setTemplates[i].setType !=
+                                              'warmup') {
+                                            workingSetIndex++;
+                                          }
+                                        }
+
                                         return _buildSetTemplateRow(
-                                            setIndex + 1,
+                                            workingSetIndex,
+                                            setIndex,
                                             routineExercise,
                                             setTemplate,
                                             setIndex);
                                       }),
                                       const SizedBox(
                                           height: DesignConstants.spacingS),
-                                      TextButton.icon(
-                                        onPressed: () =>
-                                            _addSet(routineExercise),
-                                        icon: const Icon(Icons.add),
-                                        label: Text(l10n.addSetButton),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16.0),
+                                        child: TextButton.icon(
+                                          onPressed: () =>
+                                              _addSet(routineExercise),
+                                          icon: const Icon(Icons.add),
+                                          label: Text(l10n.addSetButton),
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -534,70 +528,98 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     );
   }
 
-  Widget _buildSetTemplateRow(
-      int setIndex, RoutineExercise re, SetTemplate template, int listIndex) {
+  Widget _buildSetTemplateRow(int setIndex, int rowIndex, RoutineExercise re,
+      SetTemplate template, int listIndex) {
     final l10n = AppLocalizations.of(context)!;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 2,
-            child: SetTypeChip(
-              setType: template.setType,
-              setIndex: (template.setType == 'warmup') ? null : setIndex,
-              onTap: () => _showSetTypePicker(template),
+    final isLightMode = Theme.of(context).brightness == Brightness.light;
+    final bool isColoredRow = rowIndex > 0 && rowIndex.isOdd;
+
+    final Color rowColor;
+    if (isColoredRow) {
+      rowColor = isLightMode
+          ? Colors.grey.withOpacity(0.08)
+          : Colors.white.withOpacity(0.05);
+    } else {
+      rowColor = Colors.transparent;
+    }
+
+    return Container(
+      color: rowColor,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4.0),
+        child: Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: Center(
+                child: SetTypeChip(
+                  setType: template.setType,
+                  setIndex: (template.setType == 'warmup') ? null : setIndex,
+                  onTap: () => _showSetTypePicker(template),
+                ),
+              ),
             ),
-          ),
-          const Spacer(),
-          Expanded(
-              flex: 3,
-              child: TextFormField(
-                controller: _weightControllers[template.id!],
-                textAlign: TextAlign.center,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                decoration:
-                    InputDecoration(hintText: l10n.kgLabelShort, isDense: true),
-                validator: (value) {
-                  if (value != null &&
-                      value.isNotEmpty &&
-                      double.tryParse(value.replaceAll(',', '.')) == null) {
-                    return "!";
-                  }
-                  return null;
-                },
-              )),
-          const SizedBox(width: 8),
-          Expanded(
-              flex: 3,
-              child: TextFormField(
-                controller: _repsControllers[template.id!],
-                textAlign: TextAlign.center,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                    hintText: l10n.set_reps_hint, isDense: true),
-                validator: (value) {
-                  if (value != null &&
-                      value.isNotEmpty &&
-                      int.tryParse(value) == null) {
-                    return "!";
-                  }
-                  return null;
-                },
-              )),
-          SizedBox(
-              width: 48,
-              child: IconButton(
-                  icon:
-                      const Icon(Icons.delete_outline, color: Colors.redAccent),
-                  onPressed: () => _removeSet(re, template.id!, listIndex))),
-        ],
+            const Spacer(flex: 3),
+            Expanded(
+                flex: 2,
+                child: TextFormField(
+                  controller: _weightControllers[template.id!],
+                  textAlign: TextAlign.center,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: InputDecoration(
+                      border: InputBorder.none,
+                      isDense: true,
+                      fillColor: Colors.transparent,
+                      hintText: l10n.kgLabelShort),
+                  validator: (value) {
+                    if (value != null &&
+                        value.isNotEmpty &&
+                        double.tryParse(value.replaceAll(',', '.')) == null) {
+                      return "!";
+                    }
+                    return null;
+                  },
+                )),
+            const SizedBox(width: 8),
+            Expanded(
+                flex: 2,
+                child: TextFormField(
+                  controller: _repsControllers[template.id!],
+                  textAlign: TextAlign.center,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                      border: InputBorder.none,
+                      isDense: true,
+                      fillColor: Colors.transparent,
+                      hintText: l10n.set_reps_hint),
+                  validator: (value) {
+                    if (value != null &&
+                        value.isNotEmpty &&
+                        int.tryParse(value) == null) {
+                      return "!";
+                    }
+                    return null;
+                  },
+                )),
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: SizedBox(
+                  width: 48,
+                  child: IconButton(
+                      icon: const Icon(Icons.delete_outline,
+                          color: Colors.redAccent),
+                      onPressed: () =>
+                          _removeSet(re, template.id!, listIndex))),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildHeader(String text) => Expanded(
+  Widget _buildHeader(String text, {required int flex}) => Expanded(
+      flex: flex,
       child: Text(text,
           textAlign: TextAlign.center,
           style: TextStyle(

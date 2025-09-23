@@ -1,4 +1,5 @@
 // lib/models/set_log.dart
+// VOLLSTÄNDIGER CODE
 
 class SetLog {
   final int? id;
@@ -8,7 +9,8 @@ class SetLog {
   final double? weightKg;
   final int? reps;
   final int? restTimeSeconds;
-  final bool? isCompleted;
+  final bool?
+      isCompleted; // WAR bool?, ist es schon, perfekt. Keine Änderung nötig.
   final int? log_order;
   final String? notes;
   final double? distanceKm;
@@ -42,6 +44,7 @@ class SetLog {
       weightKg: map['weight_kg'],
       reps: map['reps'],
       restTimeSeconds: map['rest_time_seconds'],
+      // MODIFIKATION: isCompleted kann null sein, wir mappen 1 zu true, alles andere (0, null) zu false.
       isCompleted: map['is_completed'] == 1,
       log_order: map['log_order'],
       notes: map['notes'],
@@ -61,6 +64,7 @@ class SetLog {
       'weight_kg': weightKg,
       'reps': reps,
       'rest_time_seconds': restTimeSeconds,
+      // MODIFIKATION: Speichere true als 1, false/null als 0.
       'is_completed': isCompleted == true ? 1 : 0,
       'log_order': log_order,
       'notes': notes,

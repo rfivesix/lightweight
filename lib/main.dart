@@ -1,9 +1,12 @@
 // lib/main.dart
+// VOLLSTÄNDIGER CODE (KORRIGIERT)
 
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lightweight/data/workout_database_helper.dart'; // Wichtig für die Wiederherstellung
 import 'package:lightweight/generated/app_localizations.dart';
+import 'package:lightweight/models/workout_log.dart'; // Wichtig für die Wiederherstellung
 import 'package:lightweight/screens/main_screen.dart';
 import 'package:lightweight/services/profile_service.dart';
 import 'package:lightweight/services/workout_session_manager.dart';
@@ -11,12 +14,21 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lightweight/screens/onboarding_screen.dart';
 
-void main() {
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 1. Erstelle die Manager-Instanz
+  final workoutSessionManager = WorkoutSessionManager();
+
+  // 2. Rufe die neue, gekapselte Wiederherstellungsmethode auf
+  await workoutSessionManager.tryRestoreSession();
+
+  // 3. Starte die App mit der (möglicherweise wiederhergestellten) Instanz
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => WorkoutSessionManager()),
+        ChangeNotifierProvider.value(value: workoutSessionManager),
         ChangeNotifierProvider(
           create: (context) {
             final profileService = ProfileService();

@@ -11,20 +11,20 @@
 
 ---
 
-## ✨ Features at a Glance
+## ✨ Features
 
 | | |
 | :--- | :--- |
 | 📊 **Modern Dashboard** | A central hub showing your daily calories, macros, water intake, and weight trend. |
 | 🥗 **Advanced Nutrition Tracking** | Log meals via barcode scanner, a vast offline food database, or by creating custom food items. |
-| 💪 **Flexible Workout Planner** | Build detailed workout routines with various set types (Normal, Warmup, Dropset, Failure) and track your sessions live. |
+| 💪 **Robust Workout Planner & Tracker** | Build detailed workout routines with various set types (Normal, Warmup, Dropset, Failure) and track your sessions live. **Your progress is now saved even if you close the app!** |
 | 📅 **Consistency Calendar** | A beautiful heatmap calendar that visualizes your logged workout and nutrition days to keep you motivated. |
 | 🎯 **Intuitive Goal Setting** | Set your targets for calories, body measurements, and macronutrients using either direct gram input or a percentage-based calculator. |
 | 📦 **Full Data Control** | Your data stays on your device. Import your history from other apps (e.g., Hevy) and export all your data anytime as an unencrypted JSON backup or CSV files. |
 
 ## 📸 Screenshots
 
-*Screenshots are taken from v0.1.0 and show both light and dark mode.*
+*Screenshots from v0.2.0 showing both light and dark mode.*
 
 | Home (Dark) | Routines (Dark) | Live Workout (Dark) |
 | :---: | :---: | :---: |
@@ -32,25 +32,19 @@
 | **Food (Light)** | **Stats (Light)** | **Goals (Dark)** |
 | <img src="assets/screenshots/food_whitemode.png" width="250"> | <img src="assets/screenshots/Stats_whitemode.png" width="250"> | <img src="assets/screenshots/my_goals_darkmode.png" width="250"> |
 
-
 ## 🚀 Philosophy & Core Principles
 
-Lightweight is developed with a clear vision:
-
--   🔒 **Offline-First & Privacy:** Your health data belongs to you. Everything is stored locally on your device. No registration, no cloud, no tracking.
--   🎨 **Modern & Adaptive Design:** The UI adapts to your system's theme and uses a clean, modern design language inspired by Material You.
--   💸 **Free, Open & No Ads:** The core of the app will always be free and open-source, without subscriptions or advertisements.
--   🚀 **Powerful & Intuitive:** A simple surface that hides powerful features usually found only in premium apps.
+-   🔒 **Offline-First & Privacy:** Your health data belongs to you. Everything is stored locally. No registration, no cloud, no tracking.
+-   🎨 **Modern & Adaptive Design:** The UI adapts to your system's theme and uses a clean, modern design language.
+-   💸 **Free, Open & No Ads:** The core of the app will always be free and open-source.
+-   🚀 **Powerful & Intuitive:** A simple surface that hides powerful features.
 
 ---
 
 ## 🛠️ Technical Architecture
 
--   **State Management:** `StatefulWidget` and `setState` are used for local state, with simple singleton services (`WorkoutSessionManager`, `ProfileService`) for global UI state.
--   **Database System (`sqflite`):** A unique three-database system ensures clean data separation:
-    1.  **Food Products DB (`vita_prep_de.db`):** A large, read-only database from Open Food Facts.
-    2.  **Workout & Exercise DB (`vita_training.db`):** Contains the static exercise catalog from wger, plus user-created routines and logs.
-    3.  **User Data DB (`vita_user.db`):** The only dynamic database, storing all personal entries.
+-   **State Management:** `StatefulWidget` and `setState` for local state, with simple singleton services (`WorkoutSessionManager`, `ProfileService`) for global UI state.
+-   **Database System (`sqflite`):** A unique three-database system ensures clean data separation (Food Products, Exercises, User Data).
 
 ---
 

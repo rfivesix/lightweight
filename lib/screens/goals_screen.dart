@@ -205,7 +205,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                     _buildSettingsField(
                         controller: _waterController, label: l10n.water),
                     const SizedBox(height: DesignConstants.spacingXL),
-                    Text("Detail-Nährwerte",
+                    Text(l10n.detailedNutrientGoals, // HIER DIE ÄNDERUNG
                         style: Theme.of(context).textTheme.headlineSmall),
                     const SizedBox(height: DesignConstants.spacingL),
                     _buildSettingsField(
@@ -228,7 +228,10 @@ class _GoalsScreenState extends State<GoalsScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        color: Theme.of(context)
+            .colorScheme
+            .surfaceContainerHighest
+            .withOpacity(0.3),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
