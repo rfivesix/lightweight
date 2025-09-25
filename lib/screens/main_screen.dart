@@ -18,6 +18,7 @@ import 'package:lightweight/screens/home.dart';
 import 'package:lightweight/screens/live_workout_screen.dart';
 import 'package:lightweight/screens/nutrition_hub_screen.dart';
 import 'package:lightweight/screens/profile_screen.dart';
+import 'package:lightweight/screens/routines_screen.dart';
 import 'package:lightweight/screens/statistics_hub_screen.dart';
 import 'package:lightweight/screens/workout_hub_screen.dart';
 import 'package:lightweight/services/profile_service.dart';
@@ -89,7 +90,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     switch (action) {
       case 'start_workout':
         Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const WorkoutHubScreen()));
+            MaterialPageRoute(builder: (context) => const RoutinesScreen()));
         break;
       case 'add_measurement':
         final success = await Navigator.of(context).push<bool>(
