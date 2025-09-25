@@ -46,7 +46,8 @@ class BackupManager {
       for (String key in keys) {
         userPrefs[key] = prefs.get(key);
       }
-
+      final supplements = await _userDb.getAllSupplements();
+      final supplementLogs = await _userDb.getAllSupplementLogs();
       final backup = LightweightBackup(
         // KORREKTUR: Nutzt das neue Modell
         schemaVersion: currentSchemaVersion,
@@ -58,6 +59,8 @@ class BackupManager {
         routines: routines,
         workoutLogs: workoutLogs,
         userPreferences: userPrefs,
+        supplements: supplements,
+        supplementLogs: supplementLogs,
       );
       final jsonString = jsonEncode(backup.toJson());
 
@@ -100,8 +103,6 @@ class BackupManager {
 
       await _userDb.clearAllUserData();
       await _workoutDb.clearAllWorkoutData();
-      await _userDb.clearAllUserData();
-      await _workoutDb.clearAllWorkoutData();
       final productDb = await _productDb.offDatabase;
       await productDb?.delete('products',
           where: 'barcode LIKE ?', whereArgs: ['user_created_%']);
@@ -121,11 +122,15 @@ class BackupManager {
           await prefs.setStringList(key, value);
         }
       }
+      final supplements = await _userDb.getAllSupplements();
+      final supplementLogs = await _userDb.getAllSupplementLogs();
       await _userDb.importUserData(
         foodEntries: backup.foodEntries,
         waterEntries: backup.waterEntries,
         favoriteBarcodes: backup.favoriteBarcodes,
         measurementSessions: backup.measurementSessions,
+        supplements: supplements,
+        supplementLogs: supplementLogs,
       );
       if (productDb != null) {
         final batch = productDb.batch();
@@ -315,7 +320,8 @@ class BackupManager {
       for (final k in prefs.getKeys()) {
         userPrefs[k] = prefs.get(k);
       }
-
+      final supplements = await _userDb.getAllSupplements();
+      final supplementLogs = await _userDb.getAllSupplementLogs();
       final backup = LightweightBackup(
         schemaVersion: currentSchemaVersion,
         foodEntries: foodEntries,
@@ -326,6 +332,8 @@ class BackupManager {
         routines: routines,
         workoutLogs: workoutLogs,
         userPreferences: userPrefs,
+        supplements: supplements,
+        supplementLogs: supplementLogs,
       );
       final jsonString = jsonEncode(backup.toJson());
 
@@ -411,6 +419,8 @@ class BackupManager {
         waterEntries: backup.waterEntries,
         favoriteBarcodes: backup.favoriteBarcodes,
         measurementSessions: backup.measurementSessions,
+        supplements: backup.supplements, // NEU
+        supplementLogs: backup.supplementLogs, // NEU
       );
 
       if (productDb != null) {
@@ -475,6 +485,8 @@ class BackupManager {
       for (final k in prefs.getKeys()) {
         userPrefs[k] = prefs.get(k);
       }
+      final supplements = await _userDb.getAllSupplements();
+      final supplementLogs = await _userDb.getAllSupplementLogs();
       final backup = LightweightBackup(
         schemaVersion: currentSchemaVersion,
         foodEntries: foodEntries,
@@ -485,6 +497,8 @@ class BackupManager {
         routines: routines,
         workoutLogs: workoutLogs,
         userPreferences: userPrefs,
+        supplements: supplements,
+        supplementLogs: supplementLogs,
       );
       final jsonString = jsonEncode(backup.toJson());
 

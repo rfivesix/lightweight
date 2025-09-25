@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 class GlassFab extends StatefulWidget {
   final VoidCallback onPressed;
   final IconData icon;
-  final String? label; // optionaler Text
+  final String? label; // KORREKTUR: Label ist jetzt optional (kann null sein)
 
   const GlassFab({
     super.key,
     required this.onPressed,
+    this.label, // KORREKTUR: Nicht mehr 'required'
     this.icon = Icons.add,
-    this.label,
   });
 
   @override
@@ -60,12 +60,15 @@ class _GlassFabState extends State<GlassFab>
           );
         },
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(20), // viereckiger
+          borderRadius: BorderRadius.circular(20),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
             child: Container(
-              width: 76, // doppelt so breit
-              height: 76, // nur minimal höher
+              // KORREKTUR: Höhe und Breite sind jetzt dynamisch
+              height: 76,
+              width: widget.label != null
+                  ? null
+                  : 76, // Quadratisch, wenn kein Label
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(20),
@@ -81,26 +84,33 @@ class _GlassFabState extends State<GlassFab>
                   ),
                 ],
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    widget.icon,
-                    size: 30,
-                    color: Colors.white,
-                  ),
-                  if (widget.label != null) ...[
-                    const SizedBox(width: 8),
-                    Text(
-                      widget.label!,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
+              // KORREKTUR: Inhalt hängt davon ab, ob ein Label existiert
+              child: Padding(
+                padding: widget.label != null
+                    ? const EdgeInsets.symmetric(horizontal: 24.0)
+                    : EdgeInsets.zero,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      widget.icon,
+                      size: 30,
+                      color: Colors.white,
                     ),
+                    if (widget.label != null) ...[
+                      const SizedBox(width: 12),
+                      Text(
+                        widget.label!,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ),

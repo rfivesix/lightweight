@@ -11,6 +11,8 @@ import 'package:lightweight/models/set_log.dart';
 import 'package:lightweight/models/set_template.dart';
 import 'package:lightweight/models/water_entry.dart';
 import 'package:lightweight/models/workout_log.dart';
+import 'package:lightweight/models/supplement.dart';
+import 'package:lightweight/models/supplement_log.dart';
 
 class LightweightBackup {
   final int schemaVersion;
@@ -23,6 +25,8 @@ class LightweightBackup {
   final List<WorkoutLog> workoutLogs;
   // HINZUGEFÜGT: Ein Feld für die Benutzereinstellungen
   final Map<String, dynamic> userPreferences;
+  final List<Supplement> supplements;
+  final List<SupplementLog> supplementLogs;
 
   LightweightBackup({
     required this.schemaVersion,
@@ -34,6 +38,8 @@ class LightweightBackup {
     required this.routines,
     required this.workoutLogs,
     required this.userPreferences, // HINZUGEFÜGT
+    required this.supplements, // NEU
+    required this.supplementLogs, // NEU
   });
 
   // KORRIGIERTE VERSION
@@ -111,6 +117,14 @@ class LightweightBackup {
           }).toList() ??
           [],
       userPreferences: Map<String, dynamic>.from(json['userPreferences'] ?? {}),
+      supplements: (json['supplements'] as List<dynamic>?)
+              ?.map((e) => Supplement.fromMap(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      supplementLogs: (json['supplementLogs'] as List<dynamic>?)
+              ?.map((e) => SupplementLog.fromMap(e as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
   }
 
@@ -140,6 +154,8 @@ class LightweightBackup {
               })
           .toList(),
       'userPreferences': userPreferences,
+      'supplements': supplements.map((e) => e.toMap()).toList(),
+      'supplementLogs': supplementLogs.map((e) => e.toMap()).toList(),
     };
   }
 }

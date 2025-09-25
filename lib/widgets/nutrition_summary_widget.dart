@@ -168,7 +168,8 @@ class _InfoBox extends StatelessWidget {
       // Die Dekoration ist jetzt die Glas-Dekoration
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(9), // Etwas weniger Rundung für die kleinen Boxen
+        borderRadius: BorderRadius.circular(
+            9), // Etwas weniger Rundung für die kleinen Boxen
         border: Border.all(
           color: borderColor,
           width: 1.0, // Etwas dünnerer Rand
@@ -177,7 +178,8 @@ class _InfoBox extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(9),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0), // Etwas weniger Blur
+          filter:
+              ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0), // Etwas weniger Blur
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -195,7 +197,8 @@ class _InfoBox extends StatelessWidget {
               ),
               // Der Text-Inhalt liegt über dem Füllbalken
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,

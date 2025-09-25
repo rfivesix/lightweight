@@ -1172,4 +1172,70 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get detailedNutrientGoals => 'Detail-Nährwerte';
+
+  @override
+  String get supplementTrackerTitle => 'Supplement-Tracker';
+
+  @override
+  String get supplementTrackerDescription =>
+      'Ziele, Limits und Einnahmen verfolgen.';
+
+  @override
+  String get createSupplementTitle => 'Supplement erstellen';
+
+  @override
+  String get supplementNameLabel => 'Name des Supplements';
+
+  @override
+  String get defaultDoseLabel => 'Standard-Dosis';
+
+  @override
+  String get unitLabel => 'Einheit (z.B. g, mg)';
+
+  @override
+  String get dailyGoalLabel => 'Tagesziel (optional)';
+
+  @override
+  String get dailyLimitLabel => 'Tageslimit (optional)';
+
+  @override
+  String get dailyProgressTitle => 'Tagesfortschritt';
+
+  @override
+  String get todaysLogTitle => 'Heutiges Protokoll';
+
+  @override
+  String get logIntakeTitle => 'Einnahme protokollieren';
+
+  @override
+  String get emptySupplementGoals =>
+      'Lege Ziele oder Limits für Supplements fest, um deinen Fortschritt hier zu sehen.';
+
+  @override
+  String get emptySupplementLogs =>
+      'Noch keine Einnahmen für heute protokolliert.';
+
+  @override
+  String get doseLabel => 'Dosis';
+
+  @override
+  String get settingsDescription => 'Thema, Einheiten, Daten und mehr';
+
+  @override
+  String get settingsAppearance => 'Erscheinungsbild';
+
+  @override
+  String get themeSystem => 'System';
+
+  @override
+  String get themeLight => 'Hell';
+
+  @override
+  String get themeDark => 'Dunkel';
+
+  @override
+  String get caffeinePrompt => 'Koffein (optional)';
+
+  @override
+  String get caffeineUnit => 'mg pro 100ml';
 }

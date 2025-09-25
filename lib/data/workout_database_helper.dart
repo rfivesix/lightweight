@@ -773,7 +773,7 @@ class WorkoutDatabaseHelper {
         .toSet();
   }
 
-    /// Findet das letzte Workout, das eine bestimmte Übung enthielt,
+  /// Findet das letzte Workout, das eine bestimmte Übung enthielt,
   /// und gibt alle Sätze dieser Übung aus jenem Workout zurück.
   Future<List<SetLog>> getLastSetsForExercise(String exerciseName) async {
     final db = await database;

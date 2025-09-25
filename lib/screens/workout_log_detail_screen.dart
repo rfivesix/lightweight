@@ -761,7 +761,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
 
                   return _buildSetRow(
                       setLog, rowIndex, workingSetIndex, exerciseName, l10n);
-                }).toList(),
+                }),
 
                 // Add Set Button
                 if (_isEditMode)

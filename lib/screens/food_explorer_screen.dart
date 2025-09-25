@@ -160,6 +160,7 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
       ),
       floatingActionButton: GlassFab(
         onPressed: _navigateAndCreateFood,
+        label: l10n.createFoodScreenTitle,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );

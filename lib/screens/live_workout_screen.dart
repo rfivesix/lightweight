@@ -813,7 +813,6 @@ import 'package:lightweight/models/exercise.dart';
 import 'package:lightweight/models/routine.dart';
 import 'package:lightweight/models/routine_exercise.dart';
 import 'package:lightweight/models/set_log.dart';
-import 'package:lightweight/models/set_template.dart';
 import 'package:lightweight/models/workout_log.dart';
 import 'package:lightweight/services/workout_session_manager.dart';
 import 'package:lightweight/widgets/wger_attribution_widget.dart';
@@ -837,7 +836,7 @@ class LiveWorkoutScreen extends StatefulWidget {
 class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
   final Map<int, TextEditingController> _weightControllers = {};
   final Map<int, TextEditingController> _repsControllers = {};
-  Map<String, List<SetLog>> _lastPerformances = {};
+  final Map<String, List<SetLog>> _lastPerformances = {};
   bool _isLoading = true;
 
   // Definieren wir den Listener hier, damit er im ganzen State bekannt ist
@@ -1102,6 +1101,43 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     );
   }
 
+  // NEUE HELFER-METHODE für den leeren Zustand
+  Widget _buildEmptyState(AppLocalizations l10n) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.add_circle_outline,
+                size: 80, color: Colors.grey.shade400),
+            const SizedBox(height: DesignConstants.spacingL),
+            Text(
+              l10n.emptyStateAddFirstExercise,
+              style: Theme.of(context).textTheme.headlineSmall,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: DesignConstants.spacingS),
+            Text(
+              "Füge eine Übung hinzu, um mit dem Protokollieren zu beginnen.", // TODO: l10n
+              textAlign: TextAlign.center,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyLarge
+                  ?.copyWith(color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: DesignConstants.spacingXL),
+            ElevatedButton.icon(
+              onPressed: _addExercise,
+              icon: const Icon(Icons.add),
+              label: Text(l10n.fabAddExercise),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -1159,179 +1195,213 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                         .onSurfaceVariant
                         .withOpacity(0.1)),
                 Expanded(
-                  child: ReorderableListView.builder(
-                    padding: EdgeInsets.zero,
-                    onReorder: _onReorder,
-                    itemCount: manager.exercises.length,
-                    itemBuilder: (context, index) {
-                      final routineExercise = manager.exercises[index];
-                      return WorkoutCard(
-                        key: ValueKey(routineExercise.id),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ListTile(
-                              contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16.0, vertical: 8.0),
-                              leading: ReorderableDragStartListener(
-                                index: index,
-                                child: const Icon(Icons.drag_handle),
-                              ),
-                              title: InkWell(
-                                onTap: () => Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            ExerciseDetailScreen(
-                                                exercise:
-                                                    routineExercise.exercise))),
-                                child: Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 4.0),
-                                  child: Text(
-                                    routineExercise.exercise
-                                        .getLocalizedName(context),
-                                    style: textTheme.titleLarge
-                                        ?.copyWith(fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ),
-// NEUER, KORRIGIERTER trailing-Block
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  // Zeigt die eingestellte Pausenzeit an
-                                  if (manager.pauseTimes[routineExercise.id!] !=
-                                          null &&
-                                      manager.pauseTimes[routineExercise.id!]! >
-                                          0)
-                                    Padding(
-                                      padding:
-                                          const EdgeInsets.only(right: 4.0),
-                                      child: Text(
-                                        "${manager.pauseTimes[routineExercise.id!]}s",
-                                        style: textTheme.bodyMedium?.copyWith(
-                                            color: colorScheme.primary,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ),
-                                  IconButton(
-                                    icon: const Icon(Icons.timer_outlined),
-                                    tooltip: l10n.editPauseTime,
-                                    onPressed: () =>
-                                        _editPauseTime(routineExercise),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete_outline,
-                                        color: Colors.redAccent),
-                                    tooltip: l10n.removeExercise,
-                                    onPressed: () =>
-                                        _removeExercise(routineExercise),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 0.0),
+                  child: manager.exercises.isEmpty
+                      ? _buildEmptyState(l10n)
+                      : ReorderableListView.builder(
+                          padding: EdgeInsets.zero,
+                          onReorder: _onReorder,
+                          itemCount: manager.exercises.length,
+                          itemBuilder: (context, index) {
+                            final routineExercise = manager.exercises[index];
+                            return WorkoutCard(
+                              key: ValueKey(routineExercise.id),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      Expanded(
-                                          flex: 2,
-                                          child: Center(
-                                              child: Text(l10n.setLabel,
-                                                  textAlign: TextAlign.center,
-                                                  style: TextStyle(
-                                                    color: Colors.grey[600],
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  )))),
-                                      Expanded(
-                                          flex: 3,
-                                          child: Center(
-                                              child: Text(l10n.lastTimeLabel,
-                                                  textAlign: TextAlign.center,
-                                                  style: TextStyle(
-                                                    color: Colors.grey[600],
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  )))),
-                                      Expanded(
-                                          flex: 2,
-                                          child: Center(
-                                              child: Text(l10n.kgLabel,
-                                                  textAlign: TextAlign.center,
-                                                  style: TextStyle(
-                                                    color: Colors.grey[600],
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  )))),
-                                      Expanded(
-                                          flex: 2,
-                                          child: Center(
-                                              child: Text(l10n.repsLabel,
-                                                  textAlign: TextAlign.center,
-                                                  style: TextStyle(
-                                                    color: Colors.grey[600],
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  )))),
-                                      const SizedBox(width: 48),
-                                    ],
+                                  ListTile(
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 16.0, vertical: 8.0),
+                                    leading: ReorderableDragStartListener(
+                                      index: index,
+                                      child: const Icon(Icons.drag_handle),
+                                    ),
+                                    title: InkWell(
+                                      onTap: () => Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  ExerciseDetailScreen(
+                                                      exercise: routineExercise
+                                                          .exercise))),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 4.0),
+                                        child: Text(
+                                          routineExercise.exercise
+                                              .getLocalizedName(context),
+                                          style: textTheme.titleLarge?.copyWith(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ),
+// NEUER, KORRIGIERTER trailing-Block
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        // Zeigt die eingestellte Pausenzeit an
+                                        if (manager.pauseTimes[
+                                                    routineExercise.id!] !=
+                                                null &&
+                                            manager.pauseTimes[
+                                                    routineExercise.id!]! >
+                                                0)
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                                right: 4.0),
+                                            child: Text(
+                                              "${manager.pauseTimes[routineExercise.id!]}s",
+                                              style: textTheme.bodyMedium
+                                                  ?.copyWith(
+                                                      color:
+                                                          colorScheme.primary,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                            ),
+                                          ),
+                                        IconButton(
+                                          icon:
+                                              const Icon(Icons.timer_outlined),
+                                          tooltip: l10n.editPauseTime,
+                                          onPressed: () =>
+                                              _editPauseTime(routineExercise),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.delete_outline,
+                                              color: Colors.redAccent),
+                                          tooltip: l10n.removeExercise,
+                                          onPressed: () =>
+                                              _removeExercise(routineExercise),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                  ...routineExercise.setTemplates
-                                      .asMap()
-                                      .entries
-                                      .map((setEntry) {
-                                    final templateId = setEntry.value.id!;
-                                    final setLog = manager.setLogs[templateId];
-                                    if (setLog == null)
-                                      return const SizedBox.shrink();
-                                    int workingSetIndex = 0;
-                                    for (int i = 0; i <= setEntry.key; i++) {
-                                      final currentTemplateId =
-                                          routineExercise.setTemplates[i].id!;
-                                      if (manager.setLogs[currentTemplateId]
-                                              ?.setType !=
-                                          'warmup') {
-                                        workingSetIndex++;
-                                      }
-                                    }
-                                    return _buildSetRow(
-                                      workingSetIndex,
-                                      setEntry.key,
-                                      templateId,
-                                      setLog,
-                                      _lastPerformances[routineExercise
-                                              .exercise.nameEn] ??
-                                          [], // Hier die Liste übergeben
-                                    );
-                                  }),
                                   Padding(
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 16.0),
-                                    child: TextButton.icon(
-                                      onPressed: () => _addSet(routineExercise),
-                                      icon: const Icon(Icons.add),
-                                      label: Text(l10n.addSetButton),
+                                        horizontal: 0.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            Expanded(
+                                                flex: 2,
+                                                child: Center(
+                                                    child: Text(l10n.setLabel,
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        style: TextStyle(
+                                                          color:
+                                                              Colors.grey[600],
+                                                          fontSize: 12,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        )))),
+                                            Expanded(
+                                                flex: 3,
+                                                child: Center(
+                                                    child: Text(
+                                                        l10n.lastTimeLabel,
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        style: TextStyle(
+                                                          color:
+                                                              Colors.grey[600],
+                                                          fontSize: 12,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        )))),
+                                            Expanded(
+                                                flex: 2,
+                                                child: Center(
+                                                    child: Text(l10n.kgLabel,
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        style: TextStyle(
+                                                          color:
+                                                              Colors.grey[600],
+                                                          fontSize: 12,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        )))),
+                                            Expanded(
+                                                flex: 2,
+                                                child: Center(
+                                                    child: Text(l10n.repsLabel,
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        style: TextStyle(
+                                                          color:
+                                                              Colors.grey[600],
+                                                          fontSize: 12,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        )))),
+                                            const SizedBox(width: 48),
+                                          ],
+                                        ),
+                                        ...routineExercise.setTemplates
+                                            .asMap()
+                                            .entries
+                                            .map((setEntry) {
+                                          final templateId = setEntry.value.id!;
+                                          final setLog =
+                                              manager.setLogs[templateId];
+                                          if (setLog == null) {
+                                            return const SizedBox.shrink();
+                                          }
+                                          int workingSetIndex = 0;
+                                          for (int i = 0;
+                                              i <= setEntry.key;
+                                              i++) {
+                                            final currentTemplateId =
+                                                routineExercise
+                                                    .setTemplates[i].id!;
+                                            if (manager
+                                                    .setLogs[currentTemplateId]
+                                                    ?.setType !=
+                                                'warmup') {
+                                              workingSetIndex++;
+                                            }
+                                          }
+                                          return _buildSetRow(
+                                            workingSetIndex,
+                                            setEntry.key,
+                                            templateId,
+                                            setLog,
+                                            _lastPerformances[routineExercise
+                                                    .exercise.nameEn] ??
+                                                [], // Hier die Liste übergeben
+                                          );
+                                        }),
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 16.0),
+                                          child: TextButton.icon(
+                                            onPressed: () =>
+                                                _addSet(routineExercise),
+                                            icon: const Icon(Icons.add),
+                                            label: Text(l10n.addSetButton),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
-                          ],
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
                 ),
               ],
             ),
-      floatingActionButton: GlassFab(onPressed: _addExercise),
+      // KORRIGIERT: label hinzugefügt
+      floatingActionButton: GlassFab(
+        label: l10n.fabAddExercise,
+        onPressed: _addExercise,
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       // NEUER, KORREKTER bottomNavigationBar
       bottomNavigationBar: Column(
         mainAxisSize:

@@ -2257,6 +2257,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Detailed Nutrients'**
   String get detailedNutrientGoals;
+
+  /// No description provided for @supplementTrackerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Supplement Tracker'**
+  String get supplementTrackerTitle;
+
+  /// No description provided for @supplementTrackerDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Track goals, limits, and intake.'**
+  String get supplementTrackerDescription;
+
+  /// No description provided for @createSupplementTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Supplement'**
+  String get createSupplementTitle;
+
+  /// No description provided for @supplementNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Supplement Name'**
+  String get supplementNameLabel;
+
+  /// No description provided for @defaultDoseLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Default Dose'**
+  String get defaultDoseLabel;
+
+  /// No description provided for @unitLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit (e.g. g, mg)'**
+  String get unitLabel;
+
+  /// No description provided for @dailyGoalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Goal (optional)'**
+  String get dailyGoalLabel;
+
+  /// No description provided for @dailyLimitLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Limit (optional)'**
+  String get dailyLimitLabel;
+
+  /// No description provided for @dailyProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Progress'**
+  String get dailyProgressTitle;
+
+  /// No description provided for @todaysLogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Log'**
+  String get todaysLogTitle;
+
+  /// No description provided for @logIntakeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Intake'**
+  String get logIntakeTitle;
+
+  /// No description provided for @emptySupplementGoals.
+  ///
+  /// In en, this message translates to:
+  /// **'Set goals or limits for supplements to see your progress here.'**
+  String get emptySupplementGoals;
+
+  /// No description provided for @emptySupplementLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'No intake logged for today yet.'**
+  String get emptySupplementLogs;
+
+  /// No description provided for @doseLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Dose'**
+  String get doseLabel;
+
+  /// No description provided for @settingsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme, units, data and more'**
+  String get settingsDescription;
+
+  /// No description provided for @settingsAppearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get settingsAppearance;
+
+  /// No description provided for @themeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get themeSystem;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
+  /// No description provided for @caffeinePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Caffeine (optional)'**
+  String get caffeinePrompt;
+
+  /// No description provided for @caffeineUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'mg per 100ml'**
+  String get caffeineUnit;
 }
 
 class _AppLocalizationsDelegate

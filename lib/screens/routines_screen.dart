@@ -243,6 +243,7 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
                   },
                 ),
       floatingActionButton: GlassFab(
+        label: l10n.addRoutineButton,
         onPressed: _createNewRoutine,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,

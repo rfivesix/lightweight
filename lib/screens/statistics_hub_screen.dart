@@ -7,7 +7,8 @@ import 'package:lightweight/screens/measurements_screen.dart';
 import 'package:lightweight/screens/nutrition_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/summary_card.dart';
-import 'package:table_calendar/table_calendar.dart'; // NEUER IMPORT
+import 'package:table_calendar/table_calendar.dart';
+import 'package:lightweight/screens/supplement_hub_screen.dart'; // NEUER IMPORT
 
 // KORREKTUR: Umwandlung in ein StatefulWidget
 class StatisticsHubScreen extends StatefulWidget {
@@ -27,6 +28,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   // Sets zur Speicherung der aktiven Tage des Monats
   Set<int> _workoutDays = {};
   Set<int> _nutritionLogDays = {};
+  Set<int> _supplementDays = {}; // NEU
 
   @override
   void initState() {
@@ -45,11 +47,14 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         await WorkoutDatabaseHelper.instance.getWorkoutDaysInMonth(month);
     final nutritionDays =
         await DatabaseHelper.instance.getNutritionLogDaysInMonth(month);
+    final supplementDays =
+        await DatabaseHelper.instance.getSupplementLogDaysInMonth(month); // NEU
 
     if (mounted) {
       setState(() {
         _workoutDays = workoutDays;
         _nutritionLogDays = nutritionDays;
+        _supplementDays = supplementDays; // NEU
         _isLoadingCalendar = false;
       });
     }
@@ -91,23 +96,36 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 },
                 // HIER PASSIERT DIE MAGIE: Das Aussehen der Tage wird angepasst
                 calendarBuilders: CalendarBuilders(
-                  // Builder für die Marker (die kleinen Punkte)
                   markerBuilder: (context, day, events) {
                     final isNutritionDay = _nutritionLogDays.contains(day.day);
-                    if (isNutritionDay) {
-                      return Positioned(
-                        bottom: 4,
-                        child: Container(
-                          width: 6,
-                          height: 6,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.blueAccent,
-                          ),
-                        ),
-                      );
-                    }
-                    return null;
+                    final isSupplementDay = _supplementDays.contains(day.day);
+
+                    return Positioned(
+                      bottom: 4,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (isNutritionDay)
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.blueAccent),
+                            ),
+                          if (isNutritionDay && isSupplementDay)
+                            const SizedBox(width: 2), // Abstand
+                          if (isSupplementDay)
+                            Container(
+                              width: 6, height: 6,
+                              decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color:
+                                      Colors.amber), // NEU: Supplement-Marker
+                            ),
+                        ],
+                      ),
+                    );
                   },
                   // Builder für die Tages-Zellen selbst
                   defaultBuilder: (context, day, focusedDay) {
@@ -141,8 +159,20 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
           ),
           const SizedBox(height: DesignConstants.spacingXL),
 
-          // Sektion 2: "TIEFEN-ANALYSE" (bleibt unverändert)
           _buildSectionTitle(context, l10n.in_depth_analysis),
+          // NEUER EINTRAG HIER
+          _buildAnalysisGateway(
+            context: context,
+            icon: Icons.medication_outlined,
+            title: l10n.supplementTrackerTitle, // LOKALISIERT
+            subtitle: l10n.supplementTrackerDescription, // LOKALISIERT
+
+            onTap: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const SupplementHubScreen()));
+            },
+          ),
+          const SizedBox(height: DesignConstants.spacingM),
           _buildAnalysisGateway(
             context: context,
             icon: Icons.monitor_weight_outlined,

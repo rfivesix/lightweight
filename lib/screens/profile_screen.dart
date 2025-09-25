@@ -1,22 +1,15 @@
-// lib/screens/profile_screen.dart (Der neue "Profil-Hub")
-
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/screens/data_management_screen.dart';
-import 'package:lightweight/screens/goals_screen.dart'; // HINZUGEFÜGT: Import für den neuen GoalsScreen
+import 'package:lightweight/screens/goals_screen.dart';
+import 'package:lightweight/screens/onboarding_screen.dart';
+import 'package:lightweight/screens/settings_screen.dart';
+import 'package:lightweight/services/profile_service.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/summary_card.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:lightweight/services/profile_service.dart'; // HINZUGEFÜGT
-import 'package:lightweight/screens/onboarding_screen.dart';
-
-// HINZUGEFÜGT
-import 'dart:io';
-
-import 'package:provider/provider.dart'; // HINZUGEFÜGT
+import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatefulWidget {
-  // KORREKTUR: Ist jetzt StatefulWidget
   const ProfileScreen({super.key});
 
   @override
@@ -24,37 +17,17 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // KORREKTUR: State-Klasse
-  late final l10n = AppLocalizations.of(context)!;
-  late final theme = Theme.of(context);
-  late String _appVersion = l10n.load_dots; // Wird dynamisch geladen
-
-  @override
-  void initState() {
-    super.initState();
-    _loadAppVersion();
-  }
-
-  Future<void> _loadAppVersion() async {
-    final packageInfo = await PackageInfo.fromPlatform();
-    if (mounted) {
-      setState(() {
-        _appVersion = "${packageInfo.version} (${packageInfo.buildNumber})";
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final profileService = Provider.of<ProfileService>(context); // HINZUGEFÜGT
+    final profileService = Provider.of<ProfileService>(context);
 
     return Scaffold(
       body: ListView(
         padding: DesignConstants.cardPadding,
         children: [
-          // HINZUGEFÜGT: Profilbild-Sektion
-          _buildSectionTitle(context, l10n.profile_capslock),
+          // Profilbild-Sektion
+          _buildSectionTitle(l10n.profile_capslock),
           SummaryCard(
             child: Padding(
               padding: DesignConstants.cardPadding,
@@ -70,14 +43,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           .colorScheme
                           .primary
                           .withOpacity(0.1),
-                      // Wir erstellen das backgroundImage jetzt so:
                       backgroundImage: profileService.profileImagePath != null
-                          ? Image.file(
-                              File(profileService.profileImagePath!),
-                              // Dieser Key ist jetzt korrekt am Image-Widget
-                              key: ValueKey(
-                                  '${profileService.profileImagePath}${profileService.hashCode}'),
-                            ).image // Wir greifen auf die .image Eigenschaft zu, die der CircleAvatar braucht
+                          ? FileImage(File(profileService.profileImagePath!))
                           : null,
                       child: profileService.profileImagePath == null
                           ? Icon(Icons.camera_alt,
@@ -98,73 +65,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: DesignConstants.spacingXL),
-          // Sektion 1: "EINSTELLUNGEN"
-          _buildSectionTitle(context, l10n.settings_capslock),
+
+          // Sektion für Navigation
+          // HINWEIS: Der redundante Titel "EINSTELLUNGEN" wurde entfernt.
           _buildNavigationCard(
-            context: context,
+            icon: Icons.settings_outlined,
+            title: l10n.settingsTitle,
+            subtitle:
+                "Theme, units, data and more", // TODO: Localize this subtitle
+            onTap: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const SettingsScreen()));
+            },
+          ),
+          const SizedBox(height: DesignConstants.spacingM),
+          _buildNavigationCard(
             icon: Icons.flag_outlined,
             title: l10n.my_goals,
             subtitle: l10n.my_goals_description,
             onTap: () {
-              // KORREKTUR: Navigation zum neuen GoalsScreen
               Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => const GoalsScreen()));
             },
           ),
           const SizedBox(height: DesignConstants.spacingM),
-          _buildNavigationCard(
-            context: context,
-            icon: Icons.import_export_rounded,
-            title: l10n.backup_and_import,
-            subtitle: l10n.backup_and_import_description,
-            onTap: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => const DataManagementScreen()));
-            },
-          ),
-          const SizedBox(height: DesignConstants.spacingM),
-          _buildOnboardingCard(context, l10n, theme),
-          const SizedBox(height: DesignConstants.spacingXL),
-
-          // Sektion 2: "ÜBER & RECHTLICHES"
-          _buildSectionTitle(context, l10n.about_and_legal_capslock),
-          _buildNavigationCard(
-            context: context,
-            icon: Icons.info_outline_rounded,
-            title: l10n.attribution_and_license,
-            subtitle: l10n.data_from_off_and_wger,
-            onTap: () {
-              showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                        title: Text(l10n.attribution_title),
-                        content: SingleChildScrollView(
-                          child: Text(l10n.attributionText),
-                        ),
-                        actions: [
-                          TextButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              child: Text(l10n.snackbar_button_ok)),
-                        ],
-                      ));
-            },
-          ),
-          const SizedBox(height: DesignConstants.spacingM),
-          SummaryCard(
-            child: ListTile(
-              leading: const Icon(Icons.code_rounded),
-              title: Text(l10n.app_version,
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text(
-                  _appVersion), // KORREKTUR: Zeigt die dynamische Version an
-            ),
-          ),
+          _buildOnboardingCard(l10n),
         ],
       ),
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
+  Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
       child: Text(
@@ -178,7 +109,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildNavigationCard({
-    required BuildContext context,
     required IconData icon,
     required String title,
     required String subtitle,
@@ -200,8 +130,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildOnboardingCard(
-      BuildContext context, AppLocalizations l10n, ThemeData theme) {
+  Widget _buildOnboardingCard(AppLocalizations l10n) {
+    // KORREKTUR: 'theme' wird direkt hier aus dem context geholt.
+    final theme = Theme.of(context);
+
     return SummaryCard(
       child: ListTile(
         leading: Icon(Icons.school_outlined, color: theme.colorScheme.primary),
@@ -211,7 +143,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ?.copyWith(fontWeight: FontWeight.w700),
         ),
         subtitle: Text(
-          l10n.onbFinishBody, // kurzer Erklärungstext wiederverwendet
+          l10n.onbFinishBody,
           style: theme.textTheme.bodyMedium,
         ),
         trailing: const Icon(Icons.chevron_right),

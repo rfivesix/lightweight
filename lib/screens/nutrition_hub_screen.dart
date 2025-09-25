@@ -12,12 +12,15 @@ import 'package:lightweight/models/tracked_food_item.dart';
 import 'package:lightweight/screens/add_food_screen.dart';
 import 'package:lightweight/screens/create_food_screen.dart';
 import 'package:lightweight/screens/food_detail_screen.dart';
-import 'package:lightweight/screens/nutrition_screen.dart';
 import 'package:lightweight/screens/scanner_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/nutrition_summary_widget.dart'; // HINZUGEFÜGT
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:lightweight/widgets/supplement_summary_widget.dart'; // NEU
+import 'package:lightweight/screens/supplement_hub_screen.dart'
+    show TrackedSupplement, SupplementHubScreen; // NEU
+import 'package:lightweight/widgets/swipe_action_background.dart';
 
 class NutritionHubScreen extends StatefulWidget {
   const NutritionHubScreen({super.key});
@@ -30,6 +33,7 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
   bool _isLoading = true;
   DailyNutrition? _todaysNutrition;
   Map<String, List<TrackedFoodItem>> _todaysEntriesByMeal = {};
+  List<TrackedSupplement> _trackedSupplements = []; // NEU
 
   @override
   void initState() {
@@ -88,10 +92,29 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
       meal.sort((a, b) => b.entry.timestamp.compareTo(a.entry.timestamp));
     }
 
+    // NEU: Lade auch Supplement-Daten
+    final allSupplements = await DatabaseHelper.instance.getAllSupplements();
+    final todaysSupplementLogs =
+        await DatabaseHelper.instance.getSupplementLogsForDate(DateTime.now());
+
+    final Map<int, double> todaysDoses = {};
+    for (final log in todaysSupplementLogs) {
+      todaysDoses.update(log.supplementId, (value) => value + log.dose,
+          ifAbsent: () => log.dose);
+    }
+
+    final trackedSupps = allSupplements
+        .map((s) => TrackedSupplement(
+              supplement: s,
+              totalDosedToday: todaysDoses[s.id] ?? 0.0,
+            ))
+        .toList();
+
     if (mounted) {
       setState(() {
         _todaysNutrition = summary;
         _todaysEntriesByMeal = groupedEntries;
+        _trackedSupplements = trackedSupps; // NEU
         _isLoading = false;
       });
     }
@@ -174,19 +197,19 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
                 padding: DesignConstants.cardPadding,
                 children: [
                   _buildSectionTitle(context, l10n.today_overview_text),
-                  GestureDetector(
+                  if (_todaysNutrition != null)
+                    NutritionSummaryWidget(
+                        nutritionData: _todaysNutrition!,
+                        l10n: l10n,
+                        isExpandedView: false),
+
+                  // NEU: Supplement-Widget hier einfügen
+                  SupplementSummaryWidget(
+                    trackedSupplements: _trackedSupplements,
                     onTap: () => Navigator.of(context)
                         .push(MaterialPageRoute(
-                            builder: (context) => const NutritionScreen()))
+                            builder: (context) => const SupplementHubScreen()))
                         .then((_) => _loadTodaysData()),
-                    // KORREKTUR 1: Die umgebende SummaryCard entfernt.
-                    // NutritionSummaryWidget ist bereits eine SummaryCard.
-                    child: _todaysNutrition != null
-                        ? NutritionSummaryWidget(
-                            nutritionData: _todaysNutrition!,
-                            l10n: l10n,
-                            isExpandedView: false)
-                        : const SizedBox(),
                   ),
                   const SizedBox(height: DesignConstants.spacingXL),
                   _buildSectionTitle(context, l10n.quick_add_text),
@@ -277,24 +300,21 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
 
   Widget _buildFoodEntryTile(
       AppLocalizations l10n, TrackedFoodItem trackedItem) {
-    // KORREKTUR: Das ListTile ist jetzt in einem Dismissible-Widget
     return Dismissible(
       key: Key('food_hub_entry_${trackedItem.entry.id}'),
 
-      // Hintergrund für "Bearbeiten" (nach rechts wischen)
-      background: Container(
+      // KORRIGIERT: Neuer Hintergrund für "Bearbeiten"
+      background: const SwipeActionBackground(
         color: Colors.blueAccent,
+        icon: Icons.edit,
         alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: const Icon(Icons.edit, color: Colors.white),
       ),
 
-      // Hintergrund für "Löschen" (nach links wischen)
-      secondaryBackground: Container(
+      // KORRIGIERT: Neuer Hintergrund für "Löschen"
+      secondaryBackground: const SwipeActionBackground(
         color: Colors.redAccent,
+        icon: Icons.delete,
         alignment: Alignment.centerRight,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: const Icon(Icons.delete, color: Colors.white),
       ),
 
       // Diese Methode wird vor dem Löschen/Bearbeiten aufgerufen

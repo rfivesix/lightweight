@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 class SummaryCard extends StatelessWidget {
@@ -11,15 +9,16 @@ class SummaryCard extends StatelessWidget {
     required this.child,
     this.padding = const EdgeInsets.all(12.0),
   });
-/*
+
+  ///*
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
 
     final background = brightness == Brightness.dark
-        ? const Color.fromARGB(255, 22, 22, 22) // tiefes Grau für Dark Mode
+        ? const Color.fromARGB(255, 30, 30, 30) // tiefes Grau für Dark Mode
         : const Color.fromARGB(
-            255, 253, 253, 253); // sehr helles Grau für Light Mode
+            255, 240, 240, 240); // sehr helles Grau für Light Mode
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6.0),
@@ -27,6 +26,7 @@ class SummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(20),
+        /*
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.25),
@@ -34,15 +34,14 @@ class SummaryCard extends StatelessWidget {
             offset: const Offset(0, 2),
           ),
         ],
+        */
       ),
       child: child,
     );
   }
-  */
-  // Ersetze die komplette build-Methode in lib/widgets/summary_card.dart
-
-// Ersetze die komplette build-Methode in lib/widgets/summary_card.dart
-
+}
+//*/
+/*
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
@@ -86,3 +85,4 @@ class SummaryCard extends StatelessWidget {
     );
   }
 }
+*/

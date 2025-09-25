@@ -192,7 +192,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
           ),
         ],
       ),
-      floatingActionButton: GlassFab(onPressed: _navigateAndCreateFood),
+      // KORRIGIERT: label hinzugefügt
+      floatingActionButton: GlassFab(
+          label: l10n.fabCreateOwnFood, onPressed: _navigateAndCreateFood),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }

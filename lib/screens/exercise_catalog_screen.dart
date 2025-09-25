@@ -243,6 +243,7 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
         ],
       ),
       floatingActionButton: GlassFab(
+        label: l10n.create_exercise_screen_title,
         onPressed: () {
           Navigator.of(context)
               .push(

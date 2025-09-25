@@ -241,7 +241,6 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
     required String title,
     required VoidCallback onTap,
   }) {
-    // KORREKTUR: Hier wird jetzt die SummaryCard verwendet.
     return SummaryCard(
       child: ListTile(
         leading: Icon(icon, color: Theme.of(context).colorScheme.primary),

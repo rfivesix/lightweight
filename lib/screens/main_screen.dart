@@ -1,30 +1,31 @@
-// lib/screens/main_screen.dart (Final & Vollständig Korrigiert)
-
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
+import 'package:lightweight/dialogs/log_supplement_dialog_content.dart';
+import 'package:lightweight/dialogs/quantity_dialog_content.dart';
+import 'package:lightweight/dialogs/water_dialog_content.dart';
 import 'package:lightweight/generated/app_localizations.dart';
+import 'package:lightweight/models/food_entry.dart';
+import 'package:lightweight/models/food_item.dart';
+import 'package:lightweight/models/supplement.dart';
+import 'package:lightweight/models/supplement_log.dart';
+import 'package:lightweight/screens/add_food_screen.dart';
+import 'package:lightweight/screens/add_measurement_screen.dart';
+import 'package:lightweight/screens/edit_routine_screen.dart';
 import 'package:lightweight/screens/home.dart';
 import 'package:lightweight/screens/live_workout_screen.dart';
 import 'package:lightweight/screens/nutrition_hub_screen.dart';
 import 'package:lightweight/screens/profile_screen.dart';
+import 'package:lightweight/screens/statistics_hub_screen.dart';
+import 'package:lightweight/screens/workout_hub_screen.dart';
+import 'package:lightweight/services/profile_service.dart';
 import 'package:lightweight/services/workout_session_manager.dart';
 import 'package:lightweight/util/time_util.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
-import 'package:provider/provider.dart';
-import 'package:lightweight/models/food_item.dart';
-import 'package:lightweight/models/food_entry.dart';
-import 'package:lightweight/screens/add_food_screen.dart';
-import 'package:lightweight/screens/add_measurement_screen.dart';
-import 'package:lightweight/screens/routines_screen.dart';
-import 'package:lightweight/dialogs/quantity_dialog_content.dart';
-import 'package:lightweight/dialogs/water_dialog_content.dart';
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/screens/workout_hub_screen.dart';
-import 'package:lightweight/screens/statistics_hub_screen.dart';
-import 'package:lightweight/services/profile_service.dart';
 import 'package:lightweight/widgets/keep_alive_page.dart';
+import 'package:provider/provider.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -34,49 +35,35 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   late final TabController _tabController;
-
-  // KORREKTUR 1: Der Key verwendet jetzt den öffentlichen Klassennamen 'HomeState'.
   final GlobalKey<HomeState> _homeKey = GlobalKey<HomeState>();
-
   late final List<Widget> _pages;
   bool _isAddMenuOpen = false;
   late final AnimationController _menuController;
-  // Hilfsfunktion: NaN -> 0.0 und [0,1] clampen
+
   double _safe01(double v) => v.isNaN ? 0.0 : v.clamp(0.0, 1.0).toDouble();
-  late final l10n = AppLocalizations.of(context)!;
 
   @override
   void initState() {
     super.initState();
     _pages = [
       KeepAlivePage(
-        storageKey: const PageStorageKey('tab_home'),
-        child: Home(key: _homeKey),
-      ),
+          storageKey: const PageStorageKey('tab_home'),
+          child: Home(key: _homeKey)),
       const KeepAlivePage(
-        storageKey: PageStorageKey('tab_nutrition'),
-        child: NutritionHubScreen(),
-      ),
+          storageKey: PageStorageKey('tab_nutrition'),
+          child: NutritionHubScreen()),
       const KeepAlivePage(
-        storageKey: PageStorageKey('tab_workout'),
-        child: WorkoutHubScreen(),
-      ),
+          storageKey: PageStorageKey('tab_workout'), child: WorkoutHubScreen()),
       const KeepAlivePage(
-        storageKey: PageStorageKey('tab_stats'),
-        child: StatisticsHubScreen(),
-      ),
+          storageKey: PageStorageKey('tab_stats'),
+          child: StatisticsHubScreen()),
       const KeepAlivePage(
-        storageKey: PageStorageKey('tab_profile'),
-        child: ProfileScreen(),
-      ),
+          storageKey: PageStorageKey('tab_profile'), child: ProfileScreen()),
     ];
 
-    // KORREKTUR 2: Der Controller wird jetzt konsistent mit der Länge von _pages (5) initialisiert.
     _tabController = TabController(length: _pages.length, vsync: this);
     _menuController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400),
-    );
+        vsync: this, duration: const Duration(milliseconds: 400));
   }
 
   @override
@@ -86,9 +73,41 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  // ===========================================================================
-  // ZENTRALISIERTE LOGIK
-  // ===========================================================================
+  void _toggleAddMenu() {
+    setState(() {
+      _isAddMenuOpen = !_isAddMenuOpen;
+      if (_isAddMenuOpen) {
+        _menuController.forward();
+      } else {
+        _menuController.reverse();
+      }
+    });
+  }
+
+  void _executeAddMenuAction(String action) async {
+    final l10n = AppLocalizations.of(context)!;
+    switch (action) {
+      case 'start_workout':
+        Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => const WorkoutHubScreen()));
+        break;
+      case 'add_measurement':
+        final success = await Navigator.of(context).push<bool>(
+            MaterialPageRoute(
+                builder: (context) => const AddMeasurementScreen()));
+        if (success == true) _refreshHomeScreen();
+        break;
+      case 'add_food':
+        _handleAddFood();
+        break;
+      case 'add_liquid':
+        _handleWaterAdd();
+        break;
+      case 'log_supplement':
+        _handleSupplementAdd();
+        break;
+    }
+  }
 
   Future<void> _refreshHomeScreen() async {
     if (_tabController.index == 0) {
@@ -96,35 +115,179 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     }
   }
 
-  void _addFoodItem(FoodItem item) async {
-    final result = await _showQuantityDialog(item);
-    if (result != null && mounted) {
-      final quantity = result.$1;
-      final timestamp = result.$2;
-      final countAsWater = result.$3;
-      final mealType = result.$4;
-      final newEntry = FoodEntry(
-          barcode: item.barcode,
-          timestamp: timestamp,
-          quantityInGrams: quantity,
-          mealType: mealType);
-      await DatabaseHelper.instance.insertFoodEntry(newEntry);
-      if (countAsWater) {
-        await DatabaseHelper.instance.insertWaterEntry(quantity, timestamp);
+  void _handleCreateRoutine() {
+    Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) => const EditRoutineScreen()));
+  }
+
+  Future<void> _handleAddFood() async {
+    final FoodItem? selectedFoodItem = await Navigator.of(context)
+        .push<FoodItem>(
+            MaterialPageRoute(builder: (context) => const AddFoodScreen()));
+
+    if (selectedFoodItem != null && mounted) {
+      final result = await _showQuantityDialog(selectedFoodItem);
+
+      if (result != null && mounted) {
+        final quantity = result.$1;
+        final timestamp = result.$2;
+        final countAsWater = result.$3;
+        final mealType = result.$4;
+        final caffeineDose = result.$5;
+
+        final newEntry = FoodEntry(
+            barcode: selectedFoodItem.barcode,
+            timestamp: timestamp,
+            quantityInGrams: quantity,
+            mealType: mealType);
+        await DatabaseHelper.instance.insertFoodEntry(newEntry);
+
+        if (countAsWater) {
+          await DatabaseHelper.instance.insertWaterEntry(quantity, timestamp);
+        }
+
+        if (caffeineDose != null && caffeineDose > 0) {
+          final supplements = await DatabaseHelper.instance.getAllSupplements();
+          final caffeineSupplement =
+              supplements.firstWhere((s) => s.name.toLowerCase() == 'caffeine');
+          final log = SupplementLog(
+              supplementId: caffeineSupplement.id!,
+              dose: caffeineDose,
+              unit: 'mg',
+              timestamp: timestamp);
+          await DatabaseHelper.instance.insertSupplementLog(log);
+        }
+        _refreshHomeScreen();
       }
+    }
+  }
+
+  Future<void> _handleWaterAdd() async {
+    final result = await _showWaterDialog();
+    if (result != null) {
+      await DatabaseHelper.instance.insertWaterEntry(result.$1, result.$2);
       _refreshHomeScreen();
     }
   }
 
-  void _addWater(int quantityInMl, DateTime timestamp) async {
-    await DatabaseHelper.instance.insertWaterEntry(quantityInMl, timestamp);
-    _refreshHomeScreen();
+  Future<void> _handleSupplementAdd() async {
+    final allSupplements = await DatabaseHelper.instance.getAllSupplements();
+    if (!mounted || allSupplements.isEmpty) return;
+    final l10n = AppLocalizations.of(context)!;
+
+    final Supplement? selectedSupplement = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.logIntakeTitle),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: allSupplements.length,
+            itemBuilder: (context, index) {
+              final supplement = allSupplements[index];
+              return ListTile(
+                title: Text(supplement.name),
+                onTap: () => Navigator.of(context).pop(supplement),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    if (selectedSupplement != null && mounted) {
+      _logSupplement(selectedSupplement);
+    }
+  }
+
+  Future<void> _logSupplement(Supplement supplement) async {
+    final l10n = AppLocalizations.of(context)!;
+    final GlobalKey<LogSupplementDialogContentState> dialogStateKey =
+        GlobalKey();
+    final result = await showDialog<(double, DateTime)?>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(supplement.name),
+          content: LogSupplementDialogContent(
+              key: dialogStateKey, supplement: supplement),
+          actions: [
+            TextButton(
+                child: Text(l10n.cancel),
+                onPressed: () => Navigator.of(context).pop(null)),
+            FilledButton(
+              child: Text(l10n.add_button),
+              onPressed: () {
+                final state = dialogStateKey.currentState;
+                if (state != null) {
+                  final dose =
+                      double.tryParse(state.doseText.replaceAll(',', '.'));
+                  if (dose != null && dose > 0) {
+                    Navigator.of(context).pop((dose, state.selectedDateTime));
+                  }
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+    if (result != null) {
+      final newLog = SupplementLog(
+          supplementId: supplement.id!,
+          dose: result.$1,
+          unit: supplement.unit,
+          timestamp: result.$2);
+      await DatabaseHelper.instance.insertSupplementLog(newLog);
+      _refreshHomeScreen();
+    }
+  }
+
+  Future<(int, DateTime, bool, String, double?)?> _showQuantityDialog(
+      FoodItem item) async {
+    final l10n = AppLocalizations.of(context)!;
+    final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
+    return showDialog<(int, DateTime, bool, String, double?)?>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(item.name, maxLines: 2, overflow: TextOverflow.ellipsis),
+          content: QuantityDialogContent(key: dialogStateKey, item: item),
+          actions: [
+            TextButton(
+                child: Text(l10n.cancel),
+                onPressed: () => Navigator.of(context).pop(null)),
+            FilledButton(
+              child: Text(l10n.add_button),
+              onPressed: () {
+                final state = dialogStateKey.currentState;
+                if (state != null) {
+                  final quantity = int.tryParse(state.quantityText);
+                  final caffeine =
+                      double.tryParse(state.caffeineText.replaceAll(',', '.'));
+                  if (quantity != null && quantity > 0) {
+                    Navigator.of(context).pop((
+                      quantity,
+                      state.selectedDateTime,
+                      state.countAsWater,
+                      state.selectedMealType,
+                      caffeine
+                    ));
+                  }
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<(int, DateTime)?> _showWaterDialog() async {
-    final GlobalKey<WaterDialogContentState> dialogStateKey =
-        GlobalKey<WaterDialogContentState>();
-    return showDialog<(int, DateTime)>(
+    final l10n = AppLocalizations.of(context)!;
+    final GlobalKey<WaterDialogContentState> dialogStateKey = GlobalKey();
+    return showDialog<(int, DateTime)?>(
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -153,73 +316,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     );
   }
 
-  Future<(int, DateTime, bool, String)?> _showQuantityDialog(
-      FoodItem item) async {
-    final GlobalKey<QuantityDialogContentState> dialogStateKey =
-        GlobalKey<QuantityDialogContentState>();
-    return showDialog<(int, DateTime, bool, String)?>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(item.name, maxLines: 2, overflow: TextOverflow.ellipsis),
-          content: QuantityDialogContent(key: dialogStateKey, item: item),
-          actions: [
-            TextButton(
-                child: Text(l10n.cancel),
-                onPressed: () => Navigator.of(context).pop(null)),
-            FilledButton(
-              child: Text(l10n.add_button),
-              onPressed: () {
-                final state = dialogStateKey.currentState;
-                if (state != null) {
-                  final quantity = int.tryParse(state.quantityText);
-                  if (quantity != null && quantity > 0) {
-                    Navigator.of(context).pop((
-                      quantity,
-                      state.selectedDateTime,
-                      state.countAsWater,
-                      state.selectedMealType
-                    ));
-                  }
-                }
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // ===========================================================================
-  // Diese Methode wird jetzt vom neuen UI aufgerufen
-  void _executeAddMenuAction(String action) async {
-    // KORREKTUR: Die Navigations-Logik aus deiner AddMenuSheet ist jetzt hier.
-    switch (action) {
-      case 'start_workout':
-        Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const RoutinesScreen()));
-        break;
-      case 'add_measurement':
-        Navigator.of(context)
-            .push(MaterialPageRoute(
-                builder: (context) => const AddMeasurementScreen()))
-            .then((success) {
-          if (success == true) _refreshHomeScreen();
-        });
-        break;
-      case 'add_food':
-        final selectedFoodItem = await Navigator.of(context).push<FoodItem>(
-            MaterialPageRoute(builder: (context) => const AddFoodScreen()));
-        if (selectedFoodItem != null) _addFoodItem(selectedFoodItem);
-        break;
-      case 'add_liquid':
-        final waterResult = await _showWaterDialog();
-        if (waterResult != null) _addWater(waterResult.$1, waterResult.$2);
-        break;
-    }
-  }
-// In lib/screens/main_screen.dart
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -246,6 +342,11 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         'label': l10n.startWorkout,
         'action': 'start_workout'
       },
+      {
+        'icon': Icons.medication_outlined,
+        'label': l10n.logIntakeTitle,
+        'action': 'log_supplement'
+      },
     ];
 
     return Stack(
@@ -263,8 +364,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
               isScrollable: false,
               labelPadding: const EdgeInsets.symmetric(horizontal: 0.0),
               indicator: const UnderlineTabIndicator(
-                borderSide: BorderSide(width: 0.0, color: Colors.transparent),
-              ),
+                  borderSide:
+                      BorderSide(width: 0.0, color: Colors.transparent)),
               indicatorColor: Colors.transparent,
               indicatorWeight: 0.0001,
               splashFactory: NoSplash.splashFactory,
@@ -276,38 +377,29 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                   : Colors.white,
               unselectedLabelColor: Colors.grey.shade600,
               labelStyle: const TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.0,
-              ),
+                  fontSize: 23,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.0),
               unselectedLabelStyle: const TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.0,
-              ),
+                  fontSize: 23,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.0),
               tabs: [
                 const Tab(text: 'Home'),
                 const Tab(text: 'Food'),
                 const Tab(text: 'Train'),
                 const Tab(text: 'Stats'),
-                // KORREKTUR: Der Profil-Tab reagiert jetzt auf seine Auswahl.
-                // Erhöht den Radius, wenn der Tab ausgewählt ist.
                 AnimatedBuilder(
-                  // HINZUGEFÜGT: animated, damit die Größe sich animiert
                   animation: _tabController,
                   builder: (context, child) {
-                    final isProfileSelected =
-                        _tabController.index == 4; // Index des Profil-Tabs
-                    final double radius =
-                        isProfileSelected ? 21 : 19; // Größer, wenn aktiv
-                    final double iconSize =
-                        isProfileSelected ? 24 : 22; // Icon-Größe anpassen
-
+                    final isProfileSelected = _tabController.index == 4;
+                    final double radius = isProfileSelected ? 21 : 19;
+                    final double iconSize = isProfileSelected ? 24 : 22;
                     return Consumer<ProfileService>(
                       builder: (context, profileService, child) {
                         return Tab(
                           icon: CircleAvatar(
-                            radius: radius, // Dynamischer Radius
+                            radius: radius,
                             backgroundColor: Colors.grey.shade300,
                             backgroundImage:
                                 profileService.profileImagePath != null
@@ -316,9 +408,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                     : null,
                             child: profileService.profileImagePath == null
                                 ? Icon(Icons.person,
-                                    size: iconSize,
-                                    color:
-                                        Colors.black54) // Dynamische Icon-Größe
+                                    size: iconSize, color: Colors.black54)
                                 : null,
                           ),
                         );
@@ -329,28 +419,16 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
               ],
             ),
           ),
-          body: TabBarView(
-            controller: _tabController,
-            children: _pages,
-          ),
+          body: TabBarView(controller: _tabController, children: _pages),
           floatingActionButton: GlassFab(
-            onPressed: () {
-              setState(() {
-                _isAddMenuOpen = !_isAddMenuOpen;
-                if (_isAddMenuOpen) {
-                  _menuController.forward();
-                } else {
-                  _menuController.reverse();
-                }
-              });
-            },
+            onPressed: _toggleAddMenu, // Öffnet immer das Menü
+            // Kein 'label' wird übergeben, also wird er quadratisch.
           ),
           bottomNavigationBar: Consumer<WorkoutSessionManager>(
             builder: (context, manager, child) {
               if (!manager.isActive) {
                 return const SizedBox.shrink();
               }
-
               return BottomAppBar(
                 color: theme.colorScheme.primary,
                 child: Padding(
@@ -365,9 +443,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                               fontSize: 18,
                               fontWeight: FontWeight.bold)),
                       Row(
-                        // KORREKTUR: Die Buttons in eine eigene Row packen
                         children: [
-                          // HINZUGEFÜGT: Der "Verwerfen"-Knopf
                           TextButton(
                             onPressed: () async {
                               final logId = manager.workoutLog?.id;
@@ -375,18 +451,14 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                 await WorkoutDatabaseHelper.instance
                                     .deleteWorkoutLog(logId);
                               }
-                              manager
-                                  .finishWorkout(); // Beendet die Session im Manager
+                              manager.finishWorkout();
                             },
                             style: TextButton.styleFrom(
-                              backgroundColor: Colors.red
-                                  .shade600, // Auffälliges Rot für die Warnung
-                              foregroundColor: Colors.white,
-                            ),
+                                backgroundColor: Colors.red.shade600,
+                                foregroundColor: Colors.white),
                             child: Text(l10n.discard_button),
                           ),
-                          const SizedBox(
-                              width: 8), // Abstand zwischen den Knöpfen
+                          const SizedBox(width: 8),
                           ElevatedButton(
                             onPressed: () {
                               if (manager.workoutLog != null &&
@@ -402,9 +474,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                               }
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: theme.colorScheme.onPrimary,
-                              foregroundColor: theme.colorScheme.primary,
-                            ),
+                                backgroundColor: theme.colorScheme.onPrimary,
+                                foregroundColor: theme.colorScheme.primary),
                             child: Text(l10n.continue_workout_button),
                           ),
                         ],
@@ -416,22 +487,16 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             },
           ),
         ),
-// Overlay & Speed-Dial
         AnimatedBuilder(
           animation: _menuController,
           builder: (context, _) {
-            // Fortschritt sauber in [0,1]
             final v = _safe01(_menuController.value);
-
             return Offstage(
-              // Wenn zu: gar nicht rendern / hittesten
               offstage: v == 0.0,
               child: IgnorePointer(
-                // Wenn zu: keine Gesten durchlassen
                 ignoring: v == 0.0,
                 child: Stack(
                   children: [
-                    // Blur-Overlay
                     Opacity(
                       opacity: v,
                       child: GestureDetector(
@@ -443,42 +508,31 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                         },
                         child: BackdropFilter(
                           filter: ImageFilter.blur(
-                            sigmaX: 6.0 * v,
-                            sigmaY: 6.0 * v,
-                          ),
+                              sigmaX: 6.0 * v, sigmaY: 6.0 * v),
                           child: Container(
-                            color: Colors.black.withOpacity(0.4 * v),
-                          ),
+                              color: Colors.black.withOpacity(0.4 * v)),
                         ),
                       ),
                     ),
-
-                    // Actions (gestaffelt vom FAB „hochfahren“)
                     Positioned(
                       bottom: 100.0,
                       right: 20.0,
                       child: Material(
-                        color: Colors
-                            .transparent, // eigener Ink-Kontext -> kein gelber Balken mehr
+                        color: Colors.transparent,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children:
                               speedDialActions.asMap().entries.map((entry) {
                             final index = entry.key;
                             final action = entry.value;
-
                             final curved = CurvedAnimation(
                               parent: _menuController,
                               curve: Interval(
-                                (index * 0.12).clamp(0.0, 0.95),
-                                1.0,
-                                curve: Curves.easeOutBack,
-                              ),
+                                  (index * 0.12).clamp(0.0, 0.95), 1.0,
+                                  curve: Curves.easeOutBack),
                             );
-
                             final tv = _safe01(curved.value);
                             final offsetY = 90.0 * (index + 1);
-
                             return Transform.translate(
                               offset: Offset(0, (1 - tv) * offsetY),
                               child: Opacity(
@@ -489,7 +543,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      // Text links
                                       Text(
                                         action['label'],
                                         style: TextStyle(
@@ -502,7 +555,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                         ),
                                       ),
                                       const SizedBox(width: 16),
-                                      // Glas-Icon rechts
                                       GestureDetector(
                                         behavior: HitTestBehavior.opaque,
                                         onTap: () {

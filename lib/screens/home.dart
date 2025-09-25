@@ -340,11 +340,11 @@ class HomeState extends State<Home> {
     );
   }
 
+// In lib/screens/home.dart, innerhalb von HomeState
+
   Widget _buildWeightChartCard(
       BuildContext context, ColorScheme colorScheme, AppLocalizations l10n) {
-    // KORREKTUR: externalMargin wird jetzt gesetzt
     return SummaryCard(
-      //externalMargin: EdgeInsets.zero, // Wichtig
       child: Padding(
         padding: DesignConstants.cardPadding,
         child: Column(
@@ -374,16 +374,13 @@ class HomeState extends State<Home> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Zurück-Button
                 IconButton(
                   icon: const Icon(Icons.chevron_left),
                   onPressed: () => _navigateTimeRange(false),
                 ),
-                // Datumsanzeige
                 Text(
                     "${DateFormat.MMMd().format(_currentDateRange.start)} - ${DateFormat.MMMd().format(_currentDateRange.end)}",
                     style: Theme.of(context).textTheme.bodySmall),
-                // Vorwärts-Button (deaktiviert, wenn das End-Datum heute ist)
                 IconButton(
                   icon: const Icon(Icons.chevron_right),
                   onPressed: _currentDateRange.end.isSameDate(DateTime.now())
@@ -396,7 +393,8 @@ class HomeState extends State<Home> {
             MeasurementChartWidget(
               chartType: _chartType,
               dateRange: _currentDateRange,
-              lineColor: colorScheme.secondary,
+              // KORREKTUR: Die folgende Zeile wurde entfernt
+              // lineColor: colorScheme.secondary,
               unit: "kg",
             ),
           ],

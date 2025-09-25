@@ -9,6 +9,7 @@ import 'package:lightweight/screens/workout_log_detail_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/util/time_util.dart';
 import 'package:lightweight/widgets/summary_card.dart';
+import 'package:lightweight/widgets/swipe_action_background.dart';
 
 class WorkoutHistoryScreen extends StatefulWidget {
   const WorkoutHistoryScreen({super.key});
@@ -28,7 +29,8 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
 
   Future<void> _loadHistory() async {
     setState(() => _isLoading = true);
-    final data = await WorkoutDatabaseHelper.instance.getWorkoutLogs();
+    // KORREKTUR: Wir verwenden getFullWorkoutLogs(), um die Sätze direkt mitzuladen.
+    final data = await WorkoutDatabaseHelper.instance.getFullWorkoutLogs();
     if (mounted) {
       setState(() {
         _logs = data;
@@ -101,14 +103,22 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                     final log = _logs[index];
                     final duration = log.endTime?.difference(log.startTime);
 
+                    // NEU: Berechne Volumen und Sätze für diesen Log
+                    final totalSets = log.sets.length;
+                    final totalVolume = log.sets.fold<double>(
+                      0,
+                      (sum, set) => sum + (set.weightKg ?? 0) * (set.reps ?? 0),
+                    );
+
                     return Dismissible(
                       key: Key('log_${log.id}'),
                       direction: DismissDirection.endToStart,
-                      background: Container(
+
+                      // KORRIGIERT: Nur `secondaryBackground` wird hier benötigt
+                      background: const SwipeActionBackground(
                         color: Colors.redAccent,
+                        icon: Icons.delete,
                         alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: const Icon(Icons.delete, color: Colors.white),
                       ),
                       confirmDismiss: (direction) async {
                         return await showDialog<bool>(
@@ -142,10 +152,40 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                             log.routineName ?? l10n.freeWorkoutTitle,
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          subtitle: Text(
-                            DateFormat.yMMMMd(locale)
-                                .add_Hm()
-                                .format(log.startTime),
+                          // KORREKTUR: Das Subtitle wird jetzt ein Column mit mehr Infos
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 4),
+                              Text(
+                                DateFormat.yMMMMd(locale)
+                                    .add_Hm()
+                                    .format(log.startTime),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Icon(Icons.monitor_weight_outlined,
+                                      size: 14, color: Colors.grey[600]),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${totalVolume.toStringAsFixed(0)} kg',
+                                    style: TextStyle(
+                                        color: Colors.grey[600], fontSize: 12),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Icon(Icons.replay_circle_filled_outlined,
+                                      size: 14, color: Colors.grey[600]),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    l10n.setCount(
+                                        totalSets), // Nutzt die Plural-Funktion
+                                    style: TextStyle(
+                                        color: Colors.grey[600], fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                           trailing: duration != null
                               ? Text(

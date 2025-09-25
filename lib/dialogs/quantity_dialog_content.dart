@@ -26,6 +26,7 @@ class QuantityDialogContent extends StatefulWidget {
 
 class QuantityDialogContentState extends State<QuantityDialogContent> {
   late final TextEditingController _textController;
+  late final TextEditingController _caffeineController; // NEU
   late DateTime _selectedDateTime;
   bool _countAsWater = false;
   final List<String> _mealTypes = [
@@ -38,6 +39,7 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
 
   // Öffentliche Getter, damit von außen (über den GlobalKey) darauf zugegriffen werden kann
   String get quantityText => _textController.text;
+  String get caffeineText => _caffeineController.text; // NEU
   DateTime get selectedDateTime => _selectedDateTime;
   bool get countAsWater => _countAsWater;
   String get selectedMealType => _selectedMealType;
@@ -47,6 +49,7 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
     super.initState();
     _textController =
         TextEditingController(text: widget.initialQuantity?.toString() ?? '');
+    _caffeineController = TextEditingController(); // NEU
     _selectedDateTime = widget.initialTimestamp ?? DateTime.now();
     _selectedMealType = widget.initialMealType ?? "mealtypeSnack";
   }
@@ -54,6 +57,7 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
   @override
   void dispose() {
     _textController.dispose();
+    _caffeineController.dispose(); // NEU
     super.dispose();
   }
 
@@ -120,7 +124,7 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
         const SizedBox(height: DesignConstants.spacingL),
         DropdownButtonFormField<String>(
           initialValue: _selectedMealType,
-          decoration: const InputDecoration(labelText: 'Mahlzeit'),
+          decoration: InputDecoration(labelText: l10n.meal_label),
           items: _mealTypes.map((String key) {
             return DropdownMenuItem<String>(
               value: key,
@@ -167,6 +171,24 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
             },
             controlAffinity: ListTileControlAffinity.leading,
             contentPadding: EdgeInsets.zero),
+        // NEU: Animiertes Koffein-Feld
+        AnimatedSize(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          child: _countAsWater
+              ? Padding(
+                  padding: const EdgeInsets.only(top: DesignConstants.spacingM),
+                  child: TextField(
+                    controller: _caffeineController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                        labelText: l10n.caffeinePrompt, // LOKALISIERT
+                        suffixText: l10n.caffeineUnit), // LOKALISIERT
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
       ],
     );
   }

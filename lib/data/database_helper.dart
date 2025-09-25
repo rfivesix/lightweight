@@ -9,6 +9,8 @@ import 'package:lightweight/models/measurement_session.dart';
 import '../models/food_entry.dart';
 import '../models/water_entry.dart';
 import '../models/chart_data_point.dart';
+import '../models/supplement.dart';
+import '../models/supplement_log.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -26,7 +28,7 @@ class DatabaseHelper {
     final path = join(dbPath, fileName);
     return await openDatabase(
       path,
-      version: 9,
+      version: 10,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -43,7 +45,27 @@ class DatabaseHelper {
         'CREATE TABLE measurement_sessions (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT NOT NULL)');
     await db.execute(
         'CREATE TABLE measurements (id INTEGER PRIMARY KEY AUTOINCREMENT, session_id INTEGER NOT NULL, type TEXT NOT NULL, value REAL NOT NULL, unit TEXT NOT NULL, FOREIGN KEY (session_id) REFERENCES measurement_sessions(id) ON DELETE CASCADE)');
-    print("Benutzer-DB (v9) neu erstellt.");
+    // NEU: Supplement-Tabellen
+    await db.execute(
+        'CREATE TABLE supplements (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, default_dose REAL NOT NULL, unit TEXT NOT NULL, daily_goal REAL, daily_limit REAL, notes TEXT)');
+    await db.execute(
+        'CREATE TABLE supplement_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, supplement_id INTEGER NOT NULL, dose REAL NOT NULL, unit TEXT NOT NULL, timestamp TEXT NOT NULL, FOREIGN KEY (supplement_id) REFERENCES supplements(id) ON DELETE CASCADE)');
+
+    // NEU: Startdaten einfügen
+    await db.insert('supplements', {
+      'name': 'Caffeine',
+      'default_dose': 100,
+      'unit': 'mg',
+      'daily_limit': 400
+    });
+    await db.insert('supplements', {
+      'name': 'Creatine Monohydrate',
+      'default_dose': 5,
+      'unit': 'g',
+      'daily_goal': 5
+    });
+
+    print("Benutzer-DB (v10) neu erstellt.");
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
@@ -72,6 +94,28 @@ class DatabaseHelper {
           'CREATE TABLE measurements (id INTEGER PRIMARY KEY AUTOINCREMENT, session_id INTEGER NOT NULL, type TEXT NOT NULL, value REAL NOT NULL, unit TEXT NOT NULL, FOREIGN KEY (session_id) REFERENCES measurement_sessions(id) ON DELETE CASCADE)');
       print(
           "Datenbank auf Version 9 aktualisiert: Measurement-Tabellen sauber erstellt.");
+    }
+    // NEU: Upgrade auf Version 10
+    if (oldVersion < 10) {
+      await db.execute(
+          'CREATE TABLE supplements (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, default_dose REAL NOT NULL, unit TEXT NOT NULL, daily_goal REAL, daily_limit REAL, notes TEXT)');
+      await db.execute(
+          'CREATE TABLE supplement_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, supplement_id INTEGER NOT NULL, dose REAL NOT NULL, unit TEXT NOT NULL, timestamp TEXT NOT NULL, FOREIGN KEY (supplement_id) REFERENCES supplements(id) ON DELETE CASCADE)');
+
+      await db.insert('supplements', {
+        'name': 'Caffeine',
+        'default_dose': 100,
+        'unit': 'mg',
+        'daily_limit': 400
+      });
+      await db.insert('supplements', {
+        'name': 'Creatine Monohydrate',
+        'default_dose': 5,
+        'unit': 'g',
+        'daily_goal': 5
+      });
+      print(
+          "Datenbank auf Version 10 aktualisiert: Supplement-Tabellen hinzugefügt.");
     }
   }
 
@@ -413,22 +457,13 @@ class DatabaseHelper {
     return maps.map((map) => WaterEntry.fromMap(map)).toList();
   }
 
-  Future<void> clearAllUserData() async {
-    final db = await database;
-    await db.transaction((txn) async {
-      await txn.delete('food_entries');
-      await txn.delete('water_entries');
-      await txn.delete('favorites');
-      await txn.delete('measurements');
-      await txn.delete('measurement_sessions');
-    });
-  }
-
   Future<void> importUserData({
     required List<FoodEntry> foodEntries,
     required List<WaterEntry> waterEntries,
     required List<String> favoriteBarcodes,
     required List<MeasurementSession> measurementSessions,
+    required List<Supplement> supplements, // NEU
+    required List<SupplementLog> supplementLogs, // NEU
   }) async {
     final db = await database;
     await db.transaction((txn) async {
@@ -475,6 +510,111 @@ class DatabaseHelper {
     if (maps.isEmpty) return {};
 
     // Extrahiere den Tag aus jedem Timestamp und füge ihn einem Set hinzu, um Duplikate zu vermeiden.
+    return maps
+        .map((map) => DateTime.parse(map['timestamp'] as String).day)
+        .toSet();
+  }
+
+  // --- NEUE METHODEN FÜR SUPPLEMENTS ---
+
+  Future<Supplement> insertSupplement(Supplement supplement) async {
+    final db = await database;
+    final id = await db.insert('supplements', supplement.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace);
+    // Erstelle eine neue Instanz mit der zurückgegebenen ID
+    return Supplement(
+        id: id,
+        name: supplement.name,
+        defaultDose: supplement.defaultDose,
+        unit: supplement.unit,
+        dailyGoal: supplement.dailyGoal,
+        dailyLimit: supplement.dailyLimit,
+        notes: supplement.notes);
+  }
+
+  Future<List<Supplement>> getAllSupplements() async {
+    final db = await database;
+    final maps = await db.query('supplements', orderBy: 'name ASC');
+    return maps.map((map) => Supplement.fromMap(map)).toList();
+  }
+
+  Future<void> deleteSupplement(int id) async {
+    final db = await database;
+    // Lösche auch alle zugehörigen Logs, um Datenmüll zu vermeiden
+    await db.transaction((txn) async {
+      await txn.delete('supplement_logs',
+          where: 'supplement_id = ?', whereArgs: [id]);
+      await txn.delete('supplements', where: 'id = ?', whereArgs: [id]);
+    });
+  }
+
+  Future<SupplementLog> insertSupplementLog(SupplementLog log) async {
+    final db = await database;
+    final id = await db.insert('supplement_logs', log.toMap());
+    return SupplementLog(
+        id: id,
+        supplementId: log.supplementId,
+        dose: log.dose,
+        unit: log.unit,
+        timestamp: log.timestamp);
+  }
+
+  Future<List<SupplementLog>> getSupplementLogsForDate(DateTime date) async {
+    final db = await database;
+    final dateString = date.toIso8601String().substring(0, 10);
+    final List<Map<String, dynamic>> maps = await db.query(
+      'supplement_logs',
+      where: 'timestamp LIKE ?',
+      whereArgs: ['$dateString%'],
+      orderBy: 'timestamp DESC',
+    );
+    return maps.map((map) => SupplementLog.fromMap(map)).toList();
+  }
+
+  Future<void> deleteSupplementLog(int id) async {
+    final db = await database;
+    await db.delete('supplement_logs', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // FÜR BACKUP
+  Future<List<SupplementLog>> getAllSupplementLogs() async {
+    final db = await database;
+    final maps = await db.query('supplement_logs');
+    return maps.map((map) => SupplementLog.fromMap(map)).toList();
+  }
+
+  @override
+  Future<void> clearAllUserData() async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete('food_entries');
+      await txn.delete('water_entries');
+      await txn.delete('favorites');
+      await txn.delete('measurements');
+      await txn.delete('measurement_sessions');
+      await txn.delete('supplement_logs'); // NEU
+      await txn.delete('supplements'); // NEU
+    });
+  }
+
+  // NEUE METHODE
+  Future<Set<int>> getSupplementLogDaysInMonth(DateTime month) async {
+    final db = await database;
+    final firstDayOfMonth = DateTime(month.year, month.month, 1);
+    final lastDayOfMonth = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
+
+    final maps = await db.query(
+      'supplement_logs',
+      columns: ['timestamp'],
+      where: 'timestamp BETWEEN ? AND ?',
+      whereArgs: [
+        firstDayOfMonth.toIso8601String(),
+        lastDayOfMonth.toIso8601String()
+      ],
+    );
+
+    if (maps.isEmpty) return {};
+
     return maps
         .map((map) => DateTime.parse(map['timestamp'] as String).day)
         .toSet();

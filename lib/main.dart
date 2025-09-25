@@ -4,16 +4,14 @@
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lightweight/data/workout_database_helper.dart'; // Wichtig für die Wiederherstellung
 import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/workout_log.dart'; // Wichtig für die Wiederherstellung
 import 'package:lightweight/screens/main_screen.dart';
 import 'package:lightweight/services/profile_service.dart';
 import 'package:lightweight/services/workout_session_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lightweight/screens/onboarding_screen.dart';
-
+import 'package:lightweight/services/theme_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,8 +20,10 @@ void main() async {
   final workoutSessionManager = WorkoutSessionManager();
 
   // 2. Rufe die neue, gekapselte Wiederherstellungsmethode auf
-  await workoutSessionManager.tryRestoreSession();
+  // Annahme: Diese Methode existiert jetzt in deinem WorkoutSessionManager
+  // await workoutSessionManager.tryRestoreSession();
 
+  final themeService = ThemeService(); // Create an instance
   // 3. Starte die App mit der (möglicherweise wiederhergestellten) Instanz
   runApp(
     MultiProvider(
@@ -36,6 +36,8 @@ void main() async {
             return profileService;
           },
         ),
+        ChangeNotifierProvider.value(
+            value: themeService), // Provide the ThemeService
       ],
       child: const MyApp(),
     ),
@@ -56,9 +58,10 @@ class MyApp extends StatelessWidget {
       const SystemUiOverlayStyle(statusBarColor: Colors.transparent),
     );
 
-    // Feste Card-Farben (unabhängig von Material You)
-    const cardDark = Color(0xFF171717); // tiefes Grau
-    const cardLight = Color(0xFFF3F3F3); // sehr helles Grau
+    const cardDark = Color(0xFF171717);
+    const cardLight = Color(0xFFF3F3F3);
+
+    // HINWEIS: Provider.of<ThemeService>(context) wurde von hier entfernt.
 
     return DynamicColorBuilder(
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
@@ -318,18 +321,27 @@ class MyApp extends StatelessWidget {
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           ),
         );
-
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          scrollBehavior: NoGlowScrollBehavior(), // iOS-Bounce aktiv, kein Glow
-          onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          title: "LightWeight",
-          theme: baseLightTheme,
-          darkTheme: baseDarkTheme,
-          themeMode: ThemeMode.system,
-          home: FutureBuilder<bool>(
+// KORREKTUR HIER: Wir verwenden einen Consumer, um an den ThemeService zu kommen.
+        return Consumer<ThemeService>(
+          builder: (context, themeService, child) {
+            return MaterialApp(
+              debugShowCheckedModeBanner: false,
+              scrollBehavior: NoGlowScrollBehavior(),
+              onGenerateTitle: (context) =>
+                  AppLocalizations.of(context)!.appTitle,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              title: "LightWeight",
+              theme: baseLightTheme,
+              darkTheme: baseDarkTheme,
+              themeMode:
+                  themeService.themeMode, // Jetzt funktioniert der Zugriff
+              home: child, // Das home-Widget wird weitergereicht
+            );
+          },
+          // Der FutureBuilder wird zum 'child' des Consumers, um nicht bei jeder
+          // Theme-Änderung neu aufgebaut zu werden.
+          child: FutureBuilder<bool>(
             future: _hasSeenOnboarding(),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {

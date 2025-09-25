@@ -521,7 +521,9 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
           ),
         ],
       ),
+      // KORRIGIERT: label hinzugefügt
       floatingActionButton: GlassFab(
+        label: l10n.fabAddExercise,
         onPressed: _addExercises,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,

@@ -142,6 +142,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
                   ],
                 ),
       floatingActionButton: GlassFab(
+        label: l10n.addMeasurement,
         onPressed: _navigateToCreateMeasurement,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
@@ -235,7 +236,8 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
             MeasurementChartWidget(
               chartType: _selectedChartType!,
               dateRange: _currentChartDateRange,
-              lineColor: colorScheme.primary,
+              // KORREKTUR: Die folgende Zeile wurde entfernt
+              // lineColor: colorScheme.primary,
               unit: _getMeasurementUnit(_selectedChartType!),
             ),
           ],

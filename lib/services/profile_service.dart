@@ -27,11 +27,13 @@ class ProfileService extends ChangeNotifier {
   Future<void> initialize() async {
     final prefs = await SharedPreferences.getInstance();
     _profileImagePath = prefs.getString(_profileImageKey);
+    // NEU: Lade die Einheiten-Präferenzen
     _useKg = prefs.getBool('useKg') ?? true;
     _useCm = prefs.getBool('useCm') ?? true;
     notifyListeners();
   }
 
+  // NEU: Methoden zum Setzen und Speichern der Einheiten
   Future<void> setUseKg(bool value) async {
     _useKg = value;
     notifyListeners();
@@ -59,7 +61,7 @@ class ProfileService extends ChangeNotifier {
         final appDir = await getApplicationDocumentsDirectory();
         const fileName = 'profile_image.jpg';
         final localPath = '${appDir.path}/$fileName';
-        
+
         final newImage = await File(pickedFile.path).copy(localPath);
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString(_profileImageKey, newImage.path);
@@ -74,33 +76,48 @@ class ProfileService extends ChangeNotifier {
     }
   }
 
-// Ersetze diese Methode in lib/services/profile_service.dart
+// REVISED METHOD
   Future<void> deleteProfileImage() async {
     final prefs = await SharedPreferences.getInstance();
     final currentPath = prefs.getString(_profileImageKey);
+
     if (currentPath != null) {
-      try {
-        await File(currentPath).delete();
-      } catch (e) {
-        debugPrint('Fehler beim Löschen der Profildatei: $e');
-      }
+      // 1. Immediately remove the reference from persistent storage.
       await prefs.remove(_profileImageKey);
+
+      // 2. Immediately update the internal state and notify the UI.
       _profileImagePath = null;
-      
-      // Erhöhe den Cache-Buster, um einen Rebuild zu erzwingen
-      _cacheBuster++;
       notifyListeners();
+
+      // 3. Try to delete the actual file from disk in the background.
+      try {
+        final imageFile = File(currentPath);
+        if (await imageFile.exists()) {
+          await imageFile.delete();
+        }
+      } catch (e) {
+        // Log the error, but the app's state is already corrected.
+        debugPrint('Failed to delete profile image file: $e');
+      }
     }
   }
 }
 
+// NEU: Extension für die Konvertierungslogik
 extension UnitConverter on ProfileService {
+  // Konvertiert einen in KG gespeicherten Wert in die Anzeige-Einheit
   double toDisplayWeight(double kg) => useKg ? kg : kg * 2.20462;
-  double toStorageWeight(double display) => useKg ? display : display / 2.20462;
+  // Konvertiert einen in der Anzeige-Einheit eingegebenen Wert zurück in KG zur Speicherung
+  double toStorageWeight(double displayValue) =>
+      useKg ? displayValue : displayValue / 2.20462;
 
+  // Konvertiert einen in CM gespeicherten Wert in die Anzeige-Einheit
   double toDisplayLength(double cm) => useCm ? cm : cm / 2.54;
-  double toStorageLength(double display) => useCm ? display : display * 2.54;
+  // Konvertiert einen in der Anzeige-Einheit eingegebenen Wert zurück in CM zur Speicherung
+  double toStorageLength(double displayValue) =>
+      useCm ? displayValue : displayValue * 2.54;
 
-  String weightLabel() => useKg ? 'kg' : 'lbs';
-  String lengthLabel() => useCm ? 'cm' : 'in';
+  // Gibt das korrekte Label für die Einheit zurück
+  String weightUnitLabel() => useKg ? 'kg' : 'lbs';
+  String lengthUnitLabel() => useCm ? 'cm' : 'in';
 }
