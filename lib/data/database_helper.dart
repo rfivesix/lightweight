@@ -414,6 +414,17 @@ class DatabaseHelper {
     print("Eintrag mit ID ${entry.id} erfolgreich aktualisiert.");
   }
 
+  Future<void> updateWaterEntry(WaterEntry entry) async {
+    final db = await database;
+    await db.update(
+      'water_entries',
+      entry.toMap(),
+      where: 'id = ?',
+      whereArgs: [entry.id],
+    );
+    print("Wasser-Eintrag mit ID ${entry.id} erfolgreich aktualisiert.");
+  }
+
   Future<DateTime?> getEarliestMeasurementDate() async {
     final db = await database;
     final maps = await db.query('measurement_sessions',
@@ -557,6 +568,27 @@ class DatabaseHelper {
         dose: log.dose,
         unit: log.unit,
         timestamp: log.timestamp);
+  }
+
+  Future<void> updateSupplement(Supplement supplement) async {
+    final db = await database;
+    await db.update(
+      'supplements',
+      supplement.toMap(),
+      where: 'id = ?',
+      whereArgs: [supplement.id],
+    );
+  }
+
+  Future<void> updateSupplementLog(SupplementLog log) async {
+    final db = await database;
+    await db.update(
+      'supplement_logs',
+      log.toMap(),
+      where: 'id = ?',
+      whereArgs: [log.id],
+    );
+    print("Supplement-Log mit ID ${log.id} erfolgreich aktualisiert.");
   }
 
   Future<List<SupplementLog>> getSupplementLogsForDate(DateTime date) async {

@@ -7,7 +7,14 @@ import 'package:lightweight/util/design_constants.dart';
 
 class LogSupplementDialogContent extends StatefulWidget {
   final Supplement supplement;
-  const LogSupplementDialogContent({super.key, required this.supplement});
+  final double? initialDose;
+  final DateTime? initialTimestamp;
+
+  const LogSupplementDialogContent(
+      {super.key,
+      required this.supplement,
+      this.initialDose,
+      this.initialTimestamp});
 
   @override
   LogSupplementDialogContentState createState() =>
@@ -27,10 +34,11 @@ class LogSupplementDialogContentState
   void initState() {
     super.initState();
     _doseController = TextEditingController(
-        text: widget.supplement.defaultDose
-            .toStringAsFixed(1)
-            .replaceAll('.0', ''));
-    _selectedDateTime = DateTime.now();
+        text: widget.initialDose?.toStringAsFixed(1).replaceAll('.0', '') ??
+            widget.supplement.defaultDose
+                .toStringAsFixed(1)
+                .replaceAll('.0', ''));
+    _selectedDateTime = widget.initialTimestamp ?? DateTime.now();
   }
 
   @override

@@ -1,7 +1,9 @@
 // lib/screens/goals_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:lightweight/services/profile_service.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 
@@ -113,6 +115,31 @@ class _GoalsScreenState extends State<GoalsScreen> {
     _fatController.text = fatGrams.round().toString();
   }
 
+  Widget _buildMacroCalculator() {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context)
+            .colorScheme
+            .surfaceContainerHighest
+            .withOpacity(0.3),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Text(l10n.macroDistribution,
+              style: Theme.of(context).textTheme.titleMedium),
+          _buildMacroSliderRow(
+              l10n.protein, _proteinPercent, _macroColors['protein']!),
+          _buildMacroSliderRow(
+              l10n.carbs, _carbsPercent, _macroColors['carbs']!),
+          _buildMacroSliderRow(l10n.fat, _fatPercent, _macroColors['fat']!),
+        ],
+      ),
+    );
+  }
+
   void _updateSliderValues(String changedMacro, double value) {
     setState(() {
       if (changedMacro == 'protein') {
@@ -220,31 +247,6 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 ),
               ),
             ),
-    );
-  }
-
-  Widget _buildMacroCalculator() {
-    final l10n = AppLocalizations.of(context)!;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(context)
-            .colorScheme
-            .surfaceContainerHighest
-            .withOpacity(0.3),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Text(l10n.macroDistribution,
-              style: Theme.of(context).textTheme.titleMedium),
-          _buildMacroSliderRow(
-              l10n.protein, _proteinPercent, _macroColors['protein']!),
-          _buildMacroSliderRow(
-              l10n.carbs, _carbsPercent, _macroColors['carbs']!),
-          _buildMacroSliderRow(l10n.fat, _fatPercent, _macroColors['fat']!),
-        ],
-      ),
     );
   }
 

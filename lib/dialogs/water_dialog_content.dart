@@ -6,7 +6,11 @@ import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/util/design_constants.dart';
 
 class WaterDialogContent extends StatefulWidget {
-  const WaterDialogContent({super.key});
+  final int? initialQuantity;
+  final DateTime? initialTimestamp;
+
+  const WaterDialogContent(
+      {super.key, this.initialQuantity, this.initialTimestamp});
   @override
   WaterDialogContentState createState() => WaterDialogContentState();
 }
@@ -22,8 +26,9 @@ class WaterDialogContentState extends State<WaterDialogContent> {
   @override
   void initState() {
     super.initState();
-    _textController = TextEditingController();
-    _selectedDateTime = DateTime.now();
+    _textController =
+        TextEditingController(text: widget.initialQuantity?.toString() ?? '');
+    _selectedDateTime = widget.initialTimestamp ?? DateTime.now();
   }
 
   @override

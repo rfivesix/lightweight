@@ -70,25 +70,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: DesignConstants.spacingXL),
-          _buildSectionTitle(context, l10n.unitsSection),
-          SummaryCard(
-              child: Column(
-            children: [
-              SwitchListTile(
-                title: Text(l10n.weightUnit),
-                subtitle: Text(profileService.useKg ? 'kg' : 'lbs'),
-                value: profileService.useKg,
-                onChanged: (value) => profileService.setUseKg(value),
-              ),
-              SwitchListTile(
-                title: Text(l10n.lengthUnit),
-                subtitle: Text(profileService.useCm ? 'cm' : 'in'),
-                value: profileService.useCm,
-                onChanged: (value) => profileService.setUseCm(value),
-              ),
-            ],
-          )),
-          const SizedBox(height: DesignConstants.spacingXL),
           _buildSectionTitle(context, l10n.backup_and_import),
           _buildNavigationCard(
             context: context,

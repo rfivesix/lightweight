@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lightweight/theme/color_constants.dart';
 
 class SummaryCard extends StatelessWidget {
   final Widget child;
@@ -16,9 +17,8 @@ class SummaryCard extends StatelessWidget {
     final brightness = Theme.of(context).brightness;
 
     final background = brightness == Brightness.dark
-        ? const Color.fromARGB(255, 30, 30, 30) // tiefes Grau für Dark Mode
-        : const Color.fromARGB(
-            255, 240, 240, 240); // sehr helles Grau für Light Mode
+        ? summary_card_dark_mode
+        : summary_card_white_mode;
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6.0),

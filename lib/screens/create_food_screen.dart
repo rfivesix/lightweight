@@ -7,7 +7,8 @@ import 'package:lightweight/models/food_item.dart';
 import 'package:lightweight/util/design_constants.dart';
 
 class CreateFoodScreen extends StatefulWidget {
-  const CreateFoodScreen({super.key});
+  final FoodItem? foodItemToEdit;
+  const CreateFoodScreen({super.key, this.foodItemToEdit});
 
   @override
   State<CreateFoodScreen> createState() => _CreateFoodScreenState();
@@ -25,6 +26,25 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
   final _sugarController = TextEditingController();
   final _fiberController = TextEditingController();
   final _saltController = TextEditingController();
+
+  bool get _isEditing => widget.foodItemToEdit != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isEditing) {
+      final item = widget.foodItemToEdit!;
+      _nameController.text = item.name;
+      _brandController.text = item.brand;
+      _caloriesController.text = item.calories.toString();
+      _proteinController.text = item.protein.toString();
+      _carbsController.text = item.carbs.toString();
+      _fatController.text = item.fat.toString();
+      _sugarController.text = item.sugar?.toString() ?? '';
+      _fiberController.text = item.fiber?.toString() ?? '';
+      _saltController.text = item.salt?.toString() ?? '';
+    }
+  }
 
   @override
   void dispose() {
@@ -44,8 +64,10 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
     if (_formKey.currentState?.validate() ?? false) {
       final l10n = AppLocalizations.of(context)!;
 
-      final newFoodItem = FoodItem(
-        barcode: "user_created_${DateTime.now().millisecondsSinceEpoch}",
+      final foodData = FoodItem(
+        barcode: _isEditing
+            ? widget.foodItemToEdit!.barcode
+            : "user_created_${DateTime.now().millisecondsSinceEpoch}",
         name: _nameController.text,
         brand: _brandController.text,
         calories: int.tryParse(_caloriesController.text) ?? 0,
@@ -58,13 +80,17 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
         source: FoodItemSource.user,
       );
 
-      await ProductDatabaseHelper.instance.insertProduct(newFoodItem);
+      if (_isEditing) {
+        await ProductDatabaseHelper.instance.updateProduct(foodData);
+      } else {
+        await ProductDatabaseHelper.instance.insertProduct(foodData);
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.snackbarSaveSuccess(newFoodItem.name))),
+          SnackBar(content: Text(l10n.snackbarSaveSuccess(foodData.name))),
         );
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(foodData);
       }
     }
   }

@@ -2,7 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:lightweight/dialogs/water_dialog_content.dart';
+import 'package:lightweight/models/water_entry.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/swipe_action_background.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/data/product_database_helper.dart';
@@ -276,6 +279,52 @@ class _NutritionScreenState extends State<NutritionScreen> {
     }
   }
 
+  Future<void> _editWaterEntry(WaterEntry waterEntry) async {
+    final l10n = AppLocalizations.of(context)!;
+    final GlobalKey<WaterDialogContentState> dialogStateKey = GlobalKey();
+
+    final result = await showDialog<(int, DateTime)?>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(l10n.waterEntryTitle),
+          content: WaterDialogContent(
+            key: dialogStateKey,
+            initialQuantity: waterEntry.quantityInMl,
+            initialTimestamp: waterEntry.timestamp,
+          ),
+          actions: [
+            TextButton(
+                child: Text(l10n.cancel),
+                onPressed: () => Navigator.of(context).pop()),
+            FilledButton(
+                child: Text(l10n.save),
+                onPressed: () {
+                  final state = dialogStateKey.currentState;
+                  if (state != null) {
+                    final quantity = int.tryParse(state.quantityText);
+                    if (quantity != null && quantity > 0) {
+                      Navigator.of(context)
+                          .pop((quantity, state.selectedDateTime));
+                    }
+                  }
+                }),
+          ],
+        );
+      },
+    );
+
+    if (result != null) {
+      final updatedEntry = WaterEntry(
+        id: waterEntry.id,
+        quantityInMl: result.$1,
+        timestamp: result.$2,
+      );
+      await DatabaseHelper.instance.updateWaterEntry(updatedEntry);
+      _loadEntriesForDateRange(_selectedDateRange);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -499,20 +548,18 @@ class _NutritionScreenState extends State<NutritionScreen> {
                               final trackedItem = item.trackedItem;
                               return Dismissible(
                                 key: Key('food_${trackedItem.entry.id}'),
-                                background: Container(
-                                    color: Colors.blueAccent,
-                                    alignment: Alignment.centerLeft,
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 20),
-                                    child: const Icon(Icons.edit,
-                                        color: Colors.white)),
-                                secondaryBackground: Container(
-                                    color: Colors.redAccent,
-                                    alignment: Alignment.centerRight,
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 20),
-                                    child: const Icon(Icons.delete,
-                                        color: Colors.white)),
+                                direction: DismissDirection.horizontal,
+                                background: const SwipeActionBackground(
+                                  color: Colors.blueAccent,
+                                  icon: Icons.edit,
+                                  alignment: Alignment.centerLeft,
+                                ),
+                                secondaryBackground:
+                                    const SwipeActionBackground(
+                                  color: Colors.redAccent,
+                                  icon: Icons.delete,
+                                  alignment: Alignment.centerRight,
+                                ),
                                 confirmDismiss: (direction) async {
                                   if (direction ==
                                       DismissDirection.startToEnd) {
@@ -578,16 +625,56 @@ class _NutritionScreenState extends State<NutritionScreen> {
                               final waterEntry = item.waterEntry;
                               return Dismissible(
                                 key: Key('water_${waterEntry.id}'),
-                                direction: DismissDirection.endToStart,
-                                onDismissed: (direction) =>
-                                    _deleteWaterEntry(waterEntry.id!),
-                                background: Container(
-                                    color: Colors.red,
-                                    alignment: Alignment.centerRight,
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 20),
-                                    child: const Icon(Icons.delete,
-                                        color: Colors.white)),
+                                direction: DismissDirection.horizontal,
+                                background: const SwipeActionBackground(
+                                  color: Colors.blueAccent,
+                                  icon: Icons.edit,
+                                  alignment: Alignment.centerLeft,
+                                ),
+                                secondaryBackground:
+                                    const SwipeActionBackground(
+                                  color: Colors.redAccent,
+                                  icon: Icons.delete,
+                                  alignment: Alignment.centerRight,
+                                ),
+                                confirmDismiss: (direction) async {
+                                  if (direction ==
+                                      DismissDirection.startToEnd) {
+                                    _editWaterEntry(waterEntry);
+                                    return false;
+                                  } else {
+                                    return await showDialog<bool>(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              title:
+                                                  Text(l10n.deleteConfirmTitle),
+                                              content: Text(
+                                                  l10n.deleteConfirmContent),
+                                              actions: <Widget>[
+                                                TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.of(context)
+                                                            .pop(false),
+                                                    child: Text(l10n.cancel)),
+                                                TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.of(context)
+                                                            .pop(true),
+                                                    child: Text(l10n.delete)),
+                                              ],
+                                            );
+                                          },
+                                        ) ??
+                                        false;
+                                  }
+                                },
+                                onDismissed: (direction) {
+                                  if (direction ==
+                                      DismissDirection.endToStart) {
+                                    _deleteWaterEntry(waterEntry.id!);
+                                  }
+                                },
                                 child: SummaryCard(
                                   //externalMargin: EdgeInsets.zero,
                                   child: ListTile(

@@ -192,4 +192,15 @@ class ProductDatabaseHelper {
         .map((map) => FoodItem.fromMap(map, source: FoodItemSource.off))
         .toList();
   }
+
+  Future<void> updateProduct(FoodItem item) async {
+    await _ensureDatabasesInitialized();
+    if (_offDatabase == null) return;
+    await _offDatabase!.update(
+      'products',
+      item.toMap(),
+      where: 'barcode = ?',
+      whereArgs: [item.barcode],
+    );
+  }
 }

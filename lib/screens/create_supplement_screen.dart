@@ -6,7 +6,9 @@ import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/util/design_constants.dart';
 
 class CreateSupplementScreen extends StatefulWidget {
-  const CreateSupplementScreen({super.key});
+  final Supplement? supplementToEdit;
+  const CreateSupplementScreen({super.key, this.supplementToEdit});
+
   @override
   State<CreateSupplementScreen> createState() => _CreateSupplementScreenState();
 }
@@ -22,20 +24,26 @@ class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
 
   late final l10n = AppLocalizations.of(context)!;
 
+  bool get _isEditing => widget.supplementToEdit != null;
+
   @override
-  void dispose() {
-    _nameController.dispose();
-    _doseController.dispose();
-    _unitController.dispose();
-    _goalController.dispose();
-    _limitController.dispose();
-    _notesController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    if (_isEditing) {
+      final s = widget.supplementToEdit!;
+      _nameController.text = s.name;
+      _doseController.text = s.defaultDose.toString();
+      _unitController.text = s.unit;
+      _goalController.text = s.dailyGoal?.toString() ?? '';
+      _limitController.text = s.dailyLimit?.toString() ?? '';
+      _notesController.text = s.notes ?? '';
+    }
   }
 
   Future<void> _saveSupplement() async {
     if (_formKey.currentState!.validate()) {
       final newSupplement = Supplement(
+        id: _isEditing ? widget.supplementToEdit!.id : null,
         name: _nameController.text.trim(),
         defaultDose:
             double.tryParse(_doseController.text.replaceAll(',', '.')) ?? 0.0,
@@ -45,7 +53,12 @@ class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
         notes: _notesController.text.trim(),
       );
 
-      await DatabaseHelper.instance.insertSupplement(newSupplement);
+      if (_isEditing) {
+        await DatabaseHelper.instance.updateSupplement(newSupplement);
+      } else {
+        await DatabaseHelper.instance.insertSupplement(newSupplement);
+      }
+
       if (mounted) {
         Navigator.of(context)
             .pop(true); // Gib 'true' zurück, um Neuladen zu signalisieren
@@ -57,7 +70,10 @@ class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.createSupplementTitle),
+        title: Text(_isEditing
+            ? l10n.edit
+            : l10n
+                .createSupplementTitle), // TODO: Needs specific localization for "Edit Supplement"
         actions: [
           TextButton(
             onPressed: _saveSupplement,

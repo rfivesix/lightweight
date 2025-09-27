@@ -21,7 +21,7 @@ void main() async {
 
   // 2. Rufe die neue, gekapselte Wiederherstellungsmethode auf
   // Annahme: Diese Methode existiert jetzt in deinem WorkoutSessionManager
-   await workoutSessionManager.tryRestoreSession();
+  await workoutSessionManager.tryRestoreSession();
 
   final themeService = ThemeService(); // Create an instance
   // 3. Starte die App mit der (möglicherweise wiederhergestellten) Instanz

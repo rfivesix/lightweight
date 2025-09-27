@@ -2,7 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:lightweight/screens/supplement_hub_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/supplement_summary_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/data/product_database_helper.dart';
@@ -37,6 +39,7 @@ class HomeState extends State<Home> {
   final String _chartType = 'weight';
   Map<String, int> _workoutStats = {};
   bool _isFirstLoad = true;
+  List<TrackedSupplement> _trackedSupplements = [];
 
   final List<String> _chartDateRangeKeys = ['30D', '90D', 'All'];
   String _selectedChartRangeKey = '30D';
@@ -57,7 +60,6 @@ class HomeState extends State<Home> {
     }
   }
 
-  // KORREKTUR: loadAllHomeScreenData akzeptiert jetzt einen optionalen Parameter
   Future<void> loadAllHomeScreenData(
       {bool showLoadingIndicator = false}) async {
     if (!mounted) return;
@@ -69,6 +71,7 @@ class HomeState extends State<Home> {
 
     // --- DATEN HIER LADEN ---
     final l10n = AppLocalizations.of(context)!;
+    final dbHelper = DatabaseHelper.instance;
     final prefs = await SharedPreferences.getInstance();
     final targetCalories = prefs.getInt('targetCalories') ?? 2500;
     final targetProtein = prefs.getInt('targetProtein') ?? 180;
@@ -76,10 +79,8 @@ class HomeState extends State<Home> {
     final targetFat = prefs.getInt('targetFat') ?? 80;
     final targetWater = prefs.getInt('targetWater') ?? 3000;
 
-    final entries =
-        await DatabaseHelper.instance.getEntriesForDate(DateTime.now());
-    final waterIntake =
-        await DatabaseHelper.instance.getWaterForDate(DateTime.now());
+    final entries = await dbHelper.getEntriesForDate(DateTime.now());
+    final waterIntake = await dbHelper.getWaterForDate(DateTime.now());
     final newTodaysNutrition = DailyNutrition(
         targetCalories: targetCalories,
         targetProtein: targetProtein,
@@ -109,8 +110,8 @@ class HomeState extends State<Home> {
 
     final today = DateTime.now();
     final sevenDaysAgo = today.subtract(const Duration(days: 6));
-    final recentEntries = await DatabaseHelper.instance
-        .getEntriesForDateRange(sevenDaysAgo, today);
+    final recentEntries =
+        await dbHelper.getEntriesForDateRange(sevenDaysAgo, today);
     String newRecommendation = l10n.recommendationDefault;
     if (recentEntries.isNotEmpty) {
       final uniqueDaysTracked = recentEntries
@@ -143,6 +144,23 @@ class HomeState extends State<Home> {
         newRecommendation = l10n.recommendationFirstEntry;
       }
     }
+
+    // NEU: Lade Supplement-Daten
+    final allSupplements = await dbHelper.getAllSupplements();
+    final todaysSupplementLogs =
+        await dbHelper.getSupplementLogsForDate(DateTime.now());
+    final Map<int, double> todaysDoses = {};
+    for (final log in todaysSupplementLogs) {
+      todaysDoses.update(log.supplementId, (value) => value + log.dose,
+          ifAbsent: () => log.dose);
+    }
+    final trackedSupps = allSupplements
+        .map((s) => TrackedSupplement(
+              supplement: s,
+              totalDosedToday: todaysDoses[s.id] ?? 0.0,
+            ))
+        .toList();
+
     // --- DATEN LADEN ENDE ---
 
     if (mounted) {
@@ -150,6 +168,7 @@ class HomeState extends State<Home> {
         _nutritionData = newTodaysNutrition; // Neue Daten
         _recommendationText = newRecommendation; // Neue Daten
         _workoutStats = newWorkoutStats; // Neue Daten
+        _trackedSupplements = trackedSupps; // NEU
         _isLoading = false; // Ladezustand beenden
       });
     }
@@ -294,6 +313,15 @@ class HomeState extends State<Home> {
                             isExpandedView: false,
                             l10n: l10n)
                         : const SizedBox.shrink()),
+                const SizedBox(height: DesignConstants.spacingS),
+                SupplementSummaryWidget(
+                  trackedSupplements: _trackedSupplements,
+                  onTap: () => Navigator.of(context)
+                      .push(MaterialPageRoute(
+                          builder: (context) => const SupplementHubScreen()))
+                      .then((_) =>
+                          loadAllHomeScreenData(showLoadingIndicator: false)),
+                ),
                 if (_weightChartData.isNotEmpty)
                   const SizedBox(height: DesignConstants.spacingS),
                 GestureDetector(

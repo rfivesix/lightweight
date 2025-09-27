@@ -5,6 +5,7 @@ import 'package:lightweight/data/product_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/food_item.dart';
 import 'package:lightweight/screens/create_food_screen.dart';
+import 'package:lightweight/screens/food_detail_screen.dart';
 import 'package:lightweight/screens/scanner_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
@@ -381,7 +382,6 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     ]);
   }
 
-  // KORREKTUR 5: _buildFoodListItem verwendet jetzt SummaryCard
   Widget _buildFoodListItem(FoodItem item) {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
@@ -410,8 +410,20 @@ class _AddFoodScreenState extends State<AddFoodScreen>
               color: colorScheme.primary, size: 28),
           onPressed: () => Navigator.of(context).pop(item),
         ),
-        onTap: () => Navigator.of(context)
-            .pop(item), // KORREKTUR: Direkt Pop, da wir hier nur auswählen
+        onTap: () {
+          // KORREKTUR HIER: Navigiere zum Detail-Screen anstatt zu poppen.
+          Navigator.of(context)
+              .push(
+            MaterialPageRoute(
+              builder: (context) => FoodDetailScreen(foodItem: item),
+            ),
+          )
+              .then((_) {
+            // Lade die Listen neu, falls sich Favoriten geändert haben.
+            _loadFavorites();
+            _loadRecentItems();
+          });
+        },
       ),
     );
   }

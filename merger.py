@@ -1,7 +1,8 @@
 import os
 
 # Ordner, in dem gesucht werden soll
-root_dir = "D:\lightweight\lib"   # <--- hier anpassen
+# root_dir = "D:\lightweight\lib"   # <--- hier anpassen
+root_dir = "/Users/richard/Projects/Lightweight/lightweight"
 output_file = "alle_dateien.txt"
 
 with open(output_file, "w", encoding="utf-8") as outfile:

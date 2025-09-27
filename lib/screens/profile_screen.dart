@@ -38,6 +38,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       await profileService.pickAndSaveProfileImage();
                     },
                     child: CircleAvatar(
+                      key: ValueKey(
+                          '${profileService.profileImagePath ?? ''}${profileService.cacheBuster}'),
                       radius: 50,
                       backgroundColor: Theme.of(context)
                           .colorScheme
