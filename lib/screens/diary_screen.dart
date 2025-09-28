@@ -212,6 +212,8 @@ class DiaryScreenState extends State<DiaryScreen> {
               key: dialogStateKey,
               item: selectedFoodItem,
               initialMealType: mealType, // Pre-select the meal type
+              initialTimestamp:
+                  _selectedDate, // KORREKTUR: Das ausgewählte Datum übergeben
             ),
             actions: [
               TextButton(

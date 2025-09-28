@@ -26,68 +26,70 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   late final l10n = AppLocalizations.of(context)!;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  bool _isLoadingCalendar = true;
+  bool _isLoading = true;
   String _recommendationText = '';
 
   // Sets zur Speicherung der aktiven Tage des Monats
   Set<int> _workoutDays = {};
   Set<int> _nutritionLogDays = {};
-  Set<int> _supplementDays = {}; // NEU
+  Set<int> _supplementDays = {};
 
   @override
   void initState() {
     super.initState();
     _selectedDay = _focusedDay;
-    _loadAllData(_focusedDay); // Lade Daten für den aktuellen Monat
+    // Lade ALLE Daten nur EINMAL beim Start
+    _loadAllData();
   }
 
-  /// Lädt Workout- und Ernährungs-Tage für den gegebenen Monat.
-  Future<void> _loadMonthData(DateTime month) async {
+  Future<void> _loadAllData() async {
+    // Diese Methode lädt jetzt alles, was der Screen braucht
     setState(() {
-      _isLoadingCalendar = true;
+      _isLoading = true;
     });
 
-    final workoutDays =
-        await WorkoutDatabaseHelper.instance.getWorkoutDaysInMonth(month);
-    final nutritionDays =
-        await DatabaseHelper.instance.getNutritionLogDaysInMonth(month);
-    final supplementDays =
-        await DatabaseHelper.instance.getSupplementLogDaysInMonth(month); // NEU
+    // Lade Kalenderdaten für den aktuell fokussierten Monat
+    await _loadMonthData(_focusedDay);
 
-    if (mounted) {
-      setState(() {
-        _workoutDays = workoutDays;
-        _nutritionLogDays = nutritionDays;
-        _supplementDays = supplementDays; // NEU
-        _isLoadingCalendar = false;
-      });
-    }
-  }
-
-  /// Lädt Workout- und Ernährungs-Tage für den gegebenen Monat.
-  Future<void> _loadAllData(DateTime month) async {
-    setState(() {
-      _isLoadingCalendar = true;
-    });
-
-    final workoutDays =
-        await WorkoutDatabaseHelper.instance.getWorkoutDaysInMonth(month);
-    final nutritionDays =
-        await DatabaseHelper.instance.getNutritionLogDaysInMonth(month);
-    final supplementDays =
-        await DatabaseHelper.instance.getSupplementLogDaysInMonth(month); // NEU
+    // Lade die Empfehlung
     final recommendation = await _getRecommendation();
 
     if (mounted) {
       setState(() {
-        _workoutDays = workoutDays;
-        _nutritionLogDays = nutritionDays;
-        _supplementDays = supplementDays; // NEU
         _recommendationText = recommendation;
-        _isLoadingCalendar = false;
+        _isLoading = false; // Ladezustand wird hier beendet
       });
     }
   }
+
+  Future<void> _loadMonthData(DateTime month) async {
+    // Diese Methode lädt nur noch die Kalenderdaten und setzt KEINEN Ladezustand mehr
+    final workoutDays =
+        await WorkoutDatabaseHelper.instance.getWorkoutDaysInMonth(month);
+    final nutritionDays =
+        await DatabaseHelper.instance.getNutritionLogDaysInMonth(month);
+    final supplementDays =
+        await DatabaseHelper.instance.getSupplementLogDaysInMonth(month);
+
+    if (mounted) {
+      setState(() {
+        _workoutDays = workoutDays;
+        _nutritionLogDays = nutritionDays;
+        _supplementDays = supplementDays;
+      });
+    }
+  }
+
+  Future<void> _loadRecommendation() async {
+    final recommendation = await _getRecommendation();
+    if (mounted) {
+      setState(() {
+        _recommendationText = recommendation;
+      });
+    }
+  }
+
+
 
   Future<String> _getRecommendation() async {
     final prefs = await SharedPreferences.getInstance();
@@ -136,12 +138,11 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _isLoadingCalendar
+      body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               padding: DesignConstants.cardPadding,
               children: [
-                // Sektion 1: "MEINE KONSISTENZ" mit dem neuen Kalender
                 _buildSectionTitle(context, l10n.my_consistency),
                 SummaryCard(
                   child: Padding(
@@ -151,29 +152,28 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                       firstDay: DateTime.utc(2020, 1, 1),
                       lastDay: DateTime.now().add(const Duration(days: 365)),
                       focusedDay: _focusedDay,
-                      selectedDayPredicate: (day) =>
-                          isSameDay(_selectedDay, day),
+                      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
                       calendarFormat: CalendarFormat.month,
                       headerStyle: HeaderStyle(
                         formatButtonVisible:
-                            false, // Versteckt den "2 Weeks"-Button
+                            false,
                         titleCentered: true,
-                        titleTextStyle:
-                            Theme.of(context).textTheme.titleMedium!,
+                        titleTextStyle: Theme.of(context).textTheme.titleMedium!,
                       ),
                       onDaySelected: (selectedDay, focusedDay) {
                         setState(() {
                           _selectedDay = selectedDay;
                           _focusedDay = focusedDay;
                         });
-                        // Hier könnte in Zukunft die Detail-Anzeige für den Tag geladen werden
                       },
                       onPageChanged: (focusedDay) {
-                        _focusedDay = focusedDay;
-                        _loadAllData(
-                            focusedDay); // Lade Daten für den neuen Monat
+                        // KORREKTUR: Setzt nur noch den Fokus und lädt Kalenderdaten neu.
+                        // SetState wird innerhalb von _loadMonthData aufgerufen.
+                        setState(() {
+                          _focusedDay = focusedDay;
+                        });
+                        _loadMonthData(focusedDay);
                       },
-                      // HIER PASSIERT DIE MAGIE: Das Aussehen der Tage wird angepasst
                       calendarBuilders: CalendarBuilders(
                         markerBuilder: (context, day, events) {
                           final isNutritionDay =
@@ -195,21 +195,19 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                                         color: Colors.blueAccent),
                                   ),
                                 if (isNutritionDay && isSupplementDay)
-                                  const SizedBox(width: 2), // Abstand
+                                  const SizedBox(width: 2),
                                 if (isSupplementDay)
                                   Container(
                                     width: 6,
                                     height: 6,
                                     decoration: const BoxDecoration(
                                         shape: BoxShape.circle,
-                                        color: Colors
-                                            .amber), // NEU: Supplement-Marker
+                                        color: Colors.amber),
                                   ),
                               ],
                             ),
                           );
                         },
-                        // Builder für die Tages-Zellen selbst
                         defaultBuilder: (context, day, focusedDay) {
                           final isWorkoutDay = _workoutDays.contains(day.day);
                           if (isWorkoutDay) {
@@ -234,7 +232,6 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                               ),
                             );
                           }
-                          // Wenn kein Workout-Tag, wird der Standard-Look verwendet
                           return null;
                         },
                       ),
@@ -244,15 +241,12 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 const SizedBox(height: DesignConstants.spacingS),
                 _buildBannerCard(l10n),
                 const SizedBox(height: DesignConstants.spacingXL),
-
                 _buildSectionTitle(context, l10n.in_depth_analysis),
-                // NEUER EINTRAG HIER
                 _buildAnalysisGateway(
                   context: context,
                   icon: Icons.medication_outlined,
-                  title: l10n.supplementTrackerTitle, // LOKALISIERT
-                  subtitle: l10n.supplementTrackerDescription, // LOKALISIERT
-
+                  title: l10n.supplementTrackerTitle,
+                  subtitle: l10n.supplementTrackerDescription,
                   onTap: () {
                     Navigator.of(context).push(MaterialPageRoute(
                         builder: (context) => const SupplementHubScreen()));

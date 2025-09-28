@@ -630,10 +630,9 @@ import 'package:lightweight/models/supplement.dart';
 import 'package:lightweight/models/supplement_log.dart';
 import 'package:lightweight/screens/add_food_screen.dart';
 import 'package:lightweight/screens/add_measurement_screen.dart';
-import 'package:lightweight/screens/edit_routine_screen.dart';
-import 'package:lightweight/screens/home.dart';
-import 'package:lightweight/screens/live_workout_screen.dart';
 import 'package:lightweight/screens/diary_screen.dart';
+import 'package:lightweight/screens/edit_routine_screen.dart';
+import 'package:lightweight/screens/live_workout_screen.dart';
 import 'package:lightweight/screens/profile_screen.dart';
 import 'package:lightweight/screens/routines_screen.dart';
 import 'package:lightweight/screens/statistics_hub_screen.dart';
@@ -641,6 +640,7 @@ import 'package:lightweight/screens/workout_hub_screen.dart';
 import 'package:lightweight/services/profile_service.dart';
 import 'package:lightweight/services/workout_session_manager.dart';
 import 'package:lightweight/util/time_util.dart';
+import 'package:lightweight/widgets/glass_bottom_nav_bar.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/keep_alive_page.dart';
 import 'package:provider/provider.dart';
@@ -654,8 +654,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   late PageController _pageController;
   int _currentIndex = 0;
-  final GlobalKey<DiaryScreenState> _tagebuchKey =
-      GlobalKey<DiaryScreenState>();
+  final GlobalKey<DiaryScreenState> _tagebuchKey = GlobalKey<DiaryScreenState>();
   bool _isAddMenuOpen = false;
   late final AnimationController _menuController;
 
@@ -723,7 +722,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _refreshHomeScreen() async {
-    // Renamed to TagebuchScreen
+    // Renamed to DiaryScreen
     if (_currentIndex == 0) {
       _tagebuchKey.currentState?.loadDataForDate(DateTime.now());
     }
@@ -930,13 +929,80 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context)!;
-    final profileService = Provider.of<ProfileService>(context);
-
-    final List<Map<String, dynamic>> speedDialActions = [
+  AppBar _buildAppBar(
+      BuildContext context, int index, AppLocalizations l10n) {
+    String title = '';
+    // Handle titles for Train, Stats, and Profile screens
+    switch (index) {
+      case 1:
+        title = 'Train'; // TODO: l10n
+        return AppBar(
+          title: Text(
+            title,
+            style: Theme.of(context)
+                .textTheme
+                .titleLarge
+                ?.copyWith(fontWeight: FontWeight.w900),
+          ),
+        );
+      case 2:
+        title = 'Stats'; // TODO: l10n
+        return AppBar(
+          title: Text(
+            title,
+            style: Theme.of(context)
+                .textTheme
+                .titleLarge
+                ?.copyWith(fontWeight: FontWeight.w900),
+          ),
+        );
+      case 3:
+        // The profile screen's AppBar is now managed here.
+        return AppBar(
+          title: Text(
+            l10n.profile_capslock,
+            style: Theme.of(context)
+                .textTheme
+                .titleLarge
+                ?.copyWith(fontWeight: FontWeight.w900),
+          ),
+        );
+      case 0:
+      default:
+        // The Diary Screen has a special, dynamic AppBar
+        return AppBar(
+          automaticallyImplyLeading: false,
+          titleSpacing: 0,
+          title: DiaryAppBar(
+            // Pass the state's notifier directly IF the state exists
+            selectedDateNotifier:
+                _tagebuchKey.currentState?.selectedDateNotifier,
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.chevron_left),
+              onPressed: () {
+                _tagebuchKey.currentState?.navigateDay(false);
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.calendar_today),
+              onPressed: () {
+                _tagebuchKey.currentState?.pickDate();
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.chevron_right),
+              onPressed: () {
+                _tagebuchKey.currentState?.navigateDay(true);
+              },
+            ),
+          ],
+        );
+    }
+  }
+  List<Map<String, dynamic>> _getSpeedDialActions(AppLocalizations l10n) {
+    return [
       {
         'icon': Icons.local_drink,
         'label': l10n.addLiquidOption,
@@ -963,10 +1029,16 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         'action': 'log_supplement'
       },
     ];
+  }
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final profileService = Provider.of<ProfileService>(context);
 
     return Stack(
       children: [
         Scaffold(
+          extendBody: true, // Lässt den Body hinter die Nav-Leiste laufen
           appBar: _buildAppBar(context, _currentIndex, l10n),
           body: PageView(
             controller: _pageController,
@@ -986,107 +1058,50 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                   child: ProfileScreen()),
             ],
           ),
-          floatingActionButton: GlassFab(onPressed: _toggleAddMenu),
-          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-          bottomNavigationBar: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Consumer<WorkoutSessionManager>(
-                builder: (context, manager, child) {
-                  if (!manager.isActive) {
-                    return const SizedBox.shrink();
-                  }
-                  return BottomAppBar(
-                    color: theme.colorScheme.primary,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16.0, vertical: 8.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(formatDuration(manager.elapsedDuration),
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold)),
-                          Row(
-                            children: [
-                              TextButton(
-                                onPressed: () async {
-                                  final logId = manager.workoutLog?.id;
-                                  if (logId != null) {
-                                    await WorkoutDatabaseHelper.instance
-                                        .deleteWorkoutLog(logId);
-                                  }
-                                  manager.finishWorkout();
-                                },
-                                style: TextButton.styleFrom(
-                                    backgroundColor: Colors.red.shade600,
-                                    foregroundColor: Colors.white),
-                                child: Text(l10n.discard_button),
-                              ),
-                              const SizedBox(width: 8),
-                              ElevatedButton(
-                                onPressed: () {
-                                  if (manager.workoutLog != null &&
-                                      manager.workoutLog!.id != null) {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) => LiveWorkoutScreen(
-                                          workoutLog: manager.workoutLog!,
-                                          routine: null,
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                    backgroundColor:
-                                        theme.colorScheme.onPrimary,
-                                    foregroundColor: theme.colorScheme.primary),
-                                child: Text(l10n.continue_workout_button),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+          // Es gibt keinen FAB oder BottomNavBar mehr hier
+        ),
+
+        // Die neue, kombinierte Leiste wird hier im Stack platziert
+        Positioned(
+          bottom: 24,
+          left: 16,
+          right: 16,
+          child: GlassBottomNavBar(
+            currentIndex: _currentIndex,
+            onTap: _onNavigationTapped,
+            onFabTap: _toggleAddMenu,
+            items: [
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.book_outlined),
+                label: l10n.nutritionDiary,
               ),
-              BottomNavigationBar(
-                currentIndex: _currentIndex,
-                onTap: _onNavigationTapped,
-                type: BottomNavigationBarType.fixed,
-                items: [
-                  BottomNavigationBarItem(
-                      icon: const Icon(Icons.book_outlined),
-                      label: l10n.diary), // TODO l10n
-                  const BottomNavigationBarItem(
-                      icon: Icon(Icons.fitness_center_outlined),
-                      label: 'Workout'), // TODO l10n
-                  BottomNavigationBarItem(
-                      icon: const Icon(Icons.bar_chart_outlined),
-                      label: l10n.analysis), // TODO l10n
-                  BottomNavigationBarItem(
-                    icon: CircleAvatar(
-                      radius: 15,
-                      backgroundColor: Colors.grey.shade300,
-                      backgroundImage: profileService.profileImagePath != null
-                          ? FileImage(File(profileService.profileImagePath!))
-                          : null,
-                      child: profileService.profileImagePath == null
-                          ? const Icon(Icons.person,
-                              size: 20, color: Colors.black54)
-                          : null,
-                    ),
-                    label: l10n.profile,
-                  ),
-                ],
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.fitness_center_outlined),
+                label: l10n.workoutRoutinesTitle,
+              ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.bar_chart_outlined),
+                label: l10n.in_depth_analysis,
+              ),
+              BottomNavigationBarItem(
+                icon: CircleAvatar(
+                  radius: 12,
+                  backgroundColor: Colors.grey.shade300,
+                  backgroundImage: profileService.profileImagePath != null
+                      ? FileImage(File(profileService.profileImagePath!))
+                      : null,
+                  child: profileService.profileImagePath == null
+                      ? const Icon(Icons.person,
+                          size: 16, color: Colors.black54)
+                      : null,
+                ),
+                label: l10n.profile_capslock,
               ),
             ],
           ),
         ),
+
+        // Das Speed-Dial-Menü bleibt unverändert
         AnimatedBuilder(
           animation: _menuController,
           builder: (context, _) {
@@ -1122,7 +1137,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children:
-                              speedDialActions.asMap().entries.map((entry) {
+                              _getSpeedDialActions(l10n).asMap().entries.map((entry) {
                             final index = entry.key;
                             final action = entry.value;
                             final curved = CurvedAnimation(
@@ -1211,77 +1226,5 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         ),
       ],
     );
-  }
-
-  AppBar _buildAppBar(BuildContext context, int index, AppLocalizations l10n) {
-    String title = '';
-    // Handle titles for Train, Stats, and Profile screens
-    switch (index) {
-      case 1:
-        title = 'Train'; // TODO: l10n
-        return AppBar(
-          title: Text(
-            title,
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(fontWeight: FontWeight.w900),
-          ),
-        );
-      case 2:
-        title = 'Stats'; // TODO: l10n
-        return AppBar(
-          title: Text(
-            title,
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(fontWeight: FontWeight.w900),
-          ),
-        );
-      case 3:
-        // The profile screen's AppBar is now managed here.
-        return AppBar(
-          title: Text(
-            l10n.profile,
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(fontWeight: FontWeight.w900),
-          ),
-        );
-      case 0:
-      default:
-        // The Diary Screen has a special, dynamic AppBar
-        return AppBar(
-          automaticallyImplyLeading: false,
-          titleSpacing: 0,
-          title: DiaryAppBar(
-            // Pass the state's notifier directly IF the state exists
-            selectedDateNotifier:
-                _tagebuchKey.currentState?.selectedDateNotifier,
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.chevron_left),
-              onPressed: () {
-                _tagebuchKey.currentState?.navigateDay(false);
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.calendar_today),
-              onPressed: () {
-                _tagebuchKey.currentState?.pickDate();
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.chevron_right),
-              onPressed: () {
-                _tagebuchKey.currentState?.navigateDay(true);
-              },
-            ),
-          ],
-        );
-    }
   }
 }
