@@ -1,12 +1,15 @@
 // lib/screens/statistics_hub_screen.dart
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:lightweight/data/database_helper.dart';
+import 'package:lightweight/data/product_database_helper.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/screens/measurements_screen.dart';
 import 'package:lightweight/screens/nutrition_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/summary_card.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:lightweight/screens/supplement_hub_screen.dart'; // NEUER IMPORT
 
@@ -24,6 +27,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   bool _isLoadingCalendar = true;
+  String _recommendationText = '';
 
   // Sets zur Speicherung der aktiven Tage des Monats
   Set<int> _workoutDays = {};
@@ -34,7 +38,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   void initState() {
     super.initState();
     _selectedDay = _focusedDay;
-    _loadMonthData(_focusedDay); // Lade Daten für den aktuellen Monat
+    _loadAllData(_focusedDay); // Lade Daten für den aktuellen Monat
   }
 
   /// Lädt Workout- und Ernährungs-Tage für den gegebenen Monat.
@@ -60,153 +64,252 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     }
   }
 
+  /// Lädt Workout- und Ernährungs-Tage für den gegebenen Monat.
+  Future<void> _loadAllData(DateTime month) async {
+    setState(() {
+      _isLoadingCalendar = true;
+    });
+
+    final workoutDays =
+        await WorkoutDatabaseHelper.instance.getWorkoutDaysInMonth(month);
+    final nutritionDays =
+        await DatabaseHelper.instance.getNutritionLogDaysInMonth(month);
+    final supplementDays =
+        await DatabaseHelper.instance.getSupplementLogDaysInMonth(month); // NEU
+    final recommendation = await _getRecommendation();
+
+    if (mounted) {
+      setState(() {
+        _workoutDays = workoutDays;
+        _nutritionLogDays = nutritionDays;
+        _supplementDays = supplementDays; // NEU
+        _recommendationText = recommendation;
+        _isLoadingCalendar = false;
+      });
+    }
+  }
+
+  Future<String> _getRecommendation() async {
+    final prefs = await SharedPreferences.getInstance();
+    final targetCalories = prefs.getInt('targetCalories') ?? 2500;
+    final today = DateTime.now();
+    final sevenDaysAgo = today.subtract(const Duration(days: 6));
+    final recentEntries = await DatabaseHelper.instance
+        .getEntriesForDateRange(sevenDaysAgo, today);
+
+    if (recentEntries.isEmpty) {
+      return l10n.recommendationDefault;
+    }
+
+    final uniqueDaysTracked =
+        recentEntries.map((e) => DateFormat.yMd().format(e.timestamp)).toSet();
+    final numberOfTrackedDays = uniqueDaysTracked.length;
+    int totalRecentCalories = 0;
+    for (final entry in recentEntries) {
+      final foodItem = await ProductDatabaseHelper.instance
+          .getProductByBarcode(entry.barcode);
+      if (foodItem != null) {
+        totalRecentCalories +=
+            (foodItem.calories / 100 * entry.quantityInGrams).round();
+      }
+    }
+
+    final totalTargetCalories = targetCalories * numberOfTrackedDays;
+    final difference = totalRecentCalories - totalTargetCalories;
+    final tolerance = totalTargetCalories * 0.05;
+
+    if (numberOfTrackedDays > 1) {
+      if (difference > tolerance) {
+        return l10n.recommendationOverTarget(
+            numberOfTrackedDays, difference.round());
+      } else if (difference < -tolerance) {
+        return l10n.recommendationUnderTarget(
+            numberOfTrackedDays, (-difference).round());
+      } else {
+        return l10n.recommendationOnTarget(numberOfTrackedDays);
+      }
+    } else {
+      return l10n.recommendationFirstEntry;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: ListView(
-        padding: DesignConstants.cardPadding,
-        children: [
-          // Sektion 1: "MEINE KONSISTENZ" mit dem neuen Kalender
-          _buildSectionTitle(context, l10n.my_consistency),
-          SummaryCard(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TableCalendar(
-                locale: Localizations.localeOf(context).toString(),
-                firstDay: DateTime.utc(2020, 1, 1),
-                lastDay: DateTime.now().add(const Duration(days: 365)),
-                focusedDay: _focusedDay,
-                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                calendarFormat: CalendarFormat.month,
-                headerStyle: HeaderStyle(
-                  formatButtonVisible: false, // Versteckt den "2 Weeks"-Button
-                  titleCentered: true,
-                  titleTextStyle: Theme.of(context).textTheme.titleMedium!,
-                ),
-                onDaySelected: (selectedDay, focusedDay) {
-                  setState(() {
-                    _selectedDay = selectedDay;
-                    _focusedDay = focusedDay;
-                  });
-                  // Hier könnte in Zukunft die Detail-Anzeige für den Tag geladen werden
-                },
-                onPageChanged: (focusedDay) {
-                  _focusedDay = focusedDay;
-                  _loadMonthData(focusedDay); // Lade Daten für den neuen Monat
-                },
-                // HIER PASSIERT DIE MAGIE: Das Aussehen der Tage wird angepasst
-                calendarBuilders: CalendarBuilders(
-                  markerBuilder: (context, day, events) {
-                    final isNutritionDay = _nutritionLogDays.contains(day.day);
-                    final isSupplementDay = _supplementDays.contains(day.day);
-
-                    return Positioned(
-                      bottom: 4,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (isNutritionDay)
-                            Container(
-                              width: 6,
-                              height: 6,
-                              decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.blueAccent),
-                            ),
-                          if (isNutritionDay && isSupplementDay)
-                            const SizedBox(width: 2), // Abstand
-                          if (isSupplementDay)
-                            Container(
-                              width: 6, height: 6,
-                              decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color:
-                                      Colors.amber), // NEU: Supplement-Marker
-                            ),
-                        ],
+      body: _isLoadingCalendar
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: DesignConstants.cardPadding,
+              children: [
+                // Sektion 1: "MEINE KONSISTENZ" mit dem neuen Kalender
+                _buildSectionTitle(context, l10n.my_consistency),
+                SummaryCard(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TableCalendar(
+                      locale: Localizations.localeOf(context).toString(),
+                      firstDay: DateTime.utc(2020, 1, 1),
+                      lastDay: DateTime.now().add(const Duration(days: 365)),
+                      focusedDay: _focusedDay,
+                      selectedDayPredicate: (day) =>
+                          isSameDay(_selectedDay, day),
+                      calendarFormat: CalendarFormat.month,
+                      headerStyle: HeaderStyle(
+                        formatButtonVisible:
+                            false, // Versteckt den "2 Weeks"-Button
+                        titleCentered: true,
+                        titleTextStyle:
+                            Theme.of(context).textTheme.titleMedium!,
                       ),
+                      onDaySelected: (selectedDay, focusedDay) {
+                        setState(() {
+                          _selectedDay = selectedDay;
+                          _focusedDay = focusedDay;
+                        });
+                        // Hier könnte in Zukunft die Detail-Anzeige für den Tag geladen werden
+                      },
+                      onPageChanged: (focusedDay) {
+                        _focusedDay = focusedDay;
+                        _loadAllData(
+                            focusedDay); // Lade Daten für den neuen Monat
+                      },
+                      // HIER PASSIERT DIE MAGIE: Das Aussehen der Tage wird angepasst
+                      calendarBuilders: CalendarBuilders(
+                        markerBuilder: (context, day, events) {
+                          final isNutritionDay =
+                              _nutritionLogDays.contains(day.day);
+                          final isSupplementDay =
+                              _supplementDays.contains(day.day);
+
+                          return Positioned(
+                            bottom: 4,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (isNutritionDay)
+                                  Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: const BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.blueAccent),
+                                  ),
+                                if (isNutritionDay && isSupplementDay)
+                                  const SizedBox(width: 2), // Abstand
+                                if (isSupplementDay)
+                                  Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: const BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors
+                                            .amber), // NEU: Supplement-Marker
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
+                        // Builder für die Tages-Zellen selbst
+                        defaultBuilder: (context, day, focusedDay) {
+                          final isWorkoutDay = _workoutDays.contains(day.day);
+                          if (isWorkoutDay) {
+                            return Center(
+                              child: Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '${day.day}',
+                                    style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+                          // Wenn kein Workout-Tag, wird der Standard-Look verwendet
+                          return null;
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: DesignConstants.spacingS),
+                _buildBannerCard(l10n),
+                const SizedBox(height: DesignConstants.spacingXL),
+
+                _buildSectionTitle(context, l10n.in_depth_analysis),
+                // NEUER EINTRAG HIER
+                _buildAnalysisGateway(
+                  context: context,
+                  icon: Icons.medication_outlined,
+                  title: l10n.supplementTrackerTitle, // LOKALISIERT
+                  subtitle: l10n.supplementTrackerDescription, // LOKALISIERT
+
+                  onTap: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => const SupplementHubScreen()));
+                  },
+                ),
+                const SizedBox(height: DesignConstants.spacingM),
+                _buildAnalysisGateway(
+                  context: context,
+                  icon: Icons.monitor_weight_outlined,
+                  title: l10n.body_measurements,
+                  subtitle: l10n.measurements_description,
+                  onTap: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => const MeasurementsScreen()));
+                  },
+                ),
+                const SizedBox(height: DesignConstants.spacingM),
+                _buildAnalysisGateway(
+                  context: context,
+                  icon: Icons.pie_chart_outline_rounded,
+                  title: l10n.nutritionScreenTitle,
+                  subtitle: l10n.nutrition_description,
+                  onTap: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => const NutritionScreen()));
+                  },
+                ),
+                const SizedBox(height: DesignConstants.spacingM),
+                _buildAnalysisGateway(
+                  context: context,
+                  icon: Icons.bar_chart_rounded,
+                  title: l10n.training_analysis,
+                  subtitle: l10n.training_analysis_description,
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.soon_available_snackbar)),
                     );
                   },
-                  // Builder für die Tages-Zellen selbst
-                  defaultBuilder: (context, day, focusedDay) {
-                    final isWorkoutDay = _workoutDays.contains(day.day);
-                    if (isWorkoutDay) {
-                      return Center(
-                        child: Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          child: Center(
-                            child: Text(
-                              '${day.day}',
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.onPrimary,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }
-                    // Wenn kein Workout-Tag, wird der Standard-Look verwendet
-                    return null;
-                  },
                 ),
-              ),
+              ],
             ),
-          ),
-          const SizedBox(height: DesignConstants.spacingXL),
+    );
+  }
 
-          _buildSectionTitle(context, l10n.in_depth_analysis),
-          // NEUER EINTRAG HIER
-          _buildAnalysisGateway(
-            context: context,
-            icon: Icons.medication_outlined,
-            title: l10n.supplementTrackerTitle, // LOKALISIERT
-            subtitle: l10n.supplementTrackerDescription, // LOKALISIERT
-
-            onTap: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => const SupplementHubScreen()));
-            },
-          ),
-          const SizedBox(height: DesignConstants.spacingM),
-          _buildAnalysisGateway(
-            context: context,
-            icon: Icons.monitor_weight_outlined,
-            title: l10n.body_measurements,
-            subtitle: l10n.measurements_description,
-            onTap: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => const MeasurementsScreen()));
-            },
-          ),
-          const SizedBox(height: DesignConstants.spacingM),
-          _buildAnalysisGateway(
-            context: context,
-            icon: Icons.pie_chart_outline_rounded,
-            title: l10n.nutritionScreenTitle,
-            subtitle: l10n.nutrition_description,
-            onTap: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => const NutritionScreen()));
-            },
-          ),
-          const SizedBox(height: DesignConstants.spacingM),
-          _buildAnalysisGateway(
-            context: context,
-            icon: Icons.bar_chart_rounded,
-            title: l10n.training_analysis,
-            subtitle: l10n.training_analysis_description,
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.soon_available_snackbar)),
-              );
-            },
-          ),
-        ],
+  Widget _buildBannerCard(AppLocalizations l10n) {
+    return SummaryCard(
+      child: Container(
+        height: 100,
+        alignment: Alignment.center,
+        child: Text(
+          _recommendationText,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 22,
+              fontWeight: FontWeight.w500),
+        ),
       ),
     );
   }

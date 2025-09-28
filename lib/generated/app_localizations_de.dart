@@ -1238,4 +1238,16 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get caffeineUnit => 'mg pro 100ml';
+
+  @override
+  String get profile => 'Profil';
+
+  @override
+  String get measurementWeightCapslock => 'KÖRPERGEWICHT';
+
+  @override
+  String get diary => 'Tagebuch';
+
+  @override
+  String get analysis => 'Analyse';
 }

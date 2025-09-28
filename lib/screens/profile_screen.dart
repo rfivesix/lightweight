@@ -27,7 +27,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: DesignConstants.cardPadding,
         children: [
           // Profilbild-Sektion
-          _buildSectionTitle(l10n.profile_capslock),
+          //_buildSectionTitle(l10n.profile_capslock),
           SummaryCard(
             child: Padding(
               padding: DesignConstants.cardPadding,
@@ -66,7 +66,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ),
-          const SizedBox(height: DesignConstants.spacingXL),
+          const SizedBox(height: DesignConstants.spacingM),
 
           // Sektion für Navigation
           // HINWEIS: Der redundante Titel "EINSTELLUNGEN" wurde entfernt.

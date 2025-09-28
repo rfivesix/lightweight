@@ -550,5 +550,9 @@
   "themeDark": "Dunkel",
   "doseLabel": "Dosis",
   "caffeinePrompt": "Koffein (optional)",
-  "caffeineUnit": "mg pro 100ml"
+  "caffeineUnit": "mg pro 100ml",
+  "profile": "Profil",
+  "measurementWeightCapslock": "KÖRPERGEWICHT",
+  "diary": "Tagebuch",
+  "analysis": "Analyse"
 }

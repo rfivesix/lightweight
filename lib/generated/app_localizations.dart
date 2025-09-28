@@ -2383,6 +2383,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'mg per 100ml'**
   String get caffeineUnit;
+
+  /// No description provided for @profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profile;
+
+  /// No description provided for @measurementWeightCapslock.
+  ///
+  /// In en, this message translates to:
+  /// **'BODY WEIGHT'**
+  String get measurementWeightCapslock;
+
+  /// No description provided for @diary.
+  ///
+  /// In en, this message translates to:
+  /// **'Diary'**
+  String get diary;
+
+  /// No description provided for @analysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis'**
+  String get analysis;
 }
 
 class _AppLocalizationsDelegate
