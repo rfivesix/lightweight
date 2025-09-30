@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:lightweight/theme/color_constants.dart';
 
 class GlassFab extends StatefulWidget {
   final VoidCallback onPressed;
@@ -46,6 +47,8 @@ class _GlassFabState extends State<GlassFab>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
     return GestureDetector(
       onTapDown: _onTapDown,
       onTapUp: _onTapUp,
@@ -70,10 +73,12 @@ class _GlassFabState extends State<GlassFab>
                   ? null
                   : 76, // Quadratisch, wenn kein Label
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: bg.withOpacity(0.80),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.3),
+                  color: isDark
+                      ? Colors.white.withOpacity(0.30)
+                      : Colors.black.withOpacity(0.10),
                   width: 1.5,
                 ),
                 boxShadow: [
@@ -96,14 +101,14 @@ class _GlassFabState extends State<GlassFab>
                     Icon(
                       widget.icon,
                       size: 30,
-                      color: Colors.white,
+                      color: isDark ? Colors.white : Colors.black,
                     ),
                     if (widget.label != null) ...[
                       const SizedBox(width: 12),
                       Text(
                         widget.label!,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black,
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
                         ),

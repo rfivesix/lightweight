@@ -1481,13 +1481,13 @@ abstract class AppLocalizations {
   /// No description provided for @data_export_button.
   ///
   /// In en, this message translates to:
-  /// **'Exportieren'**
+  /// **'Export'**
   String get data_export_button;
 
   /// No description provided for @data_import_button.
   ///
   /// In en, this message translates to:
-  /// **'Importieren'**
+  /// **'Import'**
   String get data_import_button;
 
   /// No description provided for @snackbar_button_ok.
@@ -1499,7 +1499,7 @@ abstract class AppLocalizations {
   /// No description provided for @measurement_session_detail_view.
   ///
   /// In en, this message translates to:
-  /// **'Detailansicht der Messsession.'**
+  /// **'Detailview of measurement session'**
   String get measurement_session_detail_view;
 
   /// No description provided for @unit_grams.
@@ -1529,31 +1529,31 @@ abstract class AppLocalizations {
   /// No description provided for @add_liquid_title.
   ///
   /// In en, this message translates to:
-  /// **'Flüssigkeit hinzufügen'**
+  /// **'Add fluid'**
   String get add_liquid_title;
 
   /// No description provided for @add_button.
   ///
   /// In en, this message translates to:
-  /// **'Hinzufügen'**
+  /// **'Add'**
   String get add_button;
 
   /// No description provided for @discard_button.
   ///
   /// In en, this message translates to:
-  /// **'Verwerfen'**
+  /// **'Discard'**
   String get discard_button;
 
   /// No description provided for @continue_workout_button.
   ///
   /// In en, this message translates to:
-  /// **'Workout fortsetzen'**
+  /// **'Continue'**
   String get continue_workout_button;
 
   /// No description provided for @soon_available_snackbar.
   ///
   /// In en, this message translates to:
-  /// **'Dieser Screen wird bald verfügbar sein!'**
+  /// **'This screen will be available soon'**
   String get soon_available_snackbar;
 
   /// No description provided for @start_button.
@@ -2249,7 +2249,7 @@ abstract class AppLocalizations {
   /// No description provided for @nutritionDiary.
   ///
   /// In en, this message translates to:
-  /// **'nutrition diary'**
+  /// **'Diary'**
   String get nutritionDiary;
 
   /// No description provided for @detailedNutrientGoals.
@@ -2407,6 +2407,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Analysis'**
   String get analysis;
+
+  /// No description provided for @yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get yesterday;
+
+  /// No description provided for @dayBeforeYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Two days ago'**
+  String get dayBeforeYesterday;
+
+  /// No description provided for @statistics.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics'**
+  String get statistics;
+
+  /// No description provided for @workout.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout'**
+  String get workout;
+
+  /// No description provided for @addFoodTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'add food'**
+  String get addFoodTitle;
 }
 
 class _AppLocalizationsDelegate

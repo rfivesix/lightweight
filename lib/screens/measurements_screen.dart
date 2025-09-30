@@ -7,10 +7,12 @@ import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/measurement_session.dart';
 import 'package:lightweight/screens/add_measurement_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/bottom_content_spacer.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/measurement_chart_widget.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/util/l10n_ext.dart';
+import 'package:lightweight/widgets/swipe_action_background.dart';
 
 class MeasurementsScreen extends StatefulWidget {
   const MeasurementsScreen({super.key});
@@ -138,7 +140,8 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
                     ],
                     _buildSectionTitle(context, l10n.all_measurements),
                     ..._sessions.map((session) => _buildMeasurementSessionCard(
-                        l10n, colorScheme, session))
+                        l10n, colorScheme, session)),
+                    const BottomContentSpacer(),
                   ],
                 ),
       floatingActionButton: GlassFab(
@@ -286,13 +289,33 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
     return Dismissible(
       key: Key('session_${session.id}'),
       direction: DismissDirection.endToStart,
-      onDismissed: (direction) => _deleteSession(session.id!),
-      background: Container(
+      // gleiche Hintergründe wie im Nutrition Screen
+      background: const SwipeActionBackground(
         color: Colors.redAccent,
+        icon: Icons.delete,
         alignment: Alignment.centerRight,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: const Icon(Icons.delete, color: Colors.white),
       ),
+      confirmDismiss: (direction) async {
+        final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: Text(l10n.deleteConfirmTitle),
+                content: Text(l10n.deleteConfirmContent),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(false),
+                    child: Text(l10n.cancel),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(true),
+                    child: Text(l10n.delete),
+                  ),
+                ],
+              ),
+            ) ??
+            false;
+        return confirmed;
+      },
       child: SummaryCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

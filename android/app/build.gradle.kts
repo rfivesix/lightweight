@@ -1,4 +1,12 @@
 // android/app/build.gradle.kts
+import java.util.Properties
+
+val localProps = Properties().apply {
+    load(rootProject.file("local.properties").inputStream())
+}
+val flutterVersionName = localProps.getProperty("flutter.versionName") ?: "0.0.0"
+val flutterVersionCode = (localProps.getProperty("flutter.versionCode") ?: "1").toInt()
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -6,37 +14,32 @@ plugins {
 }
 
 android {
-    namespace = "com.example.lightweight"        // <- BEHALTE DEINEN WERT
+    namespace = "com.example.lightweight"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.lightweight" // <- BEHALTE DEINEN WERT
-        minSdk = flutter.minSdkVersion
-        targetSdk = 36
-        versionCode = 3                   // 0.0.3
-        versionName = "0.0.3"
-        multiDexEnabled = true
+        applicationId = "com.example.lightweight"
+        versionName = flutterVersionName
+        versionCode = flutterVersionCode
+
+        minSdk = flutter.minSdkVersion            // ← add this
+        targetSdk = 36      // optional; you can set it or let Flutter handle it
     }
 
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
             isShrinkResources = false
-            // TEMP: Release mit Debug-Keys signieren (installierbar, nicht Play-Store-tauglich)
             signingConfig = signingConfigs.getByName("debug")
         }
-        getByName("debug") { /* default */ }
+        getByName("debug") { }
     }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
+    kotlinOptions { jvmTarget = "1.8" }
 }
 
-flutter {
-    source = "../.."
-}
+flutter { source = "../.." }

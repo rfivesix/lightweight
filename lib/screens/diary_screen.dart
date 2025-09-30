@@ -10,12 +10,11 @@ import 'package:lightweight/models/food_item.dart';
 import 'package:lightweight/models/supplement_log.dart';
 import 'package:lightweight/models/tracked_food_item.dart';
 import 'package:lightweight/screens/add_food_screen.dart';
-import 'package:lightweight/screens/create_food_screen.dart';
 import 'package:lightweight/screens/food_detail_screen.dart';
-import 'package:lightweight/screens/scanner_screen.dart';
 import 'package:lightweight/screens/supplement_hub_screen.dart';
 import 'package:lightweight/util/date_util.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/bottom_content_spacer.dart';
 import 'package:lightweight/widgets/measurement_chart_widget.dart';
 import 'package:lightweight/widgets/nutrition_summary_widget.dart';
 import 'package:lightweight/widgets/supplement_summary_widget.dart';
@@ -294,9 +293,9 @@ class DiaryScreenState extends State<DiaryScreen> {
     if (_selectedDate.isSameDate(today)) {
       return l10n.today;
     } else if (_selectedDate.isSameDate(yesterday)) {
-      return 'Gestern'; // TODO: l10n
+      return l10n.yesterday; // ← NEW
     } else if (_selectedDate.isSameDate(dayBeforeYesterday)) {
-      return 'Vorgestern'; // TODO: l10n
+      return l10n.dayBeforeYesterday; // ← NEW
     } else {
       return DateFormat.yMMMMd(Localizations.localeOf(context).toString())
           .format(_selectedDate);
@@ -439,6 +438,7 @@ class DiaryScreenState extends State<DiaryScreen> {
                   _buildSectionTitle(context, l10n.measurementWeightCapslock),
                   _buildWeightChartCard(
                       context, Theme.of(context).colorScheme, l10n),
+                  const BottomContentSpacer(),
                 ],
               ),
             ),
@@ -651,9 +651,9 @@ class DiaryAppBar extends StatelessWidget {
     if (selectedDate.isSameDate(today)) {
       return l10n.today;
     } else if (selectedDate.isSameDate(yesterday)) {
-      return 'Gestern'; // TODO: l10n
+      return l10n.yesterday; // ← NEW
     } else if (selectedDate.isSameDate(dayBeforeYesterday)) {
-      return 'Vorgestern'; // TODO: l10n
+      return l10n.dayBeforeYesterday; // ← NEW
     } else {
       return DateFormat.yMMMMd(Localizations.localeOf(context).toString())
           .format(selectedDate);

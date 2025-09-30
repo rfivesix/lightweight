@@ -790,7 +790,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get discard_button => 'Verwerfen';
 
   @override
-  String get continue_workout_button => 'Workout fortsetzen';
+  String get continue_workout_button => 'Fortsetzen';
 
   @override
   String get soon_available_snackbar =>
@@ -1250,4 +1250,19 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get analysis => 'Analyse';
+
+  @override
+  String get yesterday => 'Gestern';
+
+  @override
+  String get dayBeforeYesterday => 'Vorgestern';
+
+  @override
+  String get statistics => 'Statistiken';
+
+  @override
+  String get workout => 'Workout';
+
+  @override
+  String get addFoodTitle => 'Lebensmittel hinzufügen';
 }

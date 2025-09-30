@@ -134,11 +134,24 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
         scrolledUnderElevation: 0,
         centerTitle: false,
         title: Text(
-          "Exercises",
+          l10n.exerciseCatalogTitle,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w900,
               ),
         ),
+        actions: [
+          if (widget.isSelectionMode)
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                l10n.doneButtonLabel,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+        ],
       ),
 
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -152,14 +165,6 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (widget.isSelectionMode)
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text(l10n.doneButtonLabel),
-                    ),
-                  ),
                 const SizedBox(height: DesignConstants.spacingS),
                 TextField(
                   controller: _searchController,

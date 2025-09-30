@@ -1,9 +1,7 @@
 // lib/screens/goals_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/services/profile_service.dart';
 import 'package:lightweight/util/design_constants.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 

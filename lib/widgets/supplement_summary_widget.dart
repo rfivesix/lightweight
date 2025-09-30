@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:lightweight/screens/supplement_hub_screen.dart';
 import 'package:lightweight/widgets/glass_progress_bar.dart';
 import 'package:lightweight/theme/color_constants.dart';
-import 'package:lightweight/util/design_constants.dart';
 
 class SupplementSummaryWidget extends StatelessWidget {
   final List<TrackedSupplement> trackedSupplements;

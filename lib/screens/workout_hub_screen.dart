@@ -10,6 +10,7 @@ import 'package:lightweight/screens/live_workout_screen.dart';
 import 'package:lightweight/screens/routines_screen.dart';
 import 'package:lightweight/screens/workout_history_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/bottom_content_spacer.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 
 class WorkoutHubScreen extends StatefulWidget {
@@ -145,6 +146,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                     onTap: () => Navigator.of(context).push(MaterialPageRoute(
                         builder: (context) => const ExerciseCatalogScreen())),
                   ),
+                  const BottomContentSpacer(),
                 ],
               ),
             ),

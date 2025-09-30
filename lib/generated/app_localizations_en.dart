@@ -752,17 +752,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get set_reps_hint => '8-12';
 
   @override
-  String get data_export_button => 'Exportieren';
+  String get data_export_button => 'Export';
 
   @override
-  String get data_import_button => 'Importieren';
+  String get data_import_button => 'Import';
 
   @override
   String get snackbar_button_ok => 'OK';
 
   @override
   String get measurement_session_detail_view =>
-      'Detailansicht der Messsession.';
+      'Detailview of measurement session';
 
   @override
   String get unit_grams => 'g';
@@ -777,20 +777,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get attribution_title => 'Attribution';
 
   @override
-  String get add_liquid_title => 'Flüssigkeit hinzufügen';
+  String get add_liquid_title => 'Add fluid';
 
   @override
-  String get add_button => 'Hinzufügen';
+  String get add_button => 'Add';
 
   @override
-  String get discard_button => 'Verwerfen';
+  String get discard_button => 'Discard';
 
   @override
-  String get continue_workout_button => 'Workout fortsetzen';
+  String get continue_workout_button => 'Continue';
 
   @override
-  String get soon_available_snackbar =>
-      'Dieser Screen wird bald verfügbar sein!';
+  String get soon_available_snackbar => 'This screen will be available soon';
 
   @override
   String get start_button => 'Start';
@@ -1163,7 +1162,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get workoutSummaryExerciseOverview => 'Exercise Overview';
 
   @override
-  String get nutritionDiary => 'nutrition diary';
+  String get nutritionDiary => 'Diary';
 
   @override
   String get detailedNutrientGoals => 'Detailed Nutrients';
@@ -1243,4 +1242,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get analysis => 'Analysis';
+
+  @override
+  String get yesterday => 'Yesterday';
+
+  @override
+  String get dayBeforeYesterday => 'Two days ago';
+
+  @override
+  String get statistics => 'Statistics';
+
+  @override
+  String get workout => 'Workout';
+
+  @override
+  String get addFoodTitle => 'add food';
 }

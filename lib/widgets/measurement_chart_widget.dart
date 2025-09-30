@@ -74,43 +74,61 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
       );
     }
 
-    final ChartDataPoint displayPoint =
-        _touchedIndex != null ? _dataPoints[_touchedIndex!] : _dataPoints.last;
+    // Punkt zur Anzeige (entweder getouched oder letzter)
+    final int lastIdx = _dataPoints.length - 1;
+    final int shownIdx = (_touchedIndex != null &&
+            _touchedIndex! >= 0 &&
+            _touchedIndex! < _dataPoints.length)
+        ? _touchedIndex!
+        : lastIdx;
+
+    final ChartDataPoint displayPoint = _dataPoints[shownIdx];
+    final String displayValue =
+        '${displayPoint.value.toStringAsFixed(1)} ${widget.unit}';
+    final String displayDate = DateFormat.yMMMd().format(displayPoint.date);
 
     final Color lineColor = Theme.of(context).colorScheme.primary;
+    final DateTime baseDate = _dataPoints.first.date;
 
     return SizedBox(
       height: 250,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '${displayPoint.value.toStringAsFixed(1)} ${widget.unit}',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+          // LINKS bündig: Gewicht groß + Datum rechts daneben
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Text(
+                displayValue,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                displayDate,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.6),
+                    ),
+              ),
+            ],
           ),
           const SizedBox(height: DesignConstants.spacingS),
           Expanded(
             child: LineChart(
               LineChartData(
+                // Touch aktiv lassen, aber Tooltip-Fenster vollständig ausblenden
                 lineTouchData: LineTouchData(
                   handleBuiltInTouches: true,
                   touchTooltipData: LineTouchTooltipData(
-                    getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
-                      // Tooltips bleiben aktiv für exakte Werte bei Berührung
-                      return touchedBarSpots.map((barSpot) {
-                        final index = barSpot.spotIndex;
-                        final dataPoint = _dataPoints[index];
-                        return LineTooltipItem(
-                          '${dataPoint.value.toStringAsFixed(1)} ${widget.unit}',
-                          TextStyle(
-                            color: lineColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        );
-                      }).toList();
-                    },
+                    //tooltipBgColor: Colors.transparent,
+                    getTooltipItems: (touchedSpots) =>
+                        List<LineTooltipItem?>.filled(touchedSpots.length, null,
+                            growable: false),
                   ),
                   touchCallback:
                       (FlTouchEvent event, LineTouchResponse? response) {
@@ -123,6 +141,7 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
                     }
                   },
                 ),
+
                 extraLinesData: ExtraLinesData(
                   horizontalLines: [
                     HorizontalLine(
@@ -136,7 +155,6 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
                 gridData: const FlGridData(show: false),
                 borderData: FlBorderData(show: false),
 
-                // KORREKTUR: Achsen sind jetzt immer sichtbar
                 titlesData: FlTitlesData(
                   leftTitles: const AxisTitles(
                       sideTitles: SideTitles(showTitles: false)),
@@ -144,51 +162,52 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
                       sideTitles: SideTitles(showTitles: false)),
                   rightTitles: AxisTitles(
                     sideTitles: SideTitles(
-                      showTitles: true, // IMMER ANZEIGEN
+                      showTitles: true,
                       reservedSize: 40,
                       getTitlesWidget: (value, meta) => Text(
                         value.toStringAsFixed(0),
                         style: Theme.of(context).textTheme.bodySmall,
-                        textAlign: TextAlign.right, // RECHTSBÜNDIG
+                        textAlign: TextAlign.right,
                       ),
                     ),
                   ),
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
-                      showTitles: true, // IMMER ANZEIGEN
+                      showTitles: true,
                       reservedSize: 30,
-                      interval: (_dataPoints.length / 4).ceilToDouble(),
+                      interval: 7, // z. B. alle 7 Tage ein Label
                       getTitlesWidget: (value, meta) {
-                        final index = value.toInt();
-                        if (index >= 0 && index < _dataPoints.length) {
-                          return SideTitleWidget(
-                            meta: meta,
-                            space: 8.0,
-                            child: Text(
-                              DateFormat.MMMd().format(_dataPoints[index].date),
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          );
-                        }
-                        return const SizedBox.shrink();
+                        final date =
+                            baseDate.add(Duration(days: value.toInt()));
+                        return SideTitleWidget(
+                          meta: meta,
+                          space: 8.0,
+                          child: Text(
+                            DateFormat.MMMd().format(date),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        );
                       },
                     ),
                   ),
                 ),
                 lineBarsData: [
                   LineChartBarData(
-                    spots: _dataPoints
-                        .asMap()
-                        .entries
-                        .map((e) => FlSpot(e.key.toDouble(), e.value.value))
-                        .toList(),
+                    spots: _dataPoints.map((p) {
+                      final days =
+                          p.date.difference(baseDate).inDays.toDouble();
+                      return FlSpot(days, p.value);
+                    }).toList(),
+
                     isCurved: true,
                     color: lineColor,
                     barWidth: 3,
                     isStrokeCapRound: true,
+                    // Punkt nur am getouchten Index anzeigen
                     dotData: FlDotData(
                       show: true,
                       checkToShowDot: (spot, barData) {
+                        if (_touchedIndex == null) return false;
                         return spot.x.toInt() == _touchedIndex;
                       },
                       getDotPainter: (spot, percent, bar, index) =>
@@ -215,7 +234,6 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
               ),
             ),
           ),
-          // KORREKTUR: Die separate Datumsanzeige am unteren Rand wurde entfernt.
         ],
       ),
     );

@@ -6,6 +6,7 @@ import 'package:lightweight/screens/onboarding_screen.dart';
 import 'package:lightweight/screens/settings_screen.dart';
 import 'package:lightweight/services/profile_service.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/bottom_content_spacer.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:provider/provider.dart';
 
@@ -92,6 +93,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: DesignConstants.spacingM),
           _buildOnboardingCard(l10n),
+          const BottomContentSpacer(),
         ],
       ),
     );

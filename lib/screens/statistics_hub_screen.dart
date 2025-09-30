@@ -8,6 +8,7 @@ import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/screens/measurements_screen.dart';
 import 'package:lightweight/screens/nutrition_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/bottom_content_spacer.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -89,8 +90,6 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     }
   }
 
-
-
   Future<String> _getRecommendation() async {
     final prefs = await SharedPreferences.getInstance();
     final targetCalories = prefs.getInt('targetCalories') ?? 2500;
@@ -152,13 +151,14 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                       firstDay: DateTime.utc(2020, 1, 1),
                       lastDay: DateTime.now().add(const Duration(days: 365)),
                       focusedDay: _focusedDay,
-                      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                      selectedDayPredicate: (day) =>
+                          isSameDay(_selectedDay, day),
                       calendarFormat: CalendarFormat.month,
                       headerStyle: HeaderStyle(
-                        formatButtonVisible:
-                            false,
+                        formatButtonVisible: false,
                         titleCentered: true,
-                        titleTextStyle: Theme.of(context).textTheme.titleMedium!,
+                        titleTextStyle:
+                            Theme.of(context).textTheme.titleMedium!,
                       ),
                       onDaySelected: (selectedDay, focusedDay) {
                         setState(() {
@@ -286,6 +286,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                     );
                   },
                 ),
+                const BottomContentSpacer(),
               ],
             ),
     );

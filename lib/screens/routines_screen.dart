@@ -9,6 +9,7 @@ import 'package:lightweight/screens/live_workout_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/summary_card.dart';
+import 'package:lightweight/widgets/swipe_action_background.dart';
 
 class RoutinesScreen extends StatefulWidget {
   final int? initialRoutineId;
@@ -170,36 +171,47 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
                     return Dismissible(
                       key: Key('routine_${routine.id}'),
                       direction: DismissDirection.endToStart,
-                      background: Container(
+
+                      // gleiche Hintergründe wie im Nutrition Screen
+                      background: const SwipeActionBackground(
                         color: Colors.redAccent,
+                        icon: Icons.delete,
                         alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: const Icon(Icons.delete, color: Colors.white),
                       ),
+
+                      // Swipe-Logik wie bei Nutrition:
+                      // links→rechts = Edit (nicht wirklich dismissen),
+                      // rechts→links = Delete (mit Bestätigung)
                       confirmDismiss: (direction) async {
-                        return await showDialog<bool>(
+                        final confirmed = await showDialog<bool>(
                               context: context,
                               builder: (ctx) => AlertDialog(
                                 title: Text(l10n.deleteConfirmTitle),
-                                content: Text(l10n
-                                    .deleteRoutineConfirmContent(routine.name)),
+                                content: Text(l10n.deleteConfirmContent),
                                 actions: [
                                   TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(ctx).pop(false),
-                                      child: Text(l10n.cancel)),
+                                    onPressed: () =>
+                                        Navigator.of(ctx).pop(false),
+                                    child: Text(l10n.cancel),
+                                  ),
                                   TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(ctx).pop(true),
-                                      child: Text(l10n.delete)),
+                                    onPressed: () =>
+                                        Navigator.of(ctx).pop(true),
+                                    child: Text(l10n.delete),
+                                  ),
                                 ],
                               ),
                             ) ??
                             false;
+                        return confirmed;
                       },
+
                       onDismissed: (direction) {
-                        _deleteRoutine(context, routine);
+                        if (direction == DismissDirection.endToStart) {
+                          _deleteRoutine(context, routine); // wirklich löschen
+                        }
                       },
+
                       child: SummaryCard(
                         child: ListTile(
                           leading: ElevatedButton(

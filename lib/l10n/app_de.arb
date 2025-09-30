@@ -355,7 +355,7 @@
   "add_liquid_title": "Flüssigkeit hinzufügen",
   "add_button": "Hinzufügen",
   "discard_button": "Verwerfen",
-  "continue_workout_button": "Workout fortsetzen",
+  "continue_workout_button": "Fortsetzen",
   "soon_available_snackbar": "Dieser Screen wird bald verfügbar sein!",
   "start_button": "Start",
   "today_overview_text": "HEUTE IM BLICK",
@@ -554,5 +554,10 @@
   "profile": "Profil",
   "measurementWeightCapslock": "KÖRPERGEWICHT",
   "diary": "Tagebuch",
-  "analysis": "Analyse"
+  "analysis": "Analyse",
+  "yesterday": "Gestern",
+  "dayBeforeYesterday": "Vorgestern",
+  "statistics": "Statistiken",
+  "workout": "Workout",
+  "addFoodTitle": "Lebensmittel hinzufügen"
 }

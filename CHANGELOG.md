@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## 0.4.0-alpha.3 — 2025-10-01
+### Added
+- New bottom bar layout with detached GlassFab
+- Running workout bar redesign (filled “Continue”, outlined red “Discard”)
+
+### Changed
+- Localized screen names (Diary/Workout/Stats/Profile; Heute/Gestern/Vorgestern)
+- Weight chart: inline date next to big weight, hover updates value/date, no tooltip popup
+- Routine & Measurements screens: swipe actions match Nutrition design
+
+### Fixed
+- Back button in Add Food
+- “Done” moved to AppBar in add exercise flow
+- App version alignment (minSdk 21, targetSdk 36, versionName/Code via local.properties)
+
+### Known
+- Play Store signing not configured (debug signing only for GitHub APK)
 
 ## [0.2.0] - 2025-09-24
 

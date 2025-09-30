@@ -156,13 +156,19 @@ class MyApp extends StatelessWidget {
             thickness: 1,
             space: 24,
           ),
-          appBarTheme: const AppBarTheme(
+          appBarTheme: AppBarTheme(
             elevation: 0,
             scrolledUnderElevation: 0,
             backgroundColor: Colors.white,
             foregroundColor: Colors.black,
             centerTitle: false,
+            titleTextStyle: ThemeData.light().textTheme.titleLarge?.copyWith(
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w900,
+                  color: Colors.black,
+                ),
           ),
+
           textTheme: ThemeData.light().textTheme.apply(
                 fontFamily: 'Inter', // Das ist weiterhin korrekt
                 bodyColor: Colors.black87,
@@ -271,13 +277,19 @@ class MyApp extends StatelessWidget {
             thickness: 1,
             space: 24,
           ),
-          appBarTheme: const AppBarTheme(
+          appBarTheme: AppBarTheme(
             elevation: 0,
             scrolledUnderElevation: 0,
             backgroundColor: Colors.black,
             foregroundColor: Colors.white,
             centerTitle: false,
+            titleTextStyle: ThemeData.dark().textTheme.titleLarge?.copyWith(
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                ),
           ),
+
           textTheme: ThemeData.dark().textTheme.apply(
                 fontFamily: 'Inter', // Das ist weiterhin korrekt
                 bodyColor: Colors.white,

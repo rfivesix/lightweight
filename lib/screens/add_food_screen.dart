@@ -134,14 +134,13 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       // KORREKTUR 1: AppBar entfernt, Titel und TabBar direkt in die ListView
       // KORREKTUR 2: Den grauen Balken entfernen, indem wir einen leeren AppBar verwenden.
       appBar: AppBar(
-        toolbarHeight: 0, // AppBar komplett "unsichtbar" machen
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        shadowColor: Colors.transparent, // Schattenfarbe explizit transparent
-        surfaceTintColor:
-            Colors.transparent, // Surface tint color auch transparent
-        bottomOpacity: 0, // Bottom-Border-Opazität auf 0
-        forceMaterialTransparency: true, // Erzwingt Transparenz
+        automaticallyImplyLeading: true, // ← shows the back chevron
+        title: Text(
+          l10n.addFoodTitle, // or whatever your l10n key is
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+        ),
       ),
       body: Column(
         children: [
