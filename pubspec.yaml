@@ -1,0 +1,76 @@
+name: lightweight
+description: "A modern, privacy-first fitness and nutrition tracking app. Offline-first, no cloud dependency, built with Flutter."
+publish_to: 'none' 
+version: 0.4.0-alpha.5+4005
+
+environment:
+  sdk: '>=3.0.0 <4.0.0' # Angepasst für moderne SDKs
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # DOC: Hinzugefügt für die Lokalisierung (Mehrsprachigkeit)
+  flutter_localizations:
+    sdk: flutter
+  intl: 0.20.2 # Stets die neueste Version prüfen mit `flutter pub outdated`
+
+  # DOC: Hinzugefügt für die SQLite-Datenbank
+  sqflite: ^2.3.0 
+  path: ^1.8.3
+
+  cupertino_icons: ^1.0.8
+  flutter_gen: ^5.11.0
+  shared_preferences: ^2.2.3
+  dynamic_color: ^1.7.0 
+  url_launcher: ^6.2.6
+  path_provider: ^2.1.5
+  file_picker: ^10.3.2
+  share_plus: ^11.1.0
+  fl_chart: ^1.1.0
+  vibration: ^3.1.3
+  csv: ^6.0.0
+  provider: ^6.1.5+1
+  google_fonts: ^6.3.1
+  package_info_plus: ^9.0.0 # oder die neueste Version
+  image_picker: ^1.2.0
+  mobile_scanner: ^5.1.0 # Füge diese Zeile hinzu
+  cryptography: ^2.7.0
+  table_calendar: ^3.2.0
+
+  mime: any
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  # DOC: Dieser Schalter ist entscheidend. Er weist Flutter an, den Code
+  # für die Lokalisierung automatisch zu generieren.
+  generate: true
+  uses-material-design: true
+  
+  assets:
+    - assets/images/max_mustermann.png
+    - assets/db/
+
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400 # Regular
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500 # Medium
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600 # SemiBold
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700 # Bold
+        - asset: assets/fonts/Inter-ExtraBold.ttf
+          weight: 800 # ExtraBold
+        - asset: assets/fonts/Inter-Black.ttf
+          weight: 900 # Black        
+        - asset: assets/fonts/Inter-Italic.ttf
+          style: italic
+        - asset: assets/fonts/Inter-BoldItalic.ttf
+          weight: 700
+          style: italic
