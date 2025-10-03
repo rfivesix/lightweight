@@ -1,5 +1,7 @@
 // lib/screens/add_food_screen.dart (Final & De-Materialisiert)
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:lightweight/data/product_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
@@ -33,6 +35,40 @@ class _AddFoodScreenState extends State<AddFoodScreen>
   bool _isLoadingRecent = true;
 
   late TabController _tabController;
+// oben in _AddFoodScreenState
+final TextEditingController _baseSearchCtrl = TextEditingController();
+String _baseSearch = '';
+Timer? _baseSearchDebounce;
+
+List<Map<String, dynamic>> _baseCategories = [];
+final Map<String, List<FoodItem>> _catItems = {};     // key -> Produkte
+final Set<String> _loadingCats = {};                  // ladeanzeige je Kategorie
+
+Future<void> _loadBaseCategories() async {
+  _baseCategories = await ProductDatabaseHelper.instance.getBaseCategories();
+  if (mounted) setState(() {});
+}
+
+Future<void> _loadCategoryItems(String key) async {
+  if (_catItems.containsKey(key) || _loadingCats.contains(key)) return;
+  _loadingCats.add(key);
+  if (mounted) setState(() {});
+  final items = await ProductDatabaseHelper.instance.getBaseFoods(
+    categoryKey: key,
+    limit: 500,     // großzügig – DB ist lokal
+  );
+  _catItems[key] = items;
+  _loadingCats.remove(key);
+  if (mounted) setState(() {});
+}
+
+void _onBaseSearchChanged(String v) {
+  _baseSearchDebounce?.cancel();
+  _baseSearchDebounce = Timer(const Duration(milliseconds: 250), () {
+    setState(() => _baseSearch = v.trim());
+  });
+}
+
 
   @override
   void initState() {
@@ -41,6 +77,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     _searchController.addListener(() => setState(() {}));
     _loadFavorites();
     _loadRecentItems();
+      _baseSearchCtrl.addListener(() => _onBaseSearchChanged(_baseSearchCtrl.text));
+  _loadBaseCategories();
   }
 
   @override
@@ -55,6 +93,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
   void dispose() {
     _searchController.dispose();
     _tabController.dispose();
+      _baseSearchDebounce?.cancel();
+  _baseSearchCtrl.dispose();
     super.dispose();
   }
 
@@ -263,33 +303,117 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     );
   }
 
-  Widget _buildBaseFoodsTab(AppLocalizations l10n) {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.eco_outlined, size: 80, color: Colors.grey.shade400),
-          const SizedBox(height: DesignConstants.spacingL),
-          Text(
-            l10n.comingSoon,
-            style: Theme.of(context).textTheme.headlineSmall,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: DesignConstants.spacingS),
-          Text(
-            l10n.baseFoodsEmptyState,
-            textAlign: TextAlign.center,
-            style: Theme.of(context)
-                .textTheme
-                .bodyLarge
-                ?.copyWith(color: Colors.grey.shade600),
-          ),
-        ],
+Widget _buildBaseFoodsTab(AppLocalizations l10n) {
+  // Kopf: Suche
+  final searchField = Padding(
+    padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+    child: TextField(
+      controller: _baseSearchCtrl,
+      textInputAction: TextInputAction.search,
+      decoration: InputDecoration(
+        hintText: 'Suche Grundnahrungsmittel',
+        prefixIcon: const Icon(Icons.search),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        isDense: true,
       ),
+    ),
+  );
+
+  // Modus 1: mit Suchbegriff → Trefferliste
+  if (_baseSearch.isNotEmpty) {
+    return Column(
+      children: [
+        searchField,
+        Expanded(
+          child: FutureBuilder<List<FoodItem>>(
+            future: ProductDatabaseHelper.instance.getBaseFoods(
+              search: _baseSearch,
+              limit: 200,
+            ),
+            builder: (context, snap) {
+              if (snap.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              final items = snap.data ?? [];
+              if (items.isEmpty) {
+                return const Center(child: Text('Keine Treffer.'));
+              }
+              return ListView.builder(
+                padding: DesignConstants.cardPadding,
+                itemCount: items.length,
+                itemBuilder: (_, i) => _buildFoodListItem(items[i]),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
+  // Modus 2: kein Suchbegriff → Kategorien mit Emoji (Accordion)
+  return Column(
+    children: [
+      searchField,
+      if (_baseCategories.isEmpty)
+        const LinearProgressIndicator(minHeight: 2),
+      Expanded(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            _catItems.clear();
+            await _loadBaseCategories();
+          },
+          child: ListView.builder(
+            padding: const EdgeInsets.only(bottom: 24),
+            itemCount: _baseCategories.length,
+            itemBuilder: (context, idx) {
+              final cat = _baseCategories[idx];
+              final key = cat['key'] as String;
+              final emoji = (cat['emoji'] as String?)?.trim();
+              final title = (cat['name_de'] as String?)?.trim().isNotEmpty == true
+                  ? cat['name_de'] as String
+                  : (cat['name_en'] as String? ?? key);
+
+              final loading = _loadingCats.contains(key);
+              final items = _catItems[key];
+
+              return Theme(
+                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                child: ExpansionTile(
+                  leading: Text(emoji?.isNotEmpty == true ? emoji! : '🗂️', style: const TextStyle(fontSize: 20)),
+                  title: Text(title),
+                  initiallyExpanded: false,
+                  onExpansionChanged: (expanded) {
+                    if (expanded) _loadCategoryItems(key);
+                  },
+                  children: [
+                    if (loading)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    else if (items == null || items.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Center(child: Text('Keine Einträge')),
+                      )
+                    else
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        padding: DesignConstants.cardPadding.copyWith(top: 0),
+                        itemCount: items.length,
+                        itemBuilder: (_, i) => _buildFoodListItem(items[i]),
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    ],
+  );
+}
   Widget _buildFavoritesTab(AppLocalizations l10n) {
     if (_isLoadingFavorites) {
       return const Center(child: CircularProgressIndicator());

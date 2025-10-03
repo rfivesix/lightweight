@@ -40,7 +40,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final profileService = Provider.of<ProfileService>(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.settingsTitle)),
+      appBar: AppBar(
+  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+  elevation: 0,
+  scrolledUnderElevation: 0,
+  title: Text(
+    l10n.settingsTitle,
+    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.w900,
+        ),
+  ),
+),
       body: ListView(
         padding: DesignConstants.cardPadding,
         children: [

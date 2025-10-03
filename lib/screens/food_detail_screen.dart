@@ -2,12 +2,19 @@
 
 import 'package:flutter/material.dart';
 import 'package:lightweight/data/database_helper.dart';
+import 'package:lightweight/data/product_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/food_item.dart';
 import 'package:lightweight/models/tracked_food_item.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/off_attribution_widget.dart';
 import 'package:lightweight/widgets/summary_card.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart' as p;
+import 'package:share_plus/share_plus.dart';
+
+// Dev-Flag: später einfach auf false setzen oder die Dev-Blöcke entfernen.
+const bool kDevEditEnabled = true;
 
 class FoodDetailScreen extends StatefulWidget {
   final TrackedFoodItem? trackedItem;
@@ -28,6 +35,41 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
   int? _trackedQuantity;
   bool get _hasPortionInfo => _trackedQuantity != null;
 
+  // ---------- DEV: Inline-Editing ----------
+  bool _devEditing = false; // via Secret-Tap toggeln
+
+  final _deCtrl = TextEditingController();
+  final _enCtrl = TextEditingController();
+  final _catCtrl = TextEditingController();
+
+  final _calCtrl = TextEditingController();
+  final _proCtrl = TextEditingController();
+  final _carbCtrl = TextEditingController();
+  final _fatCtrl = TextEditingController();
+  final _kjCtrl = TextEditingController();
+  final _fibCtrl = TextEditingController();
+  final _sugCtrl = TextEditingController();
+  final _saltCtrl = TextEditingController();
+  final _sodCtrl = TextEditingController();
+  final _calciumCtrl = TextEditingController();
+
+  void _fillControllers(FoodItem item, {Map<String, dynamic>? rawRow}) {
+    _deCtrl.text = (rawRow?['name_de'] as String?) ?? item.name;
+    _enCtrl.text = (rawRow?['name_en'] as String?) ?? '';
+    _catCtrl.text = (rawRow?['category_key'] as String?) ?? '';
+
+    _calCtrl.text = (item.calories).toString();
+    _proCtrl.text = (item.protein).toString();
+    _carbCtrl.text = (item.carbs).toString();
+    _fatCtrl.text = (item.fat).toString();
+    _kjCtrl.text = (rawRow?['kj_100g'] as num?)?.toString() ?? '';
+    _fibCtrl.text = (rawRow?['fiber_100g'] as num?)?.toString() ?? '';
+    _sugCtrl.text = (rawRow?['sugar_100g'] as num?)?.toString() ?? '';
+    _saltCtrl.text = (rawRow?['salt_100g'] as num?)?.toString() ?? '';
+    _sodCtrl.text = (rawRow?['sodium_100g'] as num?)?.toString() ?? '';
+    _calciumCtrl.text = (rawRow?['calcium_100g'] as num?)?.toString() ?? '';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -41,6 +83,119 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
     }
     _checkIfFavorite();
   }
+
+  @override
+  void dispose() {
+    _deCtrl.dispose(); _enCtrl.dispose(); _catCtrl.dispose();
+    _calCtrl.dispose(); _proCtrl.dispose(); _carbCtrl.dispose(); _fatCtrl.dispose();
+    _kjCtrl.dispose(); _fibCtrl.dispose(); _sugCtrl.dispose(); _saltCtrl.dispose();
+    _sodCtrl.dispose(); _calciumCtrl.dispose();
+    super.dispose();
+  }
+
+  // ---------- DEV: Basis-DB Hilfen ----------
+
+  Future<String> _getBaseDbPath() async {
+    // Versuche erst den bekannten Namen der Base-DB im App-DB-Verzeichnis
+    final dbDir = await getDatabasesPath();
+    return p.join(dbDir, 'vita_base_foods.db');
+  }
+
+  Future<Database> _openBaseDb({bool readOnly = false}) async {
+    final path = await _getBaseDbPath();
+    return openDatabase(path, readOnly: readOnly);
+  }
+
+  Future<Map<String, dynamic>?> _loadRawRow(String barcode) async {
+    final base = await _openBaseDb(readOnly: true);
+    try {
+      final rows = await base.query('products', where: 'barcode = ?', whereArgs: [barcode], limit: 1);
+      return rows.isNotEmpty ? rows.first : null;
+    } finally {
+      await base.close();
+    }
+  }
+
+  Future<void> _saveDevEdits() async {
+    try {
+      final barcode = _displayItem.barcode;
+      final Map<String, Object?> fields = {
+        // Spiegel beachten: name = name_de
+        'name_de': _deCtrl.text.trim(),
+        'name_en': _enCtrl.text.trim().isEmpty ? null : _enCtrl.text.trim(),
+        'name': _deCtrl.text.trim(),
+        'category_key': _catCtrl.text.trim().isEmpty ? null : _catCtrl.text.trim(),
+        // Nährwerte
+        'calories_100g': int.tryParse(_calCtrl.text.trim()),
+        'protein_100g': double.tryParse(_proCtrl.text.trim()),
+        'carbs_100g': double.tryParse(_carbCtrl.text.trim()),
+        'fat_100g': double.tryParse(_fatCtrl.text.trim()),
+        'kj_100g': double.tryParse(_kjCtrl.text.trim()),
+        'fiber_100g': double.tryParse(_fibCtrl.text.trim()),
+        'sugar_100g': double.tryParse(_sugCtrl.text.trim()),
+        'salt_100g': double.tryParse(_saltCtrl.text.trim()),
+        'sodium_100g': double.tryParse(_sodCtrl.text.trim()),
+        'calcium_100g': double.tryParse(_calciumCtrl.text.trim()),
+      };
+
+      // leere Strings zu null; 'barcode' niemals überschreiben
+      fields.removeWhere((k, v) => v == null);
+
+      final db = await _openBaseDb();
+      try {
+        await db.update(
+          'products',
+          fields,
+          where: 'barcode = ?',
+          whereArgs: [barcode],
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      } finally {
+        await db.close();
+      }
+      await ProductDatabaseHelper.instance.reloadBaseDb();
+
+      // Für sichtbares Refresh: Eintrag neu aus Base-DB laden
+      final baseDb = await _openBaseDb(readOnly: true);
+      Map<String, dynamic>? row;
+      try {
+        final rows = await baseDb.query('products', where: 'barcode = ?', whereArgs: [barcode], limit: 1);
+        if (rows.isNotEmpty) row = rows.first;
+      } finally {
+        await baseDb.close();
+      }
+      if (row != null) {
+        setState(() {
+          _displayItem = FoodItem.fromMap(row!, source: FoodItemSource.base);
+        });
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gespeichert (Basis-DB)')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Fehler: $e')),
+      );
+    }
+  }
+
+  Future<void> _exportBaseDb() async {
+    try {
+      final path = await _getBaseDbPath();
+      final file = XFile(path, name: p.basename(path));
+      await Share.shareXFiles([file], subject: 'Export: vita_base_foods.db');
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Export-Fehler: $e')),
+      );
+    }
+  }
+
+  // ---------- Favoriten / Anzeige ----------
 
   Future<void> _checkIfFavorite() async {
     final isFav =
@@ -79,11 +234,32 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: Text(
-          _displayItem.name,
-          style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+        title: GestureDetector(
+          onLongPress: () async {
+            if (!kDevEditEnabled) return;
+            setState(() => _devEditing = !_devEditing);
+            if (_devEditing) {
+              final raw = await _loadRawRow(_displayItem.barcode);
+              _fillControllers(_displayItem, rawRow: raw);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('DEV-Edit-Modus aktiv')),
+                );
+              }
+            }
+          },
+          child: Text(
+            _displayItem.name,
+            style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+          ),
         ),
         actions: [
+          if (kDevEditEnabled && _devEditing)
+            IconButton(
+              tooltip: 'Basis-DB exportieren',
+              onPressed: _exportBaseDb,
+              icon: const Icon(Icons.ios_share),
+            ),
           IconButton(
             icon: Icon(
               _isFavorite ? Icons.favorite : Icons.favorite_border,
@@ -164,6 +340,71 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                 ),
               ),
             ],
+
+            // ---------- DEV: Inline-Edit Panel ----------
+            if (kDevEditEnabled && _devEditing) ...[
+              const SizedBox(height: DesignConstants.spacingM),
+              SummaryCard(
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('DEV: Eintrag bearbeiten',
+                          style: textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          )),
+                      const SizedBox(height: 8),
+                      _row('Name (DE)', _deCtrl),
+                      const SizedBox(height: 8),
+                      _row('Name (EN)', _enCtrl),
+                      const SizedBox(height: 8),
+                      _row('Kategorie-Key', _catCtrl),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          _num('kcal/100g', _calCtrl),
+                          _num('Protein/100g', _proCtrl),
+                          _num('Carbs/100g', _carbCtrl),
+                          _num('Fett/100g', _fatCtrl),
+                          _num('kJ/100g', _kjCtrl),
+                          _num('Ballastst./100g', _fibCtrl),
+                          _num('Zucker/100g', _sugCtrl),
+                          _num('Salz/100g', _saltCtrl),
+                          _num('Natrium/100g', _sodCtrl),
+                          _num('Calcium/100g', _calciumCtrl),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: _saveDevEdits,
+                            icon: const Icon(Icons.save),
+                            label: const Text('Speichern'),
+                          ),
+                          const SizedBox(width: 12),
+                          TextButton.icon(
+                            onPressed: () => setState(() => _devEditing = false),
+                            icon: const Icon(Icons.close),
+                            label: const Text('Fertig'),
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            tooltip: 'Basis-DB exportieren',
+                            onPressed: _exportBaseDb,
+                            icon: const Icon(Icons.ios_share),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+
             if (!_displayItem.barcode.startsWith('user_created_'))
               Padding(
                 padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
@@ -224,4 +465,29 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
       ),
     );
   }
+
+  // ---------- DEV: kleine Helfer-Inputs ----------
+
+  Widget _row(String label, TextEditingController c) => TextField(
+        controller: c,
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+          isDense: true,
+        ),
+      );
+
+  Widget _num(String label, TextEditingController c) => SizedBox(
+        width: 160,
+        child: TextField(
+          controller: c,
+          keyboardType:
+              const TextInputType.numberWithOptions(decimal: true, signed: false),
+          decoration: InputDecoration(
+            labelText: label,
+            border: const OutlineInputBorder(),
+            isDense: true,
+          ),
+        ),
+      );
 }

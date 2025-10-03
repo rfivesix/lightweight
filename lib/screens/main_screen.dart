@@ -536,7 +536,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                   items: [
                     BottomNavigationBarItem(
                       icon: const Icon(Icons.book_outlined),
-                      label: l10n.nutritionDiary,
+                      label: l10n.diary,
                     ),
                     BottomNavigationBarItem(
                       icon: const Icon(Icons.fitness_center_outlined),
@@ -544,7 +544,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                     ),
                     BottomNavigationBarItem(
                       icon: const Icon(Icons.bar_chart_outlined),
-                      label: l10n.statistics,
+                      label: 'Stats',//l10n.statistics,
                     ),
                     BottomNavigationBarItem(
                       icon: CircleAvatar(

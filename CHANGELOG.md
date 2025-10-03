@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## 0.4.0-alpha.4 — 2025-10-02
+### Added
+- DEV-only editor in Food Detail Screen: allows editing base food entries directly on-device
+- Export function for `vita_base_foods.db` via share (e.g., AirDrop, Mail, Drive)
+- Search & category accordion in "Grundnahrungsmittel" tab with emoji headers
+
+### Changed
+- AppBar styling unified: Food Detail, Supplement Hub, and Settings now share large bold title style
+- Minor OLED/dark mode polish for nutrient cards
+
+### Fixed
+- Database auto-reopen after hot reload (no more `database_closed` errors)
+- Edits in base food database now persist correctly across re-entry
+
 ## 0.4.0-alpha.3 — 2025-10-01
 ### Added
 - New bottom bar layout with detached GlassFab

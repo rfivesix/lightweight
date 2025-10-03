@@ -17,7 +17,24 @@ class ProductDatabaseHelper {
 
   // Ein einfacher Sperrmechanismus, um doppelte Initialisierung zu verhindern.
   static bool _isInitializing = false;
+// --- NEU: kleine Helpers ganz oben in der Klasse ---
+bool _isOpen(Database? db) => db != null && db.isOpen;
 
+Future<void> _ensureDatabasesAlive() async {
+  if (_offDatabase != null && !_offDatabase!.isOpen) {
+    _offDatabase = await _initDB('vita_prep_de.db');
+  }
+  if (_baseDatabase != null && !_baseDatabase!.isOpen) {
+    _baseDatabase = await _initDB('vita_base_foods.db');
+  }
+}
+
+Future<void> reloadBaseDb() async {
+  final dbPath = await getDatabasesPath();
+  final path = join(dbPath, 'vita_base_foods.db');
+  try { await _baseDatabase?.close(); } catch (_) {}
+  _baseDatabase = await openDatabase(path);
+}
   // Stellt sicher, dass die Datenbanken geladen sind, bevor eine Abfrage erfolgt.
   Future<void> _ensureDatabasesInitialized() async {
     // Wenn die DBs schon da sind, ist alles gut.
@@ -87,6 +104,7 @@ class ProductDatabaseHelper {
 
   Future<List<FoodItem>> searchProducts(String query) async {
     await _ensureDatabasesInitialized();
+    await _ensureDatabasesAlive();
     final List<FoodItem> combinedResults = [];
 
     if (_baseDatabase != null) {
@@ -117,36 +135,41 @@ class ProductDatabaseHelper {
     return uniqueResults.values.toList();
   }
 
-  Future<FoodItem?> getProductByBarcode(String barcode) async {
-    await _ensureDatabasesInitialized();
+Future<FoodItem?> getProductByBarcode(String barcode) async {
+  await _ensureDatabasesInitialized();
+  await _ensureDatabasesAlive();
 
+  Future<FoodItem?> _try() async {
     if (_baseDatabase != null) {
-      final List<Map<String, dynamic>> baseMaps = await _baseDatabase!.query(
-          'products',
-          where: 'barcode = ?',
-          whereArgs: [barcode],
-          limit: 1);
+      final baseMaps = await _baseDatabase!.query('products',
+          where: 'barcode = ?', whereArgs: [barcode], limit: 1);
       if (baseMaps.isNotEmpty) {
         return FoodItem.fromMap(baseMaps.first, source: FoodItemSource.base);
       }
     }
-
     if (_offDatabase != null) {
-      final List<Map<String, dynamic>> offMaps = await _offDatabase!.query(
-          'products',
-          where: 'barcode = ?',
-          whereArgs: [barcode],
-          limit: 1);
+      final offMaps = await _offDatabase!.query('products',
+          where: 'barcode = ?', whereArgs: [barcode], limit: 1);
       if (offMaps.isNotEmpty) {
         return FoodItem.fromMap(offMaps.first, source: FoodItemSource.off);
       }
     }
-
     return null;
   }
 
+  try {
+    return await _try();
+  } on DatabaseException catch (e) {
+    if (e.toString().contains('database_closed')) {
+      await _ensureDatabasesAlive();
+      return await _try();
+    }
+    rethrow;
+  }
+}
   Future<void> insertProduct(FoodItem item) async {
     await _ensureDatabasesInitialized();
+    await _ensureDatabasesAlive();
     if (_offDatabase == null) return;
     await _offDatabase!.insert('products', item.toMap(),
         conflictAlgorithm: ConflictAlgorithm.replace);
@@ -177,6 +200,7 @@ class ProductDatabaseHelper {
   Future<List<FoodItem>> getProductsByBarcodes(List<String> barcodes) async {
     if (barcodes.isEmpty) return [];
     await _ensureDatabasesInitialized();
+    await _ensureDatabasesAlive();
 
     final db = _offDatabase;
     if (db == null) return [];
@@ -195,6 +219,7 @@ class ProductDatabaseHelper {
 
   Future<void> updateProduct(FoodItem item) async {
     await _ensureDatabasesInitialized();
+    await _ensureDatabasesAlive();
     if (_offDatabase == null) return;
     await _offDatabase!.update(
       'products',
@@ -203,4 +228,84 @@ class ProductDatabaseHelper {
       whereArgs: [item.barcode],
     );
   }
+  // === NEU: Grundnahrungsmittel lesen (optional mit Kategorie) ===
+Future<List<FoodItem>> getBaseFoods({
+  String? categoryKey,
+  int limit = 200,
+  int offset = 0,
+  String? search,
+}) async {
+  await _ensureDatabasesInitialized();
+  await _ensureDatabasesAlive();
+  if (_baseDatabase == null) return [];
+
+  final whereParts = <String>[];
+  final whereArgs = <Object?>[];
+
+  if (categoryKey != null && categoryKey.isNotEmpty) {
+    whereParts.add('category_key = ?');
+    whereArgs.add(categoryKey);
+  }
+
+  if (search != null && search.trim().isNotEmpty) {
+    // Suche über name/name_de/name_en
+    whereParts.add('(name LIKE ? OR name_de LIKE ? OR name_en LIKE ?)');
+    final q = '%${search.trim()}%';
+    whereArgs.addAll([q, q, q]);
+  }
+
+  final rows = await _baseDatabase!.query(
+    'products',
+    where: whereParts.isEmpty ? null : whereParts.join(' AND '),
+    whereArgs: whereArgs.isEmpty ? null : whereArgs,
+    orderBy: 'name COLLATE NOCASE',
+    limit: limit,
+    offset: offset,
+  );
+
+  return rows
+      .map((m) => FoodItem.fromMap(m, source: FoodItemSource.base))
+      .toList();
+}
+
+// === NEU: Kategorien (für späteren Filter / Anzeige) ===
+Future<List<Map<String, dynamic>>> getBaseCategories() async {
+  await _ensureDatabasesInitialized();
+  await _ensureDatabasesAlive();
+  if (_baseDatabase == null) return [];
+  return _baseDatabase!.query(
+    'categories',
+    columns: ['key', 'name_de', 'name_en', 'emoji'],
+    orderBy: 'name_de COLLATE NOCASE',
+  );
+}
+// === DEV: Felder eines Basis-Eintrags aktualisieren (barcode bleibt) ===
+Future<void> updateBaseProductFields({
+  required String barcode,
+  required Map<String, Object?> fields, // nur Spalten, die du ändern willst
+}) async {
+  await _ensureDatabasesInitialized();
+  await _ensureDatabasesAlive();
+  if (_baseDatabase == null) {
+    throw Exception('Basis-DB nicht geladen');
+  }
+  if (fields.isEmpty) return;
+
+  // Safety: Barcode niemals überschreiben
+  final safe = Map<String, Object?>.from(fields)..remove('barcode');
+
+  await _baseDatabase!.update(
+    'products',
+    safe,
+    where: 'barcode = ?',
+    whereArgs: [barcode],
+    conflictAlgorithm: ConflictAlgorithm.replace,
+  );
+}
+
+// === DEV: Pfad der Basis-DB ermitteln (für Export/Share) ===
+Future<String> getBaseDbPath() async {
+  final dbPath = await getDatabasesPath();
+  return join(dbPath, 'vita_base_foods.db');
+}
 }
