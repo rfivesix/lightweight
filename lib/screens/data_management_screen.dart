@@ -87,17 +87,17 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
       setState(() => _isFullBackupRunning = true);
       bool success = await BackupManager().importFullBackupAuto(filePath);
       if (!success) {
-        // ggf. verschlüsselte Datei – Passwort abfragen und erneut versuchen
+        // Datei könnte verschlüsselt sein – Passwort abfragen (leer = “kein Passwort” versuchen)
         final pw = await _askPassword(title: l10n.dialogEnterPasswordImport);
-        if (pw != null && pw.isNotEmpty) {
+        if (pw != null) {
+          // <-- wichtig: leer zulassen
           success = await BackupManager()
               .importFullBackupAuto(filePath, passphrase: pw);
         }
       }
+
       if (!mounted) return;
-      setState(() => _isFullBackupRunning = false);
-      if (!mounted) return;
-      setState(() => _isFullBackupRunning = false);
+      setState(() => _isFullBackupRunning = false); // nur einmal
 
       if (success) {
         // Neu: Unbekannte Übungsnamen ermitteln und ggf. Mapping anbieten

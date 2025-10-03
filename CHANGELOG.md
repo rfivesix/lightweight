@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## 0.4.0-alpha.7 (Hotfix)
+### Fixed
+- Backup import failed with *“no such column is_liquid”* → caused Diary/Stats to hang
+- Old backups without password could not be restored (fallback logic improved)
+- App stuck in loading when DB initialization or restore failed
+
+### Improved
+- Import logic now automatically adapts to schema changes (ignores missing columns)
+
+### Internal
+- Defensive DB handling and better logging during import
+
 ## [0.4.0-alpha.6] - 2025-10-03
 ### Fixed
 - **Database hotfix**: ensured that all core tables (`food_entries`, `water_entries`, `meals`, `supplement_logs`, etc.) and indices are always created on upgrade, preventing missing-table errors on fresh installs or after updates.

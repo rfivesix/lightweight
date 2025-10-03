@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:csv/csv.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -15,6 +16,8 @@ import 'package:sqflite/sqflite.dart'; // KORREKTUR: Importiert das neue Modell
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lightweight/util/encryption_util.dart';
 import 'package:path/path.dart' as p;
+import 'dart:typed_data';
+import 'package:archive/archive.dart'; // for GZipDecoder (add to pubspec if not present)
 
 class BackupManager {
   final _userDb = DatabaseHelper.instance;
@@ -133,10 +136,16 @@ class BackupManager {
         supplementLogs: supplementLogs,
       );
       if (productDb != null) {
+        final cols = await _getTableColumns(productDb, 'products'); // <-- neu
         final batch = productDb.batch();
         for (final item in backup.customFoodItems) {
-          batch.insert('products', item.toMap(),
-              conflictAlgorithm: ConflictAlgorithm.replace);
+          final raw = item.toMap();
+          final filtered = _filterMapForColumns(raw, cols); // <-- neu
+          batch.insert(
+            'products',
+            filtered,
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
         }
         await batch.commit(noResult: true);
       }
@@ -370,17 +379,22 @@ class BackupManager {
 
       Map<String, dynamic> payload;
       if (top is Map && top['enc'] == EncryptionUtil.wrapperVersion) {
-        if (passphrase == null || passphrase.isEmpty) {
-          print(
-              'Verschlüsseltes Backup erkannt, aber kein Passwort übergeben.');
+        // Leeres Passwort zulassen (Legacy-Cases) – EncryptionUtil sollte "" akzeptieren
+        final effectivePw = (passphrase ?? "");
+        try {
+          final clear = await EncryptionUtil.decryptToString(
+            Map<String, dynamic>.from(top),
+            effectivePw,
+          );
+          payload = jsonDecode(clear) as Map<String, dynamic>;
+        } catch (e) {
+          // Falsches/fehlendes Passwort → sauber false zurückgeben,
+          // damit der UI-Flow den Dialog zeigen/erneut versuchen kann.
+          print('Decrypt failed: $e');
           return false;
         }
-        final clear = await EncryptionUtil.decryptToString(
-          Map<String, dynamic>.from(top),
-          passphrase,
-        );
-        payload = jsonDecode(clear) as Map<String, dynamic>;
       } else {
+        // Unverschlüsselt (plain JSON)
         payload = (top as Map).cast<String, dynamic>();
       }
 
@@ -424,10 +438,16 @@ class BackupManager {
       );
 
       if (productDb != null) {
+        final cols = await _getTableColumns(productDb, 'products'); // <-- neu
         final batch = productDb.batch();
         for (final item in backup.customFoodItems) {
-          batch.insert('products', item.toMap(),
-              conflictAlgorithm: ConflictAlgorithm.replace);
+          final raw = item.toMap();
+          final filtered = _filterMapForColumns(raw, cols); // <-- neu
+          batch.insert(
+            'products',
+            filtered,
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
         }
         await batch.commit(noResult: true);
       }
@@ -565,4 +585,135 @@ class BackupManager {
       return false;
     }
   }
+
+  Future<Set<String>> _getTableColumns(Database db, String table) async {
+    final rows = await db.rawQuery('PRAGMA table_info($table)');
+    return rows.map((r) => (r['name'] as String)).toSet();
+  }
+
+  Map<String, Object?> _filterMapForColumns(
+    Map<String, Object?> src,
+    Set<String> allowedCols,
+  ) {
+    final out = <String, Object?>{};
+    src.forEach((k, v) {
+      if (allowedCols.contains(k)) out[k] = v;
+    });
+    return out;
+  }
+}
+
+class ProbeResult {
+  final bool encrypted;
+  final bool gzipped;
+  ProbeResult({required this.encrypted, required this.gzipped});
+}
+
+ProbeResult _probeBackup(Uint8List bytes) {
+  // 1) Quick JSON sniff
+  if (bytes.isNotEmpty &&
+      (bytes.first == 0x7B /* '{' */ || bytes.first == 0x5B /* '[' */)) {
+    // Looks like plain JSON (very common for unencrypted exports)
+    return ProbeResult(encrypted: false, gzipped: false);
+  }
+
+  // 2) GZIP magic: 1F 8B
+  if (bytes.length >= 2 && bytes[0] == 0x1F && bytes[1] == 0x8B) {
+    // Might be gzipped JSON (unencrypted) or gzipped+encrypted (rare)
+    // We'll try inflate first; if it fails later we can still treat as encrypted
+    return ProbeResult(encrypted: false, gzipped: true);
+  }
+
+  // 3) Optional custom magic headers you may have used
+  // e.g., "VITA1" or "ENC1"... adapt if your exporter wrote a header.
+  const encHeader = [0x45, 0x4E, 0x43, 0x31]; // "ENC1"
+  if (bytes.length >= 4 &&
+      bytes[0] == encHeader[0] &&
+      bytes[1] == encHeader[1] &&
+      bytes[2] == encHeader[2] &&
+      bytes[3] == encHeader[3]) {
+    return ProbeResult(encrypted: true, gzipped: false);
+  }
+
+  // 4) Default: treat as encrypted blob (e.g., {salt|iv|ciphertext} container)
+  return ProbeResult(encrypted: true, gzipped: false);
+}
+
+class BackupPasswordError implements Exception {}
+
+Future<void> importBackupBytes(Uint8List bytes, {String? password}) async {
+  final probe = _probeBackup(bytes);
+
+  Uint8List plainBytes;
+
+  if (!probe.encrypted) {
+    // Try direct JSON first
+    try {
+      final sourceBytes = probe.gzipped
+          ? Uint8List.fromList(const GZipDecoder().decodeBytes(bytes))
+          : bytes;
+      // Basic JSON sanity check
+      jsonDecode(utf8.decode(sourceBytes));
+      plainBytes = sourceBytes;
+    } catch (_) {
+      // If JSON/gzip decode failed, fall back to encrypted flow
+      plainBytes = await _tryDecryptWithCandidates(bytes,
+          passwordCandidates: [password, "", null]);
+    }
+  } else {
+    // Encrypted flow straight away
+    plainBytes = await _tryDecryptWithCandidates(bytes,
+        passwordCandidates: [password, "", null]);
+  }
+
+  final jsonStr = utf8.decode(plainBytes);
+  final Map<String, dynamic> payload =
+      jsonDecode(jsonStr) as Map<String, dynamic>;
+
+  // ✅ Apply payload to DB (your current restore routine)
+  await _applyBackupPayload(payload);
+}
+
+/// Tries multiple password candidates in order.
+/// If all fail, throws BackupPasswordError.
+Future<Uint8List> _tryDecryptWithCandidates(Uint8List encrypted,
+    {required List<String?> passwordCandidates}) async {
+  for (final cand in passwordCandidates) {
+    try {
+      final plain = await _decryptPayload(encrypted, cand);
+      // Quick sanity check to ensure we actually decrypted JSON
+      final s = utf8.decode(plain);
+      jsonDecode(s);
+      return plain;
+    } catch (_) {
+      // continue
+    }
+  }
+  throw BackupPasswordError();
+}
+
+/// Replace with your real decryption (AES-GCM, etc.)
+/// Contract: when `password` is `null` or `""`, handle legacy “no password” backups
+Future<Uint8List> _decryptPayload(Uint8List encrypted, String? password) async {
+  // Example structure assumption (adjust to your format):
+  // [salt(16) | iv(12) | ciphertext(...) | tag(16)]
+  // Or if you stored a JSON envelope with base64 fields, parse that here.
+
+  // PSEUDO:
+  // final salt = encrypted.sublist(0, 16);
+  // final iv = encrypted.sublist(16, 28);
+  // final ct = encrypted.sublist(28);
+  // final key = await _deriveKey(password ?? "", salt); // treat null == empty string
+  // final plain = aesGcmDecrypt(key, iv, ct);
+  // return plain;
+
+  // For now we throw to force you to wire this to your actual crypto util:
+  throw UnimplementedError(
+      "Wire _decryptPayload to your existing AES-GCM routine");
+}
+
+/// Your existing apply logic (truncate & insert or merge)
+Future<void> _applyBackupPayload(Map<String, dynamic> payload) async {
+  // e.g. payload['food_entries'], payload['water_entries'], etc.
+  // Make sure to wrap in a transaction & validate shapes.
 }
