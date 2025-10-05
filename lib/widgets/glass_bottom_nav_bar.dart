@@ -53,7 +53,7 @@ class GlassBottomNavBar extends StatelessWidget {
                         color: color,
                         fontSize: 12,
                         fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.w400,
+                            isSelected ? FontWeight.w400 : FontWeight.w400,
                       ),
                     ),
                   ],

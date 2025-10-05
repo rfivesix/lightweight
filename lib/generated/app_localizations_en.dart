@@ -792,7 +792,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get soon_available_snackbar => 'This screen will be available soon';
 
   @override
-  String get start_button => 'START';
+  String get start_button => 'Start';
 
   @override
   String get today_overview_text => 'TODAY IN FOCUS';
@@ -1384,4 +1384,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mealAddedToDiarySuccess => 'Meal added to diary';
+
+  @override
+  String get error => 'Error';
+
+  @override
+  String get mealsViewTitle => 'mealsViewTitle';
+
+  @override
+  String get noNotes => 'No notes';
+
+  @override
+  String get ingredientsCapsLock => 'INGREDIENTS';
+
+  @override
+  String get nutritionSectionLabel => 'NUTRITION FACTS';
+
+  @override
+  String get nutritionCalculatedForCurrentAmounts => 'for current quantities';
+
+  @override
+  String get startCapsLock => 'START';
 }

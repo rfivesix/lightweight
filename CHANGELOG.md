@@ -3,7 +3,30 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
-## 0.4.0-alpha.7 (Hotfix)
+## [0.4.0-alpha.8] - 2025-10-05
+### Added
+- Haptic feedback when selecting chart points and pressing the Glass FAB.
+- Meal Screen redesign: consistent typography, SummaryCards for ingredients, contextual FAB.
+- Meals list swipe actions consistent with Nutrition screen.
+
+### Changed
+- Context-aware FAB in Meals tab (“Create Meal”), removed redundant header button.
+- Meal editor visual consistency: non-filled top-right Save button.
+- Ingredient layout updated (SummaryCards, editable amounts on right).
+- TabBar text no longer changes size on selection.
+- Diary meal headers show macro line (kcal · P · C · F) below title.
+
+### Fixed
+- Save button tap area and modal layering in Meal Editor.
+- Scanner and Add Food refresh logic for recents/favorites.
+- Defensive database handling during barcode scan.
+
+### Notes
+- No database migration required.
+- Final alpha polish before beta.
+EOF
+
+## [0.4.0-alpha.7] - 2025-10-03
 ### Fixed
 - Backup import failed with *“no such column is_liquid”* → caused Diary/Stats to hang
 - Old backups without password could not be restored (fallback logic improved)

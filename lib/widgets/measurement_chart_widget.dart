@@ -5,6 +5,7 @@ import 'package:lightweight/models/chart_data_point.dart';
 import 'package:intl/intl.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:flutter/services.dart';
 
 class MeasurementChartWidget extends StatefulWidget {
   final String chartType;
@@ -54,6 +55,31 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
         _dataPoints = data;
         _isLoadingChart = false;
       });
+    }
+  }
+
+  void _setTouchedIndexWithHaptics(int? newIndex) {
+    if (newIndex == _touchedIndex) return; // nur bei echter Änderung vibrieren
+    _touchedIndex = newIndex;
+    if (newIndex != null) {
+      HapticFeedback.selectionClick(); // dezentes Tock beim Punkt-Wechsel
+    }
+    if (mounted) setState(() {});
+  }
+
+  void _handleTouchCallback(FlTouchEvent event, LineTouchResponse? response) {
+    if (event is FlPanEndEvent || event is FlTapUpEvent) {
+      // Finger losgelassen: Auswahl zurücksetzen (ohne Haptik)
+      _touchedIndex = null;
+      if (mounted) setState(() {});
+      return;
+    }
+
+    final spots = response?.lineBarSpots;
+    if (spots != null && spots.isNotEmpty) {
+      // Index des aktuell getroffenen Punktes
+      final idx = spots.first.spotIndex;
+      _setTouchedIndexWithHaptics(idx);
     }
   }
 
@@ -160,16 +186,7 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
                         List<LineTooltipItem?>.filled(touchedSpots.length, null,
                             growable: false),
                   ),
-                  touchCallback:
-                      (FlTouchEvent event, LineTouchResponse? response) {
-                    if (event is FlPanEndEvent || event is FlTapUpEvent) {
-                      setState(() => _touchedIndex = null);
-                    } else if (response?.lineBarSpots != null &&
-                        response!.lineBarSpots!.isNotEmpty) {
-                      setState(() => _touchedIndex =
-                          response.lineBarSpots!.first.spotIndex);
-                    }
-                  },
+                  touchCallback: _handleTouchCallback,
                 ),
 
                 extraLinesData: ExtraLinesData(
@@ -248,9 +265,11 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
                     // Dot nur beim getouchten Punkt:
                     dotData: FlDotData(
                       show: true,
-                      checkToShowDot: (spot, bar) =>
-                          _touchedIndex != null &&
-                          spot.x.toInt() == _touchedIndex,
+                      checkToShowDot: (spot, bar) {
+                        if (_touchedIndex == null) return false;
+                        final idx = bar.spots.indexOf(spot);
+                        return idx == _touchedIndex;
+                      },
                       getDotPainter: (spot, percent, bar, index) =>
                           FlDotCirclePainter(
                         radius: 6,

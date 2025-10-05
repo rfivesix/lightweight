@@ -357,7 +357,7 @@
   "discard_button": "Verwerfen",
   "continue_workout_button": "Fortsetzen",
   "soon_available_snackbar": "Dieser Screen wird bald verfügbar sein!",
-  "start_button": "START",
+  "start_button": "Start",
   "today_overview_text": "HEUTE IM BLICK",
   "quick_add_text": "SCHNELLES HINZUFÜGEN",
   "scann_barcode_capslock": "Barcode scannen",
@@ -602,5 +602,12 @@
   "addMealToDiaryTitle": "Zum Tagebuch hinzufügen",
   "mealTypeLabel": "Mahlzeit",
   "amountLabel": "Menge",
-  "mealAddedToDiarySuccess": "Mahlzeit zum Tagebuch hinzugefügt"
+  "mealAddedToDiarySuccess": "Mahlzeit zum Tagebuch hinzugefügt",
+  "error": "Fehler",
+  "mealsViewTitle": "mealsViewTitle",
+  "noNotes": "Keine Notizen",
+  "ingredientsCapsLock": "ZUTATEN",
+  "nutritionSectionLabel": "NÄHRWERTE",
+  "nutritionCalculatedForCurrentAmounts": "für aktuelle Mengen",
+  "startCapsLock": "START"
 }

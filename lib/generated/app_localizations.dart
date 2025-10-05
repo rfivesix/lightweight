@@ -1559,7 +1559,7 @@ abstract class AppLocalizations {
   /// No description provided for @start_button.
   ///
   /// In en, this message translates to:
-  /// **'START'**
+  /// **'Start'**
   String get start_button;
 
   /// No description provided for @today_overview_text.
@@ -2677,6 +2677,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Meal added to diary'**
   String get mealAddedToDiarySuccess;
+
+  /// No description provided for @error.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get error;
+
+  /// No description provided for @mealsViewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'mealsViewTitle'**
+  String get mealsViewTitle;
+
+  /// No description provided for @noNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'No notes'**
+  String get noNotes;
+
+  /// No description provided for @ingredientsCapsLock.
+  ///
+  /// In en, this message translates to:
+  /// **'INGREDIENTS'**
+  String get ingredientsCapsLock;
+
+  /// No description provided for @nutritionSectionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'NUTRITION FACTS'**
+  String get nutritionSectionLabel;
+
+  /// No description provided for @nutritionCalculatedForCurrentAmounts.
+  ///
+  /// In en, this message translates to:
+  /// **'for current quantities'**
+  String get nutritionCalculatedForCurrentAmounts;
+
+  /// No description provided for @startCapsLock.
+  ///
+  /// In en, this message translates to:
+  /// **'START'**
+  String get startCapsLock;
 }
 
 class _AppLocalizationsDelegate

@@ -797,7 +797,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Dieser Screen wird bald verfügbar sein!';
 
   @override
-  String get start_button => 'START';
+  String get start_button => 'Start';
 
   @override
   String get today_overview_text => 'HEUTE IM BLICK';
@@ -1392,4 +1392,25 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get mealAddedToDiarySuccess => 'Mahlzeit zum Tagebuch hinzugefügt';
+
+  @override
+  String get error => 'Fehler';
+
+  @override
+  String get mealsViewTitle => 'mealsViewTitle';
+
+  @override
+  String get noNotes => 'Keine Notizen';
+
+  @override
+  String get ingredientsCapsLock => 'ZUTATEN';
+
+  @override
+  String get nutritionSectionLabel => 'NÄHRWERTE';
+
+  @override
+  String get nutritionCalculatedForCurrentAmounts => 'für aktuelle Mengen';
+
+  @override
+  String get startCapsLock => 'START';
 }

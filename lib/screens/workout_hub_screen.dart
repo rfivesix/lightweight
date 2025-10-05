@@ -83,7 +83,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
               child: ListView(
                 padding: DesignConstants.cardPadding,
                 children: [
-                  _buildSectionTitle(context, l10n.start_button),
+                  _buildSectionTitle(context, l10n.startCapsLock),
                   SummaryCard(
                     child: InkWell(
                       onTap: _startEmptyWorkout,

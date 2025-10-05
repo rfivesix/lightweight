@@ -2937,6 +2937,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Caffeine must be recorded in mg.'**
   String get caffeineMustBeMg;
+
+  /// No description provided for @tabCatalogSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog'**
+  String get tabCatalogSearch;
+
+  /// No description provided for @tabMeals.
+  ///
+  /// In en, this message translates to:
+  /// **'Meals'**
+  String get tabMeals;
+
+  /// No description provided for @emptyCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'No entries'**
+  String get emptyCategory;
+
+  /// No description provided for @searchSectionBase.
+  ///
+  /// In en, this message translates to:
+  /// **'Base foods'**
+  String get searchSectionBase;
+
+  /// No description provided for @searchSectionOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other results'**
+  String get searchSectionOther;
+
+  /// No description provided for @mealsComingSoonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Meals (coming soon)'**
+  String get mealsComingSoonTitle;
+
+  /// No description provided for @mealsComingSoonBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Soon you will be able to create your own meals from multiple foods.'**
+  String get mealsComingSoonBody;
+
+  /// No description provided for @mealsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No meals yet'**
+  String get mealsEmptyTitle;
+
+  /// No description provided for @mealsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Create meals to quickly log multiple foods at once.'**
+  String get mealsEmptyBody;
+
+  /// No description provided for @mealsCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create meal'**
+  String get mealsCreate;
+
+  /// No description provided for @mealsEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit meal'**
+  String get mealsEdit;
+
+  /// No description provided for @mealsDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete meal'**
+  String get mealsDelete;
+
+  /// No description provided for @mealsAddToDiary.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to diary'**
+  String get mealsAddToDiary;
+
+  /// No description provided for @mealNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal name'**
+  String get mealNameLabel;
+
+  /// No description provided for @mealNotesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get mealNotesLabel;
+
+  /// No description provided for @mealIngredientsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ingredients'**
+  String get mealIngredientsTitle;
+
+  /// No description provided for @mealAddIngredient.
+  ///
+  /// In en, this message translates to:
+  /// **'Add ingredient'**
+  String get mealAddIngredient;
+
+  /// No description provided for @mealIngredientAmountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get mealIngredientAmountLabel;
+
+  /// No description provided for @mealDeleteConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete meal'**
+  String get mealDeleteConfirmTitle;
+
+  /// No description provided for @mealDeleteConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete the meal \'{name}\'? All its ingredients will also be removed.'**
+  String mealDeleteConfirmBody(Object name);
+
+  /// No description provided for @mealAddedToDiary.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal \'{name}\' has been added to your diary.'**
+  String mealAddedToDiary(Object name);
+
+  /// No description provided for @mealSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal saved.'**
+  String get mealSaved;
+
+  /// No description provided for @mealDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal deleted.'**
+  String get mealDeleted;
+
+  /// No description provided for @confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
+  /// No description provided for @addMealToDiaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to diary'**
+  String get addMealToDiaryTitle;
+
+  /// No description provided for @mealTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal'**
+  String get mealTypeLabel;
+
+  /// No description provided for @amountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get amountLabel;
+
+  /// No description provided for @mealAddedToDiarySuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal added to diary'**
+  String get mealAddedToDiarySuccess;
 }
 
 class _AppLocalizationsDelegate
@@ -4279,6 +4447,96 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get caffeineMustBeMg => 'Koffein muss in mg erfasst werden.';
+
+  @override
+  String get tabCatalogSearch => 'Katalog';
+
+  @override
+  String get tabMeals => 'Mahlzeiten';
+
+  @override
+  String get emptyCategory => 'Keine Einträge';
+
+  @override
+  String get searchSectionBase => 'Grundnahrungsmittel';
+
+  @override
+  String get searchSectionOther => 'Weitere Treffer';
+
+  @override
+  String get mealsComingSoonTitle => 'Mahlzeiten (in Vorbereitung)';
+
+  @override
+  String get mealsComingSoonBody =>
+      'Bald kannst du eigene Mahlzeiten aus mehreren Lebensmitteln zusammenstellen.';
+
+  @override
+  String get mealsEmptyTitle => 'Noch keine Mahlzeiten';
+
+  @override
+  String get mealsEmptyBody =>
+      'Lege Mahlzeiten an, um mehrere Lebensmittel mit einem Klick einzutragen.';
+
+  @override
+  String get mealsCreate => 'Mahlzeit erstellen';
+
+  @override
+  String get mealsEdit => 'Mahlzeit bearbeiten';
+
+  @override
+  String get mealsDelete => 'Mahlzeit löschen';
+
+  @override
+  String get mealsAddToDiary => 'Zum Tagebuch hinzufügen';
+
+  @override
+  String get mealNameLabel => 'Name der Mahlzeit';
+
+  @override
+  String get mealNotesLabel => 'Notizen';
+
+  @override
+  String get mealIngredientsTitle => 'Zutaten';
+
+  @override
+  String get mealAddIngredient => 'Zutat hinzufügen';
+
+  @override
+  String get mealIngredientAmountLabel => 'Menge';
+
+  @override
+  String get mealDeleteConfirmTitle => 'Mahlzeit löschen';
+
+  @override
+  String mealDeleteConfirmBody(Object name) {
+    return 'Möchtest du die Mahlzeit \'$name\' wirklich löschen? Alle Zutaten werden ebenfalls entfernt.';
+  }
+
+  @override
+  String mealAddedToDiary(Object name) {
+    return 'Mahlzeit \'$name\' wurde ins Tagebuch übernommen.';
+  }
+
+  @override
+  String get mealSaved => 'Mahlzeit gespeichert.';
+
+  @override
+  String get mealDeleted => 'Mahlzeit gelöscht.';
+
+  @override
+  String get confirm => 'bestätigen';
+
+  @override
+  String get addMealToDiaryTitle => 'Zum Tagebuch hinzufügen';
+
+  @override
+  String get mealTypeLabel => 'Mahlzeit';
+
+  @override
+  String get amountLabel => 'Menge';
+
+  @override
+  String get mealAddedToDiarySuccess => 'Mahlzeit zum Tagebuch hinzugefügt';
 }
 
 
@@ -5580,6 +5838,96 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get caffeineMustBeMg => 'Caffeine must be recorded in mg.';
+
+  @override
+  String get tabCatalogSearch => 'Catalog';
+
+  @override
+  String get tabMeals => 'Meals';
+
+  @override
+  String get emptyCategory => 'No entries';
+
+  @override
+  String get searchSectionBase => 'Base foods';
+
+  @override
+  String get searchSectionOther => 'Other results';
+
+  @override
+  String get mealsComingSoonTitle => 'Meals (coming soon)';
+
+  @override
+  String get mealsComingSoonBody =>
+      'Soon you will be able to create your own meals from multiple foods.';
+
+  @override
+  String get mealsEmptyTitle => 'No meals yet';
+
+  @override
+  String get mealsEmptyBody =>
+      'Create meals to quickly log multiple foods at once.';
+
+  @override
+  String get mealsCreate => 'Create meal';
+
+  @override
+  String get mealsEdit => 'Edit meal';
+
+  @override
+  String get mealsDelete => 'Delete meal';
+
+  @override
+  String get mealsAddToDiary => 'Add to diary';
+
+  @override
+  String get mealNameLabel => 'Meal name';
+
+  @override
+  String get mealNotesLabel => 'Notes';
+
+  @override
+  String get mealIngredientsTitle => 'Ingredients';
+
+  @override
+  String get mealAddIngredient => 'Add ingredient';
+
+  @override
+  String get mealIngredientAmountLabel => 'Amount';
+
+  @override
+  String get mealDeleteConfirmTitle => 'Delete meal';
+
+  @override
+  String mealDeleteConfirmBody(Object name) {
+    return 'Are you sure you want to delete the meal \'$name\'? All its ingredients will also be removed.';
+  }
+
+  @override
+  String mealAddedToDiary(Object name) {
+    return 'Meal \'$name\' has been added to your diary.';
+  }
+
+  @override
+  String get mealSaved => 'Meal saved.';
+
+  @override
+  String get mealDeleted => 'Meal deleted.';
+
+  @override
+  String get confirm => 'Confirm';
+
+  @override
+  String get addMealToDiaryTitle => 'Add to diary';
+
+  @override
+  String get mealTypeLabel => 'Meal';
+
+  @override
+  String get amountLabel => 'Amount';
+
+  @override
+  String get mealAddedToDiarySuccess => 'Meal added to diary';
 }
 
 
@@ -6805,6 +7153,8 @@ class FoodItem {
   final double? salt;
   final double? sodium;
   final double? calcium;
+  final bool? isLiquid; // NEW (nullable)
+  final double? caffeineMgPer100ml; // NEW (nullable)
 
   FoodItem({
     required this.barcode,
@@ -6821,6 +7171,8 @@ class FoodItem {
     this.salt,
     this.sodium,
     this.calcium,
+    this.isLiquid,
+    this.caffeineMgPer100ml,
   });
 
   factory FoodItem.fromMap(Map<String, dynamic> map,
@@ -6841,6 +7193,8 @@ class FoodItem {
       salt: (map['salt_100g'] as num?)?.toDouble(),
       sodium: (map['sodium_100g'] as num?)?.toDouble(),
       calcium: (map['calcium_100g'] as num?)?.toDouble(),
+      isLiquid: _readBool(map['is_liquid']),
+      caffeineMgPer100ml: _toDoubleOrNull(map['caffeine_mg_per_100ml']),
     );
   }
 
@@ -6859,7 +7213,27 @@ class FoodItem {
       'salt_100g': salt,
       'sodium_100g': sodium,
       'calcium_100g': calcium,
+      'is_liquid': (isLiquid == null) ? null : (isLiquid! ? 1 : 0),
+      'caffeine_mg_per_100ml': caffeineMgPer100ml,
     };
+  }
+
+  static bool? _readBool(dynamic v) {
+    if (v == null) return null;
+    if (v is bool) return v;
+    if (v is num) return v != 0;
+    if (v is String) {
+      final s = v.toLowerCase().trim();
+      return s == '1' || s == 'true' || s == 'yes';
+    }
+    return null;
+  }
+
+  static double? _toDoubleOrNull(dynamic v) {
+    if (v == null) return null;
+    if (v is num) return v.toDouble();
+    if (v is String) return double.tryParse(v.replaceAll(',', '.'));
+    return null;
   }
 }
 
@@ -10084,9 +10458,13 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/data/product_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
+import 'package:lightweight/models/food_entry.dart';
 import 'package:lightweight/models/food_item.dart';
+import 'package:lightweight/models/supplement.dart';
+import 'package:lightweight/models/supplement_log.dart';
 import 'package:lightweight/screens/create_food_screen.dart';
 import 'package:lightweight/screens/food_detail_screen.dart';
 import 'package:lightweight/screens/scanner_screen.dart';
@@ -10116,7 +10494,6 @@ class _AddFoodScreenState extends State<AddFoodScreen>
   bool _isLoadingRecent = true;
 
   late TabController _tabController;
-// oben in _AddFoodScreenState
   final TextEditingController _baseSearchCtrl = TextEditingController();
   String _baseSearch = '';
   Timer? _baseSearchDebounce;
@@ -10124,6 +10501,26 @@ class _AddFoodScreenState extends State<AddFoodScreen>
   List<Map<String, dynamic>> _baseCategories = [];
   final Map<String, List<FoodItem>> _catItems = {}; // key -> Produkte
   final Set<String> _loadingCats = {}; // ladeanzeige je Kategorie
+  // Meals
+  List<Map<String, dynamic>> _meals = [];
+  final Map<int, List<Map<String, dynamic>>> _mealItemsCache = {};
+  bool _isLoadingMeals = true;
+
+  Future<void> _loadMeals() async {
+    setState(() => _isLoadingMeals = true);
+    final rows = await DatabaseHelper.instance.getMeals();
+    setState(() {
+      _meals = rows;
+      _isLoadingMeals = false;
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> _getMealItems(int mealId) async {
+    if (_mealItemsCache.containsKey(mealId)) return _mealItemsCache[mealId]!;
+    final rows = await DatabaseHelper.instance.getMealItems(mealId);
+    _mealItemsCache[mealId] = rows;
+    return rows;
+  }
 
   Future<void> _loadBaseCategories() async {
     _baseCategories = await ProductDatabaseHelper.instance.getBaseCategories();
@@ -10160,6 +10557,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     _baseSearchCtrl
         .addListener(() => _onBaseSearchChanged(_baseSearchCtrl.text));
     _loadBaseCategories();
+    _loadMeals();
   }
 
   @override
@@ -10273,41 +10671,37 @@ class _AddFoodScreenState extends State<AddFoodScreen>
               children: [
                 TabBar(
                   controller: _tabController,
-                  isScrollable: false, // Verteilt Tabs gleichmäßig
+                  isScrollable: false,
                   indicator: const BoxDecoration(),
                   splashFactory: NoSplash.splashFactory,
                   overlayColor: WidgetStateProperty.all(Colors.transparent),
-                  // KORREKTUR: labelPadding: EdgeInsets.zero, für volle Breite der Tab-Labels
-                  labelPadding: EdgeInsets.zero, // Wichtig für exaktes Layout
+                  labelPadding: EdgeInsets.zero,
                   labelColor: isLightMode ? Colors.black : Colors.white,
                   unselectedLabelColor: Colors.grey.shade600,
                   labelStyle: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.0),
+                      fontSize: 18, fontWeight: FontWeight.w900),
                   unselectedLabelStyle: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.0),
+                      fontSize: 16, fontWeight: FontWeight.w800),
                   tabs: [
-                    Tab(text: l10n.tabSearch),
-                    Tab(text: l10n.tabBaseFoods),
+                    Tab(text: l10n.tabCatalogSearch), // Kombi-Tab
                     Tab(text: l10n.tabRecent),
                     Tab(text: l10n.tabFavorites),
+                    Tab(text: l10n.tabMeals),
                   ],
                 ),
               ],
             ),
           ),
-          // KORREKTUR 3: Padding im TabBarView entfernen, um den Inhalt zum Rand zu bringen
+          // WICHTIG: genau EIN Expanded + EIN TabBarView
           Expanded(
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildSearchTab(l10n),
-                _buildBaseFoodsTab(l10n),
+                _buildCatalogSearchTab(
+                    l10n), // kombiniert Suche + Grundnahrungsmittel
                 _buildRecentTab(l10n),
                 _buildFavoritesTab(l10n),
+                _buildMealsTab(l10n), // Empty State
               ],
             ),
           ),
@@ -10392,7 +10786,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         controller: _baseSearchCtrl,
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(
-          hintText: 'Suche Grundnahrungsmittel',
+          hintText: 'Suche Grundnahrungsmittel', //l10n.searchBaseFoodHintText
           prefixIcon: const Icon(Icons.search),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           isDense: true,
@@ -10663,6 +11057,847 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         }
       }
     }
+  }
+
+  Widget _buildCatalogSearchTab(AppLocalizations l10n) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    // UI: Suchleiste + Scanner-Button (wie in _buildSearchTab)
+    final searchRow = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              onChanged: _runFilter, // nutzt deine bestehende Suche
+              decoration: InputDecoration(
+                hintText: l10n.searchHintText,
+                prefixIcon: Icon(Icons.search,
+                    color: colorScheme.onSurfaceVariant, size: 20),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(Icons.clear,
+                            color: colorScheme.onSurfaceVariant),
+                        onPressed: () {
+                          _searchController.clear();
+                          _runFilter('');
+                        },
+                      )
+                    : null,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            style: IconButton.styleFrom(
+              backgroundColor: colorScheme.surfaceContainerHighest,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            icon: Icon(Icons.qr_code_scanner, color: colorScheme.primary),
+            onPressed: _scanBarcodeAndPop,
+          ),
+        ],
+      ),
+    );
+
+    // FALL A: Kein Query → Kategorien/Accordion aus Base-DB (deine vorhandene Logik)
+    final String q = _searchController.text.trim();
+    if (q.isEmpty) {
+      return Column(
+        children: [
+          const SizedBox(height: 12),
+          searchRow,
+          const SizedBox(height: 8),
+          if (_baseCategories.isEmpty)
+            const LinearProgressIndicator(minHeight: 2),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                _catItems.clear();
+                await _loadBaseCategories();
+              },
+              child: ListView.builder(
+                padding: const EdgeInsets.only(bottom: 24),
+                itemCount: _baseCategories.length,
+                itemBuilder: (context, idx) {
+                  final cat = _baseCategories[idx];
+                  final key = cat['key'] as String;
+                  final emoji = (cat['emoji'] as String?)?.trim();
+                  final title =
+                      (cat['name_de'] as String?)?.trim().isNotEmpty == true
+                          ? cat['name_de'] as String
+                          : (cat['name_en'] as String? ?? key);
+
+                  final loading = _loadingCats.contains(key);
+                  final items = _catItems[key];
+
+                  return Theme(
+                    data: Theme.of(context)
+                        .copyWith(dividerColor: Colors.transparent),
+                    child: ExpansionTile(
+                      leading: Text(emoji?.isNotEmpty == true ? emoji! : '🗂️',
+                          style: const TextStyle(fontSize: 20)),
+                      title: Text(title),
+                      initiallyExpanded: false,
+                      onExpansionChanged: (expanded) {
+                        if (expanded) _loadCategoryItems(key);
+                      },
+                      children: [
+                        if (loading)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            child: Center(child: CircularProgressIndicator()),
+                          )
+                        else if (items == null || items.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Center(child: Text(l10n.emptyCategory)),
+                          )
+                        else
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            padding:
+                                DesignConstants.cardPadding.copyWith(top: 0),
+                            itemCount: items.length,
+                            itemBuilder: (_, i) => _buildFoodListItem(items[i]),
+                          ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // FALL B: Mit Query → zuerst Base-Items, dann OFF/User-Items (Priorisierung)
+    final baseHits = _foundFoodItems
+        .where((it) => it.source == FoodItemSource.base)
+        .toList();
+    final otherHits = _foundFoodItems
+        .where((it) => it.source != FoodItemSource.base)
+        .toList();
+
+    return Column(
+      children: [
+        const SizedBox(height: 12),
+        searchRow,
+        const SizedBox(height: 12),
+        Expanded(
+          child: _isLoadingSearch
+              ? const Center(child: CircularProgressIndicator())
+              : (baseHits.isEmpty && otherHits.isEmpty)
+                  ? Center(
+                      child: Text(l10n.searchNoResults,
+                          style: textTheme.titleMedium))
+                  : ListView(
+                      padding: DesignConstants.cardPadding,
+                      children: [
+                        if (baseHits.isNotEmpty) ...[
+                          Text(l10n.searchSectionBase,
+                              style: textTheme.titleMedium),
+                          const SizedBox(height: 8),
+                          ...baseHits.map(_buildFoodListItem),
+                          const SizedBox(height: DesignConstants.spacingL),
+                        ],
+                        if (otherHits.isNotEmpty) ...[
+                          Text(l10n.searchSectionOther,
+                              style: textTheme.titleMedium),
+                          const SizedBox(height: 8),
+                          ...otherHits.map(_buildFoodListItem),
+                        ],
+                        if (otherHits
+                            .any((i) => i.source == FoodItemSource.off))
+                          const Padding(
+                            padding: EdgeInsets.only(top: 12),
+                            child: OffAttributionWidget(),
+                          ),
+                      ],
+                    ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMealsTab(AppLocalizations l10n) {
+    if (_isLoadingMeals) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_meals.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.restaurant_menu,
+                  size: 80, color: Colors.grey.shade400),
+              const SizedBox(height: DesignConstants.spacingL),
+              Text(l10n.mealsEmptyTitle,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                  textAlign: TextAlign.center),
+              const SizedBox(height: DesignConstants.spacingS),
+              Text(l10n.mealsEmptyBody,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyLarge
+                      ?.copyWith(color: Colors.grey.shade600)),
+              const SizedBox(height: DesignConstants.spacingL),
+              FilledButton.icon(
+                onPressed: () => _openMealEditor(l10n),
+                icon: const Icon(Icons.add),
+                label: Text(l10n.mealsCreate),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadMeals,
+      child: ListView.builder(
+        padding: DesignConstants.cardPadding,
+        itemCount: _meals.length + 1,
+        itemBuilder: (_, i) {
+          if (i == 0) {
+            // Header-Aktion: "Neue Mahlzeit"
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: FilledButton.icon(
+                  onPressed: () => _openMealEditor(l10n),
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.mealsCreate),
+                ),
+              ),
+            );
+          }
+          final meal = _meals[i - 1];
+          return _buildMealCard(meal, l10n);
+        },
+      ),
+    );
+  }
+
+  Widget _buildMealCard(Map<String, dynamic> meal, AppLocalizations l10n) {
+    final color = Theme.of(context).colorScheme;
+    return SummaryCard(
+      child: ListTile(
+        leading: Icon(Icons.restaurant, color: color.primary),
+        title: Text(meal['name'] as String),
+        subtitle: FutureBuilder<List<Map<String, dynamic>>>(
+          future: _getMealItems(meal['id'] as int),
+          builder: (_, snap) {
+            final count = snap.data?.length ?? 0;
+            return Text('${l10n.mealIngredientsTitle}: $count');
+          },
+        ),
+        trailing: Wrap(
+          spacing: 4,
+          children: [
+            IconButton(
+              tooltip: l10n.mealsAddToDiary,
+              icon: Icon(Icons.add_circle_outline, color: color.primary),
+              onPressed: () => _confirmAndLogMeal(meal, l10n),
+            ),
+            IconButton(
+              tooltip: l10n.mealsEdit,
+              icon: const Icon(Icons.edit),
+              onPressed: () => _openMealEditor(l10n, mealToEdit: meal),
+            ),
+            IconButton(
+              tooltip: l10n.mealsDelete,
+              icon: const Icon(Icons.delete_outline),
+              onPressed: () => _deleteMeal(meal, l10n),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openMealEditor(AppLocalizations l10n,
+      {Map<String, dynamic>? mealToEdit}) async {
+    final isEdit = mealToEdit != null;
+    final nameCtrl = TextEditingController(
+        text: isEdit ? (mealToEdit['name'] as String? ?? '') : '');
+    final notesCtrl = TextEditingController(
+        text: isEdit ? (mealToEdit['notes'] as String? ?? '') : '');
+
+    List<Map<String, dynamic>> items = isEdit
+        ? List<Map<String, dynamic>>.from(
+            await _getMealItems(mealToEdit['id'] as int))
+        : <Map<String, dynamic>>[];
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) {
+        return StatefulBuilder(builder: (ctx, modalSetState) {
+          Future<void> addIngredient() async {
+            final picked = await _pickIngredient(l10n);
+            if (picked == null) return;
+            final (barcode, grams) = picked;
+
+            // Produkt für den Namen (optional) laden
+            final fi = await ProductDatabaseHelper.instance
+                .getProductByBarcode(barcode);
+            final displayName =
+                (fi?.name.isNotEmpty ?? false) ? fi!.name : null;
+            modalSetState(() {
+              items.add({
+                'id': null,
+                'meal_id': mealToEdit?['id'],
+                'barcode': barcode,
+                'quantity_in_grams': grams,
+                'display_name': displayName, // nur Anzeige
+              });
+            });
+          }
+
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              top: 16,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                        color: Colors.grey.shade500,
+                        borderRadius: BorderRadius.circular(2))),
+                const SizedBox(height: 12),
+                Text(isEdit ? l10n.mealsEdit : l10n.mealsCreate,
+                    style: Theme.of(ctx)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: nameCtrl,
+                  decoration: InputDecoration(labelText: l10n.mealNameLabel),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: notesCtrl,
+                  decoration: InputDecoration(labelText: l10n.mealNotesLabel),
+                  maxLines: 2,
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Text(l10n.mealIngredientsTitle,
+                        style: Theme.of(ctx).textTheme.titleMedium),
+                    const Spacer(),
+                    TextButton.icon(
+                        onPressed: addIngredient,
+                        icon: const Icon(Icons.add),
+                        label: Text(l10n.mealAddIngredient)),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Flexible(
+                  child: items.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Text(l10n.emptyCategory,
+                              textAlign: TextAlign.center),
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: items.length,
+                          itemBuilder: (_, i) {
+                            final it = items[i];
+                            final barcode = it['barcode'] as String;
+
+                            return FutureBuilder<FoodItem?>(
+                              future: ProductDatabaseHelper.instance
+                                  .getProductByBarcode(barcode),
+                              builder: (_, snap) {
+                                final fi = snap.data;
+                                final displayName =
+                                    (fi?.name.isNotEmpty ?? false)
+                                        ? fi!.name
+                                        : barcode;
+                                final isLiquid = (fi?.isLiquid == true);
+                                final unit = isLiquid ? 'ml' : 'g';
+                                final amount = it['quantity_in_grams'] ?? 0;
+
+                                return ListTile(
+                                  dense: true,
+                                  leading: const Icon(Icons.drag_indicator,
+                                      size: 18),
+                                  title: Text(displayName),
+                                  subtitle: Text('$amount $unit'),
+                                  trailing: IconButton(
+                                    icon: const Icon(Icons.close),
+                                    onPressed: () => modalSetState(
+                                        () => items.removeAt(i)), // <—
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      child: Text(l10n.cancel),
+                    ),
+                    const Spacer(),
+                    FilledButton(
+                      onPressed: () async {
+                        final name = nameCtrl.text.trim();
+                        if (name.isEmpty) return;
+                        if (isEdit) {
+                          final mealId = mealToEdit['id'] as int;
+                          await DatabaseHelper.instance.updateMeal(mealId,
+                              name: name, notes: notesCtrl.text.trim());
+                          // Sync items: simple strategy → clear & insert current draft
+                          await DatabaseHelper.instance.clearMealItems(mealId);
+                          for (final it in items) {
+                            await DatabaseHelper.instance.addMealItem(
+                              mealId,
+                              barcode: it['barcode'] as String,
+                              grams: it['quantity_in_grams'] as int,
+                            );
+                          }
+                        } else {
+                          final mealId = await DatabaseHelper.instance
+                              .insertMeal(
+                                  name: name, notes: notesCtrl.text.trim());
+                          for (final it in items) {
+                            await DatabaseHelper.instance.addMealItem(
+                              mealId,
+                              barcode: it['barcode'] as String,
+                              grams: it['quantity_in_grams'] as int,
+                            );
+                          }
+                        }
+                        _mealItemsCache.clear();
+                        await _loadMeals();
+                        if (mounted) Navigator.of(ctx).pop();
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(l10n.mealSaved)));
+                        }
+                      },
+                      child: Text(l10n.save),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        });
+      },
+    );
+  }
+
+  Future<void> _deleteMeal(
+      Map<String, dynamic> meal, AppLocalizations l10n) async {
+    final ok = await showDialog<bool>(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: Text(l10n.mealDeleteConfirmTitle),
+            content: Text(l10n.mealDeleteConfirmBody(meal['name'] as String)),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text(l10n.cancel)),
+              TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text(l10n.delete)),
+            ],
+          ),
+        ) ??
+        false;
+    if (!ok) return;
+    await DatabaseHelper.instance.deleteMeal(meal['id'] as int);
+    _mealItemsCache.remove(meal['id'] as int);
+    await _loadMeals();
+    if (mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.mealDeleted)));
+    }
+  }
+
+  Future<(String, int)?> _pickIngredient(AppLocalizations l10n) async {
+    final searchCtrl = TextEditingController();
+    List<FoodItem> results = [];
+    bool loading = false;
+
+    return showDialog<(String, int)?>(
+      context: context,
+      builder: (ctx) {
+        final qtyCtrl = TextEditingController(text: '100'); // default
+        Future<void> runSearch(String q) async {
+          if (q.trim().isEmpty) {
+            results = [];
+            (ctx as Element).markNeedsBuild();
+            return;
+          }
+          loading = true;
+          (ctx as Element).markNeedsBuild();
+          results =
+              await ProductDatabaseHelper.instance.searchProducts(q.trim());
+          loading = false;
+          (ctx).markNeedsBuild();
+        }
+
+        return AlertDialog(
+          title: Text(l10n.mealAddIngredient),
+          content: SizedBox(
+            width: 500,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: searchCtrl,
+                  decoration: InputDecoration(
+                      hintText: l10n.searchHintText,
+                      prefixIcon: const Icon(Icons.search)),
+                  onChanged: runSearch,
+                ),
+                const SizedBox(height: 8),
+                if (loading) const LinearProgressIndicator(minHeight: 2),
+                Flexible(
+                  child: results.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Text(l10n.searchInitialHint),
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: results.length,
+                          itemBuilder: (_, i) {
+                            final fi = results[i];
+                            return ListTile(
+                              dense: true,
+                              title: Text(fi.name),
+                              subtitle: Text(fi.brand.isNotEmpty
+                                  ? fi.brand
+                                  : l10n.noBrand),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.add),
+                                onPressed: () async {
+                                  // Nach Menge fragen
+                                  final grams = await showDialog<int>(
+                                    context: context,
+                                    builder: (_) => AlertDialog(
+                                      title:
+                                          Text(l10n.mealIngredientAmountLabel),
+                                      content: TextField(
+                                        controller: qtyCtrl,
+                                        keyboardType: const TextInputType
+                                            .numberWithOptions(decimal: false),
+                                        decoration: const InputDecoration(
+                                            suffixText: 'g/ml'),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context, null),
+                                            child: Text(l10n.cancel)),
+                                        TextButton(
+                                            onPressed: () {
+                                              final val = int.tryParse(
+                                                  qtyCtrl.text.trim());
+                                              Navigator.pop(context, val);
+                                            },
+                                            child: Text(l10n.add_button)),
+                                      ],
+                                    ),
+                                  );
+                                  if (grams != null && grams > 0 && mounted) {
+                                    Navigator.of(ctx).pop((fi.barcode, grams));
+                                  }
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, null),
+                child: Text(l10n.cancel)),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _confirmAndLogMeal(
+    Map<String, dynamic> meal,
+    AppLocalizations l10n,
+  ) async {
+    final mealId = meal['id'] as int;
+    final rawItems =
+        List<Map<String, dynamic>>.from(await _getMealItems(mealId));
+    if (rawItems.isEmpty) return;
+
+    // Produkte vorab laden (für Namen, isLiquid, Koffein)
+    final Map<String, FoodItem?> products = {};
+    for (final it in rawItems) {
+      final bc = it['barcode'] as String;
+      products[bc] =
+          await ProductDatabaseHelper.instance.getProductByBarcode(bc);
+    }
+
+    // Editierbare Mengen pro Zutat
+    final Map<String, TextEditingController> qtyCtrls = {
+      for (final it in rawItems)
+        (it['barcode'] as String):
+            TextEditingController(text: '${it['quantity_in_grams']}')
+    };
+
+    // Interne Keys wie im Diary/Nutrition (WICHTIG: exakt diese Strings)
+    const internalTypes = [
+      'mealtypeBreakfast',
+      'mealtypeLunch',
+      'mealtypeDinner',
+      'mealtypeSnack',
+    ];
+    String selectedMealType = internalTypes.first;
+
+    final Map<String, String> mealTypeLabel = {
+      'mealtypeBreakfast': l10n.mealtypeBreakfast,
+      'mealtypeLunch': l10n.mealtypeLunch,
+      'mealtypeDinner': l10n.mealtypeDinner,
+      'mealtypeSnack': l10n.mealtypeSnack,
+    };
+
+    final ok = await showModalBottomSheet<bool>(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          builder: (ctx) {
+            return StatefulBuilder(
+              builder: (ctx, modalSetState) {
+                return Padding(
+                  padding: EdgeInsets.only(
+                    left: 16,
+                    right: 16,
+                    top: 12,
+                    bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade500,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        l10n.mealsAddToDiary,
+                        style: Theme.of(ctx)
+                            .textTheme
+                            .titleLarge
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        meal['name'] as String,
+                        style: Theme.of(ctx).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Meal-Type Auswahl
+                      DropdownButtonFormField<String>(
+                        initialValue: selectedMealType,
+                        decoration: InputDecoration(
+                          labelText: l10n.mealTypeLabel,
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        items: internalTypes
+                            .map((key) => DropdownMenuItem(
+                                  value: key,
+                                  child: Text(mealTypeLabel[key] ?? key),
+                                ))
+                            .toList(),
+                        onChanged: (v) {
+                          if (v != null) {
+                            modalSetState(() => selectedMealType = v);
+                          }
+                        },
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // Zutatenliste mit editierbaren Mengen
+                      Flexible(
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          itemCount: rawItems.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 10),
+                          itemBuilder: (_, i) {
+                            final it = rawItems[i];
+                            final bc = it['barcode'] as String;
+                            final fi = products[bc];
+                            final displayName = (fi?.name.isNotEmpty ?? false)
+                                ? fi!.name
+                                : bc; // Fallback Barcode, falls Name fehlt
+                            final unit = (fi?.isLiquid == true) ? 'ml' : 'g';
+
+                            return Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Padding(
+                                  padding: EdgeInsets.only(top: 14),
+                                  child: Icon(Icons.lunch_dining),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: qtyCtrls[bc],
+                                    keyboardType:
+                                        const TextInputType.numberWithOptions(
+                                            decimal: true),
+                                    decoration: InputDecoration(
+                                      labelText:
+                                          displayName, // Name statt Barcode
+                                      helperText: l10n.amountLabel,
+                                      suffixText: unit,
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(false),
+                            child: Text(l10n.cancel),
+                          ),
+                          const Spacer(),
+                          FilledButton(
+                            onPressed: () => Navigator.of(ctx).pop(true),
+                            child: Text(l10n.save),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        ) ??
+        false;
+
+    if (!ok) return;
+
+    // Speichern → pro Zutat ein FoodEntry (inkl. Wasser/Koffein falls zutreffend)
+    final ts = DateTime.now();
+    for (final it in rawItems) {
+      final bc = it['barcode'] as String;
+      final ctrl = qtyCtrls[bc]!;
+      final qty =
+          int.tryParse(ctrl.text.trim()) ?? (it['quantity_in_grams'] as int);
+
+      // 1) FoodEntry (mit korrekt gesetztem Meal-Typ)
+      await DatabaseHelper.instance.insertFoodEntry(
+        FoodEntry(
+          barcode: bc,
+          timestamp: ts,
+          quantityInGrams: qty,
+          mealType: selectedMealType, // <- EXACT dieselben Keys wie im Diary
+        ),
+      );
+
+      // 2) Wasser/Koffein automatisch buchen (bei Flüssigkeiten)
+      final fi = products[bc];
+      if (fi != null) {
+        if (fi.isLiquid == true) {
+          await DatabaseHelper.instance.insertWaterEntry(qty, ts);
+        }
+        final c100 = fi.caffeineMgPer100ml;
+        if (fi.isLiquid == true && c100 != null && c100 > 0) {
+          await _logCaffeineDose(c100 * (qty / 100.0), ts);
+        }
+      }
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.mealAddedToDiarySuccess)),
+      );
+    }
+  }
+
+  Future<void> _logCaffeineDose(double doseMg, DateTime timestamp) async {
+    if (doseMg <= 0) return;
+
+    // Caffeine-Supplement suchen/anlegen
+    final supplements = await DatabaseHelper.instance.getAllSupplements();
+    final caffeine = supplements.firstWhere(
+      (s) => (s.code == 'caffeine') || s.name.toLowerCase() == 'caffeine',
+      orElse: () => Supplement(
+        name: 'Caffeine',
+        defaultDose: 100,
+        unit: 'mg',
+        dailyLimit: 400,
+        code: 'caffeine',
+        isBuiltin: true,
+      ),
+    );
+
+    final caffeineId = caffeine.id ??
+        (await DatabaseHelper.instance.insertSupplement(caffeine)).id!;
+
+    await DatabaseHelper.instance.insertSupplementLog(
+      SupplementLog(
+        supplementId: caffeineId,
+        dose: doseMg,
+        unit: 'mg',
+        timestamp: timestamp,
+        // source_food_entry_id: hier könnten wir verlinken, wenn wir die neue FoodEntry-ID hätten –
+        // in diesem Flow buchen wir mehrere; Verlinkung kannst du später erweitern.
+      ),
+    );
   }
 }
 
@@ -11486,7 +12721,8 @@ class DiaryScreenState extends State<DiaryScreen> {
                     trackedSupplements: _trackedSupplements,
                     onTap: () => Navigator.of(context)
                         .push(MaterialPageRoute(
-                            builder: (context) => SupplementTrackScreen()))
+                            builder: (context) =>
+                                const SupplementTrackScreen()))
                         .then((_) => loadDataForDate(_selectedDate)),
                   ),
                   const SizedBox(height: DesignConstants.spacingXL),
@@ -13250,17 +14486,17 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
       setState(() => _isFullBackupRunning = true);
       bool success = await BackupManager().importFullBackupAuto(filePath);
       if (!success) {
-        // ggf. verschlüsselte Datei – Passwort abfragen und erneut versuchen
+        // Datei könnte verschlüsselt sein – Passwort abfragen (leer = “kein Passwort” versuchen)
         final pw = await _askPassword(title: l10n.dialogEnterPasswordImport);
-        if (pw != null && pw.isNotEmpty) {
+        if (pw != null) {
+          // <-- wichtig: leer zulassen
           success = await BackupManager()
               .importFullBackupAuto(filePath, passphrase: pw);
         }
       }
+
       if (!mounted) return;
-      setState(() => _isFullBackupRunning = false);
-      if (!mounted) return;
-      setState(() => _isFullBackupRunning = false);
+      setState(() => _isFullBackupRunning = false); // nur einmal
 
       if (success) {
         // Neu: Unbekannte Übungsnamen ermitteln und ggf. Mapping anbieten
@@ -17929,7 +19165,6 @@ import 'package:lightweight/util/supplement_l10n.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/widgets/swipe_action_background.dart';
-import 'package:lightweight/models/tracked_supplement.dart';
 
 class ManageSupplementsScreen extends StatefulWidget {
   const ManageSupplementsScreen({super.key});
@@ -19192,8 +20427,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                       icon: const Icon(Icons.fitness_center_outlined),
                       label: l10n.workout,
                     ),
-                    BottomNavigationBarItem(
-                      icon: const Icon(Icons.bar_chart_outlined),
+                    const BottomNavigationBarItem(
+                      icon: Icon(Icons.bar_chart_outlined),
                       label: 'Stats', //l10n.statistics,
                     ),
                     BottomNavigationBarItem(
@@ -20025,7 +21260,7 @@ class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
                   // <- Wichtig: begrenzen!
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      value: _unit,
+                      initialValue: _unit,
                       items: allowedUnits
                           .map((u) => DropdownMenuItem<String>(
                               value: u, child: Text(u)))
@@ -20043,10 +21278,12 @@ class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
                             isBuiltinCaffeine ? l10n.caffeineUnitLocked : null,
                       ),
                       validator: (val) {
-                        if (val == null || val.isEmpty)
+                        if (val == null || val.isEmpty) {
                           return l10n.fieldRequired;
-                        if (!allowedUnits.contains(val))
+                        }
+                        if (!allowedUnits.contains(val)) {
                           return l10n.unitNotSupported;
+                        }
                         return null;
                       },
                     ),
@@ -20934,7 +22171,6 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:lightweight/generated/app_localizations.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:lightweight/models/measurement.dart';
@@ -20961,7 +22197,7 @@ class DatabaseHelper {
     final path = join(dbPath, fileName);
     return await openDatabase(
       path,
-      version: 13,
+      version: 14,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -20971,60 +22207,150 @@ class DatabaseHelper {
   }
 
   Future<void> _createDB(Database db, int version) async {
-    await db.execute('CREATE TABLE supplements ('
-        'id INTEGER PRIMARY KEY AUTOINCREMENT,'
-        'code TEXT, '
-        'name TEXT NOT NULL,'
-        'default_dose REAL NOT NULL,'
-        'unit TEXT NOT NULL,'
-        'daily_goal REAL,'
-        'daily_limit REAL,'
-        'notes TEXT,'
-        'is_builtin INTEGER NOT NULL DEFAULT 0'
-        ')');
+    // --- Kern-Tabellen ---
+    await db.execute('''
+    CREATE TABLE IF NOT EXISTS food_entries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      barcode TEXT NOT NULL,
+      timestamp TEXT NOT NULL,
+      quantity_in_grams INTEGER NOT NULL,
+      meal_type TEXT NOT NULL DEFAULT "mealtypeSnack"
+    )
+  ''');
 
-    await db.execute('CREATE TABLE supplement_logs ('
-        'id INTEGER PRIMARY KEY AUTOINCREMENT,'
-        'supplement_id INTEGER NOT NULL,'
-        'dose REAL NOT NULL,'
-        'unit TEXT NOT NULL,'
-        'timestamp TEXT NOT NULL,'
-        'source_food_entry_id INTEGER,'
-        'FOREIGN KEY (supplement_id) REFERENCES supplements(id) ON DELETE CASCADE,'
-        'FOREIGN KEY (source_food_entry_id) REFERENCES food_entries(id) ON DELETE CASCADE'
-        ')' // <-- KEIN Komma vor der schließenden Klammer
-        );
-    // Seed
-    await db.insert('supplements', {
-      'code': 'caffeine',
-      'name': 'Caffeine',
-      'default_dose': 100,
-      'unit': 'mg',
-      'daily_limit': 400,
-      'is_builtin': 1,
-    });
-    await db.insert('supplements', {
-      'code': 'creatine_monohydrate',
-      'name': 'Creatine Monohydrate',
-      'default_dose': 5,
-      'unit': 'g',
-      'daily_goal': 5,
-      'is_builtin': 0,
-    });
+    await db.execute('''
+    CREATE TABLE IF NOT EXISTS water_entries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      timestamp TEXT NOT NULL,
+      quantity_in_ml INTEGER NOT NULL
+    )
+  ''');
 
-    // Indizes (Performance)
+    await db.execute('''
+    CREATE TABLE IF NOT EXISTS favorites (
+      barcode TEXT PRIMARY KEY
+    )
+  ''');
+
+    // Measurements (finale Struktur wie in v9)
+    await db.execute('''
+    CREATE TABLE IF NOT EXISTS measurement_sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      timestamp TEXT NOT NULL
+    )
+  ''');
+
+    await db.execute('''
+    CREATE TABLE IF NOT EXISTS measurements (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      session_id INTEGER NOT NULL,
+      type TEXT NOT NULL,
+      value REAL NOT NULL,
+      unit TEXT NOT NULL,
+      FOREIGN KEY (session_id) REFERENCES measurement_sessions(id) ON DELETE CASCADE
+    )
+  ''');
+
+    // Supplements
+    await db.execute('''
+    CREATE TABLE IF NOT EXISTS supplements (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      code TEXT,
+      name TEXT NOT NULL,
+      default_dose REAL NOT NULL,
+      unit TEXT NOT NULL,
+      daily_goal REAL,
+      daily_limit REAL,
+      notes TEXT,
+      is_builtin INTEGER NOT NULL DEFAULT 0
+    )
+  ''');
+
+    await db.execute('''
+    CREATE TABLE IF NOT EXISTS supplement_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      supplement_id INTEGER NOT NULL,
+      dose REAL NOT NULL,
+      unit TEXT NOT NULL,
+      timestamp TEXT NOT NULL,
+      source_food_entry_id INTEGER,
+      FOREIGN KEY (supplement_id) REFERENCES supplements(id) ON DELETE CASCADE,
+      FOREIGN KEY (source_food_entry_id) REFERENCES food_entries(id) ON DELETE CASCADE
+    )
+  ''');
+
+    // Meals
+    await db.execute('''
+    CREATE TABLE IF NOT EXISTS meals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      notes TEXT,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  ''');
+
+    await db.execute('''
+    CREATE TABLE IF NOT EXISTS meal_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      meal_id INTEGER NOT NULL,
+      barcode TEXT NOT NULL,
+      quantity_in_grams INTEGER NOT NULL,
+      FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE
+    )
+  ''');
+
+    // --- Indizes (NACH den Tabellen) ---
     await db.execute(
         'CREATE UNIQUE INDEX IF NOT EXISTS idx_supplements_code ON supplements(code)');
     await db.execute(
         'CREATE INDEX IF NOT EXISTS idx_food_entries_timestamp ON food_entries(timestamp)');
     await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_food_entries_mealtype_ts ON food_entries(meal_type, timestamp)');
+    await db.execute(
         'CREATE INDEX IF NOT EXISTS idx_water_entries_timestamp ON water_entries(timestamp)');
     await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_supp_logs_ts ON supplement_logs(timestamp)');
+        'CREATE INDEX IF NOT EXISTS idx_supplement_logs_timestamp ON supplement_logs(timestamp)');
     await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_supp_logs_supp ON supplement_logs(supplement_id)');
+        'CREATE INDEX IF NOT EXISTS idx_supplement_logs_supplement ON supplement_logs(supplement_id)');
 
-    print("Benutzer-DB (v13) neu erstellt.");
+    // --- Built-ins einmalig einfüllen (idempotent) ---
+    // Caffeine
+    final caffeRows = await db.query(
+      'supplements',
+      where: 'code = ?',
+      whereArgs: ['caffeine'],
+      limit: 1,
+    );
+    if (caffeRows.isEmpty) {
+      await db.insert('supplements', {
+        'code': 'caffeine',
+        'name': 'Caffeine',
+        'default_dose': 100,
+        'unit': 'mg',
+        'daily_limit': 400,
+        'is_builtin': 1,
+      });
+    }
+
+    // Creatine (optional)
+    final creaRows = await db.query(
+      'supplements',
+      where: 'code = ?',
+      whereArgs: ['creatine_monohydrate'],
+      limit: 1,
+    );
+    if (creaRows.isEmpty) {
+      await db.insert('supplements', {
+        'code': 'creatine_monohydrate',
+        'name': 'Creatine Monohydrate',
+        'default_dose': 5,
+        'unit': 'g',
+        'daily_goal': 5,
+        'is_builtin': 0,
+      });
+    }
+
+    print('Benutzer-DB (v$version) neu erstellt: Tabellen & Indizes angelegt.');
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
@@ -21155,6 +22481,116 @@ class DatabaseHelper {
       await db.execute(
           'CREATE INDEX IF NOT EXISTS idx_supp_logs_supp ON supplement_logs(supplement_id)');
       print("DB v13: Performance-Indizes erstellt.");
+    }
+    // Upgrade auf Version 14: Mahlzeiten
+    if (oldVersion < 14) {
+      // food_entries
+      await db.execute('''
+      CREATE TABLE IF NOT EXISTS food_entries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        barcode TEXT NOT NULL,
+        timestamp TEXT NOT NULL,
+        quantity_in_grams INTEGER NOT NULL,
+        meal_type TEXT NOT NULL DEFAULT "mealtypeSnack"
+      )
+    ''');
+
+      // water_entries
+      await db.execute('''
+      CREATE TABLE IF NOT EXISTS water_entries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp TEXT NOT NULL,
+        quantity_in_ml INTEGER NOT NULL
+      )
+    ''');
+
+      // favorites
+      await db.execute('''
+      CREATE TABLE IF NOT EXISTS favorites (
+        barcode TEXT PRIMARY KEY
+      )
+    ''');
+
+      // measurements
+      await db.execute('''
+      CREATE TABLE IF NOT EXISTS measurement_sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp TEXT NOT NULL
+      )
+    ''');
+      await db.execute('''
+      CREATE TABLE IF NOT EXISTS measurements (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id INTEGER NOT NULL,
+        type TEXT NOT NULL,
+        value REAL NOT NULL,
+        unit TEXT NOT NULL,
+        FOREIGN KEY (session_id) REFERENCES measurement_sessions(id) ON DELETE CASCADE
+      )
+    ''');
+
+      // supplements
+      await db.execute('''
+      CREATE TABLE IF NOT EXISTS supplements (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        code TEXT,
+        name TEXT NOT NULL,
+        default_dose REAL NOT NULL,
+        unit TEXT NOT NULL,
+        daily_goal REAL,
+        daily_limit REAL,
+        notes TEXT,
+        is_builtin INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+
+      await db.execute('''
+      CREATE TABLE IF NOT EXISTS supplement_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        supplement_id INTEGER NOT NULL,
+        dose REAL NOT NULL,
+        unit TEXT NOT NULL,
+        timestamp TEXT NOT NULL,
+        source_food_entry_id INTEGER,
+        FOREIGN KEY (supplement_id) REFERENCES supplements(id) ON DELETE CASCADE,
+        FOREIGN KEY (source_food_entry_id) REFERENCES food_entries(id) ON DELETE CASCADE
+      )
+    ''');
+
+      // meals
+      await db.execute('''
+      CREATE TABLE IF NOT EXISTS meals (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        notes TEXT,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    ''');
+      await db.execute('''
+      CREATE TABLE IF NOT EXISTS meal_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        meal_id INTEGER NOT NULL,
+        barcode TEXT NOT NULL,
+        quantity_in_grams INTEGER NOT NULL,
+        FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE
+      )
+    ''');
+
+      // Indizes
+      await db.execute(
+          'CREATE UNIQUE INDEX IF NOT EXISTS idx_supplements_code ON supplements(code)');
+      await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_food_entries_timestamp ON food_entries(timestamp)');
+      await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_food_entries_mealtype_ts ON food_entries(meal_type, timestamp)');
+      await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_water_entries_timestamp ON water_entries(timestamp)');
+      await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_supplement_logs_timestamp ON supplement_logs(timestamp)');
+      await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_supplement_logs_supplement ON supplement_logs(supplement_id)');
+
+      debugPrint('Catch-up: Tabellen + Indizes bis v14 sichergestellt.');
     }
   }
 
@@ -21775,13 +23211,75 @@ class DatabaseHelper {
         .map((map) => DateTime.parse(map['timestamp'] as String).day)
         .toSet();
   }
+  // --- MEALS API ---
+
+  Future<int> insertMeal({required String name, String? notes}) async {
+    final db = await database;
+    final now = DateTime.now().toIso8601String();
+    return await db.insert('meals', {
+      'name': name.trim(),
+      'notes': (notes ?? '').trim().isEmpty ? null : notes!.trim(),
+      'created_at': now,
+      'updated_at': now,
+    });
+  }
+
+  Future<void> updateMeal(int id, {required String name, String? notes}) async {
+    final db = await database;
+    final now = DateTime.now().toIso8601String();
+    await db.update(
+      'meals',
+      {
+        'name': name.trim(),
+        'notes': (notes ?? '').trim().isEmpty ? null : notes!.trim(),
+        'updated_at': now,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<void> deleteMeal(int id) async {
+    final db = await database;
+    await db.delete('meals', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<Map<String, dynamic>>> getMeals() async {
+    final db = await database;
+    return await db.query('meals', orderBy: 'updated_at DESC');
+  }
+
+  Future<List<Map<String, dynamic>>> getMealItems(int mealId) async {
+    final db = await database;
+    return await db
+        .query('meal_items', where: 'meal_id = ?', whereArgs: [mealId]);
+  }
+
+  Future<int> addMealItem(int mealId,
+      {required String barcode, required int grams}) async {
+    final db = await database;
+    return await db.insert('meal_items', {
+      'meal_id': mealId,
+      'barcode': barcode,
+      'quantity_in_grams': grams,
+    });
+  }
+
+  Future<void> removeMealItem(int itemId) async {
+    final db = await database;
+    await db.delete('meal_items', where: 'id = ?', whereArgs: [itemId]);
+  }
+
+  Future<void> clearMealItems(int mealId) async {
+    final db = await database;
+    await db.delete('meal_items', where: 'meal_id = ?', whereArgs: [mealId]);
+  }
 }
 
 
 ===== Datei: /Users/richard/Projects/Lightweight/lightweight/lib/data/base_db_exporter.dart =====
 
 // lib/data/base_db_exporter.dart
-import 'dart:io';
 import 'package:share_plus/share_plus.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart';
@@ -22618,6 +24116,7 @@ class WorkoutDatabaseHelper {
 import 'dart:convert';
 import 'dart:io';
 import 'package:csv/csv.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -22630,6 +24129,8 @@ import 'package:sqflite/sqflite.dart'; // KORREKTUR: Importiert das neue Modell
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lightweight/util/encryption_util.dart';
 import 'package:path/path.dart' as p;
+import 'dart:typed_data';
+import 'package:archive/archive.dart'; // for GZipDecoder (add to pubspec if not present)
 
 class BackupManager {
   final _userDb = DatabaseHelper.instance;
@@ -22748,10 +24249,16 @@ class BackupManager {
         supplementLogs: supplementLogs,
       );
       if (productDb != null) {
+        final cols = await _getTableColumns(productDb, 'products'); // <-- neu
         final batch = productDb.batch();
         for (final item in backup.customFoodItems) {
-          batch.insert('products', item.toMap(),
-              conflictAlgorithm: ConflictAlgorithm.replace);
+          final raw = item.toMap();
+          final filtered = _filterMapForColumns(raw, cols); // <-- neu
+          batch.insert(
+            'products',
+            filtered,
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
         }
         await batch.commit(noResult: true);
       }
@@ -22985,17 +24492,22 @@ class BackupManager {
 
       Map<String, dynamic> payload;
       if (top is Map && top['enc'] == EncryptionUtil.wrapperVersion) {
-        if (passphrase == null || passphrase.isEmpty) {
-          print(
-              'Verschlüsseltes Backup erkannt, aber kein Passwort übergeben.');
+        // Leeres Passwort zulassen (Legacy-Cases) – EncryptionUtil sollte "" akzeptieren
+        final effectivePw = (passphrase ?? "");
+        try {
+          final clear = await EncryptionUtil.decryptToString(
+            Map<String, dynamic>.from(top),
+            effectivePw,
+          );
+          payload = jsonDecode(clear) as Map<String, dynamic>;
+        } catch (e) {
+          // Falsches/fehlendes Passwort → sauber false zurückgeben,
+          // damit der UI-Flow den Dialog zeigen/erneut versuchen kann.
+          print('Decrypt failed: $e');
           return false;
         }
-        final clear = await EncryptionUtil.decryptToString(
-          Map<String, dynamic>.from(top),
-          passphrase,
-        );
-        payload = jsonDecode(clear) as Map<String, dynamic>;
       } else {
+        // Unverschlüsselt (plain JSON)
         payload = (top as Map).cast<String, dynamic>();
       }
 
@@ -23039,10 +24551,16 @@ class BackupManager {
       );
 
       if (productDb != null) {
+        final cols = await _getTableColumns(productDb, 'products'); // <-- neu
         final batch = productDb.batch();
         for (final item in backup.customFoodItems) {
-          batch.insert('products', item.toMap(),
-              conflictAlgorithm: ConflictAlgorithm.replace);
+          final raw = item.toMap();
+          final filtered = _filterMapForColumns(raw, cols); // <-- neu
+          batch.insert(
+            'products',
+            filtered,
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
         }
         await batch.commit(noResult: true);
       }
@@ -23180,6 +24698,137 @@ class BackupManager {
       return false;
     }
   }
+
+  Future<Set<String>> _getTableColumns(Database db, String table) async {
+    final rows = await db.rawQuery('PRAGMA table_info($table)');
+    return rows.map((r) => (r['name'] as String)).toSet();
+  }
+
+  Map<String, Object?> _filterMapForColumns(
+    Map<String, Object?> src,
+    Set<String> allowedCols,
+  ) {
+    final out = <String, Object?>{};
+    src.forEach((k, v) {
+      if (allowedCols.contains(k)) out[k] = v;
+    });
+    return out;
+  }
+}
+
+class ProbeResult {
+  final bool encrypted;
+  final bool gzipped;
+  ProbeResult({required this.encrypted, required this.gzipped});
+}
+
+ProbeResult _probeBackup(Uint8List bytes) {
+  // 1) Quick JSON sniff
+  if (bytes.isNotEmpty &&
+      (bytes.first == 0x7B /* '{' */ || bytes.first == 0x5B /* '[' */)) {
+    // Looks like plain JSON (very common for unencrypted exports)
+    return ProbeResult(encrypted: false, gzipped: false);
+  }
+
+  // 2) GZIP magic: 1F 8B
+  if (bytes.length >= 2 && bytes[0] == 0x1F && bytes[1] == 0x8B) {
+    // Might be gzipped JSON (unencrypted) or gzipped+encrypted (rare)
+    // We'll try inflate first; if it fails later we can still treat as encrypted
+    return ProbeResult(encrypted: false, gzipped: true);
+  }
+
+  // 3) Optional custom magic headers you may have used
+  // e.g., "VITA1" or "ENC1"... adapt if your exporter wrote a header.
+  const encHeader = [0x45, 0x4E, 0x43, 0x31]; // "ENC1"
+  if (bytes.length >= 4 &&
+      bytes[0] == encHeader[0] &&
+      bytes[1] == encHeader[1] &&
+      bytes[2] == encHeader[2] &&
+      bytes[3] == encHeader[3]) {
+    return ProbeResult(encrypted: true, gzipped: false);
+  }
+
+  // 4) Default: treat as encrypted blob (e.g., {salt|iv|ciphertext} container)
+  return ProbeResult(encrypted: true, gzipped: false);
+}
+
+class BackupPasswordError implements Exception {}
+
+Future<void> importBackupBytes(Uint8List bytes, {String? password}) async {
+  final probe = _probeBackup(bytes);
+
+  Uint8List plainBytes;
+
+  if (!probe.encrypted) {
+    // Try direct JSON first
+    try {
+      final sourceBytes = probe.gzipped
+          ? Uint8List.fromList(const GZipDecoder().decodeBytes(bytes))
+          : bytes;
+      // Basic JSON sanity check
+      jsonDecode(utf8.decode(sourceBytes));
+      plainBytes = sourceBytes;
+    } catch (_) {
+      // If JSON/gzip decode failed, fall back to encrypted flow
+      plainBytes = await _tryDecryptWithCandidates(bytes,
+          passwordCandidates: [password, "", null]);
+    }
+  } else {
+    // Encrypted flow straight away
+    plainBytes = await _tryDecryptWithCandidates(bytes,
+        passwordCandidates: [password, "", null]);
+  }
+
+  final jsonStr = utf8.decode(plainBytes);
+  final Map<String, dynamic> payload =
+      jsonDecode(jsonStr) as Map<String, dynamic>;
+
+  // ✅ Apply payload to DB (your current restore routine)
+  await _applyBackupPayload(payload);
+}
+
+/// Tries multiple password candidates in order.
+/// If all fail, throws BackupPasswordError.
+Future<Uint8List> _tryDecryptWithCandidates(Uint8List encrypted,
+    {required List<String?> passwordCandidates}) async {
+  for (final cand in passwordCandidates) {
+    try {
+      final plain = await _decryptPayload(encrypted, cand);
+      // Quick sanity check to ensure we actually decrypted JSON
+      final s = utf8.decode(plain);
+      jsonDecode(s);
+      return plain;
+    } catch (_) {
+      // continue
+    }
+  }
+  throw BackupPasswordError();
+}
+
+/// Replace with your real decryption (AES-GCM, etc.)
+/// Contract: when `password` is `null` or `""`, handle legacy “no password” backups
+Future<Uint8List> _decryptPayload(Uint8List encrypted, String? password) async {
+  // Example structure assumption (adjust to your format):
+  // [salt(16) | iv(12) | ciphertext(...) | tag(16)]
+  // Or if you stored a JSON envelope with base64 fields, parse that here.
+
+  // PSEUDO:
+  // final salt = encrypted.sublist(0, 16);
+  // final iv = encrypted.sublist(16, 28);
+  // final ct = encrypted.sublist(28);
+  // final key = await _deriveKey(password ?? "", salt); // treat null == empty string
+  // final plain = aesGcmDecrypt(key, iv, ct);
+  // return plain;
+
+  // For now we throw to force you to wire this to your actual crypto util:
+  throw UnimplementedError(
+      "Wire _decryptPayload to your existing AES-GCM routine");
+}
+
+/// Your existing apply logic (truncate & insert or merge)
+Future<void> _applyBackupPayload(Map<String, dynamic> payload) async {
+  // e.g. payload['food_entries'], payload['water_entries'], etc.
+  // Make sure to wrap in a transaction & validate shapes.
 }
 
 
@@ -23329,30 +24978,44 @@ class ProductDatabaseHelper {
     await _ensureDatabasesInitialized();
     await _ensureDatabasesAlive();
 
-    Future<FoodItem?> _try() async {
+    // Lokaler Helper mit anderem Namen als das Keyword "try"
+    Future<FoodItem?> attempt() async {
       if (_baseDatabase != null) {
-        final baseMaps = await _baseDatabase!.query('products',
-            where: 'barcode = ?', whereArgs: [barcode], limit: 1);
+        final baseMaps = await _baseDatabase!.query(
+          'products',
+          where: 'barcode = ?',
+          whereArgs: [barcode],
+          limit: 1,
+        );
         if (baseMaps.isNotEmpty) {
           return FoodItem.fromMap(baseMaps.first, source: FoodItemSource.base);
         }
       }
+
       if (_offDatabase != null) {
-        final offMaps = await _offDatabase!.query('products',
-            where: 'barcode = ?', whereArgs: [barcode], limit: 1);
+        final offMaps = await _offDatabase!.query(
+          'products',
+          where: 'barcode = ?',
+          whereArgs: [barcode],
+          limit: 1,
+        );
         if (offMaps.isNotEmpty) {
           return FoodItem.fromMap(offMaps.first, source: FoodItemSource.off);
         }
       }
+
       return null;
     }
 
     try {
-      return await _try();
+      return await attempt();
     } on DatabaseException catch (e) {
-      if (e.toString().contains('database_closed')) {
+      // Falls eine der DBs zwischenzeitlich geschlossen wurde → wiederbeleben & einmalig erneut versuchen
+      final msg = e.toString().toLowerCase();
+      if (msg.contains('database_closed') ||
+          msg.contains('attempt to reopen')) {
         await _ensureDatabasesAlive();
-        return await _try();
+        return await attempt();
       }
       rethrow;
     }
@@ -24572,11 +26235,11 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
     final double lastX = spanDays.toDouble();
 
 // ~6 Labels anpeilen (mind. 1)
-    final int desiredLabels = 6;
+    const int desiredLabels = 6;
     final int labelEvery = (spanDays / desiredLabels).ceil().clamp(1, 100000);
 
 // Kompaktes Datumsformat abhängig von der Spannweite
-    String _labelFor(DateTime d) {
+    String labelFor(DateTime d) {
       if (spanDays > 365 * 2) return DateFormat('yyyy').format(d);
       if (spanDays > 365) return DateFormat('MMM yyyy').format(d);
       if (spanDays > 31) return DateFormat('MMM d').format(d);
@@ -24691,7 +26354,7 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
                           meta: meta,
                           space: 8,
                           child: Text(
-                            _labelFor(date),
+                            labelFor(date),
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         );

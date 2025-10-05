@@ -1050,7 +1050,7 @@ class DatabaseHelper {
     return await db.insert('meals', {
       'name': name.trim(),
       'notes': (notes ?? '').trim().isEmpty ? null : notes!.trim(),
-      'created_at': now,
+      //'created_at': now,
       'updated_at': now,
     });
   }

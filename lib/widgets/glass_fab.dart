@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lightweight/theme/color_constants.dart';
+
 
 class GlassFab extends StatefulWidget {
   final VoidCallback onPressed;
@@ -40,10 +42,12 @@ class _GlassFabState extends State<GlassFab>
   }
 
   void _onTapDown(TapDownDetails details) => _controller.forward();
-  void _onTapUp(TapUpDetails details) {
-    _controller.reverse();
-    widget.onPressed();
-  }
+void _onTapUp(TapUpDetails details) {
+  _controller.reverse();
+  // leichtes, kurzes Haptik-Feedback
+  HapticFeedback.selectionClick();
+  widget.onPressed();
+}
 
   @override
   Widget build(BuildContext context) {
