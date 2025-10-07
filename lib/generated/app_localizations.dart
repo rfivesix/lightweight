@@ -443,7 +443,7 @@ abstract class AppLocalizations {
   /// No description provided for @profileScreenTitle.
   ///
   /// In en, this message translates to:
-  /// **'Profile & Goals'**
+  /// **'Profile'**
   String get profileScreenTitle;
 
   /// No description provided for @profileDailyGoals.
@@ -2719,6 +2719,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'START'**
   String get startCapsLock;
+
+  /// No description provided for @nutritionHubSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover insights, track meals, and plan your nutrition here soon.'**
+  String get nutritionHubSubtitle;
+
+  /// No description provided for @nutritionHubTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition'**
+  String get nutritionHubTitle;
+
+  /// No description provided for @nutrition.
+  ///
+  /// In en, this message translates to:
+  /// **'nutrition'**
+  String get nutrition;
 }
 
 class _AppLocalizationsDelegate

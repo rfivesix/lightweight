@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'dart:ui';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/dialogs/log_supplement_dialog_content.dart';
@@ -16,13 +18,15 @@ import 'package:lightweight/screens/add_measurement_screen.dart';
 import 'package:lightweight/screens/diary_screen.dart';
 import 'package:lightweight/screens/edit_routine_screen.dart';
 import 'package:lightweight/screens/live_workout_screen.dart';
+import 'package:lightweight/screens/nutrition_hub_screen.dart';
 import 'package:lightweight/screens/profile_screen.dart';
-import 'package:lightweight/screens/routines_screen.dart';
 import 'package:lightweight/screens/statistics_hub_screen.dart';
 import 'package:lightweight/screens/workout_hub_screen.dart';
 import 'package:lightweight/services/profile_service.dart';
 import 'package:lightweight/services/workout_session_manager.dart';
 import 'package:lightweight/theme/color_constants.dart';
+import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/glass_bottom_menu.dart';
 import 'package:lightweight/widgets/glass_bottom_nav_bar.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/keep_alive_page.dart';
@@ -62,12 +66,19 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   }
 
   void _onPageChanged(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
+    if (_isWarping) {
+      return; // während Snapshot-Overlay nicht den Index zurückspringen lassen
+    }
+    setState(() => _currentIndex = index);
   }
 
+  final _pvBoundaryKey = GlobalKey(); // RepaintBoundary um die PageView
+  final bool _navAnimating = false;
+  final bool _isWarping = false;
+  ui.Image? _pvSnapshot; // aktueller Snapshot
+
   void _onNavigationTapped(int index) {
+    if (!_pageController.hasClients) return;
     _pageController.jumpToPage(index);
   }
 
@@ -86,8 +97,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     final l10n = AppLocalizations.of(context)!;
     switch (action) {
       case 'start_workout':
-        Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const RoutinesScreen()));
+        _showStartWorkoutMenu();
+        // Navigator.of(context).push(
+        //    MaterialPageRoute(builder: (context) => const RoutinesScreen()));
         break;
       case 'add_measurement':
         final success = await Navigator.of(context).push<bool>(
@@ -99,10 +111,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         _handleAddFood();
         break;
       case 'add_liquid':
-        _handleWaterAdd();
+        await _showAddFluidMenu();
         break;
       case 'log_supplement':
-        _handleSupplementAdd();
+        _showLogSupplementMenu(); //_handleSupplementAdd();
         break;
     }
   }
@@ -114,9 +126,343 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     }
   }
 
+  Future<void> _showLogSupplementMenu() async {
+    final l10n = AppLocalizations.of(context)!;
+    final supplements = await DatabaseHelper.instance.getAllSupplements();
+    if (!mounted || supplements.isEmpty) return;
+
+    await showGlassBottomMenu(
+      context: context,
+      title: l10n.logIntakeTitle, // "Track supplement intake"
+      contentBuilder: (ctx, close) {
+        // Phase-State lokal im Builder halten
+        Supplement? selected;
+        final doseKey = GlobalKey<LogSupplementDialogContentState>();
+
+        return StatefulBuilder(
+          builder: (ctx, setState) {
+            // PHASE 1: Supplement auswählen
+            if (selected == null) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Liste der Supplements (scrollbar via BottomSheet-Container)
+                  ...supplements.map((s) => Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 6, horizontal: 4),
+                        child: Material(
+                          color: Colors.white.withOpacity(
+                            Theme.of(ctx).brightness == Brightness.dark
+                                ? 0.06
+                                : 0.08,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () => setState(() => selected = s),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 12),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.medication_outlined),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                      child: Text(
+                                          localizeSupplementName(s, l10n))),
+                                  const Icon(Icons.chevron_right_rounded),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      )),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: close,
+                          child: Text(l10n.cancel),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            }
+
+            // PHASE 2: Dosis + Zeitpunkt erfassen (bestehendes Dialog-Widget nutzen)
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    localizeSupplementName(selected!, l10n),
+                    style: Theme.of(ctx)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                LogSupplementDialogContent(
+                  key: doseKey,
+                  supplement: selected!,
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => setState(() => selected = null),
+                        child: Text("l10n.back_button" ?? l10n.cancel),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () async {
+                          final st = doseKey.currentState;
+                          if (st == null) return;
+                          final dose =
+                              double.tryParse(st.doseText.replaceAll(',', '.'));
+                          if (dose == null || dose <= 0) return;
+
+                          final log = SupplementLog(
+                            supplementId: selected!.id!,
+                            dose: dose,
+                            unit: selected!.unit,
+                            timestamp: st.selectedDateTime,
+                          );
+                          await DatabaseHelper.instance
+                              .insertSupplementLog(log);
+                          close();
+                          _refreshHomeScreen();
+                        },
+                        child: Text(l10n.add_button),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _showStartWorkoutMenu() async {
+    final l10n = AppLocalizations.of(context)!;
+
+    // Routinen laden wie im RoutinesScreen
+    final routines = await WorkoutDatabaseHelper.instance.getAllRoutines();
+    if (!mounted) return;
+
+    await showGlassBottomMenu(
+      context: context,
+      title: l10n.startWorkout, // Titel des Menüs
+      contentBuilder: (ctx, close) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+
+        // Gemeinsame Card-Factory (Look wie deine SummaryCards im Menü)
+        Widget glassCard({required Widget child, EdgeInsets? padding}) {
+          return Material(
+            color: Colors.white.withOpacity(isDark ? 0.06 : 0.08),
+            borderRadius: BorderRadius.circular(18),
+            child: Padding(
+              padding: padding ??
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              child: child,
+            ),
+          );
+        }
+
+        // 1) Free / Empty workout ganz oben
+        final freeWorkoutTile = glassCard(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () async {
+              // exakter Flow wie im RoutinesScreen._startEmptyWorkout
+              final newWorkoutLog = await WorkoutDatabaseHelper.instance
+                  .startWorkout(routineName: l10n.freeWorkoutTitle);
+              if (!context.mounted) return;
+              close();
+              Navigator.of(context)
+                  .push(MaterialPageRoute(
+                    builder: (_) =>
+                        LiveWorkoutScreen(workoutLog: newWorkoutLog),
+                  ))
+                  .then((_) => _refreshHomeScreen());
+            },
+            child: Row(
+              children: [
+                const Icon(Icons.play_arrow_rounded),
+                const SizedBox(width: 12),
+                Text(
+                  l10n.startEmptyWorkoutButton, // gleicher String wie im Screen
+                  style: Theme.of(ctx)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+          ),
+        );
+
+        // 2) Routinenliste darunter – Start-Button links, Tap öffnet Edit
+        final routinesList = ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 420),
+          child: ListView.separated(
+            padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
+            shrinkWrap: true,
+            itemCount: routines.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            itemBuilder: (ctx, i) {
+              final r = routines[i];
+              return glassCard(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Start-Button links
+                    FilledButton(
+                      onPressed: () async {
+                        // exakter Flow wie im RoutinesScreen._startWorkout
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (_) =>
+                              const Center(child: CircularProgressIndicator()),
+                        );
+                        final fullRoutine = await WorkoutDatabaseHelper.instance
+                            .getRoutineById(r.id!);
+                        final newWorkoutLog = await WorkoutDatabaseHelper
+                            .instance
+                            .startWorkout(routineName: r.name);
+                        if (!context.mounted) return;
+                        Navigator.of(context).pop(); // loading
+                        if (fullRoutine != null) {
+                          close();
+                          Navigator.of(context)
+                              .push(MaterialPageRoute(
+                                builder: (_) => LiveWorkoutScreen(
+                                  routine: fullRoutine,
+                                  workoutLog: newWorkoutLog,
+                                ),
+                              ))
+                              .then((_) => _refreshHomeScreen());
+                        }
+                      },
+                      child: Text(
+                          l10n.startButton), // gleicher String wie im Screen
+                    ),
+                    const SizedBox(width: 12),
+
+                    // Titel + Subtitle (Tap = Edit)
+                    Expanded(
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () {
+                          close();
+                          Navigator.of(context)
+                              .push(MaterialPageRoute(
+                                builder: (_) => EditRoutineScreen(routine: r),
+                              ))
+                              .then((_) => _refreshHomeScreen());
+                        },
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              r.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(ctx)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              l10n.editRoutineSubtitle, // „Tap to edit, or start the workout.“
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(ctx).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Optional: Overflow-Icon für spätere Aktionen
+                    const SizedBox(width: 8),
+                    Icon(Icons.more_vert_rounded,
+                        color: Theme.of(ctx).textTheme.bodyMedium?.color),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+
+        // Zusammenbauen
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            freeWorkoutTile,
+            if (routines.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              routinesList,
+            ],
+          ],
+        );
+      },
+    );
+  }
+
   void _handleCreateRoutine() {
     Navigator.of(context).push(
         MaterialPageRoute(builder: (context) => const EditRoutineScreen()));
+  }
+
+  Future<(int, DateTime)?> _openWaterDialog({
+    int? initialQuantity,
+    DateTime? initialTimestamp,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    final key = GlobalKey<WaterDialogContentState>();
+
+    return showDialog<(int, DateTime)?>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.add_liquid_title),
+        content: WaterDialogContent(
+          key: key,
+          initialQuantity: initialQuantity,
+          initialTimestamp: initialTimestamp,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(null),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () {
+              final s = key.currentState;
+              if (s == null) return;
+              final qty = int.tryParse(s.quantityText);
+              if (qty != null && qty > 0) {
+                Navigator.of(ctx).pop((qty, s.selectedDateTime));
+              }
+            },
+            child: Text(l10n.add_button),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _handleAddFood() async {
@@ -172,12 +518,53 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     }
   }
 
-  Future<void> _handleWaterAdd() async {
-    final result = await _showWaterDialog();
-    if (result != null) {
-      await DatabaseHelper.instance.insertWaterEntry(result.$1, result.$2);
-      _refreshHomeScreen();
-    }
+  Future<void> _showAddFluidMenu() async {
+    final l10n = AppLocalizations.of(context)!;
+
+    final key = GlobalKey<WaterDialogContentState>();
+    await showGlassBottomMenu(
+      context: context,
+      title: l10n.add_liquid_title,
+      contentBuilder: (ctx, close) {
+        // Wir bauen den Content + ersetzen unten den Primary-Button onPressed:
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            WaterDialogContent(key: key),
+            const SizedBox(height: 12),
+            // Zugriff auf den Footer-Button: wir finden ihn über context.findAncestorWidgetOfExactType ist overkill.
+            // Einfach hier gleich einen Button setzen:
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: close,
+                    child: Text(l10n.cancel),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () async {
+                      final s = key.currentState;
+                      if (s == null) return;
+                      final qty = int.tryParse(s.quantityText);
+                      if (qty != null && qty > 0) {
+                        await DatabaseHelper.instance
+                            .insertWaterEntry(qty, s.selectedDateTime);
+                        close();
+                        _refreshHomeScreen();
+                      }
+                    },
+                    child: Text(l10n.add_button),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _handleSupplementAdd() async {
@@ -326,6 +713,23 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     );
   }
 
+  Future<void> _captureSnapshot() async {
+    try {
+      final boundary = _pvBoundaryKey.currentContext?.findRenderObject()
+          as RenderRepaintBoundary?;
+      if (boundary == null) return;
+      final img = await boundary.toImage(
+          pixelRatio: MediaQuery.of(context).devicePixelRatio);
+      setState(() => _pvSnapshot = img);
+    } catch (_) {
+      // fail silently – wir fallen dann einfach auf den bisherigen Warp zurück
+    }
+  }
+
+  void _clearSnapshot() {
+    setState(() => _pvSnapshot = null);
+  }
+
   AppBar _buildAppBar(BuildContext context, int index, AppLocalizations l10n) {
     String title = '';
     // Handle titles for Train, Stats, and Profile screens
@@ -340,6 +744,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 .titleLarge
                 ?.copyWith(fontWeight: FontWeight.w900),
           ),
+          actions: [
+            _profileAppBarButton(context), // ⬅️ NEU
+          ],
         );
       case 2:
         return AppBar(
@@ -350,17 +757,23 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 .titleLarge
                 ?.copyWith(fontWeight: FontWeight.w900),
           ),
+          actions: [
+            _profileAppBarButton(context), // ⬅️ NEU
+          ],
         );
       case 3:
         // The profile screen's AppBar is now managed here.
         return AppBar(
           title: Text(
-            l10n.profile,
+            l10n.nutritionHubTitle,
             style: Theme.of(context)
                 .textTheme
                 .titleLarge
                 ?.copyWith(fontWeight: FontWeight.w900),
           ),
+          actions: [
+            _profileAppBarButton(context), // ⬅️ NEU
+          ],
         );
       case 0:
       default:
@@ -392,6 +805,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 _tagebuchKey.currentState?.navigateDay(true);
               },
             ),
+            _profileAppBarButton(context), // ⬅️ NEU
           ],
         );
     }
@@ -459,17 +873,21 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             onPageChanged: _onPageChanged,
             children: <Widget>[
               KeepAlivePage(
-                  storageKey: const PageStorageKey('tab_tagebuch'),
-                  child: DiaryScreen(key: _tagebuchKey)),
+                storageKey: const PageStorageKey('tab_tagebuch'),
+                child: DiaryScreen(key: _tagebuchKey),
+              ),
               const KeepAlivePage(
-                  storageKey: PageStorageKey('tab_workout'),
-                  child: WorkoutHubScreen()),
+                storageKey: PageStorageKey('tab_workout'),
+                child: WorkoutHubScreen(),
+              ),
               const KeepAlivePage(
-                  storageKey: PageStorageKey('tab_stats'),
-                  child: StatisticsHubScreen()),
+                storageKey: PageStorageKey('tab_stats'),
+                child: StatisticsHubScreen(),
+              ),
               const KeepAlivePage(
-                  storageKey: PageStorageKey('tab_profile'),
-                  child: ProfileScreen()),
+                storageKey: PageStorageKey('tab_nutrition'),
+                child: NutritionHubScreen(),
+              ),
             ],
           ),
         ),
@@ -558,18 +976,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                       label: 'Stats', //l10n.statistics,
                     ),
                     BottomNavigationBarItem(
-                      icon: CircleAvatar(
-                        radius: 12,
-                        backgroundColor: Colors.grey.shade300,
-                        backgroundImage: profileService.profileImagePath != null
-                            ? FileImage(File(profileService.profileImagePath!))
-                            : null,
-                        child: profileService.profileImagePath == null
-                            ? const Icon(Icons.person,
-                                size: 16, color: Colors.black54)
-                            : null,
-                      ),
-                      label: l10n.profile,
+                      icon: const Icon(Icons.restaurant_menu_rounded),
+                      label: l10n.nutrition, // oder einfach "Nutrition"
                     ),
                   ],
                 ),
@@ -711,6 +1119,33 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           },
         ),
       ],
+    );
+  }
+
+  Widget _profileAppBarButton(BuildContext context) {
+    final profileService = Provider.of<ProfileService>(context, listen: false);
+
+    return Padding(
+      // ⬇️ Abstand analog zu SummaryCard
+      padding: const EdgeInsets.only(right: DesignConstants.screenPaddingHorizontal),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ProfileScreen()),
+          );
+        },
+        child: CircleAvatar(
+          radius: 18,
+          backgroundColor: Colors.grey.shade300,
+          backgroundImage: (profileService.profileImagePath != null)
+              ? FileImage(File(profileService.profileImagePath!))
+              : null,
+          child: (profileService.profileImagePath == null)
+              ? const Icon(Icons.person, size: 20, color: Colors.black54)
+              : null,
+        ),
+      ),
     );
   }
 }

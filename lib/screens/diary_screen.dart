@@ -498,76 +498,76 @@ class DiaryScreenState extends State<DiaryScreen> {
   }
 
   Widget _buildMealCard(
-  String title,
-  String mealKey,
-  List<TrackedFoodItem> items,
-  _MealMacros macros,
-  AppLocalizations l10n,
-) {
-  final isOpen = _mealExpanded[mealKey] ?? false;
-  final theme = Theme.of(context);
-  final titleStyle = theme.textTheme.titleLarge; // Inter, fett wie im Rest
+    String title,
+    String mealKey,
+    List<TrackedFoodItem> items,
+    _MealMacros macros,
+    AppLocalizations l10n,
+  ) {
+    final isOpen = _mealExpanded[mealKey] ?? false;
+    final theme = Theme.of(context);
+    final titleStyle = theme.textTheme.titleLarge; // Inter, fett wie im Rest
 
-  return SummaryCard(
-    padding: const EdgeInsets.all(12),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // Header (Tippen toggelt)
-        InkWell(
-          onTap: () => setState(() {
-            _mealExpanded[mealKey] = !isOpen;
-          }),
-          child: Row(
-            children: [
-              Expanded(child: Text(title, style: titleStyle)),
-              Icon(isOpen ? Icons.expand_less : Icons.expand_more),
-              const SizedBox(width: 4),
-              IconButton(
-                icon: const Icon(Icons.add_circle),
-                color: theme.colorScheme.primary,
-                onPressed: () => _addFoodToMeal(mealKey),
-                tooltip: l10n.addFoodOption,
-              ),
-            ],
-          ),
-        ),
-
-        // <<< NEU: Makro-Zeile unter dem Titel (eigene Zeile, linksbündig)
-        if (items.isNotEmpty) ...[
-          const SizedBox(height: 4),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              '${macros.calories} kcal · '
-              '${macros.protein}g P · '
-              '${macros.carbs}g C · '
-              '${macros.fat}g F',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w600,
-              ),
+    return SummaryCard(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header (Tippen toggelt)
+          InkWell(
+            onTap: () => setState(() {
+              _mealExpanded[mealKey] = !isOpen;
+            }),
+            child: Row(
+              children: [
+                Expanded(child: Text(title, style: titleStyle)),
+                Icon(isOpen ? Icons.expand_less : Icons.expand_more),
+                const SizedBox(width: 4),
+                IconButton(
+                  icon: const Icon(Icons.add_circle),
+                  color: theme.colorScheme.primary,
+                  onPressed: () => _addFoodToMeal(mealKey),
+                  tooltip: l10n.addFoodOption,
+                ),
+              ],
             ),
           ),
-        ],
 
-        // Inhalt (animiert ein-/ausklappen)
-        AnimatedCrossFade(
-          crossFadeState:
-              isOpen ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-          duration: const Duration(milliseconds: 180),
-          firstChild: Column(
-            children: [
-              if (items.isNotEmpty) const Divider(height: 16),
-              ...items.map((item) => _buildFoodEntryTile(l10n, item)),
-            ],
+          // <<< NEU: Makro-Zeile unter dem Titel (eigene Zeile, linksbündig)
+          if (items.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                '${macros.calories} kcal · '
+                '${macros.protein}g P · '
+                '${macros.carbs}g C · '
+                '${macros.fat}g F',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+
+          // Inhalt (animiert ein-/ausklappen)
+          AnimatedCrossFade(
+            crossFadeState:
+                isOpen ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+            duration: const Duration(milliseconds: 180),
+            firstChild: Column(
+              children: [
+                if (items.isNotEmpty) const Divider(height: 16),
+                ...items.map((item) => _buildFoodEntryTile(l10n, item)),
+              ],
+            ),
+            secondChild: const SizedBox.shrink(),
           ),
-          secondChild: const SizedBox.shrink(),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
 
   Widget _buildMacroText(String text) {
     return Text(

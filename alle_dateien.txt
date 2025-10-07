@@ -871,7 +871,7 @@ abstract class AppLocalizations {
   /// No description provided for @profileScreenTitle.
   ///
   /// In en, this message translates to:
-  /// **'Profile & Goals'**
+  /// **'Profile'**
   String get profileScreenTitle;
 
   /// No description provided for @profileDailyGoals.
@@ -1987,7 +1987,7 @@ abstract class AppLocalizations {
   /// No description provided for @start_button.
   ///
   /// In en, this message translates to:
-  /// **'START'**
+  /// **'Start'**
   String get start_button;
 
   /// No description provided for @today_overview_text.
@@ -3105,6 +3105,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Meal added to diary'**
   String get mealAddedToDiarySuccess;
+
+  /// No description provided for @error.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get error;
+
+  /// No description provided for @mealsViewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'mealsViewTitle'**
+  String get mealsViewTitle;
+
+  /// No description provided for @noNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'No notes'**
+  String get noNotes;
+
+  /// No description provided for @ingredientsCapsLock.
+  ///
+  /// In en, this message translates to:
+  /// **'INGREDIENTS'**
+  String get ingredientsCapsLock;
+
+  /// No description provided for @nutritionSectionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'NUTRITION FACTS'**
+  String get nutritionSectionLabel;
+
+  /// No description provided for @nutritionCalculatedForCurrentAmounts.
+  ///
+  /// In en, this message translates to:
+  /// **'for current quantities'**
+  String get nutritionCalculatedForCurrentAmounts;
+
+  /// No description provided for @startCapsLock.
+  ///
+  /// In en, this message translates to:
+  /// **'START'**
+  String get startCapsLock;
+
+  /// No description provided for @nutritionHubSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover insights, track meals, and plan your nutrition here soon.'**
+  String get nutritionHubSubtitle;
+
+  /// No description provided for @nutritionHubTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition'**
+  String get nutritionHubTitle;
+
+  /// No description provided for @nutrition.
+  ///
+  /// In en, this message translates to:
+  /// **'nutrition'**
+  String get nutrition;
 }
 
 class _AppLocalizationsDelegate
@@ -3330,7 +3390,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get waterEntryTitle => 'Wasser';
 
   @override
-  String get profileScreenTitle => 'Profil & Ziele';
+  String get profileScreenTitle => 'Profil';
 
   @override
   String get profileDailyGoals => 'Tägliche Ziele';
@@ -3942,7 +4002,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Dieser Screen wird bald verfügbar sein!';
 
   @override
-  String get start_button => 'START';
+  String get start_button => 'Start';
 
   @override
   String get today_overview_text => 'HEUTE IM BLICK';
@@ -4537,6 +4597,37 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get mealAddedToDiarySuccess => 'Mahlzeit zum Tagebuch hinzugefügt';
+
+  @override
+  String get error => 'Fehler';
+
+  @override
+  String get mealsViewTitle => 'mealsViewTitle';
+
+  @override
+  String get noNotes => 'Keine Notizen';
+
+  @override
+  String get ingredientsCapsLock => 'ZUTATEN';
+
+  @override
+  String get nutritionSectionLabel => 'NÄHRWERTE';
+
+  @override
+  String get nutritionCalculatedForCurrentAmounts => 'für aktuelle Mengen';
+
+  @override
+  String get startCapsLock => 'START';
+
+  @override
+  String get nutritionHubSubtitle =>
+      'Entdecke Einblicke, verfolge Mahlzeiten und erstelle hier bald deinen Ernährungsplan.';
+
+  @override
+  String get nutritionHubTitle => 'Ernährung';
+
+  @override
+  String get nutrition => 'Ernährung';
 }
 
 
@@ -4729,7 +4820,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get waterEntryTitle => 'Water';
 
   @override
-  String get profileScreenTitle => 'Profile & Goals';
+  String get profileScreenTitle => 'Profile';
 
   @override
   String get profileDailyGoals => 'Daily Goals';
@@ -5336,7 +5427,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get soon_available_snackbar => 'This screen will be available soon';
 
   @override
-  String get start_button => 'START';
+  String get start_button => 'Start';
 
   @override
   String get today_overview_text => 'TODAY IN FOCUS';
@@ -5928,6 +6019,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mealAddedToDiarySuccess => 'Meal added to diary';
+
+  @override
+  String get error => 'Error';
+
+  @override
+  String get mealsViewTitle => 'mealsViewTitle';
+
+  @override
+  String get noNotes => 'No notes';
+
+  @override
+  String get ingredientsCapsLock => 'INGREDIENTS';
+
+  @override
+  String get nutritionSectionLabel => 'NUTRITION FACTS';
+
+  @override
+  String get nutritionCalculatedForCurrentAmounts => 'for current quantities';
+
+  @override
+  String get startCapsLock => 'START';
+
+  @override
+  String get nutritionHubSubtitle =>
+      'Discover insights, track meals, and plan your nutrition here soon.';
+
+  @override
+  String get nutritionHubTitle => 'Nutrition';
+
+  @override
+  String get nutrition => 'nutrition';
 }
 
 
@@ -10467,6 +10589,7 @@ import 'package:lightweight/models/supplement.dart';
 import 'package:lightweight/models/supplement_log.dart';
 import 'package:lightweight/screens/create_food_screen.dart';
 import 'package:lightweight/screens/food_detail_screen.dart';
+import 'package:lightweight/screens/meal_screen.dart';
 import 'package:lightweight/screens/scanner_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
@@ -10505,6 +10628,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
   List<Map<String, dynamic>> _meals = [];
   final Map<int, List<Map<String, dynamic>>> _mealItemsCache = {};
   bool _isLoadingMeals = true;
+  int _currentTab = 0; // 0=Katalog, 1=Zuletzt, 2=Favoriten, 3=Mahlzeiten
+  bool _suspendFab = false;
 
   Future<void> _loadMeals() async {
     setState(() => _isLoadingMeals = true);
@@ -10551,6 +10676,15 @@ class _AddFoodScreenState extends State<AddFoodScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this); // 4 Tabs
+    _currentTab = _tabController.index;
+    _tabController.addListener(() {
+      if (_currentTab != _tabController.index) {
+        setState(() {
+          _currentTab = _tabController.index;
+        });
+      }
+    });
+
     _searchController.addListener(() => setState(() {}));
     _loadFavorites();
     _loadRecentItems();
@@ -10643,19 +10777,65 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     }
   }
 
+  Future<void> _createMealAndOpenEditor(AppLocalizations l10n) async {
+    // Solider Default-Name (nicht leer wegen NOT NULL in DB)
+    final defaultName = l10n.mealTypeLabel; // z.B. "Mahlzeit" / "Meal"
+    final newMealId = await DatabaseHelper.instance.insertMeal(
+      name: defaultName,
+      notes: '',
+    );
+
+    final meal = {'id': newMealId, 'name': defaultName, 'notes': ''};
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => MealScreen(meal: meal, startInEdit: true),
+      ),
+    );
+
+    // Nach Rückkehr Liste aktualisieren
+    await _loadMeals();
+
+    // (Optionaler Feinschliff)
+    // Wenn Nutzer abbricht und nichts geändert hat: Platzhalter wieder entfernen.
+    try {
+      final items = await DatabaseHelper.instance.getMealItems(newMealId);
+      // Falls noch mit Defaultnamen und ohne Zutaten → löschen
+      final created = _meals.firstWhere((m) => m['id'] == newMealId);
+      if ((created['name'] as String) == defaultName && items.isEmpty) {
+        await DatabaseHelper.instance.deleteMeal(newMealId);
+        await _loadMeals();
+      }
+    } catch (_) {/* egal, Cleanup ist optional */}
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isLightMode = Theme.of(context).brightness == Brightness.light;
 
+    // FAB-Konfiguration je Tab
+    VoidCallback? fabOnPressed;
+    String fabLabel;
+    if (_suspendFab) {
+      fabOnPressed = null;
+      fabLabel = '';
+    } else if (_currentTab == 3) {
+      // Mahlzeiten-Tab
+      fabLabel = l10n.mealsCreate;
+      fabOnPressed = () => _createMealAndOpenEditor(l10n);
+    } else {
+      // Alle anderen Tabs
+      fabLabel = l10n.fabCreateOwnFood;
+      fabOnPressed = _navigateAndCreateFood;
+    }
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      // KORREKTUR 1: AppBar entfernt, Titel und TabBar direkt in die ListView
-      // KORREKTUR 2: Den grauen Balken entfernen, indem wir einen leeren AppBar verwenden.
       appBar: AppBar(
-        automaticallyImplyLeading: true, // ← shows the back chevron
+        automaticallyImplyLeading: true,
         title: Text(
-          l10n.addFoodTitle, // or whatever your l10n key is
+          l10n.addFoodTitle,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w900,
               ),
@@ -10679,11 +10859,11 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                   labelColor: isLightMode ? Colors.black : Colors.white,
                   unselectedLabelColor: Colors.grey.shade600,
                   labelStyle: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.w900),
+                      fontSize: 16, fontWeight: FontWeight.w800),
                   unselectedLabelStyle: const TextStyle(
                       fontSize: 16, fontWeight: FontWeight.w800),
                   tabs: [
-                    Tab(text: l10n.tabCatalogSearch), // Kombi-Tab
+                    Tab(text: l10n.tabCatalogSearch),
                     Tab(text: l10n.tabRecent),
                     Tab(text: l10n.tabFavorites),
                     Tab(text: l10n.tabMeals),
@@ -10692,24 +10872,25 @@ class _AddFoodScreenState extends State<AddFoodScreen>
               ],
             ),
           ),
-          // WICHTIG: genau EIN Expanded + EIN TabBarView
           Expanded(
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildCatalogSearchTab(
-                    l10n), // kombiniert Suche + Grundnahrungsmittel
+                _buildCatalogSearchTab(l10n),
                 _buildRecentTab(l10n),
                 _buildFavoritesTab(l10n),
-                _buildMealsTab(l10n), // Empty State
+                _buildMealsTab(l10n),
               ],
             ),
           ),
         ],
       ),
-      // KORRIGIERT: label hinzugefügt
-      floatingActionButton: GlassFab(
-          label: l10n.fabCreateOwnFood, onPressed: _navigateAndCreateFood),
+      floatingActionButton: _suspendFab
+          ? null
+          : GlassFab(
+              label: fabLabel,
+              onPressed: fabOnPressed ?? () {}, // ✅ Fallback: immer non-null
+            ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
@@ -11126,10 +11307,20 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                   final cat = _baseCategories[idx];
                   final key = cat['key'] as String;
                   final emoji = (cat['emoji'] as String?)?.trim();
-                  final title =
-                      (cat['name_de'] as String?)?.trim().isNotEmpty == true
-                          ? cat['name_de'] as String
-                          : (cat['name_en'] as String? ?? key);
+                  final locale = Localizations.localeOf(context).languageCode;
+                  final title = () {
+                    final de = (cat['name_de'] as String?)?.trim();
+                    final en = (cat['name_en'] as String?)?.trim();
+                    if (locale == 'de') {
+                      return (de?.isNotEmpty == true)
+                          ? de!
+                          : (en?.isNotEmpty == true ? en! : key);
+                    } else {
+                      return (en?.isNotEmpty == true)
+                          ? en!
+                          : (de?.isNotEmpty == true ? de! : key);
+                    }
+                  }();
 
                   final loading = _loadingCats.contains(key);
                   final items = _catItems[key];
@@ -11231,6 +11422,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     }
 
     if (_meals.isEmpty) {
+      // Empty State: kein Top-Button mehr – Erstellen läuft über den FAB
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -11250,12 +11442,6 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                       .textTheme
                       .bodyLarge
                       ?.copyWith(color: Colors.grey.shade600)),
-              const SizedBox(height: DesignConstants.spacingL),
-              FilledButton.icon(
-                onPressed: () => _openMealEditor(l10n),
-                icon: const Icon(Icons.add),
-                label: Text(l10n.mealsCreate),
-              ),
             ],
           ),
         ),
@@ -11266,24 +11452,10 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       onRefresh: _loadMeals,
       child: ListView.builder(
         padding: DesignConstants.cardPadding,
-        itemCount: _meals.length + 1,
+        itemCount: _meals.length,
         itemBuilder: (_, i) {
-          if (i == 0) {
-            // Header-Aktion: "Neue Mahlzeit"
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: FilledButton.icon(
-                  onPressed: () => _openMealEditor(l10n),
-                  icon: const Icon(Icons.add),
-                  label: Text(l10n.mealsCreate),
-                ),
-              ),
-            );
-          }
-          final meal = _meals[i - 1];
-          return _buildMealCard(meal, l10n);
+          final meal = _meals[i];
+          return _buildMealCard(meal, l10n); // enthält jetzt Swipe-Actions
         },
       ),
     );
@@ -11291,15 +11463,74 @@ class _AddFoodScreenState extends State<AddFoodScreen>
 
   Widget _buildMealCard(Map<String, dynamic> meal, AppLocalizations l10n) {
     final color = Theme.of(context).colorScheme;
+
+    Future<Map<String, num>> computeMealTotals(int mealId) async {
+      final items = await _getMealItems(mealId);
+      int kcal = 0;
+      double c = 0, f = 0, p = 0;
+
+      for (final it in items) {
+        final bc = it['barcode'] as String;
+        final qty = (it['quantity_in_grams'] as num?)?.toDouble() ?? 0.0;
+        final fi = await ProductDatabaseHelper.instance.getProductByBarcode(bc);
+        if (fi == null) continue;
+
+        final factor = qty / 100.0;
+        kcal += ((fi.calories ?? 0) * factor).round();
+        c += (fi.carbs ?? 0) * factor;
+        f += (fi.fat ?? 0) * factor;
+        p += (fi.protein ?? 0) * factor;
+      }
+      return {
+        'kcal': kcal,
+        'c': c,
+        'f': f,
+        'p': p,
+      };
+    }
+
     return SummaryCard(
       child: ListTile(
         leading: Icon(Icons.restaurant, color: color.primary),
         title: Text(meal['name'] as String),
-        subtitle: FutureBuilder<List<Map<String, dynamic>>>(
-          future: _getMealItems(meal['id'] as int),
+        subtitle: FutureBuilder<Map<String, num>>(
+          future: computeMealTotals(meal['id'] as int),
           builder: (_, snap) {
-            final count = snap.data?.length ?? 0;
-            return Text('${l10n.mealIngredientsTitle}: $count');
+            // Fallback: nur Anzahl Zutaten, falls noch lädt
+            if (!snap.hasData) {
+              return FutureBuilder<List<Map<String, dynamic>>>(
+                future: _getMealItems(meal['id'] as int),
+                builder: (_, s2) {
+                  final count = s2.data?.length ?? 0;
+                  return Text('${l10n.mealIngredientsTitle}: $count');
+                },
+              );
+            }
+            final t = snap.data!;
+            final c = (t['c'] ?? 0).toDouble();
+            final f = (t['f'] ?? 0).toDouble();
+            final p = (t['p'] ?? 0).toDouble();
+            final kcal = (t['kcal'] ?? 0).toInt();
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                FutureBuilder<List<Map<String, dynamic>>>(
+                  future: _getMealItems(meal['id'] as int),
+                  builder: (_, s2) {
+                    final count = s2.data?.length ?? 0;
+                    return Text('${l10n.mealIngredientsTitle}: $count');
+                  },
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$kcal kcal   •   C ${c.toStringAsFixed(1)} g   •   F ${f.toStringAsFixed(1)} g   •   P ${p.toStringAsFixed(1)} g',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey.shade600,
+                      ),
+                ),
+              ],
+            );
           },
         ),
         trailing: Wrap(
@@ -11313,7 +11544,15 @@ class _AddFoodScreenState extends State<AddFoodScreen>
             IconButton(
               tooltip: l10n.mealsEdit,
               icon: const Icon(Icons.edit),
-              onPressed: () => _openMealEditor(l10n, mealToEdit: meal),
+              onPressed: () async {
+                // Neuer Screen öffnen (View), direkt in Edit wechseln
+                await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => MealScreen(meal: meal, startInEdit: true),
+                  ),
+                );
+                await _loadMeals();
+              },
             ),
             IconButton(
               tooltip: l10n.mealsDelete,
@@ -11322,6 +11561,13 @@ class _AddFoodScreenState extends State<AddFoodScreen>
             ),
           ],
         ),
+        onTap: () async {
+          // Neuer Detail-Screen (View)
+          await Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => MealScreen(meal: meal)),
+          );
+          await _loadMeals();
+        },
       ),
     );
   }
@@ -11339,14 +11585,18 @@ class _AddFoodScreenState extends State<AddFoodScreen>
             await _getMealItems(mealToEdit['id'] as int))
         : <Map<String, dynamic>>[];
 
-    await showModalBottomSheet(
+    setState(() => _suspendFab = true);
+    final result = await showModalBottomSheet<bool>(
       context: context,
+      useRootNavigator: true, // <- wichtig: über allen Overlays
       isScrollControlled: true,
       backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) {
         return StatefulBuilder(builder: (ctx, modalSetState) {
+          // verhindert Doppelklicks auf "Speichern"
+          bool saving = false;
           Future<void> addIngredient() async {
             final picked = await _pickIngredient(l10n);
             if (picked == null) return;
@@ -11404,6 +11654,10 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                 const SizedBox(height: 12),
                 Row(
                   children: [
+                    // Live-Validierung: Name + mind. 1 Zutat
+                    // (keine Listener nötig; wir lesen direkt unten aus nameCtrl/items)
+                    // Hinweis: Keine UI-Änderung hier – nur Logik im Save-Handler.
+                    // (enabled/disabled steuern wir über onPressed: null)
                     Text(l10n.mealIngredientsTitle,
                         style: Theme.of(ctx).textTheme.titleMedium),
                     const Spacer(),
@@ -11468,39 +11722,49 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                     const Spacer(),
                     FilledButton(
                       onPressed: () async {
+                        print("save button clicked");
                         final name = nameCtrl.text.trim();
                         if (name.isEmpty) return;
-                        if (isEdit) {
-                          final mealId = mealToEdit['id'] as int;
-                          await DatabaseHelper.instance.updateMeal(mealId,
-                              name: name, notes: notesCtrl.text.trim());
-                          // Sync items: simple strategy → clear & insert current draft
-                          await DatabaseHelper.instance.clearMealItems(mealId);
-                          for (final it in items) {
-                            await DatabaseHelper.instance.addMealItem(
-                              mealId,
-                              barcode: it['barcode'] as String,
-                              grams: it['quantity_in_grams'] as int,
+                        try {
+                          if (isEdit) {
+                            final mealId = mealToEdit['id'] as int;
+                            await DatabaseHelper.instance.updateMeal(mealId,
+                                name: name, notes: notesCtrl.text.trim());
+                            await DatabaseHelper.instance
+                                .clearMealItems(mealId);
+                            for (final it in items) {
+                              await DatabaseHelper.instance.addMealItem(
+                                mealId,
+                                barcode: it['barcode'] as String,
+                                grams: it['quantity_in_grams'] as int,
+                              );
+                            }
+                          } else {
+                            final mealId =
+                                await DatabaseHelper.instance.insertMeal(
+                              name: name,
+                              notes: notesCtrl.text.trim(),
                             );
+                            for (final it in items) {
+                              await DatabaseHelper.instance.addMealItem(
+                                mealId,
+                                barcode: it['barcode'] as String,
+                                grams: it['quantity_in_grams'] as int,
+                              );
+                            }
                           }
-                        } else {
-                          final mealId = await DatabaseHelper.instance
-                              .insertMeal(
-                                  name: name, notes: notesCtrl.text.trim());
-                          for (final it in items) {
-                            await DatabaseHelper.instance.addMealItem(
-                              mealId,
-                              barcode: it['barcode'] as String,
-                              grams: it['quantity_in_grams'] as int,
-                            );
+                          _mealItemsCache.clear();
+                          await _loadMeals();
+                          if (mounted) Navigator.of(ctx).pop();
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(l10n.mealSaved)));
                           }
-                        }
-                        _mealItemsCache.clear();
-                        await _loadMeals();
-                        if (mounted) Navigator.of(ctx).pop();
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(l10n.mealSaved)));
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('${l10n.error}: $e')));
+                          }
                         }
                       },
                       child: Text(l10n.save),
@@ -11513,6 +11777,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         });
       },
     );
+    if (mounted) setState(() => _suspendFab = false);
   }
 
   Future<void> _deleteMeal(
@@ -12791,7 +13056,7 @@ class DiaryScreenState extends State<DiaryScreen> {
   ) {
     final isOpen = _mealExpanded[mealKey] ?? false;
     final theme = Theme.of(context);
-    final titleStyle = theme.textTheme.titleLarge; // -> Inter aus deinem Theme
+    final titleStyle = theme.textTheme.titleLarge; // Inter, fett wie im Rest
 
     return SummaryCard(
       padding: const EdgeInsets.all(12),
@@ -12806,17 +13071,6 @@ class DiaryScreenState extends State<DiaryScreen> {
             child: Row(
               children: [
                 Expanded(child: Text(title, style: titleStyle)),
-                if (items.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: Text(
-                      '${macros.calories} kcal · ${macros.protein}g P · ${macros.carbs}g C · ${macros.fat}g F',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
                 Icon(isOpen ? Icons.expand_less : Icons.expand_more),
                 const SizedBox(width: 4),
                 IconButton(
@@ -12828,6 +13082,24 @@ class DiaryScreenState extends State<DiaryScreen> {
               ],
             ),
           ),
+
+          // <<< NEU: Makro-Zeile unter dem Titel (eigene Zeile, linksbündig)
+          if (items.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                '${macros.calories} kcal · '
+                '${macros.protein}g P · '
+                '${macros.carbs}g C · '
+                '${macros.fat}g F',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
 
           // Inhalt (animiert ein-/ausklappen)
           AnimatedCrossFade(
@@ -13010,6 +13282,54 @@ class DiaryAppBar extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+
+===== Datei: /Users/richard/Projects/Lightweight/lightweight/lib/screens/nutrition_hub_screen.dart =====
+
+import 'package:flutter/material.dart';
+import 'package:lightweight/generated/app_localizations.dart';
+import 'package:lightweight/util/design_constants.dart';
+
+class NutritionHubScreen extends StatelessWidget {
+  const NutritionHubScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(DesignConstants.spacingXL),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.restaurant_menu_rounded,
+                  size: 72, color: theme.colorScheme.primary.withOpacity(0.6)),
+              const SizedBox(height: DesignConstants.spacingL),
+              Text(
+                l10n.nutritionHubTitle ?? 'Nutrition Hub',
+                style: theme.textTheme.headlineSmall
+                    ?.copyWith(fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: DesignConstants.spacingS),
+              Text(
+                l10n.nutritionHubSubtitle ??
+                    'Discover insights, track meals, and plan your nutrition here soon.',
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(color: Colors.grey.shade500),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -15001,6 +15321,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final profileService = Provider.of<ProfileService>(context);
 
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          l10n.profileScreenTitle,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+        ),
+      ),
       body: ListView(
         padding: DesignConstants.cardPadding,
         children: [
@@ -16010,6 +16343,69 @@ class _Hint extends StatelessWidget {
 }
 
 
+===== Datei: /Users/richard/Projects/Lightweight/lightweight/lib/screens/meals_screen.dart =====
+
+import 'package:flutter/material.dart';
+import 'meal_editor_screen.dart';
+
+class MealsScreen extends StatelessWidget {
+  const MealsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // Platzhalter-Liste – später mit echten Meals füllen
+    final meals = <String>[];
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Meals')),
+      body: meals.isEmpty
+          ? const Center(
+              child: Text(
+                'Noch keine Meals.\nTippe auf das +, um eines zu erstellen.',
+                textAlign: TextAlign.center,
+              ),
+            )
+          : ListView.separated(
+              itemCount: meals.length,
+              separatorBuilder: (_, __) => const Divider(height: 1),
+              itemBuilder: (context, i) => ListTile(
+                title: Text(meals[i]),
+                onTap: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MealEditorScreen(initialName: meals[i]),
+                    ),
+                  );
+                  if (result == true && context.mounted) {
+                    // TODO: Liste neu laden (später)
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Meal gespeichert')),
+                    );
+                  }
+                },
+              ),
+            ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const MealEditorScreen()),
+          );
+          if (result == true && context.mounted) {
+            // TODO: Liste neu laden (später)
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Meal gespeichert')),
+            );
+          }
+        },
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+
 ===== Datei: /Users/richard/Projects/Lightweight/lightweight/lib/screens/create_food_screen.dart =====
 
 // lib/screens/create_food_screen.dart (Final & De-Materialisiert)
@@ -16666,7 +17062,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
               child: ListView(
                 padding: DesignConstants.cardPadding,
                 children: [
-                  _buildSectionTitle(context, l10n.start_button),
+                  _buildSectionTitle(context, l10n.startCapsLock),
                   SummaryCard(
                     child: InkWell(
                       onTap: _startEmptyWorkout,
@@ -19335,6 +19731,909 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
 }
 
 
+===== Datei: /Users/richard/Projects/Lightweight/lightweight/lib/screens/meal_screen.dart =====
+
+import 'package:flutter/material.dart';
+import 'package:lightweight/data/database_helper.dart';
+import 'package:lightweight/data/product_database_helper.dart';
+import 'package:lightweight/generated/app_localizations.dart';
+import 'package:lightweight/models/food_entry.dart';
+import 'package:lightweight/models/food_item.dart';
+import 'package:lightweight/models/supplement.dart';
+import 'package:lightweight/models/supplement_log.dart';
+import 'package:lightweight/screens/food_detail_screen.dart';
+import 'package:lightweight/widgets/glass_fab.dart';
+import 'package:lightweight/widgets/summary_card.dart';
+import 'package:lightweight/widgets/swipe_action_background.dart';
+
+class MealScreen extends StatefulWidget {
+  final Map<String, dynamic> meal; // erwartet: {id, name, notes}
+  final bool startInEdit;
+
+  const MealScreen({
+    super.key,
+    required this.meal,
+    this.startInEdit = false,
+  });
+
+  @override
+  State<MealScreen> createState() => _MealScreenState();
+}
+
+class _MealScreenState extends State<MealScreen> {
+  late TextEditingController _nameCtrl;
+  late TextEditingController _notesCtrl;
+  bool _editMode = false;
+  bool _saving = false;
+
+  List<Map<String, dynamic>> _items = [];
+  bool _loadingItems = true;
+
+  // Totals (werden bei jedem Build aus _items berechnet)
+  int _totalKcal = 0;
+  double _totalC = 0, _totalF = 0, _totalP = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _editMode = widget.startInEdit;
+    _nameCtrl =
+        TextEditingController(text: widget.meal['name'] as String? ?? '');
+    _notesCtrl =
+        TextEditingController(text: widget.meal['notes'] as String? ?? '');
+    _loadItems();
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _notesCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadItems() async {
+    setState(() => _loadingItems = true);
+    final id = widget.meal['id'] as int;
+    final rows = await DatabaseHelper.instance.getMealItems(id);
+    _items = List<Map<String, dynamic>>.from(rows);
+    await _recomputeTotals(); // initiale Totals
+    if (mounted) setState(() => _loadingItems = false);
+  }
+
+  /// Rechnet die Summen für kcal / C / F / P einmal durch.
+  Future<void> _recomputeTotals() async {
+    int kcal = 0;
+    double c = 0, f = 0, p = 0;
+
+    for (final it in _items) {
+      final bc = it['barcode'] as String;
+      final qty = (it['quantity_in_grams'] as num?)?.toDouble() ?? 0.0;
+      final fi = await ProductDatabaseHelper.instance.getProductByBarcode(bc);
+      if (fi == null) continue;
+
+      final factor = qty / 100.0;
+      final itemKcal = (fi.calories ?? 0) * factor;
+      final itemC = (fi.carbs ?? 0) * factor;
+      final itemF = (fi.fat ?? 0) * factor;
+      final itemP = (fi.protein ?? 0) * factor;
+
+      kcal += itemKcal.round();
+      c += itemC;
+      f += itemF;
+      p += itemP;
+    }
+
+    _totalKcal = kcal;
+    _totalC = c;
+    _totalF = f;
+    _totalP = p;
+  }
+
+  Widget _buildSectionTitle(BuildContext context, String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: Colors.grey[600],
+              fontWeight: FontWeight.bold,
+            ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    final canSave =
+        _nameCtrl.text.trim().isNotEmpty && _items.isNotEmpty && !_saving;
+
+    // Floating Action Button je Modus
+    Widget? fab;
+    if (_editMode) {
+      fab = GlassFab(
+        label: l10n.mealAddIngredient, // „Zutat hinzufügen“
+        onPressed: _addIngredientFlow,
+      );
+    } else {
+      if (_items.isNotEmpty) {
+        fab = GlassFab(
+          label: l10n.mealsAddToDiary, // „Zum Tagebuch hinzufügen“
+          onPressed: _addMealToDiaryFlow,
+        );
+      } else {
+        fab = null;
+      }
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+        title: Text(
+          _editMode
+              ? l10n.mealsEdit // (L10n: du kannst das zu „Bearbeiten“ ändern)
+              : (_nameCtrl.text.isNotEmpty
+                  ? _nameCtrl.text
+                  : l10n.mealsViewTitle),
+          style:
+              theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+        ),
+        actions: [
+          if (_editMode)
+            TextButton(
+              onPressed: canSave ? _save : null,
+              child: _saving
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(
+                      l10n.save,
+                      style: TextStyle(
+                        color: canSave
+                            ? theme.colorScheme.primary
+                            : theme.disabledColor,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+            )
+          else
+            TextButton(
+              onPressed: () => setState(() => _editMode = true),
+              child: Text(
+                l10n.mealsEdit,
+                style: TextStyle(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+        ],
+      ),
+      floatingActionButton: fab,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      body: _loadingItems
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
+              children: [
+                // NAME & NOTIZEN
+                SummaryCard(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _editMode
+                            ? TextField(
+                                controller: _nameCtrl,
+                                textInputAction: TextInputAction.done,
+                                decoration: InputDecoration(
+                                    labelText: l10n.mealNameLabel),
+                                onChanged: (_) => setState(() {}),
+                              )
+                            : Text(
+                                _nameCtrl.text.isNotEmpty
+                                    ? _nameCtrl.text
+                                    : l10n.unknown,
+                                style: theme.textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                        const SizedBox(height: 8),
+                        _editMode
+                            ? TextField(
+                                controller: _notesCtrl,
+                                maxLines: 3,
+                                decoration: InputDecoration(
+                                    labelText: l10n.mealNotesLabel),
+                              )
+                            : Text(
+                                _notesCtrl.text.isNotEmpty
+                                    ? _notesCtrl.text
+                                    : l10n.noNotes,
+                                style: theme.textTheme.bodyMedium
+                                    ?.copyWith(color: Colors.grey.shade600),
+                              ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 18),
+
+                // === NÄHRWERTE (Gesamtsumme) ===
+                _buildSectionTitle(context, l10n.nutritionSectionLabel),
+                SummaryCard(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 14),
+                    child: FutureBuilder<void>(
+                      future: _recomputeTotals(),
+                      builder: (_, __) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _items.isEmpty ? '– kcal' : '$_totalKcal kcal',
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Wrap(
+                              spacing: 16,
+                              runSpacing: 6,
+                              children: [
+                                _MacroChip(
+                                    label: 'C',
+                                    value: _items.isEmpty
+                                        ? '–'
+                                        : _format1(_totalC),
+                                    unit: 'g'),
+                                _MacroChip(
+                                    label: 'F',
+                                    value: _items.isEmpty
+                                        ? '–'
+                                        : _format1(_totalF),
+                                    unit: 'g'),
+                                _MacroChip(
+                                    label: 'P',
+                                    value: _items.isEmpty
+                                        ? '–'
+                                        : _format1(_totalP),
+                                    unit: 'g'),
+                              ],
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 18),
+
+                // === ZUTATEN ===
+                _buildSectionTitle(context, l10n.ingredientsCapsLock),
+
+                if (_items.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child:
+                        Text(l10n.emptyCategory, textAlign: TextAlign.center),
+                  )
+                else
+                  Column(
+                    children: List.generate(_items.length, (i) {
+                      final it = _items[i];
+                      return _IngredientCard(
+                        key: ValueKey('ing_$i'),
+                        item: it,
+                        editMode: _editMode,
+                        showPerIngredientMacros: !_editMode,
+                        onQtyChanged: (val) async {
+                          _items[i]['quantity_in_grams'] = val;
+                          await _recomputeTotals();
+                          if (mounted) setState(() {});
+                        },
+                        onDelete: () async {
+                          final ok = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: Text(l10n.deleteConfirmTitle),
+                                  content: Text(l10n.deleteConfirmContent),
+                                  actions: [
+                                    TextButton(
+                                        onPressed: () =>
+                                            Navigator.of(ctx).pop(false),
+                                        child: Text(l10n.cancel)),
+                                    TextButton(
+                                        onPressed: () =>
+                                            Navigator.of(ctx).pop(true),
+                                        child: Text(l10n.delete)),
+                                  ],
+                                ),
+                              ) ??
+                              false;
+                          if (ok) {
+                            setState(() => _items.removeAt(i));
+                            await _recomputeTotals();
+                            if (mounted) setState(() {});
+                          }
+                        },
+                      );
+                    }),
+                  ),
+              ],
+            ),
+    );
+  }
+
+  String _format1(double v) => v.toStringAsFixed(1);
+
+  Future<void> _save() async {
+    if (_saving) return;
+    final name = _nameCtrl.text.trim();
+    if (name.isEmpty || _items.isEmpty) return;
+
+    setState(() => _saving = true);
+    try {
+      final mealId = widget.meal['id'] as int;
+      await DatabaseHelper.instance.updateMeal(
+        mealId,
+        name: name,
+        notes: _notesCtrl.text.trim(),
+      );
+      await DatabaseHelper.instance.clearMealItems(mealId);
+      for (final it in _items) {
+        final grams = (it['quantity_in_grams'] as int?) ?? 0;
+        await DatabaseHelper.instance.addMealItem(
+          mealId,
+          barcode: it['barcode'] as String,
+          grams: grams,
+        );
+      }
+      if (mounted) {
+        setState(() => _editMode = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.mealSaved)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${AppLocalizations.of(context)!.error}: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  /// Food auswählen & Menge setzen
+  Future<void> _addIngredientFlow() async {
+    final l10n = AppLocalizations.of(context)!;
+    final searchCtrl = TextEditingController();
+    final qtyCtrl = TextEditingController(text: '100');
+    List<FoodItem> results = [];
+    bool loading = false;
+
+    Future<void> runSearch(String q) async {
+      if (q.trim().isEmpty) {
+        results = [];
+        (context as Element).markNeedsBuild();
+        return;
+      }
+      loading = true;
+      (context as Element).markNeedsBuild();
+      results = await ProductDatabaseHelper.instance.searchProducts(q.trim());
+      loading = false;
+      (context as Element).markNeedsBuild();
+    }
+
+    final picked = await showDialog<(String, int)?>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: Text(l10n.mealAddIngredient),
+          content: SizedBox(
+            width: 500,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: searchCtrl,
+                  decoration: InputDecoration(
+                    hintText: l10n.searchHintText,
+                    prefixIcon: const Icon(Icons.search),
+                  ),
+                  onChanged: runSearch,
+                ),
+                const SizedBox(height: 8),
+                if (loading) const LinearProgressIndicator(minHeight: 2),
+                Flexible(
+                  child: results.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Text(l10n.searchInitialHint),
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: results.length,
+                          itemBuilder: (_, i) {
+                            final fi = results[i];
+                            return ListTile(
+                              dense: true,
+                              title: Text(fi.name),
+                              subtitle: Text(fi.brand.isNotEmpty
+                                  ? fi.brand
+                                  : l10n.noBrand),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.add),
+                                onPressed: () async {
+                                  final grams = await showDialog<int>(
+                                    context: context,
+                                    builder: (_) => AlertDialog(
+                                      title:
+                                          Text(l10n.mealIngredientAmountLabel),
+                                      content: TextField(
+                                        controller: qtyCtrl,
+                                        keyboardType: const TextInputType
+                                            .numberWithOptions(decimal: false),
+                                        decoration: const InputDecoration(
+                                            suffixText: 'g/ml'),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context, null),
+                                            child: Text(l10n.cancel)),
+                                        TextButton(
+                                            onPressed: () {
+                                              final val = int.tryParse(
+                                                  qtyCtrl.text.trim());
+                                              Navigator.pop(context, val);
+                                            },
+                                            child: Text(l10n.add_button)),
+                                      ],
+                                    ),
+                                  );
+                                  if (grams != null && grams > 0) {
+                                    Navigator.of(ctx).pop((fi.barcode, grams));
+                                  }
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, null),
+                child: Text(l10n.cancel)),
+          ],
+        );
+      },
+    );
+
+    if (picked != null) {
+      final (barcode, grams) = picked;
+      setState(() {
+        _items.add({'barcode': barcode, 'quantity_in_grams': grams});
+      });
+      await _recomputeTotals();
+      if (mounted) setState(() {});
+    }
+  }
+
+  /// Aktuelle Mahlzeit als einzelne FoodEntries ins Tagebuch
+  Future<void> _addMealToDiaryFlow() async {
+    final l10n = AppLocalizations.of(context)!;
+
+    // Produkte laden (Name, Liquid, Koffein)
+    final Map<String, FoodItem?> products = {};
+    for (final it in _items) {
+      final bc = it['barcode'] as String;
+      products[bc] =
+          await ProductDatabaseHelper.instance.getProductByBarcode(bc);
+    }
+
+    // Editierbare Mengen
+    final Map<String, TextEditingController> qtyCtrls = {
+      for (final it in _items)
+        (it['barcode'] as String):
+            TextEditingController(text: '${it['quantity_in_grams']}')
+    };
+
+    // Meal-Typen (interne Keys müssen mit Diary übereinstimmen)
+    const internalTypes = [
+      'mealtypeBreakfast',
+      'mealtypeLunch',
+      'mealtypeDinner',
+      'mealtypeSnack',
+    ];
+    String selectedMealType = internalTypes.first;
+
+    final Map<String, String> mealTypeLabel = {
+      'mealtypeBreakfast': l10n.mealtypeBreakfast,
+      'mealtypeLunch': l10n.mealtypeLunch,
+      'mealtypeDinner': l10n.mealtypeDinner,
+      'mealtypeSnack': l10n.mealtypeSnack,
+    };
+
+    final ok = await showModalBottomSheet<bool>(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          builder: (ctx) {
+            return StatefulBuilder(
+              builder: (ctx, modalSetState) {
+                return Padding(
+                  padding: EdgeInsets.only(
+                    left: 16,
+                    right: 16,
+                    top: 12,
+                    bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade500,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        l10n.mealsAddToDiary,
+                        style: Theme.of(ctx)
+                            .textTheme
+                            .titleLarge
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(_nameCtrl.text,
+                          style: Theme.of(ctx).textTheme.titleMedium),
+                      const SizedBox(height: 12),
+
+                      DropdownButtonFormField<String>(
+                        initialValue: selectedMealType,
+                        decoration: InputDecoration(
+                          labelText: l10n.mealTypeLabel,
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        items: internalTypes
+                            .map((key) => DropdownMenuItem(
+                                  value: key,
+                                  child: Text(mealTypeLabel[key] ?? key),
+                                ))
+                            .toList(),
+                        onChanged: (v) {
+                          if (v != null) {
+                            modalSetState(() => selectedMealType = v);
+                          }
+                        },
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // Mengen anpassen vor dem Buchen
+                      Flexible(
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          itemCount: _items.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 10),
+                          itemBuilder: (_, i) {
+                            final it = _items[i];
+                            final bc = it['barcode'] as String;
+                            final fi = products[bc];
+                            final displayName =
+                                (fi?.name.isNotEmpty ?? false) ? fi!.name : bc;
+                            final unit = (fi?.isLiquid == true) ? 'ml' : 'g';
+
+                            return Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Padding(
+                                  padding: EdgeInsets.only(top: 14),
+                                  child: Icon(Icons.lunch_dining),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: qtyCtrls[bc],
+                                    keyboardType:
+                                        const TextInputType.numberWithOptions(
+                                            decimal: true),
+                                    decoration: InputDecoration(
+                                      labelText: displayName,
+                                      helperText: l10n.amountLabel,
+                                      suffixText: unit,
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(false),
+                            child: Text(l10n.cancel),
+                          ),
+                          const Spacer(),
+                          FilledButton(
+                            onPressed: () => Navigator.of(ctx).pop(true),
+                            child: Text(l10n.save),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        ) ??
+        false;
+
+    if (!ok) return;
+
+    // Buchen
+    final ts = DateTime.now();
+    for (final it in _items) {
+      final bc = it['barcode'] as String;
+      final ctrl = qtyCtrls[bc]!;
+      final qty =
+          int.tryParse(ctrl.text.trim()) ?? (it['quantity_in_grams'] as int);
+
+      await DatabaseHelper.instance.insertFoodEntry(
+        FoodEntry(
+          barcode: bc,
+          timestamp: ts,
+          quantityInGrams: qty,
+          mealType: selectedMealType,
+        ),
+      );
+
+      final fi = await ProductDatabaseHelper.instance.getProductByBarcode(bc);
+      if (fi != null) {
+        if (fi.isLiquid == true) {
+          await DatabaseHelper.instance.insertWaterEntry(qty, ts);
+        }
+        final c100 = fi.caffeineMgPer100ml;
+        if (fi.isLiquid == true && c100 != null && c100 > 0) {
+          await _logCaffeineDose(c100 * (qty / 100.0), ts);
+        }
+      }
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.mealAddedToDiarySuccess)),
+      );
+    }
+  }
+
+  Future<void> _logCaffeineDose(double doseMg, DateTime timestamp) async {
+    if (doseMg <= 0) return;
+
+    final supplements = await DatabaseHelper.instance.getAllSupplements();
+    final caffeine = supplements.firstWhere(
+      (s) => (s.code == 'caffeine') || s.name.toLowerCase() == 'caffeine',
+      orElse: () => Supplement(
+        name: 'Caffeine',
+        defaultDose: 100,
+        unit: 'mg',
+        dailyLimit: 400,
+        code: 'caffeine',
+        isBuiltin: true,
+      ),
+    );
+
+    final caffeineId = caffeine.id ??
+        (await DatabaseHelper.instance.insertSupplement(caffeine)).id!;
+
+    await DatabaseHelper.instance.insertSupplementLog(
+      SupplementLog(
+        supplementId: caffeineId,
+        dose: doseMg,
+        unit: 'mg',
+        timestamp: timestamp,
+      ),
+    );
+  }
+}
+
+/// Kleines “Chip”-Label für C/F/P
+class _MacroChip extends StatelessWidget {
+  final String label;
+  final String value;
+  final String unit;
+  const _MacroChip({
+    required this.label,
+    required this.value,
+    required this.unit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        '$label  $value$unit',
+        style: text.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+}
+
+/// Einzelne Zutat als SummaryCard
+/// - View-Modus: Name (tappable) + kleine kcal rechts + (darunter) C/F/P
+/// - Edit-Modus: rechts Mengenfeld; Swipe nach links = Löschen
+class _IngredientCard extends StatelessWidget {
+  final Map<String, dynamic> item; // { barcode, quantity_in_grams }
+  final bool editMode;
+  final bool showPerIngredientMacros;
+  final ValueChanged<int> onQtyChanged;
+  final VoidCallback onDelete;
+
+  const _IngredientCard({
+    super.key,
+    required this.item,
+    required this.editMode,
+    required this.showPerIngredientMacros,
+    required this.onQtyChanged,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = theme.colorScheme.primary;
+    final bc = item['barcode'] as String;
+    final qty = (item['quantity_in_grams'] as num?)?.toDouble() ?? 0.0;
+
+    Widget buildCard(FoodItem? fi) {
+      final name = (fi?.name.isNotEmpty ?? false) ? fi!.name : bc;
+      final unit = (fi?.isLiquid == true) ? 'ml' : 'g';
+
+      // per-ingredient macros & kcal
+      int kcal = 0;
+      double c = 0, f = 0, p = 0;
+      if (fi != null) {
+        final factor = qty / 100.0;
+        kcal = ((fi.calories ?? 0) * factor).round();
+        c = (fi.carbs ?? 0) * factor;
+        f = (fi.fat ?? 0) * factor;
+        p = (fi.protein ?? 0) * factor;
+      }
+
+      final title = InkWell(
+        onTap: () {
+          if (fi != null) {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => FoodDetailScreen(foodItem: fi)),
+            );
+          }
+        },
+        child: Text(
+          name,
+          style:
+              theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+        ),
+      );
+
+      final trailingView = Text(
+        fi == null ? '–' : '$kcal kcal',
+        style: theme.textTheme.labelLarge?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.w700,
+        ),
+      );
+
+      final trailingEdit = SizedBox(
+        width: 96,
+        child: TextFormField(
+          initialValue: '${qty.toInt()}',
+          textAlign: TextAlign.right,
+          keyboardType: const TextInputType.numberWithOptions(decimal: false),
+          decoration: InputDecoration(
+            isDense: true,
+            suffixText: unit,
+            border: const OutlineInputBorder(),
+          ),
+          onChanged: (v) {
+            final parsed = int.tryParse(v.trim());
+            if (parsed != null && parsed >= 0) onQtyChanged(parsed);
+          },
+        ),
+      );
+
+      return SummaryCard(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const SizedBox(width: 4),
+                  Icon(Icons.local_dining, color: color),
+                  const SizedBox(width: 12),
+                  Expanded(child: title),
+                  if (!editMode) trailingView else trailingEdit,
+                ],
+              ),
+              if (showPerIngredientMacros && fi != null) ...[
+                const SizedBox(height: 6),
+                Text(
+                  'C ${c.toStringAsFixed(1)} g   •   F ${f.toStringAsFixed(1)} g   •   P ${p.toStringAsFixed(1)} g',
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: Colors.grey.shade600),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
+
+    final card = FutureBuilder<FoodItem?>(
+      future: ProductDatabaseHelper.instance.getProductByBarcode(bc),
+      builder: (_, snap) => buildCard(snap.data),
+    );
+
+    if (!editMode) return card;
+
+    // Edit-Modus: Swipe links = löschen
+    return Dismissible(
+      key: ValueKey('ing_${item['barcode']}_${item['quantity_in_grams']}'),
+      direction: DismissDirection.endToStart,
+      background: const SizedBox.shrink(),
+      secondaryBackground: const SwipeActionBackground(
+        color: Colors.redAccent,
+        icon: Icons.delete,
+        alignment: Alignment.centerRight,
+      ),
+      confirmDismiss: (direction) async {
+        if (direction == DismissDirection.endToStart) {
+          onDelete();
+        }
+        return false;
+      },
+      child: card,
+    );
+  }
+}
+
+
 ===== Datei: /Users/richard/Projects/Lightweight/lightweight/lib/screens/exercise_detail_screen.dart =====
 
 // lib/screens/exercise_detail_screen.dart (Final & De-Materialisiert - Korrigiert)
@@ -19874,7 +21173,9 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
 
 import 'dart:io';
 import 'dart:ui';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/dialogs/log_supplement_dialog_content.dart';
@@ -19890,13 +21191,15 @@ import 'package:lightweight/screens/add_measurement_screen.dart';
 import 'package:lightweight/screens/diary_screen.dart';
 import 'package:lightweight/screens/edit_routine_screen.dart';
 import 'package:lightweight/screens/live_workout_screen.dart';
+import 'package:lightweight/screens/nutrition_hub_screen.dart';
 import 'package:lightweight/screens/profile_screen.dart';
-import 'package:lightweight/screens/routines_screen.dart';
 import 'package:lightweight/screens/statistics_hub_screen.dart';
 import 'package:lightweight/screens/workout_hub_screen.dart';
 import 'package:lightweight/services/profile_service.dart';
 import 'package:lightweight/services/workout_session_manager.dart';
 import 'package:lightweight/theme/color_constants.dart';
+import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/glass_bottom_menu.dart';
 import 'package:lightweight/widgets/glass_bottom_nav_bar.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/keep_alive_page.dart';
@@ -19936,12 +21239,19 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   }
 
   void _onPageChanged(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
+    if (_isWarping) {
+      return; // während Snapshot-Overlay nicht den Index zurückspringen lassen
+    }
+    setState(() => _currentIndex = index);
   }
 
+  final _pvBoundaryKey = GlobalKey(); // RepaintBoundary um die PageView
+  final bool _navAnimating = false;
+  final bool _isWarping = false;
+  ui.Image? _pvSnapshot; // aktueller Snapshot
+
   void _onNavigationTapped(int index) {
+    if (!_pageController.hasClients) return;
     _pageController.jumpToPage(index);
   }
 
@@ -19960,8 +21270,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     final l10n = AppLocalizations.of(context)!;
     switch (action) {
       case 'start_workout':
-        Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const RoutinesScreen()));
+        _showStartWorkoutMenu();
+        // Navigator.of(context).push(
+        //    MaterialPageRoute(builder: (context) => const RoutinesScreen()));
         break;
       case 'add_measurement':
         final success = await Navigator.of(context).push<bool>(
@@ -19973,10 +21284,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         _handleAddFood();
         break;
       case 'add_liquid':
-        _handleWaterAdd();
+        await _showAddFluidMenu();
         break;
       case 'log_supplement':
-        _handleSupplementAdd();
+        _showLogSupplementMenu(); //_handleSupplementAdd();
         break;
     }
   }
@@ -19988,9 +21299,343 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     }
   }
 
+  Future<void> _showLogSupplementMenu() async {
+    final l10n = AppLocalizations.of(context)!;
+    final supplements = await DatabaseHelper.instance.getAllSupplements();
+    if (!mounted || supplements.isEmpty) return;
+
+    await showGlassBottomMenu(
+      context: context,
+      title: l10n.logIntakeTitle, // "Track supplement intake"
+      contentBuilder: (ctx, close) {
+        // Phase-State lokal im Builder halten
+        Supplement? selected;
+        final doseKey = GlobalKey<LogSupplementDialogContentState>();
+
+        return StatefulBuilder(
+          builder: (ctx, setState) {
+            // PHASE 1: Supplement auswählen
+            if (selected == null) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Liste der Supplements (scrollbar via BottomSheet-Container)
+                  ...supplements.map((s) => Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 6, horizontal: 4),
+                        child: Material(
+                          color: Colors.white.withOpacity(
+                            Theme.of(ctx).brightness == Brightness.dark
+                                ? 0.06
+                                : 0.08,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () => setState(() => selected = s),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 12),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.medication_outlined),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                      child: Text(
+                                          localizeSupplementName(s, l10n))),
+                                  const Icon(Icons.chevron_right_rounded),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      )),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: close,
+                          child: Text(l10n.cancel),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            }
+
+            // PHASE 2: Dosis + Zeitpunkt erfassen (bestehendes Dialog-Widget nutzen)
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    localizeSupplementName(selected!, l10n),
+                    style: Theme.of(ctx)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                LogSupplementDialogContent(
+                  key: doseKey,
+                  supplement: selected!,
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => setState(() => selected = null),
+                        child: Text("l10n.back_button" ?? l10n.cancel),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () async {
+                          final st = doseKey.currentState;
+                          if (st == null) return;
+                          final dose =
+                              double.tryParse(st.doseText.replaceAll(',', '.'));
+                          if (dose == null || dose <= 0) return;
+
+                          final log = SupplementLog(
+                            supplementId: selected!.id!,
+                            dose: dose,
+                            unit: selected!.unit,
+                            timestamp: st.selectedDateTime,
+                          );
+                          await DatabaseHelper.instance
+                              .insertSupplementLog(log);
+                          close();
+                          _refreshHomeScreen();
+                        },
+                        child: Text(l10n.add_button),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _showStartWorkoutMenu() async {
+    final l10n = AppLocalizations.of(context)!;
+
+    // Routinen laden wie im RoutinesScreen
+    final routines = await WorkoutDatabaseHelper.instance.getAllRoutines();
+    if (!mounted) return;
+
+    await showGlassBottomMenu(
+      context: context,
+      title: l10n.startWorkout, // Titel des Menüs
+      contentBuilder: (ctx, close) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+
+        // Gemeinsame Card-Factory (Look wie deine SummaryCards im Menü)
+        Widget glassCard({required Widget child, EdgeInsets? padding}) {
+          return Material(
+            color: Colors.white.withOpacity(isDark ? 0.06 : 0.08),
+            borderRadius: BorderRadius.circular(18),
+            child: Padding(
+              padding: padding ??
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              child: child,
+            ),
+          );
+        }
+
+        // 1) Free / Empty workout ganz oben
+        final freeWorkoutTile = glassCard(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () async {
+              // exakter Flow wie im RoutinesScreen._startEmptyWorkout
+              final newWorkoutLog = await WorkoutDatabaseHelper.instance
+                  .startWorkout(routineName: l10n.freeWorkoutTitle);
+              if (!context.mounted) return;
+              close();
+              Navigator.of(context)
+                  .push(MaterialPageRoute(
+                    builder: (_) =>
+                        LiveWorkoutScreen(workoutLog: newWorkoutLog),
+                  ))
+                  .then((_) => _refreshHomeScreen());
+            },
+            child: Row(
+              children: [
+                const Icon(Icons.play_arrow_rounded),
+                const SizedBox(width: 12),
+                Text(
+                  l10n.startEmptyWorkoutButton, // gleicher String wie im Screen
+                  style: Theme.of(ctx)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+          ),
+        );
+
+        // 2) Routinenliste darunter – Start-Button links, Tap öffnet Edit
+        final routinesList = ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 420),
+          child: ListView.separated(
+            padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
+            shrinkWrap: true,
+            itemCount: routines.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            itemBuilder: (ctx, i) {
+              final r = routines[i];
+              return glassCard(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Start-Button links
+                    FilledButton(
+                      onPressed: () async {
+                        // exakter Flow wie im RoutinesScreen._startWorkout
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (_) =>
+                              const Center(child: CircularProgressIndicator()),
+                        );
+                        final fullRoutine = await WorkoutDatabaseHelper.instance
+                            .getRoutineById(r.id!);
+                        final newWorkoutLog = await WorkoutDatabaseHelper
+                            .instance
+                            .startWorkout(routineName: r.name);
+                        if (!context.mounted) return;
+                        Navigator.of(context).pop(); // loading
+                        if (fullRoutine != null) {
+                          close();
+                          Navigator.of(context)
+                              .push(MaterialPageRoute(
+                                builder: (_) => LiveWorkoutScreen(
+                                  routine: fullRoutine,
+                                  workoutLog: newWorkoutLog,
+                                ),
+                              ))
+                              .then((_) => _refreshHomeScreen());
+                        }
+                      },
+                      child: Text(
+                          l10n.startButton), // gleicher String wie im Screen
+                    ),
+                    const SizedBox(width: 12),
+
+                    // Titel + Subtitle (Tap = Edit)
+                    Expanded(
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () {
+                          close();
+                          Navigator.of(context)
+                              .push(MaterialPageRoute(
+                                builder: (_) => EditRoutineScreen(routine: r),
+                              ))
+                              .then((_) => _refreshHomeScreen());
+                        },
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              r.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(ctx)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              l10n.editRoutineSubtitle, // „Tap to edit, or start the workout.“
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(ctx).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Optional: Overflow-Icon für spätere Aktionen
+                    const SizedBox(width: 8),
+                    Icon(Icons.more_vert_rounded,
+                        color: Theme.of(ctx).textTheme.bodyMedium?.color),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+
+        // Zusammenbauen
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            freeWorkoutTile,
+            if (routines.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              routinesList,
+            ],
+          ],
+        );
+      },
+    );
+  }
+
   void _handleCreateRoutine() {
     Navigator.of(context).push(
         MaterialPageRoute(builder: (context) => const EditRoutineScreen()));
+  }
+
+  Future<(int, DateTime)?> _openWaterDialog({
+    int? initialQuantity,
+    DateTime? initialTimestamp,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    final key = GlobalKey<WaterDialogContentState>();
+
+    return showDialog<(int, DateTime)?>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.add_liquid_title),
+        content: WaterDialogContent(
+          key: key,
+          initialQuantity: initialQuantity,
+          initialTimestamp: initialTimestamp,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(null),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () {
+              final s = key.currentState;
+              if (s == null) return;
+              final qty = int.tryParse(s.quantityText);
+              if (qty != null && qty > 0) {
+                Navigator.of(ctx).pop((qty, s.selectedDateTime));
+              }
+            },
+            child: Text(l10n.add_button),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _handleAddFood() async {
@@ -20046,12 +21691,53 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     }
   }
 
-  Future<void> _handleWaterAdd() async {
-    final result = await _showWaterDialog();
-    if (result != null) {
-      await DatabaseHelper.instance.insertWaterEntry(result.$1, result.$2);
-      _refreshHomeScreen();
-    }
+  Future<void> _showAddFluidMenu() async {
+    final l10n = AppLocalizations.of(context)!;
+
+    final key = GlobalKey<WaterDialogContentState>();
+    await showGlassBottomMenu(
+      context: context,
+      title: l10n.add_liquid_title,
+      contentBuilder: (ctx, close) {
+        // Wir bauen den Content + ersetzen unten den Primary-Button onPressed:
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            WaterDialogContent(key: key),
+            const SizedBox(height: 12),
+            // Zugriff auf den Footer-Button: wir finden ihn über context.findAncestorWidgetOfExactType ist overkill.
+            // Einfach hier gleich einen Button setzen:
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: close,
+                    child: Text(l10n.cancel),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () async {
+                      final s = key.currentState;
+                      if (s == null) return;
+                      final qty = int.tryParse(s.quantityText);
+                      if (qty != null && qty > 0) {
+                        await DatabaseHelper.instance
+                            .insertWaterEntry(qty, s.selectedDateTime);
+                        close();
+                        _refreshHomeScreen();
+                      }
+                    },
+                    child: Text(l10n.add_button),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _handleSupplementAdd() async {
@@ -20200,6 +21886,23 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     );
   }
 
+  Future<void> _captureSnapshot() async {
+    try {
+      final boundary = _pvBoundaryKey.currentContext?.findRenderObject()
+          as RenderRepaintBoundary?;
+      if (boundary == null) return;
+      final img = await boundary.toImage(
+          pixelRatio: MediaQuery.of(context).devicePixelRatio);
+      setState(() => _pvSnapshot = img);
+    } catch (_) {
+      // fail silently – wir fallen dann einfach auf den bisherigen Warp zurück
+    }
+  }
+
+  void _clearSnapshot() {
+    setState(() => _pvSnapshot = null);
+  }
+
   AppBar _buildAppBar(BuildContext context, int index, AppLocalizations l10n) {
     String title = '';
     // Handle titles for Train, Stats, and Profile screens
@@ -20214,6 +21917,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 .titleLarge
                 ?.copyWith(fontWeight: FontWeight.w900),
           ),
+          actions: [
+            _profileAppBarButton(context), // ⬅️ NEU
+          ],
         );
       case 2:
         return AppBar(
@@ -20224,17 +21930,23 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 .titleLarge
                 ?.copyWith(fontWeight: FontWeight.w900),
           ),
+          actions: [
+            _profileAppBarButton(context), // ⬅️ NEU
+          ],
         );
       case 3:
         // The profile screen's AppBar is now managed here.
         return AppBar(
           title: Text(
-            l10n.profile,
+            l10n.nutritionHubTitle,
             style: Theme.of(context)
                 .textTheme
                 .titleLarge
                 ?.copyWith(fontWeight: FontWeight.w900),
           ),
+          actions: [
+            _profileAppBarButton(context), // ⬅️ NEU
+          ],
         );
       case 0:
       default:
@@ -20266,6 +21978,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 _tagebuchKey.currentState?.navigateDay(true);
               },
             ),
+            _profileAppBarButton(context), // ⬅️ NEU
           ],
         );
     }
@@ -20333,17 +22046,21 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             onPageChanged: _onPageChanged,
             children: <Widget>[
               KeepAlivePage(
-                  storageKey: const PageStorageKey('tab_tagebuch'),
-                  child: DiaryScreen(key: _tagebuchKey)),
+                storageKey: const PageStorageKey('tab_tagebuch'),
+                child: DiaryScreen(key: _tagebuchKey),
+              ),
               const KeepAlivePage(
-                  storageKey: PageStorageKey('tab_workout'),
-                  child: WorkoutHubScreen()),
+                storageKey: PageStorageKey('tab_workout'),
+                child: WorkoutHubScreen(),
+              ),
               const KeepAlivePage(
-                  storageKey: PageStorageKey('tab_stats'),
-                  child: StatisticsHubScreen()),
+                storageKey: PageStorageKey('tab_stats'),
+                child: StatisticsHubScreen(),
+              ),
               const KeepAlivePage(
-                  storageKey: PageStorageKey('tab_profile'),
-                  child: ProfileScreen()),
+                storageKey: PageStorageKey('tab_nutrition'),
+                child: NutritionHubScreen(),
+              ),
             ],
           ),
         ),
@@ -20432,18 +22149,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                       label: 'Stats', //l10n.statistics,
                     ),
                     BottomNavigationBarItem(
-                      icon: CircleAvatar(
-                        radius: 12,
-                        backgroundColor: Colors.grey.shade300,
-                        backgroundImage: profileService.profileImagePath != null
-                            ? FileImage(File(profileService.profileImagePath!))
-                            : null,
-                        child: profileService.profileImagePath == null
-                            ? const Icon(Icons.person,
-                                size: 16, color: Colors.black54)
-                            : null,
-                      ),
-                      label: l10n.profile,
+                      icon: const Icon(Icons.restaurant_menu_rounded),
+                      label: l10n.nutrition, // oder einfach "Nutrition"
                     ),
                   ],
                 ),
@@ -20587,6 +22294,33 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       ],
     );
   }
+
+Widget _profileAppBarButton(BuildContext context) {
+  final profileService = Provider.of<ProfileService>(context, listen: false);
+
+  return Padding(
+    // ⬇️ Abstand analog zu SummaryCard
+    padding: EdgeInsets.only(right: DesignConstants.screenPaddingHorizontal),
+    child: InkWell(
+      customBorder: const CircleBorder(),
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const ProfileScreen()),
+        );
+      },
+      child: CircleAvatar(
+        radius: 18,
+        backgroundColor: Colors.grey.shade300,
+        backgroundImage: (profileService.profileImagePath != null)
+            ? FileImage(File(profileService.profileImagePath!))
+            : null,
+        child: (profileService.profileImagePath == null)
+            ? const Icon(Icons.person, size: 20, color: Colors.black54)
+            : null,
+      ),
+    ),
+  );
+}
 }
 
 class _FrostedBar extends StatelessWidget {
@@ -21332,6 +23066,145 @@ class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
         return null;
       },
     );
+  }
+}
+
+
+===== Datei: /Users/richard/Projects/Lightweight/lightweight/lib/screens/meal_editor_screen.dart =====
+
+import 'package:flutter/material.dart';
+
+enum MealType { breakfast, lunch, dinner, snack }
+
+class MealEditorScreen extends StatefulWidget {
+  final String? initialName;
+  final MealType initialType;
+
+  const MealEditorScreen({
+    super.key,
+    this.initialName,
+    this.initialType = MealType.lunch,
+  });
+
+  @override
+  State<MealEditorScreen> createState() => _MealEditorScreenState();
+}
+
+class _MealEditorScreenState extends State<MealEditorScreen> {
+  late final TextEditingController _nameCtrl;
+  late MealType _type;
+  bool _saving = false;
+
+  bool get _canSave =>
+      !_saving && _nameCtrl.text.trim().isNotEmpty; // simpel & robust
+
+  @override
+  void initState() {
+    super.initState();
+    _nameCtrl = TextEditingController(text: widget.initialName ?? '');
+    _type = widget.initialType;
+    _nameCtrl.addListener(() => setState(() {})); // Button-State aktualisieren
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _onSave() async {
+    if (!_canSave) return;
+    setState(() => _saving = true);
+
+    try {
+      // 🔗 HIER später: Repo/DB call (insert/update).
+      // Für jetzt: einfach Erfolg simulieren und zurück.
+      await Future.delayed(const Duration(milliseconds: 150));
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Fehler beim Speichern: $e')),
+      );
+      setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Meal bearbeiten'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            child: ElevatedButton(
+              onPressed: _canSave ? _onSave : null,
+              child: _saving
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Speichern'),
+            ),
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          TextField(
+            controller: _nameCtrl,
+            textInputAction: TextInputAction.done,
+            decoration: const InputDecoration(
+              labelText: 'Meal-Name',
+              hintText: 'z. B. Hähnchen Bowl',
+            ),
+            onSubmitted: (_) => _onSave(),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<MealType>(
+            initialValue: _type,
+            onChanged: (v) => setState(() => _type = v ?? _type),
+            decoration: const InputDecoration(labelText: 'Meal-Typ'),
+            items: MealType.values
+                .map((t) => DropdownMenuItem(
+                      value: t,
+                      child: Text(_label(t)),
+                    ))
+                .toList(),
+          ),
+          const SizedBox(height: 24),
+          // Platzhalter: später Zutaten/Per-Ingredient Anzeige
+          Card(
+            child: ListTile(
+              title: const Text('Zutaten'),
+              subtitle: const Text('Noch keine – kommt später'),
+              trailing: IconButton(
+                icon: const Icon(Icons.add),
+                onPressed: () {
+                  // später: Produktpicker öffnen
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _label(MealType t) {
+  switch (t) {
+    case MealType.breakfast:
+      return 'Frühstück';
+    case MealType.lunch:
+      return 'Mittag';
+    case MealType.dinner:
+      return 'Abend';
+    case MealType.snack:
+      return 'Snack';
   }
 }
 
@@ -23219,7 +25092,7 @@ class DatabaseHelper {
     return await db.insert('meals', {
       'name': name.trim(),
       'notes': (notes ?? '').trim().isEmpty ? null : notes!.trim(),
-      'created_at': now,
+      //'created_at': now,
       'updated_at': now,
     });
   }
@@ -26135,6 +28008,7 @@ import 'package:lightweight/models/chart_data_point.dart';
 import 'package:intl/intl.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:flutter/services.dart';
 
 class MeasurementChartWidget extends StatefulWidget {
   final String chartType;
@@ -26184,6 +28058,31 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
         _dataPoints = data;
         _isLoadingChart = false;
       });
+    }
+  }
+
+  void _setTouchedIndexWithHaptics(int? newIndex) {
+    if (newIndex == _touchedIndex) return; // nur bei echter Änderung vibrieren
+    _touchedIndex = newIndex;
+    if (newIndex != null) {
+      HapticFeedback.selectionClick(); // dezentes Tock beim Punkt-Wechsel
+    }
+    if (mounted) setState(() {});
+  }
+
+  void _handleTouchCallback(FlTouchEvent event, LineTouchResponse? response) {
+    if (event is FlPanEndEvent || event is FlTapUpEvent) {
+      // Finger losgelassen: Auswahl zurücksetzen (ohne Haptik)
+      _touchedIndex = null;
+      if (mounted) setState(() {});
+      return;
+    }
+
+    final spots = response?.lineBarSpots;
+    if (spots != null && spots.isNotEmpty) {
+      // Index des aktuell getroffenen Punktes
+      final idx = spots.first.spotIndex;
+      _setTouchedIndexWithHaptics(idx);
     }
   }
 
@@ -26290,16 +28189,7 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
                         List<LineTooltipItem?>.filled(touchedSpots.length, null,
                             growable: false),
                   ),
-                  touchCallback:
-                      (FlTouchEvent event, LineTouchResponse? response) {
-                    if (event is FlPanEndEvent || event is FlTapUpEvent) {
-                      setState(() => _touchedIndex = null);
-                    } else if (response?.lineBarSpots != null &&
-                        response!.lineBarSpots!.isNotEmpty) {
-                      setState(() => _touchedIndex =
-                          response.lineBarSpots!.first.spotIndex);
-                    }
-                  },
+                  touchCallback: _handleTouchCallback,
                 ),
 
                 extraLinesData: ExtraLinesData(
@@ -26378,9 +28268,11 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
                     // Dot nur beim getouchten Punkt:
                     dotData: FlDotData(
                       show: true,
-                      checkToShowDot: (spot, bar) =>
-                          _touchedIndex != null &&
-                          spot.x.toInt() == _touchedIndex,
+                      checkToShowDot: (spot, bar) {
+                        if (_touchedIndex == null) return false;
+                        final idx = bar.spots.indexOf(spot);
+                        return idx == _touchedIndex;
+                      },
                       getDotPainter: (spot, percent, bar, index) =>
                           FlDotCirclePainter(
                         radius: 6,
@@ -26533,7 +28425,7 @@ class GlassBottomNavBar extends StatelessWidget {
                         color: color,
                         fontSize: 12,
                         fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.w400,
+                            isSelected ? FontWeight.w400 : FontWeight.w400,
                       ),
                     ),
                   ],
@@ -27597,6 +29489,7 @@ class ShadowContainer extends StatelessWidget {
 
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lightweight/theme/color_constants.dart';
 
 class GlassFab extends StatefulWidget {
@@ -27639,6 +29532,8 @@ class _GlassFabState extends State<GlassFab>
   void _onTapDown(TapDownDetails details) => _controller.forward();
   void _onTapUp(TapUpDetails details) {
     _controller.reverse();
+    // leichtes, kurzes Haptik-Feedback
+    HapticFeedback.selectionClick();
     widget.onPressed();
   }
 
@@ -28198,6 +30093,389 @@ class _InfoBox extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+
+===== Datei: /Users/richard/Projects/Lightweight/lightweight/lib/widgets/glass_bottom_menu.dart =====
+
+import 'dart:ui';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:lightweight/generated/app_localizations.dart';
+
+/// One action row in the glass menu.
+class GlassMenuAction {
+  final IconData icon;
+  final String label;
+  final String? subtitle;
+  final VoidCallback onTap;
+
+  GlassMenuAction({
+    required this.icon,
+    required this.label,
+    this.subtitle,
+    required this.onTap,
+  });
+}
+
+/// Show the glass bottom menu with a static blurred scrim (like GlassFab).
+/// Drag-to-dismiss is handled by showModalBottomSheet.
+Future<T?> showGlassBottomMenu<T>({
+  required BuildContext context,
+  String? title,
+  List<GlassMenuAction>? actions, // ⬅️ jetzt optional
+  Widget Function(BuildContext, VoidCallback)? contentBuilder, // ⬅️ NEU
+}) {
+  assert(
+      (actions != null && contentBuilder == null) ||
+          (actions == null && contentBuilder != null),
+      'Either actions OR contentBuilder must be provided');
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  return showModalBottomSheet<T>(
+    context: context,
+    isScrollControlled: true,
+    useRootNavigator: false, // lassen wir so
+    useSafeArea: false,
+    backgroundColor: Colors.transparent,
+    // 👇 animiert automatisch mit dem Sheet (kein „an/aus“)
+    barrierColor: isDark
+        ? Colors.black.withOpacity(0.50)
+        : Colors.black.withOpacity(0.30),
+    builder: (ctx) {
+      final kb = MediaQuery.of(ctx).viewInsets.bottom; // Tastaturhöhe
+      return AnimatedPadding(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        padding: EdgeInsets.only(bottom: kb),
+        child: _GlassBottomMenuSheet(
+          title: title,
+          actions: actions ?? const <GlassMenuAction>[], // ⬅️ nie null
+          contentBuilder: contentBuilder, // ⬅️ sicher weitergeben
+        ),
+      );
+    },
+  );
+}
+
+class _GlassBottomMenuSheet extends StatelessWidget {
+  const _GlassBottomMenuSheet({
+    this.title,
+    this.contentBuilder,
+    this.actions = const <GlassMenuAction>[], // ⬅️ Default: leere Liste
+  });
+
+  final String? title;
+  final Widget Function(BuildContext, VoidCallback)? contentBuilder;
+  final List<GlassMenuAction> actions; // ⬅️ non-null
+
+  @override
+  Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final bottomInset = media.viewPadding.bottom;
+    final keyboard = media.viewInsets.bottom; // ⬅️ NEU: Tastaturhöhe
+
+    return SafeArea(
+      top: false,
+      bottom: false,
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: _GlassSurface(
+          // straight top line color (like GlassFab), tuned for dark mode
+          topBorderColor: isDark
+              ? Colors.white.withOpacity(0.22)
+              : Colors.black.withOpacity(0.10),
+          child: Padding(
+            padding: EdgeInsets.only(bottom: bottomInset),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 8),
+                // Drag handle
+                Container(
+                  width: 44,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.75),
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                ),
+                if (title != null) ...[
+                  const SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      title!,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+                if (contentBuilder != null) ...[
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: contentBuilder!(
+                        context, () => Navigator.of(context).maybePop()),
+                  ),
+                ] else if (actions.isNotEmpty) ...[
+                  Flexible(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 420),
+                      child: ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(8, 12, 8, 8),
+                        shrinkWrap: true,
+                        itemCount: actions.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        itemBuilder: (context, i) {
+                          final a = actions[i];
+                          return _GlassTile(
+                            icon: a.icon,
+                            title: a.label,
+                            subtitle: a.subtitle,
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              Navigator.of(context).maybePop();
+                              WidgetsBinding.instance
+                                  .addPostFrameCallback((_) => a.onTap());
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ]
+/*if (contentBuilder != null) ...[
+  const SizedBox(height: 12),
+  Padding(
+    padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+    child: Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: () => Navigator.of(context).maybePop(),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+        ),1
+        const SizedBox(width: 12),
+        Expanded(
+          child: _InlinePrimaryButton(), // ⬅️ Handler wird im Aufrufer gesetzt (siehe unten)
+        ),
+      ],
+    ),
+  ),
+]
+*/
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Frosted glass surface: full width, rounded only on top.
+/// IMPORTANT: Straight top line (not following the curve) is painted OUTSIDE the clip.
+class _GlassSurface extends StatelessWidget {
+  const _GlassSurface({required this.child, required this.topBorderColor});
+
+  final Widget child;
+  final Color topBorderColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Slightly different from summary-cards to stand out
+    final c0 = theme.colorScheme.surface.withOpacity(isDark ? 0.86 : 0.94);
+    final c1 = theme.colorScheme.surface.withOpacity(isDark ? 0.70 : 0.88);
+
+    return Stack(
+      clipBehavior: Clip.none, // allow the straight top line to draw freely
+      children: [
+        // Blurred glass body with rounded top corners
+        ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [c0, c1],
+                ),
+              ),
+              child: child,
+            ),
+          ),
+        ),
+        // Straight top divider line (not following the curve)
+// Hard top edge that follows the rounded corners
+        Positioned.fill(
+          child: IgnorePointer(
+            child: CustomPaint(
+              painter: _TopEdgePainter(
+                color: topBorderColor,
+                radius: 24, // ⬅️ dein Top-Radius
+                strokeWidth: 1.5,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Individual action row with subtle glass button look.
+class _GlassTile extends StatelessWidget {
+  const _GlassTile({
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textTheme = theme.textTheme;
+
+    return Material(
+      color: isDark
+          ? Colors.white.withOpacity(0.06)
+          : Colors.white.withOpacity(0.08),
+      borderRadius: BorderRadius.circular(18),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: isDark
+                      ? Colors.white.withOpacity(0.10)
+                      : Colors.white.withOpacity(0.12),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(isDark ? 0.14 : 0.18),
+                    width: 1,
+                  ),
+                ),
+                child: Icon(icon, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle!,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.bodySmall?.copyWith(
+                          color: textTheme.bodySmall?.color?.withOpacity(0.8),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 22,
+                color: Colors.white.withOpacity(0.8),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TopEdgePainter extends CustomPainter {
+  final Color color;
+  final double radius;
+  final double strokeWidth;
+  _TopEdgePainter({
+    required this.color,
+    required this.radius,
+    this.strokeWidth = 1.5,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // RRect mit nur oben gerundeten Ecken
+    final rrect = RRect.fromRectAndCorners(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      topLeft: Radius.circular(radius),
+      topRight: Radius.circular(radius),
+    );
+
+    // Nur den oberen Bereich zeichnen (inkl. Rundungen)
+    final clipBand = Rect.fromLTWH(0, 0, size.width, radius + strokeWidth);
+    canvas.save();
+    canvas.clipRect(clipBand);
+
+    final p = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..color = color;
+
+    final path = Path()..addRRect(rrect);
+    canvas.drawPath(path, p);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _TopEdgePainter old) =>
+      old.color != color ||
+      old.radius != radius ||
+      old.strokeWidth != strokeWidth;
+}
+
+class _InlinePrimaryButton extends StatelessWidget {
+  const _InlinePrimaryButton(this.onPressed, this.label);
+  final VoidCallback? onPressed;
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return FilledButton(
+      onPressed: onPressed,
+      child: Text(label ?? l10n.add_button),
     );
   }
 }

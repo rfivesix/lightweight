@@ -13,13 +13,11 @@ import 'package:lightweight/models/supplement_log.dart';
 import 'package:lightweight/screens/create_food_screen.dart';
 import 'package:lightweight/screens/food_detail_screen.dart';
 import 'package:lightweight/screens/meal_screen.dart';
-import 'package:lightweight/screens/meals_screen.dart';
 import 'package:lightweight/screens/scanner_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/off_attribution_widget.dart';
 import 'package:lightweight/widgets/summary_card.dart';
-import 'package:lightweight/widgets/swipe_action_background.dart';
 
 class AddFoodScreen extends StatefulWidget {
   const AddFoodScreen({super.key});
@@ -97,26 +95,27 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     });
   }
 
-@override
-void initState() {
-  super.initState();
-  _tabController = TabController(length: 4, vsync: this); // 4 Tabs
-  _currentTab = _tabController.index;
-  _tabController.addListener(() {
-    if (_currentTab != _tabController.index) {
-      setState(() {
-        _currentTab = _tabController.index;
-      });
-    }
-  });
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this); // 4 Tabs
+    _currentTab = _tabController.index;
+    _tabController.addListener(() {
+      if (_currentTab != _tabController.index) {
+        setState(() {
+          _currentTab = _tabController.index;
+        });
+      }
+    });
 
-  _searchController.addListener(() => setState(() {}));
-  _loadFavorites();
-  _loadRecentItems();
-  _baseSearchCtrl.addListener(() => _onBaseSearchChanged(_baseSearchCtrl.text));
-  _loadBaseCategories();
-  _loadMeals();
-}
+    _searchController.addListener(() => setState(() {}));
+    _loadFavorites();
+    _loadRecentItems();
+    _baseSearchCtrl
+        .addListener(() => _onBaseSearchChanged(_baseSearchCtrl.text));
+    _loadBaseCategories();
+    _loadMeals();
+  }
 
   @override
   void didChangeDependencies() {
@@ -201,90 +200,123 @@ void initState() {
     }
   }
 
-@override
-Widget build(BuildContext context) {
-  final l10n = AppLocalizations.of(context)!;
-  final isLightMode = Theme.of(context).brightness == Brightness.light;
+  Future<void> _createMealAndOpenEditor(AppLocalizations l10n) async {
+    // Solider Default-Name (nicht leer wegen NOT NULL in DB)
+    final defaultName = l10n.mealTypeLabel; // z.B. "Mahlzeit" / "Meal"
+    final newMealId = await DatabaseHelper.instance.insertMeal(
+      name: defaultName,
+      notes: '',
+    );
 
-  // FAB-Konfiguration je Tab
-  VoidCallback? fabOnPressed;
-  String fabLabel;
-  if (_suspendFab) {
-    fabOnPressed = null;
-    fabLabel = '';
-  } else if (_currentTab == 3) {
-    // Mahlzeiten-Tab
-    fabLabel = l10n.mealsCreate;
-    fabOnPressed = () => _openMealEditor(l10n);
-  } else {
-    // Alle anderen Tabs
-    fabLabel = l10n.fabCreateOwnFood;
-    fabOnPressed = _navigateAndCreateFood;
+    final meal = {'id': newMealId, 'name': defaultName, 'notes': ''};
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => MealScreen(meal: meal, startInEdit: true),
+      ),
+    );
+
+    // Nach Rückkehr Liste aktualisieren
+    await _loadMeals();
+
+    // (Optionaler Feinschliff)
+    // Wenn Nutzer abbricht und nichts geändert hat: Platzhalter wieder entfernen.
+    try {
+      final items = await DatabaseHelper.instance.getMealItems(newMealId);
+      // Falls noch mit Defaultnamen und ohne Zutaten → löschen
+      final created = _meals.firstWhere((m) => m['id'] == newMealId);
+      if ((created['name'] as String) == defaultName && items.isEmpty) {
+        await DatabaseHelper.instance.deleteMeal(newMealId);
+        await _loadMeals();
+      }
+    } catch (_) {/* egal, Cleanup ist optional */}
   }
 
-  return Scaffold(
-    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-    appBar: AppBar(
-      automaticallyImplyLeading: true,
-      title: Text(
-        l10n.addFoodTitle,
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w900,
-            ),
-      ),
-    ),
-    body: Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TabBar(
-                controller: _tabController,
-                isScrollable: false,
-                indicator: const BoxDecoration(),
-                splashFactory: NoSplash.splashFactory,
-                overlayColor: WidgetStateProperty.all(Colors.transparent),
-                labelPadding: EdgeInsets.zero,
-                labelColor: isLightMode ? Colors.black : Colors.white,
-                unselectedLabelColor: Colors.grey.shade600,
-                labelStyle:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-                unselectedLabelStyle:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-                tabs: [
-                  Tab(text: l10n.tabCatalogSearch),
-                  Tab(text: l10n.tabRecent),
-                  Tab(text: l10n.tabFavorites),
-                  Tab(text: l10n.tabMeals),
-                ],
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isLightMode = Theme.of(context).brightness == Brightness.light;
+
+    // FAB-Konfiguration je Tab
+    VoidCallback? fabOnPressed;
+    String fabLabel;
+    if (_suspendFab) {
+      fabOnPressed = null;
+      fabLabel = '';
+    } else if (_currentTab == 3) {
+      // Mahlzeiten-Tab
+      fabLabel = l10n.mealsCreate;
+      fabOnPressed = () => _createMealAndOpenEditor(l10n);
+    } else {
+      // Alle anderen Tabs
+      fabLabel = l10n.fabCreateOwnFood;
+      fabOnPressed = _navigateAndCreateFood;
+    }
+
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+        title: Text(
+          l10n.addFoodTitle,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
               ),
-            ],
-          ),
         ),
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              _buildCatalogSearchTab(l10n),
-              _buildRecentTab(l10n),
-              _buildFavoritesTab(l10n),
-              _buildMealsTab(l10n),
-            ],
-          ),
-        ),
-      ],
-    ),
-floatingActionButton: _suspendFab
-    ? null
-    : GlassFab(
-        label: fabLabel,
-        onPressed: fabOnPressed ?? () {}, // ✅ Fallback: immer non-null
       ),
-floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-  );
-}
+      body: Column(
+        children: [
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TabBar(
+                  controller: _tabController,
+                  isScrollable: false,
+                  indicator: const BoxDecoration(),
+                  splashFactory: NoSplash.splashFactory,
+                  overlayColor: WidgetStateProperty.all(Colors.transparent),
+                  labelPadding: EdgeInsets.zero,
+                  labelColor: isLightMode ? Colors.black : Colors.white,
+                  unselectedLabelColor: Colors.grey.shade600,
+                  labelStyle: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w800),
+                  unselectedLabelStyle: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w800),
+                  tabs: [
+                    Tab(text: l10n.tabCatalogSearch),
+                    Tab(text: l10n.tabRecent),
+                    Tab(text: l10n.tabFavorites),
+                    Tab(text: l10n.tabMeals),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildCatalogSearchTab(l10n),
+                _buildRecentTab(l10n),
+                _buildFavoritesTab(l10n),
+                _buildMealsTab(l10n),
+              ],
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: _suspendFab
+          ? null
+          : GlassFab(
+              label: fabLabel,
+              onPressed: fabOnPressed ?? () {}, // ✅ Fallback: immer non-null
+            ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
 
   Widget _buildSearchTab(AppLocalizations l10n) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -698,10 +730,20 @@ floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
                   final cat = _baseCategories[idx];
                   final key = cat['key'] as String;
                   final emoji = (cat['emoji'] as String?)?.trim();
-                  final title =
-                      (cat['name_de'] as String?)?.trim().isNotEmpty == true
-                          ? cat['name_de'] as String
-                          : (cat['name_en'] as String? ?? key);
+                  final locale = Localizations.localeOf(context).languageCode;
+                  final title = () {
+                    final de = (cat['name_de'] as String?)?.trim();
+                    final en = (cat['name_en'] as String?)?.trim();
+                    if (locale == 'de') {
+                      return (de?.isNotEmpty == true)
+                          ? de!
+                          : (en?.isNotEmpty == true ? en! : key);
+                    } else {
+                      return (en?.isNotEmpty == true)
+                          ? en!
+                          : (de?.isNotEmpty == true ? de! : key);
+                    }
+                  }();
 
                   final loading = _loadingCats.contains(key);
                   final items = _catItems[key];
@@ -797,160 +839,162 @@ floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
-Widget _buildMealsTab(AppLocalizations l10n) {
-  if (_isLoadingMeals) {
-    return const Center(child: CircularProgressIndicator());
-  }
+  Widget _buildMealsTab(AppLocalizations l10n) {
+    if (_isLoadingMeals) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-  if (_meals.isEmpty) {
-    // Empty State: kein Top-Button mehr – Erstellen läuft über den FAB
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.restaurant_menu, size: 80, color: Colors.grey.shade400),
-            const SizedBox(height: DesignConstants.spacingL),
-            Text(l10n.mealsEmptyTitle,
-                style: Theme.of(context).textTheme.headlineSmall,
-                textAlign: TextAlign.center),
-            const SizedBox(height: DesignConstants.spacingS),
-            Text(l10n.mealsEmptyBody,
-                textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyLarge
-                    ?.copyWith(color: Colors.grey.shade600)),
-          ],
+    if (_meals.isEmpty) {
+      // Empty State: kein Top-Button mehr – Erstellen läuft über den FAB
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.restaurant_menu,
+                  size: 80, color: Colors.grey.shade400),
+              const SizedBox(height: DesignConstants.spacingL),
+              Text(l10n.mealsEmptyTitle,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                  textAlign: TextAlign.center),
+              const SizedBox(height: DesignConstants.spacingS),
+              Text(l10n.mealsEmptyBody,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyLarge
+                      ?.copyWith(color: Colors.grey.shade600)),
+            ],
+          ),
         ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadMeals,
+      child: ListView.builder(
+        padding: DesignConstants.cardPadding,
+        itemCount: _meals.length,
+        itemBuilder: (_, i) {
+          final meal = _meals[i];
+          return _buildMealCard(meal, l10n); // enthält jetzt Swipe-Actions
+        },
       ),
     );
   }
 
-  return RefreshIndicator(
-    onRefresh: _loadMeals,
-    child: ListView.builder(
-      padding: DesignConstants.cardPadding,
-      itemCount: _meals.length,
-      itemBuilder: (_, i) {
-        final meal = _meals[i];
-        return _buildMealCard(meal, l10n); // enthält jetzt Swipe-Actions
-      },
-    ),
-  );
-}
+  Widget _buildMealCard(Map<String, dynamic> meal, AppLocalizations l10n) {
+    final color = Theme.of(context).colorScheme;
 
-Widget _buildMealCard(Map<String, dynamic> meal, AppLocalizations l10n) {
-  final color = Theme.of(context).colorScheme;
+    Future<Map<String, num>> computeMealTotals(int mealId) async {
+      final items = await _getMealItems(mealId);
+      int kcal = 0;
+      double c = 0, f = 0, p = 0;
 
-  Future<Map<String, num>> _computeMealTotals(int mealId) async {
-    final items = await _getMealItems(mealId);
-    int kcal = 0;
-    double c = 0, f = 0, p = 0;
+      for (final it in items) {
+        final bc = it['barcode'] as String;
+        final qty = (it['quantity_in_grams'] as num?)?.toDouble() ?? 0.0;
+        final fi = await ProductDatabaseHelper.instance.getProductByBarcode(bc);
+        if (fi == null) continue;
 
-    for (final it in items) {
-      final bc = it['barcode'] as String;
-      final qty = (it['quantity_in_grams'] as num?)?.toDouble() ?? 0.0;
-      final fi = await ProductDatabaseHelper.instance.getProductByBarcode(bc);
-      if (fi == null) continue;
-
-      final factor = qty / 100.0;
-      kcal += ((fi.calories ?? 0) * factor).round();
-      c += (fi.carbs ?? 0) * factor;
-      f += (fi.fat ?? 0) * factor;
-      p += (fi.protein ?? 0) * factor;
+        final factor = qty / 100.0;
+        kcal += ((fi.calories ?? 0) * factor).round();
+        c += (fi.carbs ?? 0) * factor;
+        f += (fi.fat ?? 0) * factor;
+        p += (fi.protein ?? 0) * factor;
+      }
+      return {
+        'kcal': kcal,
+        'c': c,
+        'f': f,
+        'p': p,
+      };
     }
-    return {
-      'kcal': kcal,
-      'c': c,
-      'f': f,
-      'p': p,
-    };
-  }
 
-  return SummaryCard(
-    child: ListTile(
-      leading: Icon(Icons.restaurant, color: color.primary),
-      title: Text(meal['name'] as String),
-      subtitle: FutureBuilder<Map<String, num>>(
-        future: _computeMealTotals(meal['id'] as int),
-        builder: (_, snap) {
-          // Fallback: nur Anzahl Zutaten, falls noch lädt
-          if (!snap.hasData) {
-            return FutureBuilder<List<Map<String, dynamic>>>(
-              future: _getMealItems(meal['id'] as int),
-              builder: (_, s2) {
-                final count = s2.data?.length ?? 0;
-                return Text('${l10n.mealIngredientsTitle}: $count');
-              },
-            );
-          }
-          final t = snap.data!;
-          final c = (t['c'] ?? 0).toDouble();
-          final f = (t['f'] ?? 0).toDouble();
-          final p = (t['p'] ?? 0).toDouble();
-          final kcal = (t['kcal'] ?? 0).toInt();
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              FutureBuilder<List<Map<String, dynamic>>>(
+    return SummaryCard(
+      child: ListTile(
+        leading: Icon(Icons.restaurant, color: color.primary),
+        title: Text(meal['name'] as String),
+        subtitle: FutureBuilder<Map<String, num>>(
+          future: computeMealTotals(meal['id'] as int),
+          builder: (_, snap) {
+            // Fallback: nur Anzahl Zutaten, falls noch lädt
+            if (!snap.hasData) {
+              return FutureBuilder<List<Map<String, dynamic>>>(
                 future: _getMealItems(meal['id'] as int),
                 builder: (_, s2) {
                   final count = s2.data?.length ?? 0;
                   return Text('${l10n.mealIngredientsTitle}: $count');
                 },
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '$kcal kcal   •   C ${c.toStringAsFixed(1)} g   •   F ${f.toStringAsFixed(1)} g   •   P ${p.toStringAsFixed(1)} g',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey.shade600,
-                    ),
-              ),
-            ],
+              );
+            }
+            final t = snap.data!;
+            final c = (t['c'] ?? 0).toDouble();
+            final f = (t['f'] ?? 0).toDouble();
+            final p = (t['p'] ?? 0).toDouble();
+            final kcal = (t['kcal'] ?? 0).toInt();
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                FutureBuilder<List<Map<String, dynamic>>>(
+                  future: _getMealItems(meal['id'] as int),
+                  builder: (_, s2) {
+                    final count = s2.data?.length ?? 0;
+                    return Text('${l10n.mealIngredientsTitle}: $count');
+                  },
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$kcal kcal   •   C ${c.toStringAsFixed(1)} g   •   F ${f.toStringAsFixed(1)} g   •   P ${p.toStringAsFixed(1)} g',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey.shade600,
+                      ),
+                ),
+              ],
+            );
+          },
+        ),
+        trailing: Wrap(
+          spacing: 4,
+          children: [
+            IconButton(
+              tooltip: l10n.mealsAddToDiary,
+              icon: Icon(Icons.add_circle_outline, color: color.primary),
+              onPressed: () => _confirmAndLogMeal(meal, l10n),
+            ),
+            IconButton(
+              tooltip: l10n.mealsEdit,
+              icon: const Icon(Icons.edit),
+              onPressed: () async {
+                // Neuer Screen öffnen (View), direkt in Edit wechseln
+                await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => MealScreen(meal: meal, startInEdit: true),
+                  ),
+                );
+                await _loadMeals();
+              },
+            ),
+            IconButton(
+              tooltip: l10n.mealsDelete,
+              icon: const Icon(Icons.delete_outline),
+              onPressed: () => _deleteMeal(meal, l10n),
+            ),
+          ],
+        ),
+        onTap: () async {
+          // Neuer Detail-Screen (View)
+          await Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => MealScreen(meal: meal)),
           );
+          await _loadMeals();
         },
       ),
-      trailing: Wrap(
-        spacing: 4,
-        children: [
-          IconButton(
-            tooltip: l10n.mealsAddToDiary,
-            icon: Icon(Icons.add_circle_outline, color: color.primary),
-            onPressed: () => _confirmAndLogMeal(meal, l10n),
-          ),
-          IconButton(
-            tooltip: l10n.mealsEdit,
-            icon: const Icon(Icons.edit),
-            onPressed: () async {
-              // Neuer Screen öffnen (View), direkt in Edit wechseln
-              await Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => MealScreen(meal: meal, startInEdit: true),
-                ),
-              );
-              await _loadMeals();
-            },
-          ),
-          IconButton(
-            tooltip: l10n.mealsDelete,
-            icon: const Icon(Icons.delete_outline),
-            onPressed: () => _deleteMeal(meal, l10n),
-          ),
-        ],
-      ),
-      onTap: () async {
-        // Neuer Detail-Screen (View)
-        await Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => MealScreen(meal: meal)),
-        );
-        await _loadMeals();
-      },
-    ),
-  );
-}
+    );
+  }
+
   Future<void> _openMealEditor(AppLocalizations l10n,
       {Map<String, dynamic>? mealToEdit}) async {
     final isEdit = mealToEdit != null;

@@ -24,6 +24,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final profileService = Provider.of<ProfileService>(context);
 
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          l10n.profileScreenTitle,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+        ),
+      ),
       body: ListView(
         padding: DesignConstants.cardPadding,
         children: [

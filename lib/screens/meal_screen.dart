@@ -42,8 +42,10 @@ class _MealScreenState extends State<MealScreen> {
   void initState() {
     super.initState();
     _editMode = widget.startInEdit;
-    _nameCtrl = TextEditingController(text: widget.meal['name'] as String? ?? '');
-    _notesCtrl = TextEditingController(text: widget.meal['notes'] as String? ?? '');
+    _nameCtrl =
+        TextEditingController(text: widget.meal['name'] as String? ?? '');
+    _notesCtrl =
+        TextEditingController(text: widget.meal['notes'] as String? ?? '');
     _loadItems();
   }
 
@@ -104,6 +106,7 @@ class _MealScreenState extends State<MealScreen> {
       ),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -230,8 +233,8 @@ class _MealScreenState extends State<MealScreen> {
                 _buildSectionTitle(context, l10n.nutritionSectionLabel),
                 SummaryCard(
                   child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 14),
                     child: FutureBuilder<void>(
                       future: _recomputeTotals(),
                       builder: (_, __) {
@@ -239,9 +242,7 @@ class _MealScreenState extends State<MealScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              _items.isEmpty
-                                  ? '– kcal'
-                                  : '${_totalKcal} kcal',
+                              _items.isEmpty ? '– kcal' : '$_totalKcal kcal',
                               style: theme.textTheme.headlineSmall?.copyWith(
                                 fontWeight: FontWeight.w800,
                               ),
@@ -286,8 +287,8 @@ class _MealScreenState extends State<MealScreen> {
                 if (_items.isEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    child: Text(l10n.emptyCategory,
-                        textAlign: TextAlign.center),
+                    child:
+                        Text(l10n.emptyCategory, textAlign: TextAlign.center),
                   )
                 else
                   Column(
@@ -432,21 +433,21 @@ class _MealScreenState extends State<MealScreen> {
                             return ListTile(
                               dense: true,
                               title: Text(fi.name),
-                              subtitle: Text(
-                                  fi.brand.isNotEmpty ? fi.brand : l10n.noBrand),
+                              subtitle: Text(fi.brand.isNotEmpty
+                                  ? fi.brand
+                                  : l10n.noBrand),
                               trailing: IconButton(
                                 icon: const Icon(Icons.add),
                                 onPressed: () async {
                                   final grams = await showDialog<int>(
                                     context: context,
                                     builder: (_) => AlertDialog(
-                                      title: Text(
-                                          l10n.mealIngredientAmountLabel),
+                                      title:
+                                          Text(l10n.mealIngredientAmountLabel),
                                       content: TextField(
                                         controller: qtyCtrl,
-                                        keyboardType:
-                                            const TextInputType.numberWithOptions(
-                                                decimal: false),
+                                        keyboardType: const TextInputType
+                                            .numberWithOptions(decimal: false),
                                         decoration: const InputDecoration(
                                             suffixText: 'g/ml'),
                                       ),
@@ -573,7 +574,7 @@ class _MealScreenState extends State<MealScreen> {
                       const SizedBox(height: 12),
 
                       DropdownButtonFormField<String>(
-                        value: selectedMealType,
+                        initialValue: selectedMealType,
                         decoration: InputDecoration(
                           labelText: l10n.mealTypeLabel,
                           border: const OutlineInputBorder(),
@@ -605,11 +606,9 @@ class _MealScreenState extends State<MealScreen> {
                             final it = _items[i];
                             final bc = it['barcode'] as String;
                             final fi = products[bc];
-                            final displayName = (fi?.name.isNotEmpty ?? false)
-                                ? fi!.name
-                                : bc;
-                            final unit =
-                                (fi?.isLiquid == true) ? 'ml' : 'g';
+                            final displayName =
+                                (fi?.name.isNotEmpty ?? false) ? fi!.name : bc;
+                            final unit = (fi?.isLiquid == true) ? 'ml' : 'g';
 
                             return Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -630,8 +629,7 @@ class _MealScreenState extends State<MealScreen> {
                                       helperText: l10n.amountLabel,
                                       suffixText: unit,
                                       border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(14),
+                                        borderRadius: BorderRadius.circular(14),
                                       ),
                                     ),
                                   ),
@@ -646,14 +644,12 @@ class _MealScreenState extends State<MealScreen> {
                       Row(
                         children: [
                           TextButton(
-                            onPressed: () =>
-                                Navigator.of(ctx).pop(false),
+                            onPressed: () => Navigator.of(ctx).pop(false),
                             child: Text(l10n.cancel),
                           ),
                           const Spacer(),
                           FilledButton(
-                            onPressed: () =>
-                                Navigator.of(ctx).pop(true),
+                            onPressed: () => Navigator.of(ctx).pop(true),
                             child: Text(l10n.save),
                           ),
                         ],
@@ -686,8 +682,7 @@ class _MealScreenState extends State<MealScreen> {
         ),
       );
 
-      final fi = await ProductDatabaseHelper.instance
-          .getProductByBarcode(bc);
+      final fi = await ProductDatabaseHelper.instance.getProductByBarcode(bc);
       if (fi != null) {
         if (fi.isLiquid == true) {
           await DatabaseHelper.instance.insertWaterEntry(qty, ts);
@@ -709,8 +704,7 @@ class _MealScreenState extends State<MealScreen> {
   Future<void> _logCaffeineDose(double doseMg, DateTime timestamp) async {
     if (doseMg <= 0) return;
 
-    final supplements =
-        await DatabaseHelper.instance.getAllSupplements();
+    final supplements = await DatabaseHelper.instance.getAllSupplements();
     final caffeine = supplements.firstWhere(
       (s) => (s.code == 'caffeine') || s.name.toLowerCase() == 'caffeine',
       orElse: () => Supplement(
@@ -724,9 +718,7 @@ class _MealScreenState extends State<MealScreen> {
     );
 
     final caffeineId = caffeine.id ??
-        (await DatabaseHelper.instance
-                .insertSupplement(caffeine))
-            .id!;
+        (await DatabaseHelper.instance.insertSupplement(caffeine)).id!;
 
     await DatabaseHelper.instance.insertSupplementLog(
       SupplementLog(
@@ -818,7 +810,8 @@ class _IngredientCard extends StatelessWidget {
         },
         child: Text(
           name,
-          style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+          style:
+              theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
         ),
       );
 
@@ -835,8 +828,7 @@ class _IngredientCard extends StatelessWidget {
         child: TextFormField(
           initialValue: '${qty.toInt()}',
           textAlign: TextAlign.right,
-          keyboardType:
-              const TextInputType.numberWithOptions(decimal: false),
+          keyboardType: const TextInputType.numberWithOptions(decimal: false),
           decoration: InputDecoration(
             isDense: true,
             suffixText: unit,

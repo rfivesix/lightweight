@@ -68,7 +68,8 @@ class _MealEditorScreenState extends State<MealEditorScreen> {
               onPressed: _canSave ? _onSave : null,
               child: _saving
                   ? const SizedBox(
-                      width: 16, height: 16,
+                      width: 16,
+                      height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Text('Speichern'),
@@ -122,9 +123,13 @@ class _MealEditorScreenState extends State<MealEditorScreen> {
 
 String _label(MealType t) {
   switch (t) {
-    case MealType.breakfast: return 'Frühstück';
-    case MealType.lunch:     return 'Mittag';
-    case MealType.dinner:    return 'Abend';
-    case MealType.snack:     return 'Snack';
+    case MealType.breakfast:
+      return 'Frühstück';
+    case MealType.lunch:
+      return 'Mittag';
+    case MealType.dinner:
+      return 'Abend';
+    case MealType.snack:
+      return 'Snack';
   }
 }

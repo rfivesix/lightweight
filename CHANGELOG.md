@@ -3,6 +3,29 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+## Release Notes - 0.4.0-alpha.9+4009
+
+### ✨ New
+- Glass-styled bottom sheet menu (blur removed; smooth dimmed backdrop).
+- “Add fluid” flow merged into the new bottom sheet (amount + date + time).
+- “Start workout” bottom sheet with:
+  - **Start empty workout** action on top.
+  - List of routines below, each with a **Start** button; tap on the tile opens **Edit Routine**.
+- “Track supplement intake” fully inline in the bottom sheet (select supplement → dose & time).
+- **Nutrition** tab added to the bottom bar (temporary hub / empty state).
+- **Profile** moved from bottom bar to the **right side of the AppBar** as a large avatar (uses user photo when set).
+
+### 🎨 UX / Polish
+- Bottom sheet now respects the on-screen keyboard (slides up smoothly).
+- Consistent glass styling (rounded corners, straight hard edge around curve).
+- Restored instant tab switching on bottom bar tap (no intermediate swipe animation).
+
+### 🐞 Fixes
+- Meals: GlassFAB redirection corrected to open meal screen in edit mode.
+- Category localization fixed (translated labels show correctly).
+
+
 ## [0.4.0-alpha.8] - 2025-10-05
 ### Added
 - Haptic feedback when selecting chart points and pressing the Glass FAB.

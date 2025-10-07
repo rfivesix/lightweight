@@ -64,7 +64,7 @@
   "entriesForDateRangeLabel": "Einträge für",
   "noEntriesForPeriod": "Noch keine Einträge für diesen Zeitraum.",
   "waterEntryTitle": "Wasser",
-  "profileScreenTitle": "Profil & Ziele",
+  "profileScreenTitle": "Profil",
   "profileDailyGoals": "Tägliche Ziele",
   "snackbarGoalsSaved": "Ziele erfolgreich gespeichert!",
   "measurementsScreenTitle": "Messwerte",
@@ -609,5 +609,8 @@
   "ingredientsCapsLock": "ZUTATEN",
   "nutritionSectionLabel": "NÄHRWERTE",
   "nutritionCalculatedForCurrentAmounts": "für aktuelle Mengen",
-  "startCapsLock": "START"
+  "startCapsLock": "START",
+  "nutritionHubSubtitle": "Entdecke Einblicke, verfolge Mahlzeiten und erstelle hier bald deinen Ernährungsplan.",
+  "nutritionHubTitle": "Ernährung",
+  "nutrition": "Ernährung"
 }

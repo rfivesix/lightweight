@@ -185,7 +185,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get waterEntryTitle => 'Water';
 
   @override
-  String get profileScreenTitle => 'Profile & Goals';
+  String get profileScreenTitle => 'Profile';
 
   @override
   String get profileDailyGoals => 'Daily Goals';
@@ -1405,4 +1405,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get startCapsLock => 'START';
+
+  @override
+  String get nutritionHubSubtitle =>
+      'Discover insights, track meals, and plan your nutrition here soon.';
+
+  @override
+  String get nutritionHubTitle => 'Nutrition';
+
+  @override
+  String get nutrition => 'nutrition';
 }

@@ -64,7 +64,7 @@
   "entriesForDateRangeLabel": "Entries for",
   "noEntriesForPeriod": "No entries for this period yet.",
   "waterEntryTitle": "Water",
-  "profileScreenTitle": "Profile & Goals",
+  "profileScreenTitle": "Profile",
   "profileDailyGoals": "Daily Goals",
   "snackbarGoalsSaved": "Goals saved successfully!",
   "measurementsScreenTitle": "Measurements",
@@ -604,5 +604,8 @@
   "ingredientsCapsLock": "INGREDIENTS",
   "nutritionSectionLabel": "NUTRITION FACTS",
   "nutritionCalculatedForCurrentAmounts": "for current quantities",
-  "startCapsLock": "START"
+  "startCapsLock": "START",
+  "nutritionHubSubtitle": "Discover insights, track meals, and plan your nutrition here soon.",
+  "nutritionHubTitle": "Nutrition",
+  "nutrition": "nutrition"
 }
