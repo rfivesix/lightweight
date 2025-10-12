@@ -616,19 +616,21 @@ class _AddFoodScreenState extends State<AddFoodScreen>
               color: colorScheme.primary, size: 28),
           onPressed: () => Navigator.of(context).pop(item),
         ),
-        onTap: () {
+        onTap: () async {
           // KORREKTUR HIER: Navigiere zum Detail-Screen anstatt zu poppen.
-          Navigator.of(context)
-              .push(
+          final result = await Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => FoodDetailScreen(foodItem: item),
             ),
-          )
-              .then((_) {
+          );
+
+          if (result is FoodItem) {
+            Navigator.of(context).pop(result);
+          } else {
             // Lade die Listen neu, falls sich Favoriten geändert haben.
             _loadFavorites();
             _loadRecentItems();
-          });
+          }
         },
       ),
     );
@@ -1540,7 +1542,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       final fi = products[bc];
       if (fi != null) {
         if (fi.isLiquid == true) {
-          await DatabaseHelper.instance.insertWaterEntry(qty, ts);
+          // await DatabaseHelper.instance.insertWaterEntry(qty, ts);
         }
         final c100 = fi.caffeineMgPer100ml;
         if (fi.isLiquid == true && c100 != null && c100 > 0) {

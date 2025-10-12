@@ -28,9 +28,8 @@ class BackupManager {
 
   Future<bool> exportFullBackup() async {
     try {
-      // ... (Logik zum Sammeln der Daten bleibt identisch)
       final foodEntries = await _userDb.getAllFoodEntries();
-      final waterEntries = await _userDb.getAllWaterEntries();
+      final fluidEntries = await _userDb.getAllFluidEntries();
       final favoriteBarcodes = await _userDb.getFavoriteBarcodes();
       final measurementSessions = await _userDb.getMeasurementSessions();
       final productDb = await _productDb.offDatabase;
@@ -55,7 +54,7 @@ class BackupManager {
         // KORREKTUR: Nutzt das neue Modell
         schemaVersion: currentSchemaVersion,
         foodEntries: foodEntries,
-        waterEntries: waterEntries,
+        fluidEntries: fluidEntries,
         favoriteBarcodes: favoriteBarcodes,
         customFoodItems: customFoodItems,
         measurementSessions: measurementSessions,
@@ -129,7 +128,7 @@ class BackupManager {
       final supplementLogs = await _userDb.getAllSupplementLogs();
       await _userDb.importUserData(
         foodEntries: backup.foodEntries,
-        waterEntries: backup.waterEntries,
+        fluidEntries: backup.fluidEntries,
         favoriteBarcodes: backup.favoriteBarcodes,
         measurementSessions: backup.measurementSessions,
         supplements: supplements,
@@ -309,7 +308,7 @@ class BackupManager {
     try {
       // Daten sammeln (wie in exportFullBackup)
       final foodEntries = await _userDb.getAllFoodEntries();
-      final waterEntries = await _userDb.getAllWaterEntries();
+      final fluidEntries = await _userDb.getAllFluidEntries();
       final favoriteBarcodes = await _userDb.getFavoriteBarcodes();
       final measurementSessions = await _userDb.getMeasurementSessions();
       final productDb = await _productDb.offDatabase;
@@ -334,7 +333,7 @@ class BackupManager {
       final backup = LightweightBackup(
         schemaVersion: currentSchemaVersion,
         foodEntries: foodEntries,
-        waterEntries: waterEntries,
+        fluidEntries: fluidEntries,
         favoriteBarcodes: favoriteBarcodes,
         customFoodItems: customFoodItems,
         measurementSessions: measurementSessions,
@@ -430,7 +429,7 @@ class BackupManager {
 
       await _userDb.importUserData(
         foodEntries: backup.foodEntries,
-        waterEntries: backup.waterEntries,
+        fluidEntries: backup.fluidEntries,
         favoriteBarcodes: backup.favoriteBarcodes,
         measurementSessions: backup.measurementSessions,
         supplements: backup.supplements, // NEU
@@ -486,7 +485,7 @@ class BackupManager {
 
       // 1) Daten sammeln (wie schon implementiert)
       final foodEntries = await _userDb.getAllFoodEntries();
-      final waterEntries = await _userDb.getAllWaterEntries();
+      final fluidEntries = await _userDb.getAllFluidEntries();
       final favoriteBarcodes = await _userDb.getFavoriteBarcodes();
       final measurementSessions = await _userDb.getMeasurementSessions();
       final productDb = await _productDb.offDatabase;
@@ -510,7 +509,7 @@ class BackupManager {
       final backup = LightweightBackup(
         schemaVersion: currentSchemaVersion,
         foodEntries: foodEntries,
-        waterEntries: waterEntries,
+        fluidEntries: fluidEntries,
         favoriteBarcodes: favoriteBarcodes,
         customFoodItems: customFoodItems,
         measurementSessions: measurementSessions,

@@ -25,10 +25,10 @@ class QuantityDialogContent extends StatefulWidget {
 }
 
 class QuantityDialogContentState extends State<QuantityDialogContent> {
-  late final TextEditingController _textController;
-  late final TextEditingController _caffeineController; // NEU
+  late final TextEditingController _quantityController;
+  late final TextEditingController _caffeineController;
+  late final TextEditingController _sugarController;
   late DateTime _selectedDateTime;
-  bool _countAsWater = false;
   final List<String> _mealTypes = [
     "mealtypeBreakfast",
     "mealtypeLunch",
@@ -36,37 +36,49 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
     "mealtypeSnack"
   ];
   late String _selectedMealType;
+  late bool _isLiquid;
 
-  // Öffentliche Getter, damit von außen (über den GlobalKey) darauf zugegriffen werden kann
-  String get quantityText => _textController.text;
-  String get caffeineText => _caffeineController.text; // NEU
+  // Public Getters
+  String get quantityText => _quantityController.text;
+  String get caffeineText => _caffeineController.text;
+  String get sugarText => _sugarController.text;
   DateTime get selectedDateTime => _selectedDateTime;
-  bool get countAsWater => _countAsWater;
   String get selectedMealType => _selectedMealType;
+  bool get isLiquid => _isLiquid;
 
   @override
   void initState() {
     super.initState();
-    _textController =
-        TextEditingController(text: widget.initialQuantity?.toString() ?? '');
-    _caffeineController = TextEditingController(); // NEU
+    _quantityController = TextEditingController(
+        text: widget.initialQuantity?.toString() ?? '100');
+    _sugarController = TextEditingController(
+        text: widget.item.sugar?.toStringAsFixed(1).replaceAll('.0', '') ?? '');
+    _caffeineController = TextEditingController(
+        text: widget.item.caffeineMgPer100ml
+                ?.toStringAsFixed(1)
+                .replaceAll('.0', '') ??
+            '');
     _selectedDateTime = widget.initialTimestamp ?? DateTime.now();
     _selectedMealType = widget.initialMealType ?? "mealtypeSnack";
+    _isLiquid = widget.item.isLiquid ?? false;
   }
 
   @override
   void dispose() {
-    _textController.dispose();
-    _caffeineController.dispose(); // NEU
+    _quantityController.dispose();
+    _caffeineController.dispose();
+    _sugarController.dispose();
     super.dispose();
   }
 
   Future<void> _selectDate() async {
+    final locale = Localizations.localeOf(context);
     final DateTime? picked = await showDatePicker(
         context: context,
         initialDate: _selectedDateTime,
         firstDate: DateTime(2020),
-        lastDate: DateTime.now());
+        lastDate: DateTime.now().add(const Duration(days: 365)),
+        locale: locale);
     if (picked != null && picked != _selectedDateTime) {
       setState(() {
         _selectedDateTime = DateTime(picked.year, picked.month, picked.day,
@@ -94,8 +106,10 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final formattedDate = DateFormat('dd.MM.yyyy').format(_selectedDateTime);
-    final formattedTime = DateFormat.Hm().format(_selectedDateTime);
+    final locale = Localizations.localeOf(context).toString();
+    final formattedDate = DateFormat.yMd(locale).format(_selectedDateTime);
+    final formattedTime = DateFormat.Hm(locale).format(_selectedDateTime);
+    final unit = _isLiquid ? 'ml' : 'g';
 
     String getLocalizedMealName(String key) {
       switch (key) {
@@ -114,12 +128,16 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
 
     return Column(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         TextField(
-            controller: _textController,
+            controller: _quantityController,
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
-                labelText: l10n.amount_in_grams, suffixText: 'g'),
+                labelText: _isLiquid
+                    ? l10n.amount_in_milliliters
+                    : l10n.amount_in_grams,
+                suffixText: unit),
             autofocus: true),
         const SizedBox(height: DesignConstants.spacingL),
         DropdownButtonFormField<String>(
@@ -132,63 +150,52 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
             );
           }).toList(),
           onChanged: (String? newValue) {
-            if (newValue != null) {
-              setState(() {
-                _selectedMealType = newValue;
-              });
-            }
+            if (newValue != null) setState(() => _selectedMealType = newValue);
           },
         ),
         const SizedBox(height: DesignConstants.spacingL),
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          InkWell(
-              onTap: _selectDate,
-              child: Padding(
-                  padding: DesignConstants.cardMargin,
-                  child: Row(children: [
-                    const Icon(Icons.calendar_today, size: 20),
-                    const SizedBox(width: 8),
-                    Text(formattedDate, style: const TextStyle(fontSize: 16))
-                  ]))),
-          InkWell(
-              onTap: _selectTime,
-              child: Padding(
-                  padding: DesignConstants.cardMargin,
-                  child: Row(children: [
-                    const Icon(Icons.access_time, size: 20),
-                    const SizedBox(width: 8),
-                    Text(formattedTime, style: const TextStyle(fontSize: 16))
-                  ]))),
-        ]),
-        const SizedBox(height: DesignConstants.spacingS),
-        CheckboxListTile(
-            title: Text(l10n.add_to_water_intake),
-            value: _countAsWater,
-            onChanged: (bool? newValue) {
-              setState(() {
-                _countAsWater = newValue ?? false;
-              });
-            },
-            controlAffinity: ListTileControlAffinity.leading,
-            contentPadding: EdgeInsets.zero),
-        // NEU: Animiertes Koffein-Feld
-        AnimatedSize(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          child: _countAsWater
-              ? Padding(
-                  padding: const EdgeInsets.only(top: DesignConstants.spacingM),
-                  child: TextField(
-                    controller: _caffeineController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                        labelText: l10n.caffeinePrompt, // LOKALISIERT
-                        suffixText: l10n.caffeineUnit), // LOKALISIERT
-                  ),
-                )
-              : const SizedBox.shrink(),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            TextButton.icon(
+              icon: const Icon(Icons.calendar_today, size: 20),
+              label: Text(formattedDate, style: const TextStyle(fontSize: 16)),
+              onPressed: _selectDate,
+            ),
+            TextButton.icon(
+              icon: const Icon(Icons.access_time, size: 20),
+              label: Text(formattedTime, style: const TextStyle(fontSize: 16)),
+              onPressed: _selectTime,
+            ),
+          ],
         ),
+        const Divider(height: 24),
+        SwitchListTile(
+          title: Text(l10n.add_to_water_intake),
+          value: _isLiquid,
+          onChanged: (bool value) => setState(() => _isLiquid = value),
+          contentPadding: EdgeInsets.zero,
+        ),
+        if (_isLiquid) ...[
+          const SizedBox(height: DesignConstants.spacingS),
+          TextFormField(
+            controller: _sugarController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              labelText: '${l10n.sugar} (g / 100ml)',
+              suffixText: 'g',
+            ),
+          ),
+          const SizedBox(height: DesignConstants.spacingL),
+          TextFormField(
+            controller: _caffeineController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              labelText: l10n.caffeinePrompt,
+              suffixText: 'mg / 100ml',
+            ),
+          ),
+        ]
       ],
     );
   }

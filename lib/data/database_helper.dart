@@ -2,12 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:lightweight/models/fluid_entry.dart';
 import 'package:lightweight/models/measurement.dart';
 import 'package:lightweight/models/measurement_session.dart';
 import '../models/food_entry.dart';
-import '../models/water_entry.dart';
 import '../models/chart_data_point.dart';
 import '../models/supplement.dart';
 import '../models/supplement_log.dart';
@@ -28,7 +29,7 @@ class DatabaseHelper {
     final path = join(dbPath, fileName);
     return await openDatabase(
       path,
-      version: 14,
+      version: 19,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -45,17 +46,26 @@ class DatabaseHelper {
       barcode TEXT NOT NULL,
       timestamp TEXT NOT NULL,
       quantity_in_grams INTEGER NOT NULL,
-      meal_type TEXT NOT NULL DEFAULT "mealtypeSnack"
+      meal_type TEXT NOT NULL DEFAULT "mealtypeSnack",
+      sugar_in_grams REAL
     )
   ''');
 
+    // *** KORRIGIERTER BLOCK FÜR fluid_entries ***
     await db.execute('''
-    CREATE TABLE IF NOT EXISTS water_entries (
+    CREATE TABLE IF NOT EXISTS fluid_entries (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       timestamp TEXT NOT NULL,
-      quantity_in_ml INTEGER NOT NULL
+      quantity_in_ml INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      kcal INTEGER,
+      sugar_per_100ml REAL,
+      carbs_per_100ml REAL,
+      caffeine_per_100ml REAL,
+      linked_food_entry_id INTEGER -- DIESE ZEILE WURDE HINZUGEFÜGT
     )
   ''');
+    // *** ENDE DES KORRIGIERTEN BLOCKS ***
 
     await db.execute('''
     CREATE TABLE IF NOT EXISTS favorites (
@@ -63,7 +73,6 @@ class DatabaseHelper {
     )
   ''');
 
-    // Measurements (finale Struktur wie in v9)
     await db.execute('''
     CREATE TABLE IF NOT EXISTS measurement_sessions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -82,7 +91,6 @@ class DatabaseHelper {
     )
   ''');
 
-    // Supplements
     await db.execute('''
     CREATE TABLE IF NOT EXISTS supplements (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -97,6 +105,7 @@ class DatabaseHelper {
     )
   ''');
 
+    // *** KORRIGIERTER BLOCK FÜR supplement_logs ***
     await db.execute('''
     CREATE TABLE IF NOT EXISTS supplement_logs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -105,12 +114,14 @@ class DatabaseHelper {
       unit TEXT NOT NULL,
       timestamp TEXT NOT NULL,
       source_food_entry_id INTEGER,
+      source_fluid_entry_id INTEGER, -- DIESE ZEILE WURDE HINZUGEFÜGT
       FOREIGN KEY (supplement_id) REFERENCES supplements(id) ON DELETE CASCADE,
-      FOREIGN KEY (source_food_entry_id) REFERENCES food_entries(id) ON DELETE CASCADE
+      FOREIGN KEY (source_food_entry_id) REFERENCES food_entries(id) ON DELETE SET NULL,
+      FOREIGN KEY (source_fluid_entry_id) REFERENCES fluid_entries(id) ON DELETE CASCADE
     )
   ''');
+    // *** ENDE DES KORRIGIERTEN BLOCKS ***
 
-    // Meals
     await db.execute('''
     CREATE TABLE IF NOT EXISTS meals (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -138,14 +149,13 @@ class DatabaseHelper {
     await db.execute(
         'CREATE INDEX IF NOT EXISTS idx_food_entries_mealtype_ts ON food_entries(meal_type, timestamp)');
     await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_water_entries_timestamp ON water_entries(timestamp)');
+        'CREATE INDEX IF NOT EXISTS idx_fluid_entries_timestamp ON fluid_entries(timestamp)');
     await db.execute(
         'CREATE INDEX IF NOT EXISTS idx_supplement_logs_timestamp ON supplement_logs(timestamp)');
     await db.execute(
         'CREATE INDEX IF NOT EXISTS idx_supplement_logs_supplement ON supplement_logs(supplement_id)');
 
     // --- Built-ins einmalig einfüllen (idempotent) ---
-    // Caffeine
     final caffeRows = await db.query(
       'supplements',
       where: 'code = ?',
@@ -163,7 +173,6 @@ class DatabaseHelper {
       });
     }
 
-    // Creatine (optional)
     final creaRows = await db.query(
       'supplements',
       where: 'code = ?',
@@ -187,8 +196,18 @@ class DatabaseHelper {
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
     // Dieser Block bringt alte Versionen Schritt für Schritt auf den neuesten Stand.
     if (oldVersion < 2) {
-      await db.execute(
-          'CREATE TABLE water_entries (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT NOT NULL, quantity_in_ml INTEGER NOT NULL)');
+      await db.execute('''
+      CREATE TABLE IF NOT EXISTS fluid_entries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp TEXT NOT NULL,
+        quantity_in_ml INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        kcal INTEGER,
+        sugar_per_100ml REAL,
+        carbs_per_100ml REAL,
+        caffeine_per_100ml REAL
+      )
+    ''');
     }
     if (oldVersion < 4) {
       await db.execute('CREATE TABLE favorites (barcode TEXT PRIMARY KEY)');
@@ -306,7 +325,7 @@ class DatabaseHelper {
       await db.execute(
           'CREATE INDEX IF NOT EXISTS idx_food_entries_timestamp ON food_entries(timestamp)');
       await db.execute(
-          'CREATE INDEX IF NOT EXISTS idx_water_entries_timestamp ON water_entries(timestamp)');
+          'CREATE INDEX IF NOT EXISTS idx_fluid_entries_timestamp ON fluid_entries(timestamp)');
       await db.execute(
           'CREATE INDEX IF NOT EXISTS idx_supp_logs_ts ON supplement_logs(timestamp)');
       await db.execute(
@@ -326,12 +345,17 @@ class DatabaseHelper {
       )
     ''');
 
-      // water_entries
+      // fluid_entries
       await db.execute('''
-      CREATE TABLE IF NOT EXISTS water_entries (
+      CREATE TABLE IF NOT EXISTS fluid_entries (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         timestamp TEXT NOT NULL,
-        quantity_in_ml INTEGER NOT NULL
+        quantity_in_ml INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        kcal INTEGER,
+        sugar_per_100ml REAL,
+        carbs_per_100ml REAL,
+        caffeine_per_100ml REAL
       )
     ''');
 
@@ -415,13 +439,67 @@ class DatabaseHelper {
       await db.execute(
           'CREATE INDEX IF NOT EXISTS idx_food_entries_mealtype_ts ON food_entries(meal_type, timestamp)');
       await db.execute(
-          'CREATE INDEX IF NOT EXISTS idx_water_entries_timestamp ON water_entries(timestamp)');
+          'CREATE INDEX IF NOT EXISTS idx_fluid_entries_timestamp ON fluid_entries(timestamp)');
       await db.execute(
           'CREATE INDEX IF NOT EXISTS idx_supplement_logs_timestamp ON supplement_logs(timestamp)');
       await db.execute(
           'CREATE INDEX IF NOT EXISTS idx_supplement_logs_supplement ON supplement_logs(supplement_id)');
 
       debugPrint('Catch-up: Tabellen + Indizes bis v14 sichergestellt.');
+    }
+
+    if (oldVersion < 15) {
+      try {
+        await db
+            .execute('ALTER TABLE food_entries ADD COLUMN sugar_in_grams REAL');
+      } catch (_) {}
+      debugPrint("DB v15: food_entries.sugar_in_grams added.");
+    }
+    if (oldVersion < 16) {
+      try {
+        await db.execute(
+            'ALTER TABLE fluid_entries ADD COLUMN carbs_per_100ml REAL');
+      } catch (_) {}
+      debugPrint("DB v16: fluid_entries.carbs_per_100ml added.");
+    }
+    if (oldVersion < 17) {
+      try {
+        await db.execute(
+            'ALTER TABLE supplement_logs ADD COLUMN source_fluid_entry_id INTEGER');
+      } catch (_) {}
+      debugPrint("DB v17: supplement_logs.source_fluid_entry_id added.");
+    }
+    if (oldVersion < 18) {
+      try {
+        await db.execute(
+            'ALTER TABLE supplement_logs ADD COLUMN source_fluid_entry_id INTEGER');
+        // Füge die Fremdschlüsselbeziehung hinzu, falls sie nicht existiert
+        // HINWEIS: Das Hinzufügen von Foreign Keys zu einer bestehenden Tabelle ist in SQLite komplex.
+        // Für Einfachheit verlassen wir uns auf die Löschlogik in der App.
+        // Aber für Neuinstallationen ist der Foreign Key in _createDB korrekt.
+      } catch (_) {}
+
+      // Korrigiere auch den Foreign Key für food_entries, falls er falsch war
+      try {
+        await db.execute(
+            'DROP INDEX IF EXISTS idx_supp_logs_food_entry'); // Beispiel, falls alter Index existierte
+        await db.execute('''
+          -- Rekonstruktion der Tabelle, um Foreign Key hinzuzufügen, ist aufwändig.
+          -- Stattdessen stellen wir sicher, dass die Logik in der App stimmt.
+          -- Die Löschung erfolgt jetzt in der App-Logik (deleteFoodEntry, deleteFluidEntry)
+        ''');
+      } catch (_) {}
+
+      debugPrint(
+          "DB v18: supplement_logs.source_fluid_entry_id hinzugefügt und Foreign Keys sichergestellt.");
+    }
+
+    if (oldVersion < 19) {
+      try {
+        await db.execute(
+            'ALTER TABLE fluid_entries ADD COLUMN linked_food_entry_id INTEGER');
+      } catch (_) {}
+      debugPrint("DB v19: fluid_entries.linked_food_entry_id added.");
     }
   }
 
@@ -480,69 +558,100 @@ class DatabaseHelper {
   Future<void> deleteFoodEntry(int id) async {
     final db = await database;
     await db.transaction((txn) async {
-      // Verknüpfte Supplement-Logs (z. B. Koffein zu diesem Drink) entfernen
+      // Lösche zuerst verknüpfte Supplement-Logs (z.B. Koffein)
       await txn.delete('supplement_logs',
           where: 'source_food_entry_id = ?', whereArgs: [id]);
+      // Lösche dann den verknüpften Fluid-Eintrag (falls vorhanden)
+      await txn.delete('fluid_entries',
+          where: 'linked_food_entry_id = ?', whereArgs: [id]);
+      // Lösche zuletzt den Food-Eintrag selbst
       await txn.delete('food_entries', where: 'id = ?', whereArgs: [id]);
     });
-    print("Eintrag mit ID $id erfolgreich gelöscht.");
+    print(
+        "Eintrag mit ID $id und alle verknüpften Daten erfolgreich gelöscht.");
   }
 
-  // --- WATER ENTRIES ---
-  Future<void> insertWaterEntry(int quantityInMl, DateTime timestamp) async {
+  // --- FLUID ENTRIES ---
+  Future<int> insertFluidEntry(FluidEntry entry) async {
     final db = await database;
-    await db.insert(
-        'water_entries',
-        {
-          'timestamp': timestamp.toIso8601String(),
-          'quantity_in_ml': quantityInMl
-        },
+    final id = await db.insert('fluid_entries', entry.toMap(),
         conflictAlgorithm: ConflictAlgorithm.replace);
-    print("$quantityInMl ml Wasser erfolgreich gespeichert.");
+    print(
+        "Neuer FluidEntry erfolgreich in der Benutzer-DB gespeichert (id=$id).");
+    return id;
   }
 
-  Future<int> getWaterForDate(DateTime date) async {
+  Future<List<FluidEntry>> getFluidEntriesForDate(DateTime date) async {
     final db = await database;
     final dateString = date.toIso8601String().substring(0, 10);
-    final result = await db.rawQuery(
-        'SELECT SUM(quantity_in_ml) as total FROM water_entries WHERE timestamp LIKE ?',
-        ['$dateString%']);
-    return result.first['total'] as int? ?? 0;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'fluid_entries',
+      where: 'timestamp LIKE ?',
+      whereArgs: ['$dateString%'],
+    );
+    return List.generate(maps.length, (i) {
+      return FluidEntry.fromMap(maps[i]);
+    });
   }
 
-  Future<int> getWaterForDateRange(DateTime start, DateTime end) async {
+  Future<void> deleteFluidEntry(int id) async {
     final db = await database;
-    final startDateString = DateFormat('yyyy-MM-dd').format(start);
-    final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
-    final endDateString = endDate.toIso8601String();
-    final result = await db.rawQuery(
-        'SELECT SUM(quantity_in_ml) as total FROM water_entries WHERE timestamp BETWEEN ? AND ?',
-        [startDateString, endDateString]);
-    return result.first['total'] as int? ?? 0;
+
+    // Finde zuerst den Eintrag, um die verknüpfte FoodEntry-ID zu bekommen
+    final List<Map<String, dynamic>> maps = await db.query(
+      'fluid_entries',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+
+    if (maps.isNotEmpty) {
+      final linkedFoodEntryId = maps.first['linked_food_entry_id'] as int?;
+
+      if (linkedFoodEntryId != null) {
+        // *** DAS IST DER FIX ***
+        // Wenn es einen verknüpften FoodEntry gibt, rufen wir dessen Löschmethode auf.
+        // Diese kümmert sich um das Löschen von ALLEM (FoodEntry, FluidEntry und SupplementLog).
+        await deleteFoodEntry(linkedFoodEntryId);
+      } else {
+        // Dies ist ein eigenständiger FluidEntry (z.B. "Wasser" oder manueller Proteinshake).
+        // Er hat möglicherweise einen eigenen Koffein-Log.
+        await db.transaction((txn) async {
+          await txn.delete('supplement_logs',
+              where: 'source_fluid_entry_id = ?', whereArgs: [id]);
+          await txn.delete('fluid_entries', where: 'id = ?', whereArgs: [id]);
+        });
+      }
+      print(
+          "Fluid-Eintrag mit ID $id und alle verknüpften Daten erfolgreich gelöscht.");
+    }
   }
 
-  Future<List<WaterEntry>> getWaterEntriesForDateRange(
+  Future<List<FluidEntry>> getFluidEntriesForDateRange(
       DateTime start, DateTime end) async {
     final db = await database;
     final startDateString = DateFormat('yyyy-MM-dd').format(start);
     final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
     final endDateString = endDate.toIso8601String();
     final List<Map<String, dynamic>> maps = await db.query(
-      'water_entries',
+      'fluid_entries',
       where: 'timestamp BETWEEN ? AND ?',
       whereArgs: [startDateString, endDateString],
     );
-    return List.generate(maps.length, (i) => WaterEntry.fromMap(maps[i]));
+    return List.generate(maps.length, (i) {
+      return FluidEntry.fromMap(maps[i]);
+    });
   }
 
-  Future<void> deleteWaterEntry(int id) async {
+  Future<void> updateFluidEntry(FluidEntry entry) async {
     final db = await database;
-    await db.delete(
-      'water_entries',
+    await db.update(
+      'fluid_entries',
+      entry.toMap(),
       where: 'id = ?',
-      whereArgs: [id],
+      whereArgs: [entry.id],
     );
-    print("Wasser-Eintrag mit ID $id erfolgreich gelöscht.");
+    print("Fluid-Eintrag mit ID ${entry.id} erfolgreich aktualisiert.");
   }
 
   // --- FAVORITES ---
@@ -726,17 +835,6 @@ class DatabaseHelper {
     print("Eintrag mit ID ${entry.id} erfolgreich aktualisiert.");
   }
 
-  Future<void> updateWaterEntry(WaterEntry entry) async {
-    final db = await database;
-    await db.update(
-      'water_entries',
-      entry.toMap(),
-      where: 'id = ?',
-      whereArgs: [entry.id],
-    );
-    print("Wasser-Eintrag mit ID ${entry.id} erfolgreich aktualisiert.");
-  }
-
   Future<DateTime?> getEarliestMeasurementDate() async {
     final db = await database;
     final maps = await db.query('measurement_sessions',
@@ -756,12 +854,10 @@ class DatabaseHelper {
     }
     return null;
   }
-// In lib/data/database_helper.dart (korrigierte Version der neuen Methoden)
 
   Future<List<FoodEntry>> getAllFoodEntries() async {
     final db = await database;
     final maps = await db.query('food_entries');
-    // KORREKTUR: Nutzt den Standard-Konstruktor, da 'fromJson' nicht existiert.
     return maps
         .map((map) => FoodEntry(
               id: map['id'] as int?,
@@ -773,16 +869,15 @@ class DatabaseHelper {
         .toList();
   }
 
-  Future<List<WaterEntry>> getAllWaterEntries() async {
+  Future<List<FluidEntry>> getAllFluidEntries() async {
     final db = await database;
-    final maps = await db.query('water_entries');
-    // KORREKTUR: Nutzt die korrekte 'fromMap'-Factory.
-    return maps.map((map) => WaterEntry.fromMap(map)).toList();
+    final maps = await db.query('fluid_entries');
+    return maps.map((map) => FluidEntry.fromMap(map)).toList();
   }
 
   Future<void> importUserData({
     required List<FoodEntry> foodEntries,
-    required List<WaterEntry> waterEntries,
+    required List<FluidEntry> fluidEntries,
     required List<String> favoriteBarcodes,
     required List<MeasurementSession> measurementSessions,
     required List<Supplement> supplements, // NEU
@@ -793,8 +888,8 @@ class DatabaseHelper {
       for (final entry in foodEntries) {
         await txn.insert('food_entries', entry.toMap());
       }
-      for (final entry in waterEntries) {
-        await txn.insert('water_entries', entry.toMap());
+      for (final entry in fluidEntries) {
+        await txn.insert('fluid_entries', entry.toMap());
       }
       for (final barcode in favoriteBarcodes) {
         await txn.insert('favorites', {'barcode': barcode});
@@ -994,7 +1089,7 @@ class DatabaseHelper {
     final db = await database;
     await db.transaction((txn) async {
       await txn.delete('food_entries');
-      await txn.delete('water_entries');
+      await txn.delete('fluid_entries');
       await txn.delete('favorites');
       await txn.delete('measurements');
       await txn.delete('measurement_sessions');

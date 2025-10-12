@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## Release Notes - 0.4.0-alpha.10+4010
+
+### ✨ New Features & Major Improvements
+
+*   **Enhanced Fluid Tracking:**
+  *   Any liquid can now be logged with a name, quantity, sugar, and caffeine content via the new "+" menu.
+  *   When logging food items, you can now specify that it is a liquid ("Add to water intake"). The quantity is then correctly added to the daily water goal.
+*   **Automatic Caffeine Tracking:**
+  *   Daily caffeine intake is now automatically calculated and displayed in the nutrition summary.
+  *   Caffeine can be specified in "mg per 100ml" for both custom liquids and food items marked as liquid.
+  *   A new "Caffeine" entry has been added to the trackable supplements.
+*   **Improved Nutrition Analysis:**
+  *   Calculations in the nutrition analysis (`nutrition_screen.dart`) and on the dashboard (`diary_screen.dart`) now correctly include calories, carbs, and sugar from all logged fluids.
+*   **Expanded "Add" Menu:**
+  *   The central speed-dial menu has been expanded with "Add Liquid" and "Log Supplement" options for faster access.
+
+### 🐛 Bugfixes & Improvements
+
+*   **Data Integrity on Deletion:** Fixed a critical bug where deleting fluid or food entries did not remove associated supplement logs (e.g., for caffeine). The deletion logic has been revised to ensure data consistency.
+*   **Database Structure:** The database has been updated to version 19 to enable linking between food, fluid, and supplement entries.
+*   **UI Improvements in Diary:** Fluids are now displayed in their own section (`Water & Drinks`) on the diary page for better clarity.
+*   **Data Backup Fixes:** The backup model (`LightweightBackup`) has been updated to correctly handle the new `FluidEntry` data.
+
 ## Release Notes - 0.4.0-alpha.9+4009
 
 ### ✨ New

@@ -6,6 +6,9 @@ class SupplementLog {
   final double dose;
   final String unit;
   final DateTime timestamp;
+  // --- KORREKTUR START ---
+  final int? source_food_entry_id;
+  final int? source_fluid_entry_id;
 
   SupplementLog({
     this.id,
@@ -13,7 +16,10 @@ class SupplementLog {
     required this.dose,
     required this.unit,
     required this.timestamp,
+    this.source_food_entry_id, // Jetzt als optionaler Parameter verfügbar
+    this.source_fluid_entry_id, // Jetzt als optionaler Parameter verfügbar
   });
+  // --- KORREKTUR ENDE ---
 
   Map<String, dynamic> toMap() {
     return {
@@ -22,6 +28,10 @@ class SupplementLog {
       'dose': dose,
       'unit': unit,
       'timestamp': timestamp.toIso8601String(),
+      // --- KORREKTUR START ---
+      'source_food_entry_id': source_food_entry_id,
+      'source_fluid_entry_id': source_fluid_entry_id,
+      // --- KORREKTUR ENDE ---
     };
   }
 
@@ -32,6 +42,10 @@ class SupplementLog {
       dose: map['dose'],
       unit: map['unit'],
       timestamp: DateTime.parse(map['timestamp']),
+      // --- KORREKTUR START ---
+      source_food_entry_id: map['source_food_entry_id'],
+      source_fluid_entry_id: map['source_fluid_entry_id'],
+      // --- KORREKTUR ENDE ---
     );
   }
 }

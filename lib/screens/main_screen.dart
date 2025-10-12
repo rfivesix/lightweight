@@ -6,10 +6,13 @@ import 'package:flutter/rendering.dart';
 import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/dialogs/log_supplement_dialog_content.dart';
+import 'package:lightweight/dialogs/fluid_dialog_content.dart';
+import 'package:lightweight/dialogs/log_supplement_menu.dart';
 import 'package:lightweight/dialogs/quantity_dialog_content.dart';
 import 'package:lightweight/dialogs/water_dialog_content.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/food_entry.dart';
+import 'package:lightweight/models/fluid_entry.dart';
 import 'package:lightweight/models/food_item.dart';
 import 'package:lightweight/models/supplement.dart';
 import 'package:lightweight/models/supplement_log.dart';
@@ -98,8 +101,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     switch (action) {
       case 'start_workout':
         _showStartWorkoutMenu();
-        // Navigator.of(context).push(
-        //    MaterialPageRoute(builder: (context) => const RoutinesScreen()));
         break;
       case 'add_measurement':
         final success = await Navigator.of(context).push<bool>(
@@ -114,13 +115,12 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         await _showAddFluidMenu();
         break;
       case 'log_supplement':
-        _showLogSupplementMenu(); //_handleSupplementAdd();
+        _showLogSupplementMenu();
         break;
     }
   }
 
   Future<void> _refreshHomeScreen() async {
-    // Renamed to DiaryScreen
     if (_currentIndex == 0) {
       _tagebuchKey.currentState?.loadDataForDate(DateTime.now());
     }
@@ -128,146 +128,26 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
   Future<void> _showLogSupplementMenu() async {
     final l10n = AppLocalizations.of(context)!;
-    final supplements = await DatabaseHelper.instance.getAllSupplements();
-    if (!mounted || supplements.isEmpty) return;
-
     await showGlassBottomMenu(
       context: context,
-      title: l10n.logIntakeTitle, // "Track supplement intake"
+      title: l10n.logIntakeTitle,
       contentBuilder: (ctx, close) {
-        // Phase-State lokal im Builder halten
-        Supplement? selected;
-        final doseKey = GlobalKey<LogSupplementDialogContentState>();
-
-        return StatefulBuilder(
-          builder: (ctx, setState) {
-            // PHASE 1: Supplement auswählen
-            if (selected == null) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Liste der Supplements (scrollbar via BottomSheet-Container)
-                  ...supplements.map((s) => Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 6, horizontal: 4),
-                        child: Material(
-                          color: Colors.white.withOpacity(
-                            Theme.of(ctx).brightness == Brightness.dark
-                                ? 0.06
-                                : 0.08,
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(16),
-                            onTap: () => setState(() => selected = s),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 12),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.medication_outlined),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                      child: Text(
-                                          localizeSupplementName(s, l10n))),
-                                  const Icon(Icons.chevron_right_rounded),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      )),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: close,
-                          child: Text(l10n.cancel),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              );
-            }
-
-            // PHASE 2: Dosis + Zeitpunkt erfassen (bestehendes Dialog-Widget nutzen)
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    localizeSupplementName(selected!, l10n),
-                    style: Theme.of(ctx)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w700),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                LogSupplementDialogContent(
-                  key: doseKey,
-                  supplement: selected!,
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => setState(() => selected = null),
-                        child: Text("l10n.back_button" ?? l10n.cancel),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: () async {
-                          final st = doseKey.currentState;
-                          if (st == null) return;
-                          final dose =
-                              double.tryParse(st.doseText.replaceAll(',', '.'));
-                          if (dose == null || dose <= 0) return;
-
-                          final log = SupplementLog(
-                            supplementId: selected!.id!,
-                            dose: dose,
-                            unit: selected!.unit,
-                            timestamp: st.selectedDateTime,
-                          );
-                          await DatabaseHelper.instance
-                              .insertSupplementLog(log);
-                          close();
-                          _refreshHomeScreen();
-                        },
-                        child: Text(l10n.add_button),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            );
-          },
-        );
+        return LogSupplementMenu(close: close);
       },
     );
+    _refreshHomeScreen();
   }
 
   Future<void> _showStartWorkoutMenu() async {
     final l10n = AppLocalizations.of(context)!;
-
-    // Routinen laden wie im RoutinesScreen
     final routines = await WorkoutDatabaseHelper.instance.getAllRoutines();
     if (!mounted) return;
 
     await showGlassBottomMenu(
       context: context,
-      title: l10n.startWorkout, // Titel des Menüs
+      title: l10n.startWorkout,
       contentBuilder: (ctx, close) {
         final isDark = Theme.of(ctx).brightness == Brightness.dark;
-
-        // Gemeinsame Card-Factory (Look wie deine SummaryCards im Menü)
         Widget glassCard({required Widget child, EdgeInsets? padding}) {
           return Material(
             color: Colors.white.withOpacity(isDark ? 0.06 : 0.08),
@@ -280,12 +160,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           );
         }
 
-        // 1) Free / Empty workout ganz oben
         final freeWorkoutTile = glassCard(
           child: InkWell(
             borderRadius: BorderRadius.circular(16),
             onTap: () async {
-              // exakter Flow wie im RoutinesScreen._startEmptyWorkout
               final newWorkoutLog = await WorkoutDatabaseHelper.instance
                   .startWorkout(routineName: l10n.freeWorkoutTitle);
               if (!context.mounted) return;
@@ -302,7 +180,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 const Icon(Icons.play_arrow_rounded),
                 const SizedBox(width: 12),
                 Text(
-                  l10n.startEmptyWorkoutButton, // gleicher String wie im Screen
+                  l10n.startEmptyWorkoutButton,
                   style: Theme.of(ctx)
                       .textTheme
                       .titleMedium
@@ -313,7 +191,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           ),
         );
 
-        // 2) Routinenliste darunter – Start-Button links, Tap öffnet Edit
         final routinesList = ConstrainedBox(
           constraints: const BoxConstraints(maxHeight: 420),
           child: ListView.separated(
@@ -327,10 +204,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Start-Button links
                     FilledButton(
                       onPressed: () async {
-                        // exakter Flow wie im RoutinesScreen._startWorkout
                         showDialog(
                           context: context,
                           barrierDismissible: false,
@@ -343,7 +218,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                             .instance
                             .startWorkout(routineName: r.name);
                         if (!context.mounted) return;
-                        Navigator.of(context).pop(); // loading
+                        Navigator.of(context).pop();
                         if (fullRoutine != null) {
                           close();
                           Navigator.of(context)
@@ -356,12 +231,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                               .then((_) => _refreshHomeScreen());
                         }
                       },
-                      child: Text(
-                          l10n.startButton), // gleicher String wie im Screen
+                      child: Text(l10n.startButton),
                     ),
                     const SizedBox(width: 12),
-
-                    // Titel + Subtitle (Tap = Edit)
                     Expanded(
                       child: InkWell(
                         borderRadius: BorderRadius.circular(12),
@@ -387,7 +259,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              l10n.editRoutineSubtitle, // „Tap to edit, or start the workout.“
+                              l10n.editRoutineSubtitle,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: Theme.of(ctx).textTheme.bodySmall,
@@ -396,8 +268,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                         ),
                       ),
                     ),
-
-                    // Optional: Overflow-Icon für spätere Aktionen
                     const SizedBox(width: 8),
                     Icon(Icons.more_vert_rounded,
                         color: Theme.of(ctx).textTheme.bodyMedium?.color),
@@ -408,7 +278,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           ),
         );
 
-        // Zusammenbauen
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -417,6 +286,233 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
               const SizedBox(height: 12),
               routinesList,
             ],
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _handleAddFood() async {
+    final FoodItem? selectedFoodItem = await Navigator.of(context)
+        .push<FoodItem>(
+            MaterialPageRoute(builder: (context) => const AddFoodScreen()));
+
+    if (selectedFoodItem == null || !mounted) return;
+
+    final result = await _showQuantityMenu(selectedFoodItem);
+    if (result == null || !mounted) return;
+
+    final int quantity = result.quantity;
+    final DateTime timestamp = result.timestamp;
+    final String mealType = result.mealType;
+    final bool isLiquid = result.isLiquid;
+    final double? caffeinePer100 = result.caffeinePer100ml;
+
+    // 1. Immer den FoodEntry mit allen Nährwerten speichern
+    final newFoodEntry = FoodEntry(
+      barcode: selectedFoodItem.barcode,
+      timestamp: timestamp,
+      quantityInGrams: quantity,
+      mealType: mealType,
+    );
+    final newFoodEntryId =
+        await DatabaseHelper.instance.insertFoodEntry(newFoodEntry);
+
+    // 2. Wenn es eine Flüssigkeit ist, ZUSÄTZLICH einen FluidEntry NUR FÜR WASSER erstellen
+    if (isLiquid) {
+      final newFluidEntry = FluidEntry(
+        timestamp: timestamp,
+        quantityInMl: quantity,
+        name: selectedFoodItem.name,
+        // WICHTIG: Keine Nährwerte hier, um Doppelzählung zu vermeiden!
+        kcal: null,
+        sugarPer100ml: null,
+        carbsPer100ml: null,
+        caffeinePer100ml: null,
+        linked_food_entry_id: newFoodEntryId, // Die neue Verknüpfung
+      );
+      await DatabaseHelper.instance.insertFluidEntry(newFluidEntry);
+    }
+
+    // 3. Koffein nur loggen, wenn als Flüssigkeit deklariert, und mit FoodEntry verknüpfen
+    if (isLiquid && caffeinePer100 != null && caffeinePer100 > 0) {
+      final totalCaffeine = (caffeinePer100 / 100.0) * quantity;
+      await _logCaffeineDose(totalCaffeine, timestamp,
+          foodEntryId: newFoodEntryId);
+    }
+
+    _refreshHomeScreen();
+  }
+
+  Future<void> _showAddFluidMenu() async {
+    final l10n = AppLocalizations.of(context)!;
+    final key = GlobalKey<FluidDialogContentState>();
+    await showGlassBottomMenu(
+      context: context,
+      title: l10n.add_liquid_title,
+      contentBuilder: (ctx, close) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FluidDialogContent(key: key),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: close,
+                    child: Text(l10n.cancel),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () async {
+                      final state = key.currentState;
+                      if (state == null) return;
+                      final quantity = int.tryParse(state.quantityText);
+                      if (quantity == null || quantity <= 0) return;
+
+                      final name = state.nameText;
+                      final sugarPer100ml =
+                          double.tryParse(state.sugarText.replaceAll(',', '.'));
+                      final caffeinePer100ml = double.tryParse(
+                          state.caffeineText.replaceAll(',', '.'));
+                      final kcal = (sugarPer100ml != null)
+                          ? ((sugarPer100ml / 100) * quantity * 4).round()
+                          : null;
+
+                      final newEntry = FluidEntry(
+                        timestamp: state.selectedDateTime,
+                        quantityInMl: quantity,
+                        name: name,
+                        kcal: kcal,
+                        sugarPer100ml: sugarPer100ml,
+                        carbsPer100ml: sugarPer100ml, // Spiegeln
+                        caffeinePer100ml: caffeinePer100ml,
+                      );
+
+                      final newId = await DatabaseHelper.instance
+                          .insertFluidEntry(newEntry);
+
+                      if (caffeinePer100ml != null && caffeinePer100ml > 0) {
+                        final totalCaffeine =
+                            (caffeinePer100ml / 100.0) * quantity;
+                        await _logCaffeineDose(
+                            totalCaffeine, state.selectedDateTime,
+                            fluidEntryId: newId);
+                      }
+
+                      close();
+                      _refreshHomeScreen();
+                    },
+                    child: Text(l10n.add_button),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _logCaffeineDose(double doseMg, DateTime timestamp,
+      {int? foodEntryId, int? fluidEntryId}) async {
+    if (doseMg <= 0) return;
+
+    final supplements = await DatabaseHelper.instance.getAllSupplements();
+    Supplement? caffeineSupplement;
+    try {
+      caffeineSupplement = supplements.firstWhere((s) => s.code == 'caffeine');
+    } catch (e) {
+      return;
+    }
+
+    if (caffeineSupplement.id == null) return;
+
+    await DatabaseHelper.instance.insertSupplementLog(
+      SupplementLog(
+        supplementId: caffeineSupplement.id!,
+        dose: doseMg,
+        unit: 'mg',
+        timestamp: timestamp,
+        // EINEN der beiden Fremdschlüssel setzen
+        source_food_entry_id: foodEntryId,
+        source_fluid_entry_id: fluidEntryId,
+      ),
+    );
+  }
+
+  Future<
+      ({
+        int quantity,
+        DateTime timestamp,
+        String mealType,
+        bool isLiquid,
+        double? sugarPer100ml,
+        double? caffeinePer100ml
+      })?> _showQuantityMenu(FoodItem item) async {
+    final l10n = AppLocalizations.of(context)!;
+    final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
+
+    return showGlassBottomMenu<
+        ({
+          int quantity,
+          DateTime timestamp,
+          String mealType,
+          bool isLiquid,
+          double? sugarPer100ml,
+          double? caffeinePer100ml
+        })>(
+      context: context,
+      title: item.name,
+      contentBuilder: (ctx, close) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            QuantityDialogContent(key: dialogStateKey, item: item),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      close();
+                      Navigator.of(ctx).pop(null);
+                    },
+                    child: Text(l10n.cancel),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      final state = dialogStateKey.currentState;
+                      if (state != null) {
+                        final quantity = int.tryParse(state.quantityText);
+                        final sugar = double.tryParse(
+                            state.sugarText.replaceAll(',', '.'));
+                        final caffeine = double.tryParse(
+                            state.caffeineText.replaceAll(',', '.'));
+                        if (quantity != null && quantity > 0) {
+                          close();
+                          Navigator.of(ctx).pop((
+                            quantity: quantity,
+                            timestamp: state.selectedDateTime,
+                            mealType: state.selectedMealType,
+                            isLiquid: state.isLiquid,
+                            sugarPer100ml: sugar,
+                            caffeinePer100ml: caffeine
+                          ));
+                        }
+                      }
+                    },
+                    child: Text(l10n.add_button),
+                  ),
+                ),
+              ],
+            ),
           ],
         );
       },
@@ -465,47 +561,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     );
   }
 
-  Future<void> _handleAddFood() async {
-    final FoodItem? selectedFoodItem = await Navigator.of(context)
-        .push<FoodItem>(
-            MaterialPageRoute(builder: (context) => const AddFoodScreen()));
-
-    if (selectedFoodItem == null || !mounted) return;
-
-    final result = await _showQuantityDialog(selectedFoodItem);
-    if (result == null || !mounted) return;
-
-    final int quantity = result.$1; // ml ~ g
-    final DateTime timestamp = result.$2;
-    final bool countAsWater = result.$3;
-    final String mealType = result.$4;
-    final double? caffeinePer100ml = result.$5; // mg per 100 ml
-
-    final newEntry = FoodEntry(
-      barcode: selectedFoodItem.barcode,
-      timestamp: timestamp,
-      quantityInGrams: quantity,
-      mealType: mealType,
-    );
-
-    // ⬇️ wir bekommen jetzt die ID zurück
-    final int newId = await DatabaseHelper.instance.insertFoodEntry(newEntry);
-
-    if (countAsWater) {
-      await DatabaseHelper.instance.insertWaterEntry(quantity, timestamp);
-    }
-
-    // Koffein-Log: nur bei Getränken (countAsWater) und wenn ein Wert angegeben ist
-    await DatabaseHelper.instance.upsertCaffeineForFoodEntry(
-      foodEntryId: newId,
-      timestamp: timestamp,
-      caffeinePer100ml: (countAsWater ? caffeinePer100ml : null),
-      quantityInMl: quantity.toDouble(), // mg = mg/100ml * (ml/100)
-    );
-
-    _refreshHomeScreen();
-  }
-
   String localizeSupplementName(Supplement s, AppLocalizations l10n) {
     switch (s.code) {
       case 'caffeine':
@@ -516,55 +571,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         // Fallback: benutzerdefinierte Supplements behalten ihren Namen
         return s.name;
     }
-  }
-
-  Future<void> _showAddFluidMenu() async {
-    final l10n = AppLocalizations.of(context)!;
-
-    final key = GlobalKey<WaterDialogContentState>();
-    await showGlassBottomMenu(
-      context: context,
-      title: l10n.add_liquid_title,
-      contentBuilder: (ctx, close) {
-        // Wir bauen den Content + ersetzen unten den Primary-Button onPressed:
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            WaterDialogContent(key: key),
-            const SizedBox(height: 12),
-            // Zugriff auf den Footer-Button: wir finden ihn über context.findAncestorWidgetOfExactType ist overkill.
-            // Einfach hier gleich einen Button setzen:
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: close,
-                    child: Text(l10n.cancel),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () async {
-                      final s = key.currentState;
-                      if (s == null) return;
-                      final qty = int.tryParse(s.quantityText);
-                      if (qty != null && qty > 0) {
-                        await DatabaseHelper.instance
-                            .insertWaterEntry(qty, s.selectedDateTime);
-                        close();
-                        _refreshHomeScreen();
-                      }
-                    },
-                    child: Text(l10n.add_button),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        );
-      },
-    );
   }
 
   Future<void> _handleSupplementAdd() async {
@@ -639,46 +645,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       await DatabaseHelper.instance.insertSupplementLog(newLog);
       _refreshHomeScreen();
     }
-  }
-
-  Future<(int, DateTime, bool, String, double?)?> _showQuantityDialog(
-      FoodItem item) async {
-    final l10n = AppLocalizations.of(context)!;
-    final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
-    return showDialog<(int, DateTime, bool, String, double?)?>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(item.name, maxLines: 2, overflow: TextOverflow.ellipsis),
-          content: QuantityDialogContent(key: dialogStateKey, item: item),
-          actions: [
-            TextButton(
-                child: Text(l10n.cancel),
-                onPressed: () => Navigator.of(context).pop(null)),
-            FilledButton(
-              child: Text(l10n.add_button),
-              onPressed: () {
-                final state = dialogStateKey.currentState;
-                if (state != null) {
-                  final quantity = int.tryParse(state.quantityText);
-                  final caffeine =
-                      double.tryParse(state.caffeineText.replaceAll(',', '.'));
-                  if (quantity != null && quantity > 0) {
-                    Navigator.of(context).pop((
-                      quantity,
-                      state.selectedDateTime,
-                      state.countAsWater,
-                      state.selectedMealType,
-                      caffeine
-                    ));
-                  }
-                }
-              },
-            ),
-          ],
-        );
-      },
-    );
   }
 
   Future<(int, DateTime)?> _showWaterDialog() async {
@@ -1127,7 +1093,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
     return Padding(
       // ⬇️ Abstand analog zu SummaryCard
-      padding: const EdgeInsets.only(right: DesignConstants.screenPaddingHorizontal),
+      padding:
+          const EdgeInsets.only(right: DesignConstants.screenPaddingHorizontal),
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: () {

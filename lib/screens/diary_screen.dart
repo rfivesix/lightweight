@@ -5,8 +5,10 @@ import 'package:lightweight/data/product_database_helper.dart';
 import 'package:lightweight/dialogs/quantity_dialog_content.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/daily_nutrition.dart';
+import 'package:lightweight/models/fluid_entry.dart';
 import 'package:lightweight/models/food_entry.dart';
 import 'package:lightweight/models/food_item.dart';
+import 'package:lightweight/models/supplement.dart';
 import 'package:lightweight/models/supplement_log.dart';
 import 'package:lightweight/models/tracked_food_item.dart';
 import 'package:lightweight/screens/add_food_screen.dart';
@@ -15,6 +17,7 @@ import 'package:lightweight/screens/supplement_track_screen.dart';
 import 'package:lightweight/util/date_util.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/bottom_content_spacer.dart';
+import 'package:lightweight/widgets/glass_bottom_menu.dart';
 import 'package:lightweight/widgets/measurement_chart_widget.dart';
 import 'package:lightweight/widgets/nutrition_summary_widget.dart';
 import 'package:lightweight/widgets/supplement_summary_widget.dart';
@@ -38,6 +41,7 @@ class DiaryScreenState extends State<DiaryScreen> {
   DateTime get _selectedDate => selectedDateNotifier.value;
   DailyNutrition? _dailyNutrition;
   Map<String, List<TrackedFoodItem>> _entriesByMeal = {};
+  List<FluidEntry> _fluidEntries = [];
   List<TrackedSupplement> _trackedSupplements = [];
   String _selectedChartRangeKey = '30D';
   final Map<String, bool> _mealExpanded = {
@@ -45,6 +49,7 @@ class DiaryScreenState extends State<DiaryScreen> {
     "mealtypeLunch": false,
     "mealtypeDinner": false,
     "mealtypeSnack": false,
+    "fluids": false,
   };
 
   @override
@@ -59,6 +64,11 @@ class DiaryScreenState extends State<DiaryScreen> {
     super.dispose();
   }
 
+// lib/screens/diary_screen.dart
+
+// ... (Rest der Datei bleibt unverändert)
+
+// ERSETZEN SIE DIESE METHODE
   Future<void> loadDataForDate(DateTime date) async {
     if (!mounted) return;
     setState(() => _isLoading = true);
@@ -69,9 +79,13 @@ class DiaryScreenState extends State<DiaryScreen> {
     final targetCarbs = prefs.getInt('targetCarbs') ?? 250;
     final targetFat = prefs.getInt('targetFat') ?? 80;
     final targetWater = prefs.getInt('targetWater') ?? 3000;
+    final targetCaffeine = prefs.getInt('targetCaffeine') ?? 400;
 
     final foodEntries = await DatabaseHelper.instance.getEntriesForDate(date);
-    final waterIntake = await DatabaseHelper.instance.getWaterForDate(date);
+    final fluidEntries =
+        await DatabaseHelper.instance.getFluidEntriesForDate(date);
+    final waterIntake =
+        fluidEntries.fold<int>(0, (sum, entry) => sum + entry.quantityInMl);
 
     final summary = DailyNutrition(
       targetCalories: targetCalories,
@@ -79,8 +93,16 @@ class DiaryScreenState extends State<DiaryScreen> {
       targetCarbs: targetCarbs,
       targetFat: targetFat,
       targetWater: targetWater,
+      targetCaffeine: targetCaffeine,
     );
     summary.water = waterIntake;
+
+    for (final entry in fluidEntries) {
+      summary.calories += entry.kcal ?? 0;
+      final factor = entry.quantityInMl / 100.0;
+      summary.sugar += (entry.sugarPer100ml ?? 0) * factor;
+      summary.carbs += ((entry.carbsPer100ml ?? 0) * factor).round();
+    }
 
     final Map<String, List<TrackedFoodItem>> groupedEntries = {
       'mealtypeBreakfast': [],
@@ -119,6 +141,21 @@ class DiaryScreenState extends State<DiaryScreen> {
           ifAbsent: () => log.dose);
     }
 
+    // *** KORREKTUR HIER ***
+    // Wir fangen den Fehler ab, falls das Supplement nicht gefunden wird.
+    Supplement? caffeineSupplement;
+    try {
+      caffeineSupplement =
+          allSupplements.firstWhere((s) => s.code == 'caffeine');
+    } catch (e) {
+      caffeineSupplement =
+          null; // Sicherstellen, dass es null ist, wenn nicht gefunden
+    }
+
+    if (caffeineSupplement != null && caffeineSupplement.id != null) {
+      summary.caffeine = todaysDoses[caffeineSupplement.id] ?? 0.0;
+    }
+
     final trackedSupps = allSupplements
         .map((s) => TrackedSupplement(
               supplement: s,
@@ -131,14 +168,22 @@ class DiaryScreenState extends State<DiaryScreen> {
         selectedDateNotifier.value = date;
         _dailyNutrition = summary;
         _entriesByMeal = groupedEntries;
+        _fluidEntries = fluidEntries;
         _trackedSupplements = trackedSupps;
         _isLoading = false;
       });
     }
   }
 
+// ... (Rest der Datei bleibt unverändert)
+
   Future<void> _deleteFoodEntry(int id) async {
     await DatabaseHelper.instance.deleteFoodEntry(id);
+    loadDataForDate(_selectedDate);
+  }
+
+  Future<void> _deleteFluidEntry(int id) async {
+    await DatabaseHelper.instance.deleteFluidEntry(id);
     loadDataForDate(_selectedDate);
   }
 
@@ -146,7 +191,7 @@ class DiaryScreenState extends State<DiaryScreen> {
     final l10n = AppLocalizations.of(context)!;
     final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
 
-    final result = await showDialog<(int, DateTime, bool, String, double?)?>(
+    final result = await showDialog<(int, DateTime, String, double?)?>(
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -175,7 +220,6 @@ class DiaryScreenState extends State<DiaryScreen> {
                       Navigator.of(context).pop((
                         quantity,
                         state.selectedDateTime,
-                        state.countAsWater,
                         state.selectedMealType,
                         caffeine
                       ));
@@ -193,7 +237,7 @@ class DiaryScreenState extends State<DiaryScreen> {
         barcode: trackedItem.item.barcode,
         quantityInGrams: result.$1,
         timestamp: result.$2,
-        mealType: result.$4,
+        mealType: result.$3,
       );
       await DatabaseHelper.instance.updateFoodEntry(updatedEntry);
       loadDataForDate(_selectedDate);
@@ -205,79 +249,158 @@ class DiaryScreenState extends State<DiaryScreen> {
         .push<FoodItem>(
             MaterialPageRoute(builder: (context) => const AddFoodScreen()));
 
-    if (selectedFoodItem != null && mounted) {
-      final l10n = AppLocalizations.of(context)!;
-      final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
+    if (selectedFoodItem == null || !mounted) return;
 
-      final result = await showDialog<(int, DateTime, bool, String, double?)?>(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text(selectedFoodItem.name,
-                maxLines: 2, overflow: TextOverflow.ellipsis),
-            content: QuantityDialogContent(
-              key: dialogStateKey,
-              item: selectedFoodItem,
-              initialMealType: mealType, // Pre-select the meal type
-              initialTimestamp:
-                  _selectedDate, // KORREKTUR: Das ausgewählte Datum übergeben
-            ),
-            actions: [
-              TextButton(
-                  child: Text(l10n.cancel),
-                  onPressed: () => Navigator.of(context).pop(null)),
-              FilledButton(
-                child: Text(l10n.add_button),
-                onPressed: () {
-                  final state = dialogStateKey.currentState;
-                  if (state != null) {
-                    final quantity = int.tryParse(state.quantityText);
-                    final caffeine = double.tryParse(
-                        state.caffeineText.replaceAll(',', '.'));
-                    if (quantity != null && quantity > 0) {
-                      Navigator.of(context).pop((
-                        quantity,
-                        state.selectedDateTime,
-                        state.countAsWater,
-                        state.selectedMealType,
-                        caffeine
-                      ));
-                    }
-                  }
-                },
-              ),
-            ],
-          );
-        },
+    final result = await _showQuantityMenu(selectedFoodItem, mealType);
+    if (result == null || !mounted) return;
+
+    final int quantity = result.quantity;
+    final DateTime timestamp = result.timestamp;
+    final String resultMealType = result.mealType;
+    final bool isLiquid = result.isLiquid;
+    final double? caffeinePer100 = result.caffeinePer100ml;
+
+    // 1. Immer den FoodEntry mit allen Nährwerten speichern
+    final newFoodEntry = FoodEntry(
+      barcode: selectedFoodItem.barcode,
+      timestamp: timestamp,
+      quantityInGrams: quantity,
+      mealType: resultMealType,
+    );
+    final newFoodEntryId =
+        await DatabaseHelper.instance.insertFoodEntry(newFoodEntry);
+
+    // 2. Wenn es eine Flüssigkeit ist, ZUSÄTZLICH einen FluidEntry NUR FÜR WASSER erstellen
+    if (isLiquid) {
+      final newFluidEntry = FluidEntry(
+        timestamp: timestamp,
+        quantityInMl: quantity,
+        name: selectedFoodItem.name,
+        kcal: null,
+        sugarPer100ml: null,
+        carbsPer100ml: null,
+        caffeinePer100ml: null,
+        linked_food_entry_id: newFoodEntryId,
       );
-
-      if (result != null && mounted) {
-        final newEntry = FoodEntry(
-            barcode: selectedFoodItem.barcode,
-            timestamp: result.$2,
-            quantityInGrams: result.$1,
-            mealType: result.$4);
-        await DatabaseHelper.instance.insertFoodEntry(newEntry);
-
-        if (result.$3) {
-          await DatabaseHelper.instance.insertWaterEntry(result.$1, result.$2);
-        }
-
-        final caffeineDose = result.$5;
-        if (caffeineDose != null && caffeineDose > 0) {
-          final supplements = await DatabaseHelper.instance.getAllSupplements();
-          final caffeineSupplement =
-              supplements.firstWhere((s) => s.name.toLowerCase() == 'caffeine');
-          final log = SupplementLog(
-              supplementId: caffeineSupplement.id!,
-              dose: caffeineDose,
-              unit: 'mg',
-              timestamp: result.$2);
-          await DatabaseHelper.instance.insertSupplementLog(log);
-        }
-        loadDataForDate(_selectedDate);
-      }
+      await DatabaseHelper.instance.insertFluidEntry(newFluidEntry);
     }
+
+    // 3. Koffein nur loggen, wenn als Flüssigkeit deklariert
+    if (isLiquid && caffeinePer100 != null && caffeinePer100 > 0) {
+      final totalCaffeine = (caffeinePer100 / 100.0) * quantity;
+      await _logCaffeineDose(totalCaffeine, timestamp,
+          foodEntryId: newFoodEntryId);
+    }
+
+    loadDataForDate(_selectedDate);
+  }
+
+  // FÜGEN SIE DIESE ZWEI NEUEN METHODEN ZUR KLASSE HINZU
+  Future<
+      ({
+        int quantity,
+        DateTime timestamp,
+        String mealType,
+        bool isLiquid,
+        double? sugarPer100ml,
+        double? caffeinePer100ml
+      })?> _showQuantityMenu(FoodItem item, String mealType) async {
+    final l10n = AppLocalizations.of(context)!;
+    final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
+
+    return showGlassBottomMenu<
+        ({
+          int quantity,
+          DateTime timestamp,
+          String mealType,
+          bool isLiquid,
+          double? sugarPer100ml,
+          double? caffeinePer100ml
+        })>(
+      context: context,
+      title: item.name,
+      contentBuilder: (ctx, close) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            QuantityDialogContent(
+              key: dialogStateKey,
+              item: item,
+              initialMealType: mealType, // WICHTIG: Mahlzeit vorauswählen
+              initialTimestamp: _selectedDate,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      close();
+                      Navigator.of(ctx).pop(null);
+                    },
+                    child: Text(l10n.cancel),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      final state = dialogStateKey.currentState;
+                      if (state != null) {
+                        final quantity = int.tryParse(state.quantityText);
+                        final sugar = double.tryParse(
+                            state.sugarText.replaceAll(',', '.'));
+                        final caffeine = double.tryParse(
+                            state.caffeineText.replaceAll(',', '.'));
+
+                        if (quantity != null && quantity > 0) {
+                          close();
+                          Navigator.of(ctx).pop((
+                            quantity: quantity,
+                            timestamp: state.selectedDateTime,
+                            mealType: state.selectedMealType,
+                            isLiquid: state.isLiquid,
+                            sugarPer100ml: sugar,
+                            caffeinePer100ml: caffeine
+                          ));
+                        }
+                      }
+                    },
+                    child: Text(l10n.add_button),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _logCaffeineDose(double doseMg, DateTime timestamp,
+      {int? foodEntryId, int? fluidEntryId}) async {
+    if (doseMg <= 0) return;
+
+    final supplements = await DatabaseHelper.instance.getAllSupplements();
+    Supplement? caffeineSupplement;
+    try {
+      caffeineSupplement = supplements.firstWhere((s) => s.code == 'caffeine');
+    } catch (e) {
+      return;
+    }
+
+    if (caffeineSupplement.id == null) return;
+
+    await DatabaseHelper.instance.insertSupplementLog(
+      SupplementLog(
+        supplementId: caffeineSupplement.id!,
+        dose: doseMg,
+        unit: 'mg',
+        timestamp: timestamp,
+        source_food_entry_id: foodEntryId,
+        source_fluid_entry_id: fluidEntryId,
+      ),
+    );
   }
 
   Future<void> pickDate() async {
@@ -474,26 +597,29 @@ class DiaryScreenState extends State<DiaryScreen> {
     ];
 
     return Column(
-      children: mealOrder.map((mealKey) {
-        final entries = _entriesByMeal[mealKey] ?? [];
-        // Calculate macros for this specific meal
-        final mealMacros = _MealMacros();
-        for (var item in entries) {
-          final factor = item.entry.quantityInGrams / 100.0;
-          mealMacros.calories += (item.item.calories * factor).round();
-          mealMacros.protein += (item.item.protein * factor).round();
-          mealMacros.carbs += (item.item.carbs * factor).round();
-          mealMacros.fat += (item.item.fat * factor).round();
-        }
+      children: [
+        ...mealOrder.map((mealKey) {
+          final entries = _entriesByMeal[mealKey] ?? [];
+          // Calculate macros for this specific meal
+          final mealMacros = _MealMacros();
+          for (var item in entries) {
+            final factor = item.entry.quantityInGrams / 100.0;
+            mealMacros.calories += (item.item.calories * factor).round();
+            mealMacros.protein += (item.item.protein * factor).round();
+            mealMacros.carbs += (item.item.carbs * factor).round();
+            mealMacros.fat += (item.item.fat * factor).round();
+          }
 
-        return _buildMealCard(
-          _getLocalizedMealName(l10n, mealKey),
-          mealKey,
-          entries,
-          mealMacros,
-          l10n,
-        );
-      }).toList(),
+          return _buildMealCard(
+            _getLocalizedMealName(l10n, mealKey),
+            mealKey,
+            entries,
+            mealMacros,
+            l10n,
+          );
+        }),
+        _buildFluidsCard(l10n),
+      ],
     );
   }
 
@@ -565,6 +691,103 @@ class DiaryScreenState extends State<DiaryScreen> {
             secondChild: const SizedBox.shrink(),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFluidsCard(AppLocalizations l10n) {
+    final isOpen = _mealExpanded['fluids'] ?? false;
+    final theme = Theme.of(context);
+    final titleStyle = theme.textTheme.titleLarge;
+
+    return SummaryCard(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          InkWell(
+            onTap: () => setState(() {
+              _mealExpanded['fluids'] = !isOpen;
+            }),
+            child: Row(
+              children: [
+                Expanded(child: Text(l10n.water, style: titleStyle)),
+                Icon(isOpen ? Icons.expand_less : Icons.expand_more),
+                const SizedBox(width: 4),
+                IconButton(
+                  icon: const Icon(Icons.add_circle),
+                  color: theme.colorScheme.primary,
+                  onPressed: () {},
+                  tooltip: l10n.addLiquidOption,
+                ),
+              ],
+            ),
+          ),
+          AnimatedCrossFade(
+            crossFadeState:
+                isOpen ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+            duration: const Duration(milliseconds: 180),
+            firstChild: Column(
+              children: [
+                if (_fluidEntries.isNotEmpty) const Divider(height: 16),
+                ..._fluidEntries
+                    .map((entry) => _buildFluidEntryTile(l10n, entry)),
+              ],
+            ),
+            secondChild: const SizedBox.shrink(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFluidEntryTile(AppLocalizations l10n, FluidEntry entry) {
+    final totalSugar = (entry.sugarPer100ml != null)
+        ? (entry.sugarPer100ml! / 100 * entry.quantityInMl).toStringAsFixed(1)
+        : '0';
+    final totalCaffeine = (entry.caffeinePer100ml != null)
+        ? (entry.caffeinePer100ml! / 100 * entry.quantityInMl)
+            .toStringAsFixed(1)
+        : '0';
+
+    return Dismissible(
+      key: Key('fluid_entry_${entry.id}'),
+      background: const SwipeActionBackground(
+        color: Colors.redAccent,
+        icon: Icons.delete,
+        alignment: Alignment.centerRight,
+      ),
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (direction) async {
+        return await showDialog<bool>(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: Text(l10n.deleteConfirmTitle),
+                  content: Text(l10n.deleteConfirmContent),
+                  actions: <Widget>[
+                    TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: Text(l10n.cancel)),
+                    TextButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: Text(l10n.delete)),
+                  ],
+                );
+              },
+            ) ??
+            false;
+      },
+      onDismissed: (direction) {
+        _deleteFluidEntry(entry.id!);
+      },
+      child: SummaryCard(
+        child: ListTile(
+          title: Text(entry.name),
+          subtitle: Text(
+              "${entry.quantityInMl}ml · Sugar: ${totalSugar}g · Caffeine: ${totalCaffeine}mg"),
+          trailing: Text("${entry.kcal ?? 0} kcal"),
+        ),
       ),
     );
   }

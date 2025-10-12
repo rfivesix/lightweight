@@ -9,7 +9,7 @@ import 'package:lightweight/models/routine.dart';
 import 'package:lightweight/models/routine_exercise.dart';
 import 'package:lightweight/models/set_log.dart';
 import 'package:lightweight/models/set_template.dart';
-import 'package:lightweight/models/water_entry.dart';
+import 'package:lightweight/models/fluid_entry.dart';
 import 'package:lightweight/models/workout_log.dart';
 import 'package:lightweight/models/supplement.dart';
 import 'package:lightweight/models/supplement_log.dart';
@@ -17,7 +17,7 @@ import 'package:lightweight/models/supplement_log.dart';
 class LightweightBackup {
   final int schemaVersion;
   final List<FoodEntry> foodEntries;
-  final List<WaterEntry> waterEntries;
+  final List<FluidEntry> fluidEntries;
   final List<String> favoriteBarcodes;
   final List<FoodItem> customFoodItems;
   final List<MeasurementSession> measurementSessions;
@@ -31,7 +31,7 @@ class LightweightBackup {
   LightweightBackup({
     required this.schemaVersion,
     required this.foodEntries,
-    required this.waterEntries,
+    required this.fluidEntries,
     required this.favoriteBarcodes,
     required this.customFoodItems,
     required this.measurementSessions,
@@ -56,8 +56,8 @@ class LightweightBackup {
                   ))
               .toList() ??
           [],
-      waterEntries: (json['waterEntries'] as List<dynamic>?)
-              ?.map((e) => WaterEntry.fromMap(e as Map<String, dynamic>))
+      fluidEntries: (json['fluidEntries'] as List<dynamic>?)
+              ?.map((e) => FluidEntry.fromMap(e as Map<String, dynamic>))
               .toList() ??
           [],
       favoriteBarcodes: List<String>.from(json['favoriteBarcodes'] ?? []),
@@ -133,7 +133,7 @@ class LightweightBackup {
     return {
       'schemaVersion': schemaVersion,
       'foodEntries': foodEntries.map((e) => e.toMap()).toList(),
-      'waterEntries': waterEntries.map((e) => e.toMap()).toList(),
+      'fluidEntries': fluidEntries.map((e) => e.toMap()).toList(),
       'favoriteBarcodes': favoriteBarcodes,
       'customFoodItems': customFoodItems.map((e) => e.toMap()).toList(),
       'measurementSessions': measurementSessions

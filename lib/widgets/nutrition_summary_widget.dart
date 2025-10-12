@@ -377,6 +377,16 @@ class NutritionSummaryWidget extends StatelessWidget {
                       color: Colors.grey.shade500,
                     ),
                   ),
+                  const SizedBox(height: DesignConstants.spacingS),
+                  Expanded(
+                    child: GlassProgressBar(
+                      label: l10n.supplement_caffeine,
+                      unit: 'mg',
+                      value: nutritionData.caffeine,
+                      target: nutritionData.targetCaffeine.toDouble(),
+                      color: Colors.brown,
+                    ),
+                  ),
                 ],
               ),
             ),

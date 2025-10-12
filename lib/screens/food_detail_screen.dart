@@ -7,6 +7,7 @@ import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/food_item.dart';
 import 'package:lightweight/models/tracked_food_item.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/off_attribution_widget.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:sqflite/sqflite.dart';
@@ -242,6 +243,11 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      floatingActionButton: GlassFab(
+          onPressed: () {
+            Navigator.of(context).pop(widget.foodItem);
+          },
+          label: l10n.mealsAddToDiary),
       appBar: AppBar(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,

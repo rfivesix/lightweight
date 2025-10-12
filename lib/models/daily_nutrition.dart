@@ -10,6 +10,7 @@ class DailyNutrition {
   double fiber;
   double sugar;
   double salt;
+  double caffeine;
 
   // Ziele
   int targetCalories;
@@ -22,6 +23,7 @@ class DailyNutrition {
   int targetSugar;
   int targetFiber;
   int targetSalt;
+  int targetCaffeine;
 
   DailyNutrition({
     this.calories = 0,
@@ -32,6 +34,7 @@ class DailyNutrition {
     this.fiber = 0.0,
     this.sugar = 0.0,
     this.salt = 0.0,
+    this.caffeine = 0.0,
     this.targetCalories = 0,
     this.targetWater = 0,
     this.targetProtein = 0,
@@ -42,5 +45,6 @@ class DailyNutrition {
     this.targetSugar = 0,
     this.targetFiber = 0,
     this.targetSalt = 0,
+    this.targetCaffeine = 0,
   });
 }

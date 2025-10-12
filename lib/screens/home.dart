@@ -82,7 +82,9 @@ class HomeState extends State<Home> {
     final targetWater = prefs.getInt('targetWater') ?? 3000;
 
     final entries = await dbHelper.getEntriesForDate(DateTime.now());
-    final waterIntake = await dbHelper.getWaterForDate(DateTime.now());
+    final fluidEntries = await dbHelper.getFluidEntriesForDate(DateTime.now());
+    final waterIntake =
+        fluidEntries.fold<int>(0, (sum, entry) => sum + entry.quantityInMl);
     final newTodaysNutrition = DailyNutrition(
         targetCalories: targetCalories,
         targetProtein: targetProtein,

@@ -383,106 +383,113 @@ class _MealScreenState extends State<MealScreen> {
     final l10n = AppLocalizations.of(context)!;
     final searchCtrl = TextEditingController();
     final qtyCtrl = TextEditingController(text: '100');
-    List<FoodItem> results = [];
-    bool loading = false;
-
-    Future<void> runSearch(String q) async {
-      if (q.trim().isEmpty) {
-        results = [];
-        (context as Element).markNeedsBuild();
-        return;
-      }
-      loading = true;
-      (context as Element).markNeedsBuild();
-      results = await ProductDatabaseHelper.instance.searchProducts(q.trim());
-      loading = false;
-      (context as Element).markNeedsBuild();
-    }
 
     final picked = await showDialog<(String, int)?>(
       context: context,
       builder: (ctx) {
-        return AlertDialog(
-          title: Text(l10n.mealAddIngredient),
-          content: SizedBox(
-            width: 500,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: searchCtrl,
-                  decoration: InputDecoration(
-                    hintText: l10n.searchHintText,
-                    prefixIcon: const Icon(Icons.search),
-                  ),
-                  onChanged: runSearch,
+        List<FoodItem> results = [];
+        bool loading = false;
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            Future<void> runSearch(String q) async {
+              if (q.trim().isEmpty) {
+                setState(() {
+                  results = [];
+                });
+                return;
+              }
+              setState(() => loading = true);
+              results =
+                  await ProductDatabaseHelper.instance.searchProducts(q.trim());
+              setState(() => loading = false);
+            }
+
+            return AlertDialog(
+              title: Text(l10n.mealAddIngredient),
+              content: SizedBox(
+                width: 500,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: searchCtrl,
+                      decoration: InputDecoration(
+                        hintText: l10n.searchHintText,
+                        prefixIcon: const Icon(Icons.search),
+                      ),
+                      onChanged: runSearch,
+                    ),
+                    const SizedBox(height: 8),
+                    if (loading) const LinearProgressIndicator(minHeight: 2),
+                    Flexible(
+                      child: results.isEmpty
+                          ? Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              child: Text(l10n.searchInitialHint),
+                            )
+                          : ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: results.length,
+                              itemBuilder: (_, i) {
+                                final fi = results[i];
+                                return ListTile(
+                                  dense: true,
+                                  title: Text(fi.name),
+                                  subtitle: Text(fi.brand.isNotEmpty
+                                      ? fi.brand
+                                      : l10n.noBrand),
+                                  trailing: IconButton(
+                                    icon: const Icon(Icons.add),
+                                    onPressed: () async {
+                                      final grams = await showDialog<int>(
+                                        context: context,
+                                        builder: (_) => AlertDialog(
+                                          title: Text(
+                                              l10n.mealIngredientAmountLabel),
+                                          content: TextField(
+                                            controller: qtyCtrl,
+                                            keyboardType: const TextInputType
+                                                .numberWithOptions(
+                                                decimal: false),
+                                            decoration: const InputDecoration(
+                                                suffixText: 'g/ml'),
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                                onPressed: () => Navigator.pop(
+                                                    context, null),
+                                                child: Text(l10n.cancel)),
+                                            TextButton(
+                                                onPressed: () {
+                                                  final val = int.tryParse(
+                                                      qtyCtrl.text.trim());
+                                                  Navigator.pop(context, val);
+                                                },
+                                                child: Text(l10n.add_button)),
+                                          ],
+                                        ),
+                                      );
+                                      if (grams != null && grams > 0) {
+                                        Navigator.of(ctx)
+                                            .pop((fi.barcode, grams));
+                                      }
+                                    },
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                if (loading) const LinearProgressIndicator(minHeight: 2),
-                Flexible(
-                  child: results.isEmpty
-                      ? Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          child: Text(l10n.searchInitialHint),
-                        )
-                      : ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: results.length,
-                          itemBuilder: (_, i) {
-                            final fi = results[i];
-                            return ListTile(
-                              dense: true,
-                              title: Text(fi.name),
-                              subtitle: Text(fi.brand.isNotEmpty
-                                  ? fi.brand
-                                  : l10n.noBrand),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.add),
-                                onPressed: () async {
-                                  final grams = await showDialog<int>(
-                                    context: context,
-                                    builder: (_) => AlertDialog(
-                                      title:
-                                          Text(l10n.mealIngredientAmountLabel),
-                                      content: TextField(
-                                        controller: qtyCtrl,
-                                        keyboardType: const TextInputType
-                                            .numberWithOptions(decimal: false),
-                                        decoration: const InputDecoration(
-                                            suffixText: 'g/ml'),
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(context, null),
-                                            child: Text(l10n.cancel)),
-                                        TextButton(
-                                            onPressed: () {
-                                              final val = int.tryParse(
-                                                  qtyCtrl.text.trim());
-                                              Navigator.pop(context, val);
-                                            },
-                                            child: Text(l10n.add_button)),
-                                      ],
-                                    ),
-                                  );
-                                  if (grams != null && grams > 0) {
-                                    Navigator.of(ctx).pop((fi.barcode, grams));
-                                  }
-                                },
-                              ),
-                            );
-                          },
-                        ),
-                ),
+              ),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(ctx, null),
+                    child: Text(l10n.cancel)),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(ctx, null),
-                child: Text(l10n.cancel)),
-          ],
+            );
+          },
         );
       },
     );
@@ -685,7 +692,7 @@ class _MealScreenState extends State<MealScreen> {
       final fi = await ProductDatabaseHelper.instance.getProductByBarcode(bc);
       if (fi != null) {
         if (fi.isLiquid == true) {
-          await DatabaseHelper.instance.insertWaterEntry(qty, ts);
+          // await DatabaseHelper.instance.insertWaterEntry(qty, ts);
         }
         final c100 = fi.caffeineMgPer100ml;
         if (fi.isLiquid == true && c100 != null && c100 > 0) {

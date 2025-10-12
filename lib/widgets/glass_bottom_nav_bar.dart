@@ -46,7 +46,7 @@ class GlassBottomNavBar extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       item.label ?? '',
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.fade,
                       textAlign: TextAlign.center,
                       style: TextStyle(
