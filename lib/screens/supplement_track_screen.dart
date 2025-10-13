@@ -48,15 +48,20 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
 
     final doses = <int, double>{};
     for (final log in logs) {
-      doses.update(log.supplementId, (v) => v + log.dose,
-          ifAbsent: () => log.dose);
+      doses.update(
+        log.supplementId,
+        (v) => v + log.dose,
+        ifAbsent: () => log.dose,
+      );
     }
 
     final tracked = supplements
-        .map((s) => TrackedSupplement(
-              supplement: s,
-              totalDosedToday: doses[s.id] ?? 0.0,
-            ))
+        .map(
+          (s) => TrackedSupplement(
+            supplement: s,
+            totalDosedToday: doses[s.id] ?? 0.0,
+          ),
+        )
         .toList();
 
     if (!mounted) return;
@@ -101,8 +106,9 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
         content: LogSupplementDialogContent(key: key, supplement: supplement),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, null),
-              child: Text(l10n.cancel)),
+            onPressed: () => Navigator.pop(context, null),
+            child: Text(l10n.cancel),
+          ),
           FilledButton(
             onPressed: () {
               final st = key.currentState;
@@ -147,8 +153,9 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, null),
-              child: Text(l10n.cancel)),
+            onPressed: () => Navigator.pop(context, null),
+            child: Text(l10n.cancel),
+          ),
           FilledButton(
             onPressed: () {
               final st = key.currentState;
@@ -207,15 +214,15 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
   }
 
   Widget _sectionTitle(String title) => Padding(
-        padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
-        child: Text(
-          title,
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: Colors.grey[600],
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-      );
+    padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
+    child: Text(
+      title,
+      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+        color: Colors.grey[600],
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  );
 
   Widget _progressCard(TrackedSupplement ts) {
     final s = ts.supplement;
@@ -223,8 +230,9 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
     final target = (isLimit ? s.dailyLimit : s.dailyGoal) ?? 0.0;
     final overTarget = isLimit && ts.totalDosedToday > target;
     final hasTarget = target > 0;
-    final progress =
-        hasTarget ? (ts.totalDosedToday / target).clamp(0.0, 1.0) : 0.0;
+    final progress = hasTarget
+        ? (ts.totalDosedToday / target).clamp(0.0, 1.0)
+        : 0.0;
     final color = overTarget ? Colors.red.shade400 : Colors.green.shade400;
     final l10n = AppLocalizations.of(context)!;
 
@@ -232,10 +240,9 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
       height: 60,
       margin: const EdgeInsets.symmetric(vertical: 6.0),
       decoration: BoxDecoration(
-        color: Theme.of(context)
-            .colorScheme
-            .surfaceContainerHighest
-            .withOpacity(0.3),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
         borderRadius: BorderRadius.circular(20),
       ),
       child: ClipRRect(
@@ -246,11 +253,15 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
             Align(
               alignment: Alignment.centerLeft,
               child: FractionallySizedBox(
-                  widthFactor: progress, child: Container(color: color)),
+                widthFactor: progress,
+                child: Container(color: color),
+              ),
             ),
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12.0,
+                vertical: 4.0,
+              ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -261,7 +272,9 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
                       localizeSupplementName(s, l10n),
                       maxLines: 1,
                       style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -270,10 +283,9 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
                         ? '${ts.totalDosedToday.toStringAsFixed(1)} / ${target.toStringAsFixed(1)} ${s.unit}'
                         : '${ts.totalDosedToday.toStringAsFixed(1)} ${s.unit}',
                     style: TextStyle(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withOpacity(0.8),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.8),
                       fontSize: 14,
                     ),
                   ),
@@ -319,18 +331,21 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
           _editLogEntry(log);
           return false;
         }
-        final ok = await showDialog<bool>(
+        final ok =
+            await showDialog<bool>(
               context: context,
               builder: (_) => AlertDialog(
                 title: Text(l10n.deleteConfirmTitle),
                 content: Text(l10n.deleteConfirmContent),
                 actions: [
                   TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: Text(l10n.cancel)),
+                    onPressed: () => Navigator.pop(context, false),
+                    child: Text(l10n.cancel),
+                  ),
                   TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: Text(l10n.delete)),
+                    onPressed: () => Navigator.pop(context, true),
+                    child: Text(l10n.delete),
+                  ),
                 ],
               ),
             ) ??
@@ -363,10 +378,9 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
         scrolledUnderElevation: 0,
         title: Text(
           l10n.supplementTrackerTitle,
-          style: Theme.of(context)
-              .textTheme
-              .titleLarge
-              ?.copyWith(fontWeight: FontWeight.w900),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
         ),
         actions: [
           IconButton(
@@ -375,7 +389,8 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
             onPressed: () async {
               final changed = await Navigator.of(context).push<bool>(
                 MaterialPageRoute(
-                    builder: (_) => const ManageSupplementsScreen()),
+                  builder: (_) => const ManageSupplementsScreen(),
+                ),
               );
               if (changed == true) _loadData(_selectedDate);
             },
@@ -397,13 +412,16 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
                   // Date header
                   Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0, vertical: 8.0),
+                      horizontal: 16.0,
+                      vertical: 8.0,
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         IconButton(
-                            icon: const Icon(Icons.chevron_left),
-                            onPressed: () => _navigateDay(false)),
+                          icon: const Icon(Icons.chevron_left),
+                          onPressed: () => _navigateDay(false),
+                        ),
                         Expanded(
                           child: InkWell(
                             onTap: _pickDate,
@@ -411,9 +429,7 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
                               DateFormat.yMMMMd(locale).format(_selectedDate),
                               textAlign: TextAlign.center,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
+                              style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                           ),
@@ -430,29 +446,34 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
                   Divider(
                     height: 1,
                     thickness: 1,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurfaceVariant
-                        .withOpacity(0.1),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurfaceVariant.withOpacity(0.1),
                   ),
                   const SizedBox(height: DesignConstants.spacingL),
 
                   // Progress section
                   _sectionTitle(l10n.dailyProgressTitle),
                   if (_tracked
-                      .where((t) =>
-                          t.supplement.dailyGoal != null ||
-                          t.supplement.dailyLimit != null)
+                      .where(
+                        (t) =>
+                            t.supplement.dailyGoal != null ||
+                            t.supplement.dailyLimit != null,
+                      )
                       .isEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Text(l10n.emptySupplementGoals,
-                          textAlign: TextAlign.center),
+                      child: Text(
+                        l10n.emptySupplementGoals,
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ..._tracked
-                      .where((t) =>
-                          t.supplement.dailyGoal != null ||
-                          t.supplement.dailyLimit != null)
+                      .where(
+                        (t) =>
+                            t.supplement.dailyGoal != null ||
+                            t.supplement.dailyLimit != null,
+                      )
                       .map(_progressCard),
 
                   const SizedBox(height: DesignConstants.spacingXL),
@@ -468,8 +489,10 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
                   if (_todaysLogs.isEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Text(l10n.emptySupplementLogs,
-                          textAlign: TextAlign.center),
+                      child: Text(
+                        l10n.emptySupplementLogs,
+                        textAlign: TextAlign.center,
+                      ),
                     )
                   else
                     ..._todaysLogs.map((log) => _logEntryTile(log, l10n)),

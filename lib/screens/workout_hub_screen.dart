@@ -43,31 +43,40 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
   }
 
   void _startEmptyWorkout() async {
-    final newLog = await WorkoutDatabaseHelper.instance
-        .startWorkout(routineName: l10n.free_training);
+    final newLog = await WorkoutDatabaseHelper.instance.startWorkout(
+      routineName: l10n.free_training,
+    );
     if (mounted) {
       Navigator.of(context)
-          .push(MaterialPageRoute(
-            builder: (context) => LiveWorkoutScreen(workoutLog: newLog),
-          ))
+          .push(
+            MaterialPageRoute(
+              builder: (context) => LiveWorkoutScreen(workoutLog: newLog),
+            ),
+          )
           .then((_) => _loadData());
     }
   }
 
   void _startRoutine(Routine routine) async {
     // Wir brauchen die vollen Details der Routine zum Starten
-    final detailedRoutine =
-        await WorkoutDatabaseHelper.instance.getRoutineById(routine.id!);
+    final detailedRoutine = await WorkoutDatabaseHelper.instance.getRoutineById(
+      routine.id!,
+    );
     if (detailedRoutine == null) return;
 
-    final newLog = await WorkoutDatabaseHelper.instance
-        .startWorkout(routineName: routine.name);
+    final newLog = await WorkoutDatabaseHelper.instance.startWorkout(
+      routineName: routine.name,
+    );
     if (mounted) {
       Navigator.of(context)
-          .push(MaterialPageRoute(
-            builder: (context) =>
-                LiveWorkoutScreen(routine: detailedRoutine, workoutLog: newLog),
-          ))
+          .push(
+            MaterialPageRoute(
+              builder: (context) => LiveWorkoutScreen(
+                routine: detailedRoutine,
+                workoutLog: newLog,
+              ),
+            ),
+          )
           .then((_) => _loadData());
     }
   }
@@ -87,8 +96,9 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                   SummaryCard(
                     child: InkWell(
                       onTap: _startEmptyWorkout,
-                      borderRadius:
-                          BorderRadius.circular(DesignConstants.borderRadiusM),
+                      borderRadius: BorderRadius.circular(
+                        DesignConstants.borderRadiusM,
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.all(20.0),
                         child: Row(
@@ -96,8 +106,10 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                           children: [
                             const Icon(Icons.add_circle_outline, size: 28),
                             const SizedBox(width: 12),
-                            Text(l10n.startEmptyWorkoutButton,
-                                style: Theme.of(context).textTheme.titleLarge),
+                            Text(
+                              l10n.startEmptyWorkoutButton,
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
                           ],
                         ),
                       ),
@@ -115,7 +127,9 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                             itemCount: _routines.length,
                             itemBuilder: (context, index) {
                               return _buildRoutineCard(
-                                  context, _routines[index]);
+                                context,
+                                _routines[index],
+                              );
                             },
                           ),
                         ),
@@ -125,8 +139,11 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                     context: context,
                     icon: Icons.history,
                     title: l10n.workoutHistoryButton,
-                    onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => const WorkoutHistoryScreen())),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const WorkoutHistoryScreen(),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: DesignConstants.spacingM),
                   _buildNavigationTile(
@@ -134,8 +151,11 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                     icon: Icons.list_alt_rounded,
                     title: l10n.manage_all_plans,
                     onTap: () => Navigator.of(context)
-                        .push(MaterialPageRoute(
-                            builder: (context) => const RoutinesScreen()))
+                        .push(
+                          MaterialPageRoute(
+                            builder: (context) => const RoutinesScreen(),
+                          ),
+                        )
                         .then((_) => _loadData()),
                   ),
                   const SizedBox(height: DesignConstants.spacingM),
@@ -143,8 +163,11 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                     context: context,
                     icon: Icons.folder_open_outlined,
                     title: l10n.drawerExerciseCatalog,
-                    onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => const ExerciseCatalogScreen())),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const ExerciseCatalogScreen(),
+                      ),
+                    ),
                   ),
                   const BottomContentSpacer(),
                 ],
@@ -159,9 +182,9 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
+          color: Colors.grey[600],
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -191,16 +214,18 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(routine.name,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis),
+                  Text(
+                    routine.name,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   ElevatedButton(
-                      onPressed: () => _startRoutine(routine),
-                      child: Text(l10n.start_button)),
+                    onPressed: () => _startRoutine(routine),
+                    child: Text(l10n.start_button),
+                  ),
                 ],
               ),
             ),
@@ -216,21 +241,28 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
         padding: DesignConstants.cardPadding,
         child: Column(
           children: [
-            Text(l10n.emptyRoutinesTitle,
-                style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              l10n.emptyRoutinesTitle,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: DesignConstants.spacingS),
-            Text(l10n.emptyRoutinesSubtitle,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              l10n.emptyRoutinesSubtitle,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
             const SizedBox(height: DesignConstants.spacingL),
             TextButton.icon(
               onPressed: () => Navigator.of(context)
-                  .push(MaterialPageRoute(
-                      builder: (context) => const RoutinesScreen()))
+                  .push(
+                    MaterialPageRoute(
+                      builder: (context) => const RoutinesScreen(),
+                    ),
+                  )
                   .then((_) => _loadData()),
               icon: const Icon(Icons.add),
               label: Text(l10n.createFirstRoutineButton),
-            )
+            ),
           ],
         ),
       ),
@@ -250,7 +282,8 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
         trailing: const Icon(Icons.chevron_right),
         onTap: onTap,
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(DesignConstants.borderRadiusM)),
+          borderRadius: BorderRadius.circular(DesignConstants.borderRadiusM),
+        ),
       ),
     );
   }

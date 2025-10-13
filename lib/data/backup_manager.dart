@@ -33,8 +33,12 @@ class BackupManager {
       final favoriteBarcodes = await _userDb.getFavoriteBarcodes();
       final measurementSessions = await _userDb.getMeasurementSessions();
       final productDb = await _productDb.offDatabase;
-      final customFoodMaps = await productDb?.query('products',
-              where: 'barcode LIKE ?', whereArgs: ['user_created_%']) ??
+      final customFoodMaps =
+          await productDb?.query(
+            'products',
+            where: 'barcode LIKE ?',
+            whereArgs: ['user_created_%'],
+          ) ??
           [];
       final customFoodItems = customFoodMaps
           .map((map) => FoodItem.fromMap(map, source: FoodItemSource.user))
@@ -70,11 +74,12 @@ class BackupManager {
       final tempDir = await getTemporaryDirectory();
       final timestamp = DateFormat('yyyy-MM-dd_HH-mm').format(DateTime.now());
       final tempFile = File(
-          '${tempDir.path}/lightweight_backup_v$currentSchemaVersion-[$timestamp].json');
+        '${tempDir.path}/lightweight_backup_v$currentSchemaVersion-[$timestamp].json',
+      );
       await tempFile.writeAsString(jsonString);
-      final result = await Share.shareXFiles(
-          [XFile(tempFile.path, mimeType: 'application/json')],
-          subject: 'Lightweight App Backup - $timestamp');
+      final result = await Share.shareXFiles([
+        XFile(tempFile.path, mimeType: 'application/json'),
+      ], subject: 'Lightweight App Backup - $timestamp');
       await tempFile.delete();
       return result.status == ShareResultStatus.success;
     } catch (e) {
@@ -90,11 +95,13 @@ class BackupManager {
       final jsonMap = jsonDecode(jsonString);
 
       final backup = LightweightBackup.fromJson(
-          jsonMap); // KORREKTUR: Nutzt das neue Modell
+        jsonMap,
+      ); // KORREKTUR: Nutzt das neue Modell
 
       if (backup.schemaVersion > currentSchemaVersion) {
         print(
-            "Backup-Version (${backup.schemaVersion}) ist neuer als die App-Version ($currentSchemaVersion). Import abgebrochen.");
+          "Backup-Version (${backup.schemaVersion}) ist neuer als die App-Version ($currentSchemaVersion). Import abgebrochen.",
+        );
         return false;
       }
 
@@ -106,8 +113,11 @@ class BackupManager {
       await _userDb.clearAllUserData();
       await _workoutDb.clearAllWorkoutData();
       final productDb = await _productDb.offDatabase;
-      await productDb?.delete('products',
-          where: 'barcode LIKE ?', whereArgs: ['user_created_%']);
+      await productDb?.delete(
+        'products',
+        where: 'barcode LIKE ?',
+        whereArgs: ['user_created_%'],
+      );
       // HINZUGEFÜGT: Neue Einstellungen wiederherstellen
       for (final entry in backup.userPreferences.entries) {
         final key = entry.key;
@@ -186,7 +196,7 @@ class BackupManager {
         'protein_g',
         'carbs_g',
         'fat_g',
-        'barcode'
+        'barcode',
       ]);
 
       for (final entry in entries) {
@@ -259,7 +269,7 @@ class BackupManager {
         'weight_kg',
         'reps',
         'rest_seconds',
-        'notes'
+        'notes',
       ]);
 
       for (final log in logs) {
@@ -288,17 +298,18 @@ class BackupManager {
 
   /// Private Helfer-Methode zum Erstellen, Speichern und Teilen einer CSV-Datei.
   Future<bool> _createAndShareCsv(
-      List<List<dynamic>> rows, String baseFileName) async {
+    List<List<dynamic>> rows,
+    String baseFileName,
+  ) async {
     final String csvData = const ListToCsvConverter().convert(rows);
     final tempDir = await getTemporaryDirectory();
     final timestamp = DateFormat('yyyy-MM-dd').format(DateTime.now());
     final tempFile = File('${tempDir.path}/$baseFileName-$timestamp.csv');
     await tempFile.writeAsString(csvData);
 
-    final result = await Share.shareXFiles(
-      [XFile(tempFile.path, mimeType: 'text/csv')],
-      subject: baseFileName,
-    );
+    final result = await Share.shareXFiles([
+      XFile(tempFile.path, mimeType: 'text/csv'),
+    ], subject: baseFileName);
 
     await tempFile.delete();
     return result.status == ShareResultStatus.success;
@@ -312,7 +323,8 @@ class BackupManager {
       final favoriteBarcodes = await _userDb.getFavoriteBarcodes();
       final measurementSessions = await _userDb.getMeasurementSessions();
       final productDb = await _productDb.offDatabase;
-      final customFoodMaps = await productDb?.query(
+      final customFoodMaps =
+          await productDb?.query(
             'products',
             where: 'barcode LIKE ?',
             whereArgs: ['user_created_%'],
@@ -346,21 +358,24 @@ class BackupManager {
       final jsonString = jsonEncode(backup.toJson());
 
       // Verschlüsseln
-      final wrapper =
-          await EncryptionUtil.encryptString(jsonString, passphrase);
+      final wrapper = await EncryptionUtil.encryptString(
+        jsonString,
+        passphrase,
+      );
       final wrappedJson = jsonEncode(wrapper);
 
       final tempDir = await getTemporaryDirectory();
       final ts = DateFormat('yyyy-MM-dd_HH-mm').format(DateTime.now());
       final tempFile = File(
-        p.join(tempDir.path,
-            'lightweight_backup_enc_v$currentSchemaVersion-[$ts].json'),
+        p.join(
+          tempDir.path,
+          'lightweight_backup_enc_v$currentSchemaVersion-[$ts].json',
+        ),
       );
       await tempFile.writeAsString(wrappedJson);
-      final result = await Share.shareXFiles(
-        [XFile(tempFile.path, mimeType: 'application/json')],
-        subject: 'Lightweight Encrypted Backup - $ts',
-      );
+      final result = await Share.shareXFiles([
+        XFile(tempFile.path, mimeType: 'application/json'),
+      ], subject: 'Lightweight Encrypted Backup - $ts');
       await tempFile.delete();
       return result.status == ShareResultStatus.success;
     } catch (e) {
@@ -369,8 +384,10 @@ class BackupManager {
     }
   }
 
-  Future<bool> importFullBackupAuto(String filePath,
-      {String? passphrase}) async {
+  Future<bool> importFullBackupAuto(
+    String filePath, {
+    String? passphrase,
+  }) async {
     try {
       final file = File(filePath);
       final raw = await file.readAsString();
@@ -400,7 +417,8 @@ class BackupManager {
       final backup = LightweightBackup.fromJson(payload);
       if (backup.schemaVersion > currentSchemaVersion) {
         print(
-            'Backup-Version (${backup.schemaVersion}) ist neuer als App-Version ($currentSchemaVersion).');
+          'Backup-Version (${backup.schemaVersion}) ist neuer als App-Version ($currentSchemaVersion).',
+        );
         return false;
       }
 
@@ -410,8 +428,11 @@ class BackupManager {
       await _workoutDb.clearAllWorkoutData();
 
       final productDb = await _productDb.offDatabase;
-      await productDb?.delete('products',
-          where: 'barcode LIKE ?', whereArgs: ['user_created_%']);
+      await productDb?.delete(
+        'products',
+        where: 'barcode LIKE ?',
+        whereArgs: ['user_created_%'],
+      );
 
       for (final e in backup.userPreferences.entries) {
         final k = e.key;
@@ -424,7 +445,8 @@ class BackupManager {
           await prefs.setDouble(k, v);
         else if (v is String)
           await prefs.setString(k, v);
-        else if (v is List<String>) await prefs.setStringList(k, v);
+        else if (v is List<String>)
+          await prefs.setStringList(k, v);
       }
 
       await _userDb.importUserData(
@@ -464,7 +486,7 @@ class BackupManager {
     }
   }
 
-// lib/data/backup_manager.dart
+  // lib/data/backup_manager.dart
 
   Future<bool> runAutoBackupIfDue({
     Duration interval = const Duration(days: 1),
@@ -489,7 +511,8 @@ class BackupManager {
       final favoriteBarcodes = await _userDb.getFavoriteBarcodes();
       final measurementSessions = await _userDb.getMeasurementSessions();
       final productDb = await _productDb.offDatabase;
-      final customFoodMaps = await productDb?.query(
+      final customFoodMaps =
+          await productDb?.query(
             'products',
             where: 'barcode LIKE ?',
             whereArgs: ['user_created_%'],
@@ -527,8 +550,8 @@ class BackupManager {
       Directory baseDir = (dirPath != null && dirPath.trim().isNotEmpty)
           ? Directory(dirPath)
           : ((saved != null && saved.trim().isNotEmpty)
-              ? Directory(saved)
-              : Directory(p.join(docs.path, 'Backups')));
+                ? Directory(saved)
+                : Directory(p.join(docs.path, 'Backups')));
       await baseDir.create(recursive: true);
       final ts = DateFormat('yyyy-MM-dd_HH-mm').format(DateTime.now());
 
@@ -540,8 +563,10 @@ class BackupManager {
           print('Auto-Backup ENC: Passwort fehlt');
           return false;
         }
-        final wrapper =
-            await EncryptionUtil.encryptString(jsonString, passphrase);
+        final wrapper = await EncryptionUtil.encryptString(
+          jsonString,
+          passphrase,
+        );
         content = jsonEncode(wrapper);
         name = 'lightweight_auto_enc_v$currentSchemaVersion-[$ts].json';
       } else {
@@ -555,7 +580,8 @@ class BackupManager {
         await outFile.writeAsString(content);
       } on FileSystemException catch (e) {
         print(
-            'Auto-Backup: Schreiben in $baseDir fehlgeschlagen, Fallback → App-Ordner ($e)');
+          'Auto-Backup: Schreiben in $baseDir fehlgeschlagen, Fallback → App-Ordner ($e)',
+        );
         baseDir = Directory(p.join(docs.path, 'Backups'));
         await baseDir.create(recursive: true);
         outFile = File(p.join(baseDir.path, name));
@@ -565,12 +591,15 @@ class BackupManager {
       print('Auto-Backup geschrieben: ${outFile.path}');
 
       // 5) Retention
-      final files = baseDir
-          .listSync()
-          .whereType<File>()
-          .where((f) => p.basename(f.path).startsWith('lightweight_auto'))
-          .toList()
-        ..sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
+      final files =
+          baseDir
+              .listSync()
+              .whereType<File>()
+              .where((f) => p.basename(f.path).startsWith('lightweight_auto'))
+              .toList()
+            ..sort(
+              (a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()),
+            );
       for (var i = retention; i < files.length; i++) {
         try {
           files[i].deleteSync();
@@ -611,7 +640,7 @@ class ProbeResult {
 ProbeResult _probeBackup(Uint8List bytes) {
   // 1) Quick JSON sniff
   if (bytes.isNotEmpty &&
-      (bytes.first == 0x7B /* '{' */ || bytes.first == 0x5B /* '[' */)) {
+      (bytes.first == 0x7B /* '{' */ || bytes.first == 0x5B /* '[' */ )) {
     // Looks like plain JSON (very common for unencrypted exports)
     return ProbeResult(encrypted: false, gzipped: false);
   }
@@ -656,13 +685,17 @@ Future<void> importBackupBytes(Uint8List bytes, {String? password}) async {
       plainBytes = sourceBytes;
     } catch (_) {
       // If JSON/gzip decode failed, fall back to encrypted flow
-      plainBytes = await _tryDecryptWithCandidates(bytes,
-          passwordCandidates: [password, "", null]);
+      plainBytes = await _tryDecryptWithCandidates(
+        bytes,
+        passwordCandidates: [password, "", null],
+      );
     }
   } else {
     // Encrypted flow straight away
-    plainBytes = await _tryDecryptWithCandidates(bytes,
-        passwordCandidates: [password, "", null]);
+    plainBytes = await _tryDecryptWithCandidates(
+      bytes,
+      passwordCandidates: [password, "", null],
+    );
   }
 
   final jsonStr = utf8.decode(plainBytes);
@@ -675,8 +708,10 @@ Future<void> importBackupBytes(Uint8List bytes, {String? password}) async {
 
 /// Tries multiple password candidates in order.
 /// If all fail, throws BackupPasswordError.
-Future<Uint8List> _tryDecryptWithCandidates(Uint8List encrypted,
-    {required List<String?> passwordCandidates}) async {
+Future<Uint8List> _tryDecryptWithCandidates(
+  Uint8List encrypted, {
+  required List<String?> passwordCandidates,
+}) async {
   for (final cand in passwordCandidates) {
     try {
       final plain = await _decryptPayload(encrypted, cand);
@@ -708,7 +743,8 @@ Future<Uint8List> _decryptPayload(Uint8List encrypted, String? password) async {
 
   // For now we throw to force you to wire this to your actual crypto util:
   throw UnimplementedError(
-      "Wire _decryptPayload to your existing AES-GCM routine");
+    "Wire _decryptPayload to your existing AES-GCM routine",
+  );
 }
 
 /// Your existing apply logic (truncate & insert or merge)

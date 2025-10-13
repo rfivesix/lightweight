@@ -28,7 +28,8 @@ class RunningWorkoutBar extends StatelessWidget {
               Text(
                 timeText,
                 style: const TextStyle(
-                    fontFeatures: [FontFeature.tabularFigures()]),
+                  fontFeatures: [FontFeature.tabularFigures()],
+                ),
               ),
             ],
           ),
@@ -40,8 +41,9 @@ class RunningWorkoutBar extends StatelessWidget {
             backgroundColor: cs.primary,
             foregroundColor: cs.onPrimary,
             minimumSize: const Size(0, 36),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
           child: const Text('Fortsetzen'),
         ),
@@ -53,8 +55,9 @@ class RunningWorkoutBar extends StatelessWidget {
             backgroundColor: cs.error,
             foregroundColor: cs.onError,
             minimumSize: const Size(0, 36),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
           child: const Text('Verwerfen'),
         ),

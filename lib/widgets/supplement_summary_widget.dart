@@ -30,8 +30,11 @@ class SupplementSummaryWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final goalOnlySupplements = trackedSupplements
-        .where((ts) =>
-            ts.supplement.dailyGoal != null && ts.supplement.dailyLimit == null)
+        .where(
+          (ts) =>
+              ts.supplement.dailyGoal != null &&
+              ts.supplement.dailyLimit == null,
+        )
         .toList();
 
     final progressSupplements = trackedSupplements
@@ -44,10 +47,12 @@ class SupplementSummaryWidget extends StatelessWidget {
 
     return Column(
       children: [
-        ...goalOnlySupplements.map((ts) => GestureDetector(
-              onTap: onTap,
-              child: _CheckmarkCard(trackedSupplement: ts),
-            )),
+        ...goalOnlySupplements.map(
+          (ts) => GestureDetector(
+            onTap: onTap,
+            child: _CheckmarkCard(trackedSupplement: ts),
+          ),
+        ),
         ...progressSupplements.map((ts) {
           final supplement = ts.supplement;
           return GestureDetector(

@@ -9,8 +9,11 @@ class WaterDialogContent extends StatefulWidget {
   final int? initialQuantity;
   final DateTime? initialTimestamp;
 
-  const WaterDialogContent(
-      {super.key, this.initialQuantity, this.initialTimestamp});
+  const WaterDialogContent({
+    super.key,
+    this.initialQuantity,
+    this.initialTimestamp,
+  });
   @override
   WaterDialogContentState createState() => WaterDialogContentState();
 }
@@ -26,8 +29,9 @@ class WaterDialogContentState extends State<WaterDialogContent> {
   @override
   void initState() {
     super.initState();
-    _textController =
-        TextEditingController(text: widget.initialQuantity?.toString() ?? '');
+    _textController = TextEditingController(
+      text: widget.initialQuantity?.toString() ?? '',
+    );
     _selectedDateTime = widget.initialTimestamp ?? DateTime.now();
   }
 
@@ -39,30 +43,38 @@ class WaterDialogContentState extends State<WaterDialogContent> {
 
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
-        context: context,
-        initialDate: _selectedDateTime,
-        firstDate: DateTime(2020),
-        lastDate: DateTime.now());
+      context: context,
+      initialDate: _selectedDateTime,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+    );
     if (picked != null && picked != _selectedDateTime) {
       setState(() {
-        _selectedDateTime = DateTime(picked.year, picked.month, picked.day,
-            _selectedDateTime.hour, _selectedDateTime.minute);
+        _selectedDateTime = DateTime(
+          picked.year,
+          picked.month,
+          picked.day,
+          _selectedDateTime.hour,
+          _selectedDateTime.minute,
+        );
       });
     }
   }
 
   Future<void> _selectTime() async {
     final TimeOfDay? picked = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(_selectedDateTime));
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_selectedDateTime),
+    );
     if (picked != null) {
       setState(() {
         _selectedDateTime = DateTime(
-            _selectedDateTime.year,
-            _selectedDateTime.month,
-            _selectedDateTime.day,
-            picked.hour,
-            picked.minute);
+          _selectedDateTime.year,
+          _selectedDateTime.month,
+          _selectedDateTime.day,
+          picked.hour,
+          picked.minute,
+        );
       });
     }
   }
@@ -75,33 +87,44 @@ class WaterDialogContentState extends State<WaterDialogContent> {
       mainAxisSize: MainAxisSize.min,
       children: [
         TextField(
-            controller: _textController,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-                labelText: l10n.amount_in_milliliters, suffixText: 'ml'),
-            autofocus: true),
+          controller: _textController,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            labelText: l10n.amount_in_milliliters,
+            suffixText: 'ml',
+          ),
+          autofocus: true,
+        ),
         const SizedBox(height: DesignConstants.spacingL),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             InkWell(
-                onTap: _selectDate,
-                child: Padding(
-                    padding: DesignConstants.cardMargin,
-                    child: Row(children: [
-                      const Icon(Icons.calendar_today, size: 20),
-                      const SizedBox(width: 8),
-                      Text(formattedDate, style: const TextStyle(fontSize: 16))
-                    ]))),
+              onTap: _selectDate,
+              child: Padding(
+                padding: DesignConstants.cardMargin,
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_today, size: 20),
+                    const SizedBox(width: 8),
+                    Text(formattedDate, style: const TextStyle(fontSize: 16)),
+                  ],
+                ),
+              ),
+            ),
             InkWell(
-                onTap: _selectTime,
-                child: Padding(
-                    padding: DesignConstants.cardMargin,
-                    child: Row(children: [
-                      const Icon(Icons.access_time, size: 20),
-                      const SizedBox(width: 8),
-                      Text(formattedTime, style: const TextStyle(fontSize: 16))
-                    ]))),
+              onTap: _selectTime,
+              child: Padding(
+                padding: DesignConstants.cardMargin,
+                child: Row(
+                  children: [
+                    const Icon(Icons.access_time, size: 20),
+                    const SizedBox(width: 8),
+                    Text(formattedTime, style: const TextStyle(fontSize: 16)),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ],

@@ -80,8 +80,9 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
       setState(() => _isLoading = true);
     }
 
-    final data =
-        await WorkoutDatabaseHelper.instance.getWorkoutLogById(widget.logId);
+    final data = await WorkoutDatabaseHelper.instance.getWorkoutLogById(
+      widget.logId,
+    );
     if (data == null) {
       if (mounted) setState(() => _isLoading = false);
       return;
@@ -94,20 +95,24 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
 
     final Map<String, double> categoryVolume = {};
     for (final set in data.sets) {
-      final exercise = await WorkoutDatabaseHelper.instance
-          .getExerciseByName(set.exerciseName);
+      final exercise = await WorkoutDatabaseHelper.instance.getExerciseByName(
+        set.exerciseName,
+      );
       if (exercise != null) {
         final volumeForSet = (set.weightKg ?? 0) * (set.reps ?? 0);
         categoryVolume.update(
-            exercise.categoryName, (value) => value + volumeForSet,
-            ifAbsent: () => volumeForSet);
+          exercise.categoryName,
+          (value) => value + volumeForSet,
+          ifAbsent: () => volumeForSet,
+        );
       }
     }
 
     final tempExerciseDetails = <String, Exercise>{};
     for (var name in groups.keys) {
-      final exercise =
-          await WorkoutDatabaseHelper.instance.getExerciseByName(name);
+      final exercise = await WorkoutDatabaseHelper.instance.getExerciseByName(
+        name,
+      );
       if (exercise != null) tempExerciseDetails[name] = exercise;
     }
 
@@ -117,9 +122,11 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     _clearControllers();
     for (final setLog in data.sets) {
       _weightControllers[setLog.id!] = TextEditingController(
-          text: setLog.weightKg?.toStringAsFixed(1).replaceAll('.0', '') ?? '');
-      _repsControllers[setLog.id!] =
-          TextEditingController(text: setLog.reps?.toString() ?? '');
+        text: setLog.weightKg?.toStringAsFixed(1).replaceAll('.0', '') ?? '',
+      );
+      _repsControllers[setLog.id!] = TextEditingController(
+        text: setLog.reps?.toString() ?? '',
+      );
     }
 
     if (!mounted) return;
@@ -161,8 +168,13 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     if (time == null) return;
 
     setState(() {
-      _editedStartTime =
-          DateTime(date.year, date.month, date.day, time.hour, time.minute);
+      _editedStartTime = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
     });
   }
 
@@ -184,9 +196,10 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     final List<SetLog> setsToInsert = [];
 
     for (final setLog in currentSets) {
-      final weight = double.tryParse(
-              _weightControllers[setLog.id!]?.text.replaceAll(',', '.') ??
-                  '0') ??
+      final weight =
+          double.tryParse(
+            _weightControllers[setLog.id!]?.text.replaceAll(',', '.') ?? '0',
+          ) ??
           0.0;
       final reps = int.tryParse(_repsControllers[setLog.id!]?.text ?? '0') ?? 0;
 
@@ -200,17 +213,22 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     }
 
     await dbHelper.updateWorkoutLogDetails(
-        widget.logId, _editedStartTime!, _notesController.text);
+      widget.logId,
+      _editedStartTime!,
+      _notesController.text,
+    );
     if (idsToDelete.isNotEmpty) await dbHelper.deleteSetLogs(idsToDelete);
     if (setsToUpdate.isNotEmpty) await dbHelper.updateSetLogs(setsToUpdate);
     for (final set in setsToInsert) {
-      await dbHelper
-          .insertSetLog(set.copyWith(id: null, workoutLogId: widget.logId));
+      await dbHelper.insertSetLog(
+        set.copyWith(id: null, workoutLogId: widget.logId),
+      );
     }
 
     if (mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.snackbarRoutineSaved)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.snackbarRoutineSaved)));
     }
 
     setState(() => _isEditMode = false);
@@ -218,12 +236,16 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
   }
 
   Widget _buildHeader(String text) => Expanded(
-      child: Text(text,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontWeight: FontWeight.bold)));
+    child: Text(
+      text,
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        color: Colors.grey[600],
+        fontSize: 12,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -250,20 +272,22 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
         scrolledUnderElevation: 0,
         title: Text(
           l10n.workoutDetailsTitle,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
         ),
         actions: [
           if (!_isLoading && _log != null)
             _isEditMode
                 ? TextButton(
                     onPressed: _saveChanges,
-                    child: Text(l10n.save,
-                        style: TextStyle(
-                          color: colorScheme.primary,
-                          fontWeight: FontWeight.bold,
-                        )),
+                    child: Text(
+                      l10n.save,
+                      style: TextStyle(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   )
                 : IconButton(
                     icon: const Icon(Icons.edit),
@@ -274,142 +298,158 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _log == null
-              ? Center(child: Text(l10n.workoutNotFound))
-              : Column(
-                  children: [
-                    WorkoutSummaryBar(
-                      duration: duration,
-                      volume: totalVolume,
-                      sets: _log!.sets.length,
-                      progress: null,
-                    ),
-                    Divider(
-                        height: 1,
-                        thickness: 1,
-                        color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
-                    Expanded(
-                      child: ListView(
-                        padding: EdgeInsets.zero,
-                        children: [
-                          // Header Info Section mit SummaryCard
-                          Padding(
-                            padding: DesignConstants.cardPadding,
-                            child: SummaryCard(
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Form(
-                                  key: _formKey,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+          ? Center(child: Text(l10n.workoutNotFound))
+          : Column(
+              children: [
+                WorkoutSummaryBar(
+                  duration: duration,
+                  volume: totalVolume,
+                  sets: _log!.sets.length,
+                  progress: null,
+                ),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+                ),
+                Expanded(
+                  child: ListView(
+                    padding: EdgeInsets.zero,
+                    children: [
+                      // Header Info Section mit SummaryCard
+                      Padding(
+                        padding: DesignConstants.cardPadding,
+                        child: SummaryCard(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _log!.routineName ?? l10n.freeWorkoutTitle,
+                                    style: textTheme.headlineMedium,
+                                  ),
+                                  Row(
                                     children: [
                                       Text(
-                                        _log!.routineName ??
-                                            l10n.freeWorkoutTitle,
-                                        style: textTheme.headlineMedium,
+                                        DateFormat.yMMMMd(
+                                          locale,
+                                        ).add_Hm().format(
+                                          _editedStartTime ?? _log!.startTime,
+                                        ),
                                       ),
-                                      Row(
-                                        children: [
-                                          Text(DateFormat.yMMMMd(locale)
-                                              .add_Hm()
-                                              .format(_editedStartTime ??
-                                                  _log!.startTime)),
-                                          if (_isEditMode)
-                                            IconButton(
-                                              icon: Icon(Icons.calendar_today,
-                                                  size: 18,
-                                                  color: colorScheme.primary),
-                                              onPressed: _pickDateTime,
-                                            )
-                                        ],
-                                      ),
-                                      const SizedBox(
-                                          height: DesignConstants.spacingM),
-                                      _isEditMode
-                                          ? TextFormField(
-                                              controller: _notesController,
-                                              decoration: InputDecoration(
-                                                  labelText: l10n.notesLabel),
-                                              maxLines: 3,
-                                            )
-                                          : (_log!.notes != null &&
-                                                  _log!.notes!.isNotEmpty
-                                              ? Text(
-                                                  '${l10n.notesLabel}: ${_log!.notes!}',
-                                                  style: const TextStyle(
-                                                      fontStyle:
-                                                          FontStyle.italic))
-                                              : const SizedBox.shrink()),
-                                      if (_categoryVolume.isNotEmpty) ...[
-                                        const Divider(height: 24),
-                                        Text(l10n.muscleSplitLabel,
-                                            style: textTheme.titleMedium),
-                                        const SizedBox(
-                                            height: DesignConstants.spacingS),
-                                        ..._buildCategoryBars(context),
-                                      ],
+                                      if (_isEditMode)
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.calendar_today,
+                                            size: 18,
+                                            color: colorScheme.primary,
+                                          ),
+                                          onPressed: _pickDateTime,
+                                        ),
                                     ],
                                   ),
-                                ),
+                                  const SizedBox(
+                                    height: DesignConstants.spacingM,
+                                  ),
+                                  _isEditMode
+                                      ? TextFormField(
+                                          controller: _notesController,
+                                          decoration: InputDecoration(
+                                            labelText: l10n.notesLabel,
+                                          ),
+                                          maxLines: 3,
+                                        )
+                                      : (_log!.notes != null &&
+                                                _log!.notes!.isNotEmpty
+                                            ? Text(
+                                                '${l10n.notesLabel}: ${_log!.notes!}',
+                                                style: const TextStyle(
+                                                  fontStyle: FontStyle.italic,
+                                                ),
+                                              )
+                                            : const SizedBox.shrink()),
+                                  if (_categoryVolume.isNotEmpty) ...[
+                                    const Divider(height: 24),
+                                    Text(
+                                      l10n.muscleSplitLabel,
+                                      style: textTheme.titleMedium,
+                                    ),
+                                    const SizedBox(
+                                      height: DesignConstants.spacingS,
+                                    ),
+                                    ..._buildCategoryBars(context),
+                                  ],
+                                ],
                               ),
                             ),
                           ),
-
-                          // Exercise Sets mit WorkoutCard
-                          ..._buildSetList(context, l10n),
-
-                          // Add Exercise Button
-                          if (_isEditMode)
-                            Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: TextButton.icon(
-                                onPressed: () async {
-                                  final selectedExercise =
-                                      await Navigator.of(context)
-                                          .push<Exercise>(
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            const ExerciseCatalogScreen(
-                                                isSelectionMode: true)),
-                                  );
-                                  if (selectedExercise != null) {
-                                    setState(() {
-                                      final newSet = SetLog(
-                                          id: DateTime.now()
-                                              .millisecondsSinceEpoch,
-                                          workoutLogId: _log!.id!,
-                                          exerciseName: selectedExercise
-                                              .getLocalizedName(context),
-                                          setType: 'normal');
-                                      _groupedSets[selectedExercise
-                                          .getLocalizedName(context)] = [
-                                        newSet
-                                      ];
-                                      _weightControllers[newSet.id!] =
-                                          TextEditingController();
-                                      _repsControllers[newSet.id!] =
-                                          TextEditingController();
-                                    });
-                                  }
-                                },
-                                icon: const Icon(Icons.add),
-                                label: Text(l10n.addExerciseToWorkoutButton),
-                              ),
-                            ),
-
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                                16.0, 24.0, 16.0, 8.0),
-                            child: WgerAttributionWidget(
-                              textStyle: textTheme.bodySmall
-                                  ?.copyWith(color: Colors.grey[600]),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
+
+                      // Exercise Sets mit WorkoutCard
+                      ..._buildSetList(context, l10n),
+
+                      // Add Exercise Button
+                      if (_isEditMode)
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: TextButton.icon(
+                            onPressed: () async {
+                              final selectedExercise =
+                                  await Navigator.of(context).push<Exercise>(
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const ExerciseCatalogScreen(
+                                            isSelectionMode: true,
+                                          ),
+                                    ),
+                                  );
+                              if (selectedExercise != null) {
+                                setState(() {
+                                  final newSet = SetLog(
+                                    id: DateTime.now().millisecondsSinceEpoch,
+                                    workoutLogId: _log!.id!,
+                                    exerciseName: selectedExercise
+                                        .getLocalizedName(context),
+                                    setType: 'normal',
+                                  );
+                                  _groupedSets[selectedExercise
+                                      .getLocalizedName(context)] = [
+                                    newSet,
+                                  ];
+                                  _weightControllers[newSet.id!] =
+                                      TextEditingController();
+                                  _repsControllers[newSet.id!] =
+                                      TextEditingController();
+                                });
+                              }
+                            },
+                            icon: const Icon(Icons.add),
+                            label: Text(l10n.addExerciseToWorkoutButton),
+                          ),
+                        ),
+
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          16.0,
+                          24.0,
+                          16.0,
+                          8.0,
+                        ),
+                        child: WgerAttributionWidget(
+                          textStyle: textTheme.bodySmall?.copyWith(
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+              ],
+            ),
     );
   }
 
@@ -422,8 +462,9 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
         child: Row(
           children: [
             Expanded(
-                flex: 2,
-                child: Text(entry.key, style: const TextStyle(fontSize: 12))),
+              flex: 2,
+              child: Text(entry.key, style: const TextStyle(fontSize: 12)),
+            ),
             Expanded(
               flex: 5,
               child: LinearProgressIndicator(
@@ -521,12 +562,14 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                   ? TextFormField(
                       controller: _weightControllers[setLog.id!],
                       textAlign: TextAlign.center,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          isDense: true,
-                          fillColor: Colors.transparent),
+                        border: InputBorder.none,
+                        isDense: true,
+                        fillColor: Colors.transparent,
+                      ),
                     )
                   : Text(
                       setLog.weightKg
@@ -546,9 +589,10 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                       textAlign: TextAlign.center,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          isDense: true,
-                          fillColor: Colors.transparent),
+                        border: InputBorder.none,
+                        isDense: true,
+                        fillColor: Colors.transparent,
+                      ),
                     )
                   : Text(
                       "${setLog.reps ?? '0'}",
@@ -562,21 +606,21 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                 width: 48,
                 child: _isEditMode
                     ? IconButton(
-                        icon: const Icon(Icons.delete_outline,
-                            color: Colors.redAccent),
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.redAccent,
+                        ),
                         onPressed: () {
                           setState(() {
-                            _groupedSets[exerciseName]
-                                ?.removeWhere((s) => s.id == setLog.id);
+                            _groupedSets[exerciseName]?.removeWhere(
+                              (s) => s.id == setLog.id,
+                            );
                             _weightControllers.remove(setLog.id!)?.dispose();
                             _repsControllers.remove(setLog.id!)?.dispose();
                           });
                         },
                       )
-                    : const Icon(
-                        Icons.check_circle,
-                        color: Colors.green,
-                      ),
+                    : const Icon(Icons.check_circle, color: Colors.green),
               ),
             ),
           ],
@@ -625,8 +669,12 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     }
   }
 
-  Widget _buildExerciseCard(BuildContext context, AppLocalizations l10n,
-      MapEntry<String, List<SetLog>> entry, int index) {
+  Widget _buildExerciseCard(
+    BuildContext context,
+    AppLocalizations l10n,
+    MapEntry<String, List<SetLog>> entry,
+    int index,
+  ) {
     final String exerciseName = entry.key;
     final Exercise? exercise = _exerciseDetails[exerciseName];
     final List<SetLog> sets = entry.value;
@@ -638,8 +686,10 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
             leading: _isEditMode
                 ? ReorderableDragStartListener(
                     index: index,
@@ -649,25 +699,30 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
             title: InkWell(
               onTap: () {
                 if (exercise != null) {
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) =>
-                        ExerciseDetailScreen(exercise: exercise),
-                  ));
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          ExerciseDetailScreen(exercise: exercise),
+                    ),
+                  );
                 }
               },
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4.0),
                 child: Text(
                   exercise?.getLocalizedName(context) ?? exerciseName,
-                  style: textTheme.titleLarge
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
             trailing: _isEditMode
                 ? IconButton(
-                    icon: const Icon(Icons.delete_outline,
-                        color: Colors.redAccent),
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.redAccent,
+                    ),
                     tooltip: l10n.removeExercise,
                     onPressed: () {
                       setState(() {
@@ -693,54 +748,58 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                     Expanded(
                       flex: 2,
                       child: Center(
-                          child: Text(
-                        l10n.setLabel,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                        child: Text(
+                          l10n.setLabel,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      )),
+                      ),
                     ),
                     Expanded(
                       flex: 3,
                       child: Center(
-                          child: Text(
-                        l10n.lastTimeLabel,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                        child: Text(
+                          l10n.lastTimeLabel,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      )),
+                      ),
                     ),
                     Expanded(
                       flex: 2,
                       child: Center(
-                          child: Text(
-                        l10n.kgLabel,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                        child: Text(
+                          l10n.kgLabel,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      )),
+                      ),
                     ),
                     Expanded(
                       flex: 2,
                       child: Center(
-                          child: Text(
-                        l10n.repsLabel,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                        child: Text(
+                          l10n.repsLabel,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      )),
+                      ),
                     ),
                     const SizedBox(width: 48),
                   ],
@@ -761,7 +820,12 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                   }
 
                   return _buildSetRow(
-                      setLog, rowIndex, workingSetIndex, exerciseName, l10n);
+                    setLog,
+                    rowIndex,
+                    workingSetIndex,
+                    exerciseName,
+                    l10n,
+                  );
                 }),
 
                 // Add Set Button
@@ -771,10 +835,11 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                     child: TextButton.icon(
                       onPressed: () {
                         final newSet = SetLog(
-                            id: DateTime.now().millisecondsSinceEpoch,
-                            workoutLogId: _log!.id!,
-                            exerciseName: exerciseName,
-                            setType: 'normal');
+                          id: DateTime.now().millisecondsSinceEpoch,
+                          workoutLogId: _log!.id!,
+                          exerciseName: exerciseName,
+                          setType: 'normal',
+                        );
                         setState(() {
                           sets.add(newSet);
                           _weightControllers[newSet.id!] =
@@ -819,17 +884,21 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
         return Wrap(
           children: <Widget>[
             ListTile(
-                title: const Text('Normal'),
-                onTap: () => _changeSetType(setLogId, 'normal')),
+              title: const Text('Normal'),
+              onTap: () => _changeSetType(setLogId, 'normal'),
+            ),
             ListTile(
-                title: const Text('Warmup'),
-                onTap: () => _changeSetType(setLogId, 'warmup')),
+              title: const Text('Warmup'),
+              onTap: () => _changeSetType(setLogId, 'warmup'),
+            ),
             ListTile(
-                title: const Text('Failure'),
-                onTap: () => _changeSetType(setLogId, 'failure')),
+              title: const Text('Failure'),
+              onTap: () => _changeSetType(setLogId, 'failure'),
+            ),
             ListTile(
-                title: const Text('Dropset'),
-                onTap: () => _changeSetType(setLogId, 'dropset')),
+              title: const Text('Dropset'),
+              onTap: () => _changeSetType(setLogId, 'dropset'),
+            ),
           ],
         );
       },

@@ -54,12 +54,12 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }
 
   Future<void> _loadMonthData(DateTime month) async {
-    final workoutDays =
-        await WorkoutDatabaseHelper.instance.getWorkoutDaysInMonth(month);
-    final nutritionDays =
-        await DatabaseHelper.instance.getNutritionLogDaysInMonth(month);
-    final supplementDays =
-        await DatabaseHelper.instance.getSupplementLogDaysInMonth(month);
+    final workoutDays = await WorkoutDatabaseHelper.instance
+        .getWorkoutDaysInMonth(month);
+    final nutritionDays = await DatabaseHelper.instance
+        .getNutritionLogDaysInMonth(month);
+    final supplementDays = await DatabaseHelper.instance
+        .getSupplementLogDaysInMonth(month);
 
     if (mounted) {
       setState(() {
@@ -75,23 +75,27 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final targetCalories = prefs.getInt('targetCalories') ?? 2500;
     final today = DateTime.now();
     final sevenDaysAgo = today.subtract(const Duration(days: 6));
-    final recentEntries = await DatabaseHelper.instance
-        .getEntriesForDateRange(sevenDaysAgo, today);
+    final recentEntries = await DatabaseHelper.instance.getEntriesForDateRange(
+      sevenDaysAgo,
+      today,
+    );
 
     if (recentEntries.isEmpty) {
       return l10n.recommendationDefault;
     }
 
-    final uniqueDaysTracked =
-        recentEntries.map((e) => DateFormat.yMd().format(e.timestamp)).toSet();
+    final uniqueDaysTracked = recentEntries
+        .map((e) => DateFormat.yMd().format(e.timestamp))
+        .toSet();
     final numberOfTrackedDays = uniqueDaysTracked.length;
     int totalRecentCalories = 0;
     for (final entry in recentEntries) {
-      final foodItem = await ProductDatabaseHelper.instance
-          .getProductByBarcode(entry.barcode);
+      final foodItem = await ProductDatabaseHelper.instance.getProductByBarcode(
+        entry.barcode,
+      );
       if (foodItem != null) {
-        totalRecentCalories +=
-            (foodItem.calories / 100 * entry.quantityInGrams).round();
+        totalRecentCalories += (foodItem.calories / 100 * entry.quantityInGrams)
+            .round();
       }
     }
 
@@ -102,10 +106,14 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     if (numberOfTrackedDays > 1) {
       if (difference > tolerance) {
         return l10n.recommendationOverTarget(
-            numberOfTrackedDays, difference.round());
+          numberOfTrackedDays,
+          difference.round(),
+        );
       } else if (difference < -tolerance) {
         return l10n.recommendationUnderTarget(
-            numberOfTrackedDays, (-difference).round());
+          numberOfTrackedDays,
+          (-difference).round(),
+        );
       } else {
         return l10n.recommendationOnTarget(numberOfTrackedDays);
       }
@@ -139,8 +147,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                         headerStyle: HeaderStyle(
                           formatButtonVisible: false,
                           titleCentered: true,
-                          titleTextStyle:
-                              Theme.of(context).textTheme.titleMedium!,
+                          titleTextStyle: Theme.of(
+                            context,
+                          ).textTheme.titleMedium!,
                         ),
                         onDaySelected: (selectedDay, focusedDay) {
                           setState(() {
@@ -156,10 +165,12 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                         },
                         calendarBuilders: CalendarBuilders(
                           markerBuilder: (context, day, events) {
-                            final isNutritionDay =
-                                _nutritionLogDays.contains(day.day);
-                            final isSupplementDay =
-                                _supplementDays.contains(day.day);
+                            final isNutritionDay = _nutritionLogDays.contains(
+                              day.day,
+                            );
+                            final isSupplementDay = _supplementDays.contains(
+                              day.day,
+                            );
 
                             return Positioned(
                               bottom: 4,
@@ -171,8 +182,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                                       width: 6,
                                       height: 6,
                                       decoration: const BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Colors.blueAccent),
+                                        shape: BoxShape.circle,
+                                        color: Colors.blueAccent,
+                                      ),
                                     ),
                                   if (isNutritionDay && isSupplementDay)
                                     const SizedBox(width: 2),
@@ -181,8 +193,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                                       width: 6,
                                       height: 6,
                                       decoration: const BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Colors.amber),
+                                        shape: BoxShape.circle,
+                                        color: Colors.amber,
+                                      ),
                                     ),
                                 ],
                               ),
@@ -197,16 +210,17 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                                   height: 32,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
                                   ),
                                   child: Center(
                                     child: Text(
                                       '${day.day}',
                                       style: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onPrimary,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onPrimary,
                                       ),
                                     ),
                                   ),
@@ -229,8 +243,11 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                     title: l10n.body_measurements,
                     subtitle: l10n.measurements_description,
                     onTap: () {
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => const MeasurementsScreen()));
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const MeasurementsScreen(),
+                        ),
+                      );
                     },
                   ),
                   const SizedBox(height: DesignConstants.spacingM),
@@ -240,8 +257,11 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                     title: l10n.nutritionScreenTitle,
                     subtitle: l10n.nutrition_description,
                     onTap: () {
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => const NutritionScreen()));
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const NutritionScreen(),
+                        ),
+                      );
                     },
                   ),
                   const SizedBox(height: DesignConstants.spacingM),
@@ -272,9 +292,10 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
           _recommendationText.isEmpty ? l10n.load_dots : _recommendationText,
           textAlign: TextAlign.center,
           style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 22,
-              fontWeight: FontWeight.w500),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 22,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
     );
@@ -286,9 +307,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
+          color: Colors.grey[600],
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -302,10 +323,15 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }) {
     return SummaryCard(
       child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
-        leading:
-            Icon(icon, size: 40, color: Theme.of(context).colorScheme.primary),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 12.0,
+          horizontal: 16.0,
+        ),
+        leading: Icon(
+          icon,
+          size: 40,
+          color: Theme.of(context).colorScheme.primary,
+        ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(subtitle),
         trailing: const Icon(Icons.chevron_right),

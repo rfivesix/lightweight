@@ -33,7 +33,7 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
     "mealtypeBreakfast",
     "mealtypeLunch",
     "mealtypeDinner",
-    "mealtypeSnack"
+    "mealtypeSnack",
   ];
   late String _selectedMealType;
   late bool _isLiquid;
@@ -50,14 +50,18 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
   void initState() {
     super.initState();
     _quantityController = TextEditingController(
-        text: widget.initialQuantity?.toString() ?? '100');
+      text: widget.initialQuantity?.toString() ?? '100',
+    );
     _sugarController = TextEditingController(
-        text: widget.item.sugar?.toStringAsFixed(1).replaceAll('.0', '') ?? '');
+      text: widget.item.sugar?.toStringAsFixed(1).replaceAll('.0', '') ?? '',
+    );
     _caffeineController = TextEditingController(
-        text: widget.item.caffeineMgPer100ml
-                ?.toStringAsFixed(1)
-                .replaceAll('.0', '') ??
-            '');
+      text:
+          widget.item.caffeineMgPer100ml
+              ?.toStringAsFixed(1)
+              .replaceAll('.0', '') ??
+          '',
+    );
     _selectedDateTime = widget.initialTimestamp ?? DateTime.now();
     _selectedMealType = widget.initialMealType ?? "mealtypeSnack";
     _isLiquid = widget.item.isLiquid ?? false;
@@ -74,31 +78,39 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
   Future<void> _selectDate() async {
     final locale = Localizations.localeOf(context);
     final DateTime? picked = await showDatePicker(
-        context: context,
-        initialDate: _selectedDateTime,
-        firstDate: DateTime(2020),
-        lastDate: DateTime.now().add(const Duration(days: 365)),
-        locale: locale);
+      context: context,
+      initialDate: _selectedDateTime,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      locale: locale,
+    );
     if (picked != null && picked != _selectedDateTime) {
       setState(() {
-        _selectedDateTime = DateTime(picked.year, picked.month, picked.day,
-            _selectedDateTime.hour, _selectedDateTime.minute);
+        _selectedDateTime = DateTime(
+          picked.year,
+          picked.month,
+          picked.day,
+          _selectedDateTime.hour,
+          _selectedDateTime.minute,
+        );
       });
     }
   }
 
   Future<void> _selectTime() async {
     final TimeOfDay? picked = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(_selectedDateTime));
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_selectedDateTime),
+    );
     if (picked != null) {
       setState(() {
         _selectedDateTime = DateTime(
-            _selectedDateTime.year,
-            _selectedDateTime.month,
-            _selectedDateTime.day,
-            picked.hour,
-            picked.minute);
+          _selectedDateTime.year,
+          _selectedDateTime.month,
+          _selectedDateTime.day,
+          picked.hour,
+          picked.minute,
+        );
       });
     }
   }
@@ -131,14 +143,16 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         TextField(
-            controller: _quantityController,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-                labelText: _isLiquid
-                    ? l10n.amount_in_milliliters
-                    : l10n.amount_in_grams,
-                suffixText: unit),
-            autofocus: true),
+          controller: _quantityController,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            labelText: _isLiquid
+                ? l10n.amount_in_milliliters
+                : l10n.amount_in_grams,
+            suffixText: unit,
+          ),
+          autofocus: true,
+        ),
         const SizedBox(height: DesignConstants.spacingL),
         DropdownButtonFormField<String>(
           initialValue: _selectedMealType,
@@ -195,7 +209,7 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
               suffixText: 'mg / 100ml',
             ),
           ),
-        ]
+        ],
       ],
     );
   }

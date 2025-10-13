@@ -48,8 +48,10 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
       _isLoadingChart = true;
       _touchedIndex = null;
     });
-    final data = await DatabaseHelper.instance
-        .getChartDataForTypeAndRange(widget.chartType, widget.dateRange);
+    final data = await DatabaseHelper.instance.getChartDataForTypeAndRange(
+      widget.chartType,
+      widget.dateRange,
+    );
     if (mounted) {
       setState(() {
         _dataPoints = data;
@@ -102,13 +104,14 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
 
     // Punkt zur Anzeige (entweder getouched oder letzter)
     final int lastIdx = _dataPoints.length - 1;
-    final int shownIdx = (_touchedIndex != null &&
+    final int shownIdx =
+        (_touchedIndex != null &&
             _touchedIndex! >= 0 &&
             _touchedIndex! < _dataPoints.length)
         ? _touchedIndex!
         : lastIdx;
 
-// 2) Anzeigezeile oben (unverändert)
+    // 2) Anzeigezeile oben (unverändert)
     final ChartDataPoint displayPoint = _dataPoints[shownIdx];
     final String displayValue =
         '${displayPoint.value.toStringAsFixed(1)} ${widget.unit}';
@@ -121,20 +124,26 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
         .inDays
         .clamp(1, 100000); // Schutz
 
-// 1) Basisdaten: auf Tagesgrenzen normalisieren und SPAN berechnen
-    final DateTime firstDate = DateTime(_dataPoints.first.date.year,
-        _dataPoints.first.date.month, _dataPoints.first.date.day);
-    final DateTime lastDate = DateTime(_dataPoints.last.date.year,
-        _dataPoints.last.date.month, _dataPoints.last.date.day);
+    // 1) Basisdaten: auf Tagesgrenzen normalisieren und SPAN berechnen
+    final DateTime firstDate = DateTime(
+      _dataPoints.first.date.year,
+      _dataPoints.first.date.month,
+      _dataPoints.first.date.day,
+    );
+    final DateTime lastDate = DateTime(
+      _dataPoints.last.date.year,
+      _dataPoints.last.date.month,
+      _dataPoints.last.date.day,
+    );
 
     final int spanDays = lastDate.difference(firstDate).inDays;
     final double lastX = spanDays.toDouble();
 
-// ~6 Labels anpeilen (mind. 1)
+    // ~6 Labels anpeilen (mind. 1)
     const int desiredLabels = 6;
     final int labelEvery = (spanDays / desiredLabels).ceil().clamp(1, 100000);
 
-// Kompaktes Datumsformat abhängig von der Spannweite
+    // Kompaktes Datumsformat abhängig von der Spannweite
     String labelFor(DateTime d) {
       if (spanDays > 365 * 2) return DateFormat('yyyy').format(d);
       if (spanDays > 365) return DateFormat('MMM yyyy').format(d);
@@ -154,18 +163,17 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
               Text(
                 displayValue,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(width: 8),
               Text(
                 displayDate,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withOpacity(0.6),
-                    ),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.6),
+                ),
               ),
             ],
           ),
@@ -176,15 +184,18 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
               LineChartData(
                 minX: 0,
                 maxX: lastX == 0 ? 1 : lastX, // bei nur einem Punkt min Breite
-                clipData: const FlClipData
-                    .none(), // vermeidet Clipping am rechten Rand
+                clipData:
+                    const FlClipData.none(), // vermeidet Clipping am rechten Rand
                 lineTouchData: LineTouchData(
                   handleBuiltInTouches: true,
                   touchTooltipData: LineTouchTooltipData(
                     //tooltipBgColor: Colors.transparent,
                     getTooltipItems: (touchedSpots) =>
-                        List<LineTooltipItem?>.filled(touchedSpots.length, null,
-                            growable: false),
+                        List<LineTooltipItem?>.filled(
+                          touchedSpots.length,
+                          null,
+                          growable: false,
+                        ),
                   ),
                   touchCallback: _handleTouchCallback,
                 ),
@@ -252,10 +263,11 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
                 lineBarsData: [
                   LineChartBarData(
                     spots: _dataPoints.map((p) {
-                      final x = DateTime(p.date.year, p.date.month, p.date.day)
-                          .difference(firstDate)
-                          .inDays
-                          .toDouble();
+                      final x = DateTime(
+                        p.date.year,
+                        p.date.month,
+                        p.date.day,
+                      ).difference(firstDate).inDays.toDouble();
                       return FlSpot(x, p.value);
                     }).toList(),
                     isCurved: false, // gerade Linien
@@ -272,24 +284,24 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
                       },
                       getDotPainter: (spot, percent, bar, index) =>
                           FlDotCirclePainter(
-                        radius: 6,
-                        color: Theme.of(context).colorScheme.primary,
-                        strokeWidth: 2,
-                        strokeColor: Theme.of(context).scaffoldBackgroundColor,
-                      ),
+                            radius: 6,
+                            color: Theme.of(context).colorScheme.primary,
+                            strokeWidth: 2,
+                            strokeColor: Theme.of(
+                              context,
+                            ).scaffoldBackgroundColor,
+                          ),
                     ),
                     belowBarData: BarAreaData(
                       show: true,
                       gradient: LinearGradient(
                         colors: [
-                          Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withOpacity(0.3),
-                          Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withOpacity(0.0),
+                          Theme.of(
+                            context,
+                          ).colorScheme.primary.withOpacity(0.3),
+                          Theme.of(
+                            context,
+                          ).colorScheme.primary.withOpacity(0.0),
                         ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,

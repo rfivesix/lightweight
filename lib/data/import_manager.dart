@@ -10,15 +10,18 @@ import 'package:lightweight/models/set_log.dart';
 class ImportManager {
   Future<int> importHevyCsv() async {
     try {
-      final result = await FilePicker.platform
-          .pickFiles(type: FileType.custom, allowedExtensions: ['csv']);
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['csv'],
+      );
       if (result == null || result.files.single.path == null) return 0;
       final filePath = result.files.single.path!;
       final file = File(filePath);
       final content = await file.readAsString();
-      final List<List<dynamic>> rows =
-          const CsvToListConverter(shouldParseNumbers: false, eol: '\n')
-              .convert(content);
+      final List<List<dynamic>> rows = const CsvToListConverter(
+        shouldParseNumbers: false,
+        eol: '\n',
+      ).convert(content);
 
       if (rows.length < 2) return 0;
 
@@ -52,17 +55,18 @@ class ImportManager {
 
         final dbInstance = await db.database;
         await dbInstance.update(
-            'workout_logs',
-            {
-              'start_time':
-                  _parseHevyDate(firstRow['start_time']).toIso8601String(),
-              'end_time':
-                  _parseHevyDate(firstRow['end_time']).toIso8601String(),
-              'notes': firstRow['description'],
-              'status': 'completed',
-            },
-            where: 'id = ?',
-            whereArgs: [newLog.id]);
+          'workout_logs',
+          {
+            'start_time': _parseHevyDate(
+              firstRow['start_time'],
+            ).toIso8601String(),
+            'end_time': _parseHevyDate(firstRow['end_time']).toIso8601String(),
+            'notes': firstRow['description'],
+            'status': 'completed',
+          },
+          where: 'id = ?',
+          whereArgs: [newLog.id],
+        );
 
         int setOrder = 0;
         for (var row in group) {
@@ -78,8 +82,9 @@ class ImportManager {
             log_order: setOrder++,
             notes: row['exercise_notes'],
             distanceKm: double.tryParse(row['distance_km']?.toString() ?? ''),
-            durationSeconds:
-                int.tryParse(row['duration_seconds']?.toString() ?? ''),
+            durationSeconds: int.tryParse(
+              row['duration_seconds']?.toString() ?? '',
+            ),
             rpe: int.tryParse(row['rpe']?.toString() ?? ''),
             supersetId: int.tryParse(row['superset_id']?.toString() ?? ''),
           );
@@ -99,16 +104,21 @@ class ImportManager {
     final dateString = rawDateString?.toString().trim();
     if (dateString == null || dateString.isEmpty) {
       print(
-          "Leere oder null Datumszeichenfolge erhalten. Fallback auf DateTime.now()");
+        "Leere oder null Datumszeichenfolge erhalten. Fallback auf DateTime.now()",
+      );
       return DateTime.now();
     }
 
     // Die Liste der Formate wurde um das deutsche Locale erweitert.
     final List<DateFormat> formats = [
-      DateFormat("dd MMM yyyy, HH:mm",
-          "en_US"), // Probiert zuerst Englisch (Jan, Feb, Apr...)
       DateFormat(
-          "dd MMM yyyy, HH:mm", "de_DE"), // Dann Deutsch (März, Mai, Juni...)
+        "dd MMM yyyy, HH:mm",
+        "en_US",
+      ), // Probiert zuerst Englisch (Jan, Feb, Apr...)
+      DateFormat(
+        "dd MMM yyyy, HH:mm",
+        "de_DE",
+      ), // Dann Deutsch (März, Mai, Juni...)
       DateFormat("yyyy-MM-dd HH:mm:ss"),
       DateFormat("dd.MM.yyyy, HH:mm"),
     ];

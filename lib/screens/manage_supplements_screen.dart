@@ -41,7 +41,8 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
   Future<void> _navigateToEdit(Supplement s) async {
     final changed = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-          builder: (_) => CreateSupplementScreen(supplementToEdit: s)),
+        builder: (_) => CreateSupplementScreen(supplementToEdit: s),
+      ),
     );
     if (changed == true) _load();
   }
@@ -49,7 +50,8 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
   Future<void> _delete(Supplement s) async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      final ok = await showDialog<bool>(
+      final ok =
+          await showDialog<bool>(
             context: context,
             builder: (_) => AlertDialog(
               title: Text(l10n.deleteConfirmTitle),
@@ -58,11 +60,13 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
               ),
               actions: [
                 TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: Text(l10n.cancel)),
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text(l10n.cancel),
+                ),
                 TextButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: Text(l10n.delete)),
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text(l10n.delete),
+                ),
               ],
             ),
           ) ??
@@ -72,14 +76,17 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
       await DatabaseHelper.instance.deleteSupplement(s.id!);
       if (!mounted) return;
       _load();
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.deleted)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.deleted)));
     } catch (e) {
       // builtin blockiert -> freundlich erklären
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text(
-                l10n.operationNotAllowed /* ergänze passenden l10n-Text */)),
+          content: Text(
+            l10n.operationNotAllowed /* ergänze passenden l10n-Text */,
+          ),
+        ),
       );
     }
   }
@@ -93,12 +100,14 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
         leading: const Icon(Icons.set_meal_outlined),
         title: Text(title),
         subtitle: (s.dailyGoal != null || s.dailyLimit != null)
-            ? Text([
-                if (s.dailyGoal != null)
-                  '${l10n.dailyGoalLabel}: ${s.dailyGoal} ${s.unit}',
-                if (s.dailyLimit != null)
-                  '${l10n.dailyLimitLabel}: ${s.dailyLimit} ${s.unit}',
-              ].join('  •  '))
+            ? Text(
+                [
+                  if (s.dailyGoal != null)
+                    '${l10n.dailyGoalLabel}: ${s.dailyGoal} ${s.unit}',
+                  if (s.dailyLimit != null)
+                    '${l10n.dailyLimitLabel}: ${s.dailyLimit} ${s.unit}',
+                ].join('  •  '),
+              )
             : null,
         trailing: isBuiltin ? null : const Icon(Icons.chevron_right),
         onTap: () => _navigateToEdit(s),
@@ -140,9 +149,9 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
       appBar: AppBar(
         title: Text(
           l10n.manageSupplementsTitle,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
         ),
       ),
       body: _isLoading
@@ -155,8 +164,10 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
                   if (_supplements.isEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 16.0),
-                      child: Text(l10n.emptySupplements,
-                          textAlign: TextAlign.center),
+                      child: Text(
+                        l10n.emptySupplements,
+                        textAlign: TextAlign.center,
+                      ),
                     )
                   else
                     ..._supplements.map((s) => _tile(s, l10n)),
@@ -168,7 +179,8 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
         onPressed: () async {
           final created = await Navigator.of(context).push<bool>(
             MaterialPageRoute(
-                builder: (context) => const CreateSupplementScreen()),
+              builder: (context) => const CreateSupplementScreen(),
+            ),
           );
           if (created == true) _load();
         },

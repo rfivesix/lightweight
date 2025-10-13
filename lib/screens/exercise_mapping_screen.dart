@@ -21,7 +21,8 @@ class _ExerciseMappingScreenState extends State<ExerciseMappingScreen> {
   Future<void> _pickTarget(String sourceName) async {
     final Exercise? picked = await Navigator.of(context).push(
       MaterialPageRoute(
-          builder: (_) => const ExerciseCatalogScreen(isSelectionMode: true)),
+        builder: (_) => const ExerciseCatalogScreen(isSelectionMode: true),
+      ),
     );
     if (picked != null && mounted) {
       setState(() => _selection[sourceName] = picked);
@@ -84,10 +85,12 @@ class _ExerciseMappingScreenState extends State<ExerciseMappingScreen> {
                       ? const SizedBox(
                           width: 16,
                           height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2))
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
                       : const Icon(Icons.check),
                   label: Text(
-                      _applying ? l10n.applyingChanges : l10n.applyMapping),
+                    _applying ? l10n.applyingChanges : l10n.applyMapping,
+                  ),
                 ),
               ),
             ),

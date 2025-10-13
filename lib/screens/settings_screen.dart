@@ -46,9 +46,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         scrolledUnderElevation: 0,
         title: Text(
           l10n.settingsTitle,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
         ),
       ),
       body: ListView(
@@ -87,8 +87,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: l10n.backup_and_import,
             subtitle: l10n.backup_and_import_description,
             onTap: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => const DataManagementScreen()));
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const DataManagementScreen(),
+                ),
+              );
             },
           ),
           const SizedBox(height: DesignConstants.spacingXL),
@@ -100,26 +103,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle: l10n.data_from_off_and_wger,
             onTap: () {
               showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                        title: Text(l10n.attribution_title),
-                        content: SingleChildScrollView(
-                          child: Text(l10n.attributionText),
-                        ),
-                        actions: [
-                          TextButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              child: Text(l10n.snackbar_button_ok)),
-                        ],
-                      ));
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text(l10n.attribution_title),
+                  content: SingleChildScrollView(
+                    child: Text(l10n.attributionText),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(l10n.snackbar_button_ok),
+                    ),
+                  ],
+                ),
+              );
             },
           ),
           const SizedBox(height: DesignConstants.spacingM),
           SummaryCard(
             child: ListTile(
               leading: const Icon(Icons.code_rounded),
-              title: Text(l10n.app_version,
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              title: Text(
+                l10n.app_version,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
               subtitle: Text(_appVersion),
             ),
           ),
@@ -134,9 +141,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Text(
         title.toUpperCase(),
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
+          color: Colors.grey[600],
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -150,16 +157,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }) {
     return SummaryCard(
       child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-        leading:
-            Icon(icon, size: 36, color: Theme.of(context).colorScheme.primary),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 8.0,
+          horizontal: 16.0,
+        ),
+        leading: Icon(
+          icon,
+          size: 36,
+          color: Theme.of(context).colorScheme.primary,
+        ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(subtitle),
         trailing: const Icon(Icons.chevron_right),
         onTap: onTap,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24.0),
+        ),
       ),
     );
   }

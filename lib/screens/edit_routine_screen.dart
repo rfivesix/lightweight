@@ -63,8 +63,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
   Future<void> _loadExercisesForRoutine() async {
     if (_routineId == null) return;
     setState(() => _isLoading = true);
-    final routineWithExercises =
-        await WorkoutDatabaseHelper.instance.getRoutineById(_routineId!);
+    final routineWithExercises = await WorkoutDatabaseHelper.instance
+        .getRoutineById(_routineId!);
     if (mounted && routineWithExercises != null) {
       for (var c in _repsControllers.values) {
         c.dispose();
@@ -78,8 +78,9 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
       for (var re in routineWithExercises.exercises) {
         for (var st in re.setTemplates) {
           _repsControllers[st.id!] = TextEditingController(text: st.targetReps);
-          _weightControllers[st.id!] =
-              TextEditingController(text: st.targetWeight?.toString() ?? '');
+          _weightControllers[st.id!] = TextEditingController(
+            text: st.targetWeight?.toString() ?? '',
+          );
         }
       }
 
@@ -99,9 +100,11 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     }
     if (!mounted) return;
     final selectedExercise = await Navigator.of(context).push<Exercise>(
-        MaterialPageRoute(
-            builder: (context) =>
-                const ExerciseCatalogScreen(isSelectionMode: true)));
+      MaterialPageRoute(
+        builder: (context) =>
+            const ExerciseCatalogScreen(isSelectionMode: true),
+      ),
+    );
 
     if (selectedExercise != null && _routineId != null) {
       final newRoutineExercise = await WorkoutDatabaseHelper.instance
@@ -109,8 +112,9 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
       if (newRoutineExercise != null) {
         for (var st in newRoutineExercise.setTemplates) {
           _repsControllers[st.id!] = TextEditingController(text: st.targetReps);
-          _weightControllers[st.id!] =
-              TextEditingController(text: st.targetWeight?.toString() ?? '');
+          _weightControllers[st.id!] = TextEditingController(
+            text: st.targetWeight?.toString() ?? '',
+          );
         }
         setState(() {
           _routineExercises.add(newRoutineExercise);
@@ -126,7 +130,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     if (_nameController.text.trim().isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.validatorPleaseEnterRoutineName)));
+          SnackBar(content: Text(l10n.validatorPleaseEnterRoutineName)),
+        );
       }
       return false;
     }
@@ -134,8 +139,9 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     int? currentRoutineId = _routineId;
 
     if (_isNewRoutine) {
-      final newRoutine = await WorkoutDatabaseHelper.instance
-          .createRoutine(_nameController.text.trim());
+      final newRoutine = await WorkoutDatabaseHelper.instance.createRoutine(
+        _nameController.text.trim(),
+      );
       currentRoutineId = newRoutine.id;
       if (mounted) {
         setState(() {
@@ -145,13 +151,16 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         });
       }
       if (mounted && !isAddingExercise) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(l10n.snackbarRoutineCreated)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.snackbarRoutineCreated)));
       }
     } else {
       if (_nameController.text.trim() != _originalName) {
-        await WorkoutDatabaseHelper.instance
-            .updateRoutineName(currentRoutineId!, _nameController.text.trim());
+        await WorkoutDatabaseHelper.instance.updateRoutineName(
+          currentRoutineId!,
+          _nameController.text.trim(),
+        );
       }
     }
 
@@ -159,17 +168,22 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     for (var re in _routineExercises) {
       final List<SetTemplate> currentTemplates = [];
       for (var set in re.setTemplates) {
-        currentTemplates.add(set.copyWith(
+        currentTemplates.add(
+          set.copyWith(
             targetReps: _repsControllers[set.id!]?.text,
             targetWeight: double.tryParse(
-                _weightControllers[set.id!]!.text.replaceAll(',', '.'))));
+              _weightControllers[set.id!]!.text.replaceAll(',', '.'),
+            ),
+          ),
+        );
       }
       await db.replaceSetTemplatesForExercise(re.id!, currentTemplates);
     }
 
     if (mounted && !isAddingExercise) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.snackbarRoutineSaved)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.snackbarRoutineSaved)));
       Navigator.of(context).pop(true);
     }
     return true;
@@ -178,18 +192,23 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
   void _addSet(RoutineExercise routineExercise) {
     setState(() {
       final newSet = SetTemplate(
-          id: DateTime.now().millisecondsSinceEpoch,
-          setType: 'normal',
-          targetReps: '8-12');
+        id: DateTime.now().millisecondsSinceEpoch,
+        setType: 'normal',
+        targetReps: '8-12',
+      );
       routineExercise.setTemplates.add(newSet);
-      _repsControllers[newSet.id!] =
-          TextEditingController(text: newSet.targetReps);
+      _repsControllers[newSet.id!] = TextEditingController(
+        text: newSet.targetReps,
+      );
       _weightControllers[newSet.id!] = TextEditingController();
     });
   }
 
   void _removeSet(
-      RoutineExercise routineExercise, int setTemplateId, int index) {
+    RoutineExercise routineExercise,
+    int setTemplateId,
+    int index,
+  ) {
     setState(() {
       routineExercise.setTemplates.removeAt(index);
       _repsControllers.remove(setTemplateId)?.dispose();
@@ -199,8 +218,9 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
 
   void _changeSetType(SetTemplate setTemplate, String newType) {
     setState(() {
-      final re = _routineExercises
-          .firstWhere((re) => re.setTemplates.contains(setTemplate));
+      final re = _routineExercises.firstWhere(
+        (re) => re.setTemplates.contains(setTemplate),
+      );
       final setIndex = re.setTemplates.indexOf(setTemplate);
       re.setTemplates[setIndex] = setTemplate.copyWith(setType: newType);
     });
@@ -214,17 +234,21 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         return Wrap(
           children: <Widget>[
             ListTile(
-                title: const Text('Normal'),
-                onTap: () => _changeSetType(setTemplate, 'normal')),
+              title: const Text('Normal'),
+              onTap: () => _changeSetType(setTemplate, 'normal'),
+            ),
             ListTile(
-                title: const Text('Warmup'),
-                onTap: () => _changeSetType(setTemplate, 'warmup')),
+              title: const Text('Warmup'),
+              onTap: () => _changeSetType(setTemplate, 'warmup'),
+            ),
             ListTile(
-                title: const Text('Failure'),
-                onTap: () => _changeSetType(setTemplate, 'failure')),
+              title: const Text('Failure'),
+              onTap: () => _changeSetType(setTemplate, 'failure'),
+            ),
             ListTile(
-                title: const Text('Dropset'),
-                onTap: () => _changeSetType(setTemplate, 'dropset')),
+              title: const Text('Dropset'),
+              onTap: () => _changeSetType(setTemplate, 'dropset'),
+            ),
           ],
         );
       },
@@ -234,7 +258,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
   void _editPauseTime(RoutineExercise routineExercise) async {
     final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController(
-        text: routineExercise.pauseSeconds?.toString() ?? '');
+      text: routineExercise.pauseSeconds?.toString() ?? '',
+    );
 
     final result = await showDialog<int?>(
       context: context,
@@ -243,27 +268,29 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            labelText: l10n.pauseInSeconds,
-          ),
+          decoration: InputDecoration(labelText: l10n.pauseInSeconds),
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(l10n.cancel)),
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l10n.cancel),
+          ),
           FilledButton(
-              onPressed: () {
-                final seconds = int.tryParse(controller.text);
-                Navigator.of(ctx).pop(seconds);
-              },
-              child: Text(l10n.save)),
+            onPressed: () {
+              final seconds = int.tryParse(controller.text);
+              Navigator.of(ctx).pop(seconds);
+            },
+            child: Text(l10n.save),
+          ),
         ],
       ),
     );
 
     if (result != null) {
-      await WorkoutDatabaseHelper.instance
-          .updatePauseTime(routineExercise.id!, result);
+      await WorkoutDatabaseHelper.instance.updatePauseTime(
+        routineExercise.id!,
+        result,
+      );
       _loadExercisesForRoutine();
     }
   }
@@ -274,22 +301,28 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.deleteExerciseConfirmTitle),
-        content: Text(l10n.deleteExerciseConfirmContent(
-            exerciseToDelete.exercise.getLocalizedName(context))),
+        content: Text(
+          l10n.deleteExerciseConfirmContent(
+            exerciseToDelete.exercise.getLocalizedName(context),
+          ),
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: Text(l10n.cancel)),
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancel),
+          ),
           TextButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: Text(l10n.delete)),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.delete),
+          ),
         ],
       ),
     );
 
     if (confirmed == true && _routineId != null) {
-      await WorkoutDatabaseHelper.instance
-          .removeExerciseFromRoutine(exerciseToDelete.id!);
+      await WorkoutDatabaseHelper.instance.removeExerciseFromRoutine(
+        exerciseToDelete.id!,
+      );
       _loadExercisesForRoutine();
     }
   }
@@ -303,8 +336,10 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
       _routineExercises.insert(newIndex, item);
     });
     if (_routineId != null) {
-      WorkoutDatabaseHelper.instance
-          .updateExerciseOrder(_routineId!, _routineExercises);
+      WorkoutDatabaseHelper.instance.updateExerciseOrder(
+        _routineId!,
+        _routineExercises,
+      );
     }
   }
 
@@ -324,9 +359,9 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         centerTitle: false,
         title: Text(
           _isNewRoutine ? l10n.titleNewRoutine : l10n.titleEditRoutine,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
         ),
         actions: [
           TextButton(
@@ -366,112 +401,124 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _routineExercises.isEmpty
-                    ? Center(
-                        child: Text(
-                          l10n.emptyStateAddFirstExercise,
-                          style: textTheme.titleMedium,
-                        ),
-                      )
-                    : ReorderableListView.builder(
-                        padding: EdgeInsets.zero,
-                        itemCount: _routineExercises.length,
-                        proxyDecorator: (Widget child, int index,
-                            Animation<double> animation) {
+                ? Center(
+                    child: Text(
+                      l10n.emptyStateAddFirstExercise,
+                      style: textTheme.titleMedium,
+                    ),
+                  )
+                : ReorderableListView.builder(
+                    padding: EdgeInsets.zero,
+                    itemCount: _routineExercises.length,
+                    proxyDecorator:
+                        (Widget child, int index, Animation<double> animation) {
                           return Material(
                             elevation: 4.0,
                             color: Theme.of(context).scaffoldBackgroundColor,
                             child: child,
                           );
                         },
-                        onReorder: _onReorder,
-                        itemBuilder: (context, index) {
-                          final routineExercise = _routineExercises[index];
+                    onReorder: _onReorder,
+                    itemBuilder: (context, index) {
+                      final routineExercise = _routineExercises[index];
 
-                          return WorkoutCard(
-                            key: ValueKey(routineExercise.id),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                ListTile(
-                                  contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16.0, vertical: 8.0),
-                                  title: InkWell(
-                                    onTap: () => Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                ExerciseDetailScreen(
-                                                    exercise: routineExercise
-                                                        .exercise))),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 4.0),
-                                      child: Text(
-                                          routineExercise.exercise
-                                              .getLocalizedName(context),
-                                          style: textTheme.titleLarge?.copyWith(
-                                              fontWeight: FontWeight.bold)),
+                      return WorkoutCard(
+                        key: ValueKey(routineExercise.id),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16.0,
+                                vertical: 8.0,
+                              ),
+                              title: InkWell(
+                                onTap: () => Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => ExerciseDetailScreen(
+                                      exercise: routineExercise.exercise,
                                     ),
                                   ),
-                                  leading: ReorderableDragStartListener(
-                                    index: index,
-                                    child: const Icon(Icons.drag_handle),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 4.0,
                                   ),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(Icons.timer_outlined),
-                                        tooltip: l10n.editPauseTime,
-                                        onPressed: () =>
-                                            _editPauseTime(routineExercise),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.delete_outline,
-                                            color: Colors.redAccent),
-                                        tooltip: l10n.removeExercise,
-                                        onPressed: () => _deleteSingleExercise(
-                                            routineExercise),
-                                      ),
-                                    ],
+                                  child: Text(
+                                    routineExercise.exercise.getLocalizedName(
+                                      context,
+                                    ),
+                                    style: textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 0.0),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      if (routineExercise.pauseSeconds !=
-                                              null &&
-                                          routineExercise.pauseSeconds! > 0)
-                                        Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                              16, 12, 16, 12),
-                                          child: Text(
-                                            l10n.pauseDuration(
-                                                routineExercise.pauseSeconds!),
-                                            style: textTheme.bodyMedium
-                                                ?.copyWith(
-                                                    color: Colors.grey[600],
-                                                    fontStyle:
-                                                        FontStyle.italic),
-                                          ),
-                                        ),
-                                      Row(
-                                        children: [
-                                          _buildHeader(l10n.setLabel, flex: 2),
-                                          const Spacer(flex: 3),
-                                          _buildHeader(l10n.kgLabel, flex: 2),
-                                          const SizedBox(width: 8),
-                                          _buildHeader(l10n.repsLabel, flex: 2),
-                                          const SizedBox(width: 48),
-                                        ],
+                              ),
+                              leading: ReorderableDragStartListener(
+                                index: index,
+                                child: const Icon(Icons.drag_handle),
+                              ),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.timer_outlined),
+                                    tooltip: l10n.editPauseTime,
+                                    onPressed: () =>
+                                        _editPauseTime(routineExercise),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.delete_outline,
+                                      color: Colors.redAccent,
+                                    ),
+                                    tooltip: l10n.removeExercise,
+                                    onPressed: () =>
+                                        _deleteSingleExercise(routineExercise),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 0.0,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (routineExercise.pauseSeconds != null &&
+                                      routineExercise.pauseSeconds! > 0)
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                        16,
+                                        12,
+                                        16,
+                                        12,
                                       ),
-                                      ...routineExercise.setTemplates
-                                          .asMap()
-                                          .entries
-                                          .map((entry) {
+                                      child: Text(
+                                        l10n.pauseDuration(
+                                          routineExercise.pauseSeconds!,
+                                        ),
+                                        style: textTheme.bodyMedium?.copyWith(
+                                          color: Colors.grey[600],
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                    ),
+                                  Row(
+                                    children: [
+                                      _buildHeader(l10n.setLabel, flex: 2),
+                                      const Spacer(flex: 3),
+                                      _buildHeader(l10n.kgLabel, flex: 2),
+                                      const SizedBox(width: 8),
+                                      _buildHeader(l10n.repsLabel, flex: 2),
+                                      const SizedBox(width: 48),
+                                    ],
+                                  ),
+                                  ...routineExercise.setTemplates
+                                      .asMap()
+                                      .entries
+                                      .map((entry) {
                                         final setIndex = entry.key;
                                         final setTemplate = entry.value;
 
@@ -479,39 +526,42 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                                         int workingSetIndex = 0;
                                         for (int i = 0; i <= setIndex; i++) {
                                           if (routineExercise
-                                                  .setTemplates[i].setType !=
+                                                  .setTemplates[i]
+                                                  .setType !=
                                               'warmup') {
                                             workingSetIndex++;
                                           }
                                         }
 
                                         return _buildSetTemplateRow(
-                                            workingSetIndex,
-                                            setIndex,
-                                            routineExercise,
-                                            setTemplate,
-                                            setIndex);
+                                          workingSetIndex,
+                                          setIndex,
+                                          routineExercise,
+                                          setTemplate,
+                                          setIndex,
+                                        );
                                       }),
-                                      const SizedBox(
-                                          height: DesignConstants.spacingS),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 16.0),
-                                        child: TextButton.icon(
-                                          onPressed: () =>
-                                              _addSet(routineExercise),
-                                          icon: const Icon(Icons.add),
-                                          label: Text(l10n.addSetButton),
-                                        ),
-                                      ),
-                                    ],
+                                  const SizedBox(
+                                    height: DesignConstants.spacingS,
                                   ),
-                                )
-                              ],
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16.0,
+                                    ),
+                                    child: TextButton.icon(
+                                      onPressed: () => _addSet(routineExercise),
+                                      icon: const Icon(Icons.add),
+                                      label: Text(l10n.addSetButton),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          );
-                        },
-                      ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
           ),
           Padding(
             padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
@@ -530,8 +580,13 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     );
   }
 
-  Widget _buildSetTemplateRow(int setIndex, int rowIndex, RoutineExercise re,
-      SetTemplate template, int listIndex) {
+  Widget _buildSetTemplateRow(
+    int setIndex,
+    int rowIndex,
+    RoutineExercise re,
+    SetTemplate template,
+    int listIndex,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     final isLightMode = Theme.of(context).brightness == Brightness.light;
     final bool isColoredRow = rowIndex > 0 && rowIndex.isOdd;
@@ -563,56 +618,64 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
             ),
             const Spacer(flex: 3),
             Expanded(
-                flex: 2,
-                child: TextFormField(
-                  controller: _weightControllers[template.id!],
-                  textAlign: TextAlign.center,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(
-                      border: InputBorder.none,
-                      isDense: true,
-                      fillColor: Colors.transparent,
-                      hintText: l10n.kgLabelShort),
-                  validator: (value) {
-                    if (value != null &&
-                        value.isNotEmpty &&
-                        double.tryParse(value.replaceAll(',', '.')) == null) {
-                      return "!";
-                    }
-                    return null;
-                  },
-                )),
+              flex: 2,
+              child: TextFormField(
+                controller: _weightControllers[template.id!],
+                textAlign: TextAlign.center,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  isDense: true,
+                  fillColor: Colors.transparent,
+                  hintText: l10n.kgLabelShort,
+                ),
+                validator: (value) {
+                  if (value != null &&
+                      value.isNotEmpty &&
+                      double.tryParse(value.replaceAll(',', '.')) == null) {
+                    return "!";
+                  }
+                  return null;
+                },
+              ),
+            ),
             const SizedBox(width: 8),
             Expanded(
-                flex: 2,
-                child: TextFormField(
-                  controller: _repsControllers[template.id!],
-                  textAlign: TextAlign.center,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                      border: InputBorder.none,
-                      isDense: true,
-                      fillColor: Colors.transparent,
-                      hintText: l10n.set_reps_hint),
-                  validator: (value) {
-                    if (value != null &&
-                        value.isNotEmpty &&
-                        int.tryParse(value) == null) {
-                      return "!";
-                    }
-                    return null;
-                  },
-                )),
+              flex: 2,
+              child: TextFormField(
+                controller: _repsControllers[template.id!],
+                textAlign: TextAlign.center,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  isDense: true,
+                  fillColor: Colors.transparent,
+                  hintText: l10n.set_reps_hint,
+                ),
+                validator: (value) {
+                  if (value != null &&
+                      value.isNotEmpty &&
+                      int.tryParse(value) == null) {
+                    return "!";
+                  }
+                  return null;
+                },
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.only(right: 8.0),
               child: SizedBox(
-                  width: 48,
-                  child: IconButton(
-                      icon: const Icon(Icons.delete_outline,
-                          color: Colors.redAccent),
-                      onPressed: () =>
-                          _removeSet(re, template.id!, listIndex))),
+                width: 48,
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    color: Colors.redAccent,
+                  ),
+                  onPressed: () => _removeSet(re, template.id!, listIndex),
+                ),
+              ),
             ),
           ],
         ),
@@ -621,11 +684,15 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
   }
 
   Widget _buildHeader(String text, {required int flex}) => Expanded(
-      flex: flex,
-      child: Text(text,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontWeight: FontWeight.bold)));
+    flex: flex,
+    child: Text(
+      text,
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        color: Colors.grey[600],
+        fontSize: 12,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  );
 }

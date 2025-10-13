@@ -43,9 +43,9 @@ class WorkoutSessionManager extends ChangeNotifier {
   Duration get elapsedDuration => _elapsedDuration;
   Map<int, SetLog> get setLogs => _setLogs;
 
-// Ersetze diese Methode in lib/services/workout_session_manager.dart
+  // Ersetze diese Methode in lib/services/workout_session_manager.dart
 
-// Ersetze diese Methode in lib/services/workout_session_manager.dart
+  // Ersetze diese Methode in lib/services/workout_session_manager.dart
 
   Future<void> restoreWorkoutSession(WorkoutLog logToRestore) async {
     final db = WorkoutDatabaseHelper.instance;
@@ -57,15 +57,18 @@ class WorkoutSessionManager extends ChangeNotifier {
     // 1. Hole alle einzigartigen Übungen, sortiert nach ihrem ersten Auftreten (log_order)
     final sortedSets = logToRestore.sets
       ..sort((a, b) => (a.log_order ?? 999).compareTo(b.log_order ?? 999));
-    final orderedUniqueExerciseNames =
-        sortedSets.map((s) => s.exerciseName).toSet().toList();
+    final orderedUniqueExerciseNames = sortedSets
+        .map((s) => s.exerciseName)
+        .toSet()
+        .toList();
 
     // 2. Baue die _exercises-Liste in der korrekten Reihenfolge auf
     for (final name in orderedUniqueExerciseNames) {
       final exerciseDetail = await db.getExerciseByName(name);
       if (exerciseDetail != null) {
-        final setsForThisExercise =
-            sortedSets.where((s) => s.exerciseName == name).toList();
+        final setsForThisExercise = sortedSets
+            .where((s) => s.exerciseName == name)
+            .toList();
 
         final routineExercise = RoutineExercise(
           id: DateTime.now().millisecondsSinceEpoch + _exercises.length,
@@ -93,7 +96,9 @@ class WorkoutSessionManager extends ChangeNotifier {
   }
 
   Future<void> startWorkout(
-      WorkoutLog log, List<RoutineExercise> routineExercises) async {
+    WorkoutLog log,
+    List<RoutineExercise> routineExercises,
+  ) async {
     _workoutLog = log;
     _exercises = routineExercises;
     _setLogs.clear();
@@ -123,15 +128,21 @@ class WorkoutSessionManager extends ChangeNotifier {
     notifyListeners();
   }
 
-// Ersetze diese Methode in lib/services/workout_session_manager.dart
+  // Ersetze diese Methode in lib/services/workout_session_manager.dart
 
-  Future<void> updateSet(int templateId,
-      {double? weight, int? reps, String? setType, bool? isCompleted}) async {
+  Future<void> updateSet(
+    int templateId, {
+    double? weight,
+    int? reps,
+    String? setType,
+    bool? isCompleted,
+  }) async {
     if (_workoutLog == null || !_setLogs.containsKey(templateId)) return;
 
     SetLog currentLog = _setLogs[templateId]!;
-    final exerciseIndex = _exercises
-        .indexWhere((e) => e.setTemplates.any((t) => t.id == templateId));
+    final exerciseIndex = _exercises.indexWhere(
+      (e) => e.setTemplates.any((t) => t.id == templateId),
+    );
 
     // Hole die aktuelle Pausenzeit für diese Übung
     int? currentRestTime;
@@ -174,7 +185,7 @@ class WorkoutSessionManager extends ChangeNotifier {
     notifyListeners();
   }
 
-// Ersetze diese Methode in lib/services/workout_session_manager.dart
+  // Ersetze diese Methode in lib/services/workout_session_manager.dart
 
   void reorderExercise(int oldIndex, int newIndex) {
     if (newIndex > oldIndex) {
@@ -189,8 +200,10 @@ class WorkoutSessionManager extends ChangeNotifier {
       for (final template in re.setTemplates) {
         if (_setLogs.containsKey(template.id!)) {
           // Hier rufen wir direkt updateSet auf, um die Änderung auch in die DB zu schreiben
-          updateSet(template.id!,
-              isCompleted: _setLogs[template.id!]!.isCompleted);
+          updateSet(
+            template.id!,
+            isCompleted: _setLogs[template.id!]!.isCompleted,
+          );
         }
       }
     }
@@ -203,16 +216,19 @@ class WorkoutSessionManager extends ChangeNotifier {
     final exercise = _exercises.firstWhere((e) => e.id == routineExerciseId);
     for (final template in exercise.setTemplates) {
       if (_setLogs.containsKey(template.id!)) {
-        updateSet(template.id!,
-            isCompleted: _setLogs[template.id!]!.isCompleted);
+        updateSet(
+          template.id!,
+          isCompleted: _setLogs[template.id!]!.isCompleted,
+        );
       }
     }
     notifyListeners();
   }
 
   Future<void> removeExercise(int routineExerciseId) async {
-    final exerciseToRemove =
-        _exercises.firstWhere((e) => e.id == routineExerciseId);
+    final exerciseToRemove = _exercises.firstWhere(
+      (e) => e.id == routineExerciseId,
+    );
 
     final idsToDelete = <int>[];
     for (final template in exerciseToRemove.setTemplates) {
@@ -230,7 +246,7 @@ class WorkoutSessionManager extends ChangeNotifier {
     notifyListeners();
   }
 
-// Ersetze diese Methode in lib/services/workout_session_manager.dart
+  // Ersetze diese Methode in lib/services/workout_session_manager.dart
 
   Future<RoutineExercise?> addExercise(Exercise exercise) async {
     if (_workoutLog == null) return null;
@@ -240,7 +256,9 @@ class WorkoutSessionManager extends ChangeNotifier {
       exercise: exercise,
       setTemplates: [
         SetTemplate(
-            id: DateTime.now().millisecondsSinceEpoch + 1, setType: 'normal'),
+          id: DateTime.now().millisecondsSinceEpoch + 1,
+          setType: 'normal',
+        ),
       ],
     );
     _exercises.add(newRoutineExercise);
@@ -263,8 +281,9 @@ class WorkoutSessionManager extends ChangeNotifier {
   }
 
   Future<SetTemplate?> addSetToExercise(int routineExerciseId) async {
-    final exerciseIndex =
-        _exercises.indexWhere((e) => e.id == routineExerciseId);
+    final exerciseIndex = _exercises.indexWhere(
+      (e) => e.id == routineExerciseId,
+    );
     if (exerciseIndex == -1) return null;
 
     final newTemplate = SetTemplate(
@@ -399,7 +418,8 @@ class WorkoutSessionManager extends ChangeNotifier {
 
     if (ongoingWorkout != null) {
       print(
-          "Laufendes Workout gefunden (ID: ${ongoingWorkout.id}). Stelle Session wieder her...");
+        "Laufendes Workout gefunden (ID: ${ongoingWorkout.id}). Stelle Session wieder her...",
+      );
       await restoreWorkoutSession(ongoingWorkout);
       print("Session erfolgreich wiederhergestellt.");
     } else {

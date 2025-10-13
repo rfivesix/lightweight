@@ -101,12 +101,13 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                   children: [
                     TextFormField(
                       controller: _nameController,
-                      decoration:
-                          InputDecoration(labelText: l10n.exercise_name_label),
+                      decoration: InputDecoration(
+                        labelText: l10n.exercise_name_label,
+                      ),
                       validator: (value) =>
                           value == null || value.trim().isEmpty
-                              ? l10n.validatorPleaseEnterName
-                              : null,
+                          ? l10n.validatorPleaseEnterName
+                          : null,
                     ),
                     const SizedBox(height: DesignConstants.spacingL),
 
@@ -117,39 +118,46 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                           return const Iterable<String>.empty();
                         }
                         return _allCategories.where((String option) {
-                          return option
-                              .toLowerCase()
-                              .contains(textEditingValue.text.toLowerCase());
+                          return option.toLowerCase().contains(
+                            textEditingValue.text.toLowerCase(),
+                          );
                         });
                       },
                       onSelected: (String selection) {
                         _categoryController.text = selection;
                       },
-                      fieldViewBuilder: (context, textEditingController,
-                          focusNode, onFieldSubmitted) {
-                        _categoryController.value = textEditingController.value;
-                        return TextFormField(
-                          controller: textEditingController,
-                          focusNode: focusNode,
-                          decoration: InputDecoration(
-                            labelText: l10n.category_label,
-                            hintText: l10n.categoryHint,
-                          ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return l10n.validatorPleaseEnterCategory;
-                            }
-                            return null;
+                      fieldViewBuilder:
+                          (
+                            context,
+                            textEditingController,
+                            focusNode,
+                            onFieldSubmitted,
+                          ) {
+                            _categoryController.value =
+                                textEditingController.value;
+                            return TextFormField(
+                              controller: textEditingController,
+                              focusNode: focusNode,
+                              decoration: InputDecoration(
+                                labelText: l10n.category_label,
+                                hintText: l10n.categoryHint,
+                              ),
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return l10n.validatorPleaseEnterCategory;
+                                }
+                                return null;
+                              },
+                            );
                           },
-                        );
-                      },
                     ),
 
                     const SizedBox(height: DesignConstants.spacingL),
                     TextFormField(
                       controller: _descriptionController,
                       decoration: InputDecoration(
-                          labelText: l10n.description_optional_label),
+                        labelText: l10n.description_optional_label,
+                      ),
                       maxLines: 3,
                     ),
                     const SizedBox(height: DesignConstants.spacingXL),

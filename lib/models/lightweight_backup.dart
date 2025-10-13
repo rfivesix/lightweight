@@ -46,30 +46,40 @@ class LightweightBackup {
   factory LightweightBackup.fromJson(Map<String, dynamic> json) {
     return LightweightBackup(
       schemaVersion: json['schemaVersion'] as int? ?? 1,
-      foodEntries: (json['foodEntries'] as List<dynamic>?)
-              ?.map((e) => FoodEntry(
-                    id: e['id'],
-                    barcode: e['barcode'],
-                    timestamp: DateTime.parse(e['timestamp']),
-                    quantityInGrams: e['quantity_in_grams'],
-                    mealType: e['meal_type'],
-                  ))
+      foodEntries:
+          (json['foodEntries'] as List<dynamic>?)
+              ?.map(
+                (e) => FoodEntry(
+                  id: e['id'],
+                  barcode: e['barcode'],
+                  timestamp: DateTime.parse(e['timestamp']),
+                  quantityInGrams: e['quantity_in_grams'],
+                  mealType: e['meal_type'],
+                ),
+              )
               .toList() ??
           [],
-      fluidEntries: (json['fluidEntries'] as List<dynamic>?)
+      fluidEntries:
+          (json['fluidEntries'] as List<dynamic>?)
               ?.map((e) => FluidEntry.fromMap(e as Map<String, dynamic>))
               .toList() ??
           [],
       favoriteBarcodes: List<String>.from(json['favoriteBarcodes'] ?? []),
-      customFoodItems: (json['customFoodItems'] as List<dynamic>?)
-              ?.map((e) => FoodItem.fromMap(e as Map<String, dynamic>,
-                  source: FoodItemSource.user))
+      customFoodItems:
+          (json['customFoodItems'] as List<dynamic>?)
+              ?.map(
+                (e) => FoodItem.fromMap(
+                  e as Map<String, dynamic>,
+                  source: FoodItemSource.user,
+                ),
+              )
               .toList() ??
           [],
-      measurementSessions: (json['measurementSessions'] as List<dynamic>?)
-              ?.map((s) {
+      measurementSessions:
+          (json['measurementSessions'] as List<dynamic>?)?.map((s) {
             final sessionMap = s as Map<String, dynamic>;
-            final measurements = (sessionMap['measurements'] as List<dynamic>?)
+            final measurements =
+                (sessionMap['measurements'] as List<dynamic>?)
                     ?.map((m) => Measurement.fromMap(m as Map<String, dynamic>))
                     .toList() ??
                 [];
@@ -82,21 +92,28 @@ class LightweightBackup {
           [],
 
       // KORRIGIERT: Detaillierte Deserialisierung für Routinen
-      routines: (json['routines'] as List<dynamic>?)?.map((r) {
+      routines:
+          (json['routines'] as List<dynamic>?)?.map((r) {
             final routineMap = r as Map<String, dynamic>;
             return Routine(
               id: routineMap['id'],
               name: routineMap['name'],
-              exercises: (routineMap['exercises'] as List<dynamic>?)?.map((re) {
+              exercises:
+                  (routineMap['exercises'] as List<dynamic>?)?.map((re) {
                     final reMap = re as Map<String, dynamic>;
                     return RoutineExercise(
                       id: reMap['id'],
                       // Rekursiver Aufruf der .fromMap Konstruktoren
                       exercise: Exercise.fromMap(
-                          reMap['exercise'] as Map<String, dynamic>),
-                      setTemplates: (reMap['setTemplates'] as List<dynamic>?)
-                              ?.map((st) => SetTemplate.fromMap(
-                                  st as Map<String, dynamic>))
+                        reMap['exercise'] as Map<String, dynamic>,
+                      ),
+                      setTemplates:
+                          (reMap['setTemplates'] as List<dynamic>?)
+                              ?.map(
+                                (st) => SetTemplate.fromMap(
+                                  st as Map<String, dynamic>,
+                                ),
+                              )
                               .toList() ??
                           [],
                       pauseSeconds: reMap['pause_seconds'],
@@ -107,9 +124,11 @@ class LightweightBackup {
           }).toList() ??
           [],
 
-      workoutLogs: (json['workoutLogs'] as List<dynamic>?)?.map((log) {
+      workoutLogs:
+          (json['workoutLogs'] as List<dynamic>?)?.map((log) {
             final logMap = log as Map<String, dynamic>;
-            final sets = (logMap['sets'] as List<dynamic>?)
+            final sets =
+                (logMap['sets'] as List<dynamic>?)
                     ?.map((set) => SetLog.fromMap(set as Map<String, dynamic>))
                     .toList() ??
                 [];
@@ -117,11 +136,13 @@ class LightweightBackup {
           }).toList() ??
           [],
       userPreferences: Map<String, dynamic>.from(json['userPreferences'] ?? {}),
-      supplements: (json['supplements'] as List<dynamic>?)
+      supplements:
+          (json['supplements'] as List<dynamic>?)
               ?.map((e) => Supplement.fromMap(e as Map<String, dynamic>))
               .toList() ??
           [],
-      supplementLogs: (json['supplementLogs'] as List<dynamic>?)
+      supplementLogs:
+          (json['supplementLogs'] as List<dynamic>?)
               ?.map((e) => SupplementLog.fromMap(e as Map<String, dynamic>))
               .toList() ??
           [],
@@ -137,21 +158,25 @@ class LightweightBackup {
       'favoriteBarcodes': favoriteBarcodes,
       'customFoodItems': customFoodItems.map((e) => e.toMap()).toList(),
       'measurementSessions': measurementSessions
-          .map((s) => {
-                'id': s.id,
-                'timestamp': s.timestamp.toIso8601String(),
-                'measurements': s.measurements.map((m) => m.toMap()).toList(),
-              })
+          .map(
+            (s) => {
+              'id': s.id,
+              'timestamp': s.timestamp.toIso8601String(),
+              'measurements': s.measurements.map((m) => m.toMap()).toList(),
+            },
+          )
           .toList(),
       // Platzhalter für die komplexe Serialisierung von Routinen
       'routines': routines.map((r) => r.toMap()).toList(),
       'workoutLogs': workoutLogs
-          .map((log) => {
-                ...log.toMap(), // Nutzt die existierende toMap-Methode
-                'sets': log.sets
-                    .map((s) => s.toMap())
-                    .toList(), // Hängt die Sets an
-              })
+          .map(
+            (log) => {
+              ...log.toMap(), // Nutzt die existierende toMap-Methode
+              'sets': log.sets
+                  .map((s) => s.toMap())
+                  .toList(), // Hängt die Sets an
+            },
+          )
           .toList(),
       'userPreferences': userPreferences,
       'supplements': supplements.map((e) => e.toMap()).toList(),

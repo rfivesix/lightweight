@@ -19,8 +19,10 @@ class WorkoutLog {
     this.sets = const [],
   });
 
-  factory WorkoutLog.fromMap(Map<String, dynamic> map,
-      {List<SetLog> sets = const []}) {
+  factory WorkoutLog.fromMap(
+    Map<String, dynamic> map, {
+    List<SetLog> sets = const [],
+  }) {
     return WorkoutLog(
       id: map['id'],
       routineName: map['routine_name'],

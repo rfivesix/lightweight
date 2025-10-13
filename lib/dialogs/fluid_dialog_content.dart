@@ -36,8 +36,9 @@ class FluidDialogContentState extends State<FluidDialogContent> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: 'Water');
-    _quantityController =
-        TextEditingController(text: widget.initialQuantity?.toString() ?? '');
+    _quantityController = TextEditingController(
+      text: widget.initialQuantity?.toString() ?? '',
+    );
     _caffeineController = TextEditingController();
     _sugarController = TextEditingController();
     _selectedDateTime = widget.initialTimestamp ?? DateTime.now();
@@ -55,31 +56,39 @@ class FluidDialogContentState extends State<FluidDialogContent> {
   Future<void> _selectDate() async {
     final locale = Localizations.localeOf(context);
     final DateTime? picked = await showDatePicker(
-        context: context,
-        initialDate: _selectedDateTime,
-        firstDate: DateTime(2020),
-        lastDate: DateTime.now().add(const Duration(days: 365)),
-        locale: locale);
+      context: context,
+      initialDate: _selectedDateTime,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      locale: locale,
+    );
     if (picked != null && picked != _selectedDateTime) {
       setState(() {
-        _selectedDateTime = DateTime(picked.year, picked.month, picked.day,
-            _selectedDateTime.hour, _selectedDateTime.minute);
+        _selectedDateTime = DateTime(
+          picked.year,
+          picked.month,
+          picked.day,
+          _selectedDateTime.hour,
+          _selectedDateTime.minute,
+        );
       });
     }
   }
 
   Future<void> _selectTime() async {
     final TimeOfDay? picked = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(_selectedDateTime));
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_selectedDateTime),
+    );
     if (picked != null) {
       setState(() {
         _selectedDateTime = DateTime(
-            _selectedDateTime.year,
-            _selectedDateTime.month,
-            _selectedDateTime.day,
-            picked.hour,
-            picked.minute);
+          _selectedDateTime.year,
+          _selectedDateTime.month,
+          _selectedDateTime.day,
+          picked.hour,
+          picked.minute,
+        );
       });
     }
   }
@@ -95,29 +104,37 @@ class FluidDialogContentState extends State<FluidDialogContent> {
       mainAxisSize: MainAxisSize.min,
       children: [
         TextField(
-            controller: _nameController,
-            decoration: const InputDecoration(labelText: 'Name'),
-            autofocus: true),
+          controller: _nameController,
+          decoration: const InputDecoration(labelText: 'Name'),
+          autofocus: true,
+        ),
         const SizedBox(height: DesignConstants.spacingL),
         TextField(
-            controller: _quantityController,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-                labelText: l10n.amount_in_milliliters, suffixText: 'ml'),
-            autofocus: true),
+          controller: _quantityController,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            labelText: l10n.amount_in_milliliters,
+            suffixText: 'ml',
+          ),
+          autofocus: true,
+        ),
         const SizedBox(height: DesignConstants.spacingL),
         TextField(
           controller: _sugarController,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: InputDecoration(
-              labelText: '${l10n.sugar} (g / 100ml)', suffixText: 'g'),
+            labelText: '${l10n.sugar} (g / 100ml)',
+            suffixText: 'g',
+          ),
         ),
         const SizedBox(height: DesignConstants.spacingL),
         TextField(
           controller: _caffeineController,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: InputDecoration(
-              labelText: l10n.caffeinePrompt, suffixText: 'mg / 100ml'),
+            labelText: l10n.caffeinePrompt,
+            suffixText: 'mg / 100ml',
+          ),
         ),
         const SizedBox(height: DesignConstants.spacingL),
         Row(

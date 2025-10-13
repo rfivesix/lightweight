@@ -848,8 +848,10 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     // Der Listener wird jetzt einer Variable zugewiesen
     _onManagerUpdateCallback = () {
       if (mounted) {
-        final manager =
-            Provider.of<WorkoutSessionManager>(context, listen: false);
+        final manager = Provider.of<WorkoutSessionManager>(
+          context,
+          listen: false,
+        );
         _syncControllersWithManager(manager);
         // setState() wird hier benötigt, um UI-Änderungen zu triggern,
         // die nicht von Controllern abgedeckt sind (z.B. ein neu hinzugefügter Satz)
@@ -860,12 +862,14 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeScreen();
       // Der Listener wird registriert
-      Provider.of<WorkoutSessionManager>(context, listen: false)
-          .addListener(_onManagerUpdateCallback);
+      Provider.of<WorkoutSessionManager>(
+        context,
+        listen: false,
+      ).addListener(_onManagerUpdateCallback);
     });
   }
 
-// NEUE, KORREKTE dispose-Methode
+  // NEUE, KORREKTE dispose-Methode
   @override
   void dispose() {
     // Wir greifen direkt auf die Singleton-Instanz zu, ohne den "context" zu nutzen.
@@ -905,16 +909,18 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     manager.setLogs.forEach((templateId, setLog) {
       if (!_weightControllers.containsKey(templateId)) {
         _weightControllers[templateId] = TextEditingController(
-            text:
-                setLog.weightKg?.toStringAsFixed(1).replaceAll('.0', '') ?? '');
-        _repsControllers[templateId] =
-            TextEditingController(text: setLog.reps?.toString() ?? '');
+          text: setLog.weightKg?.toStringAsFixed(1).replaceAll('.0', '') ?? '',
+        );
+        _repsControllers[templateId] = TextEditingController(
+          text: setLog.reps?.toString() ?? '',
+        );
 
         _weightControllers[templateId]!.addListener(() {
           final currentManagerValue = manager.setLogs[templateId]?.weightKg;
           final controllerText = _weightControllers[templateId]!.text;
-          final controllerValue =
-              double.tryParse(controllerText.replaceAll(',', '.'));
+          final controllerValue = double.tryParse(
+            controllerText.replaceAll(',', '.'),
+          );
 
           // Nur updaten, wenn sich der WERT tatsächlich geändert hat, oder das Feld leer ist.
           if (controllerValue != currentManagerValue) {
@@ -980,11 +986,13 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         content: Text(l10n.dialogFinishWorkoutBody),
         actions: [
           TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(l10n.cancel)),
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.cancel),
+          ),
           FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text(l10n.finishWorkoutButton)),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.finishWorkoutButton),
+          ),
         ],
       ),
     );
@@ -993,15 +1001,20 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       final logId = manager.workoutLog?.id;
       await manager.finishWorkout();
       if (mounted && logId != null) {
-        Navigator.of(context).pushReplacement(MaterialPageRoute(
-            builder: (context) => WorkoutSummaryScreen(logId: logId)));
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => WorkoutSummaryScreen(logId: logId),
+          ),
+        );
       }
     }
   }
 
   void _onReorder(int oldIndex, int newIndex) {
-    Provider.of<WorkoutSessionManager>(context, listen: false)
-        .reorderExercise(oldIndex, newIndex);
+    Provider.of<WorkoutSessionManager>(
+      context,
+      listen: false,
+    ).reorderExercise(oldIndex, newIndex);
   }
 
   void _editPauseTime(RoutineExercise routineExercise) async {
@@ -1009,24 +1022,28 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     final manager = Provider.of<WorkoutSessionManager>(context, listen: false);
     final currentPause = manager.pauseTimes[routineExercise.id!];
 
-    final controller =
-        TextEditingController(text: currentPause?.toString() ?? '');
+    final controller = TextEditingController(
+      text: currentPause?.toString() ?? '',
+    );
     final result = await showDialog<int?>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.editPauseTimeTitle),
         content: TextField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(labelText: l10n.pauseInSeconds)),
+          controller: controller,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(labelText: l10n.pauseInSeconds),
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(l10n.cancel)),
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l10n.cancel),
+          ),
           FilledButton(
-              onPressed: () =>
-                  Navigator.of(ctx).pop(int.tryParse(controller.text)),
-              child: Text(l10n.save)),
+            onPressed: () =>
+                Navigator.of(ctx).pop(int.tryParse(controller.text)),
+            child: Text(l10n.save),
+          ),
         ],
       ),
     );
@@ -1036,16 +1053,19 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
   }
 
   void _removeExercise(RoutineExercise exerciseToRemove) {
-    Provider.of<WorkoutSessionManager>(context, listen: false)
-        .removeExercise(exerciseToRemove.id!);
+    Provider.of<WorkoutSessionManager>(
+      context,
+      listen: false,
+    ).removeExercise(exerciseToRemove.id!);
   }
 
   void _addExercise() async {
     final manager = Provider.of<WorkoutSessionManager>(context, listen: false);
     final selectedExercise = await Navigator.of(context).push<Exercise>(
       MaterialPageRoute(
-          builder: (context) =>
-              const ExerciseCatalogScreen(isSelectionMode: true)),
+        builder: (context) =>
+            const ExerciseCatalogScreen(isSelectionMode: true),
+      ),
     );
 
     if (selectedExercise != null) {
@@ -1062,18 +1082,24 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
   }
 
   void _addSet(RoutineExercise re) {
-    Provider.of<WorkoutSessionManager>(context, listen: false)
-        .addSetToExercise(re.id!);
+    Provider.of<WorkoutSessionManager>(
+      context,
+      listen: false,
+    ).addSetToExercise(re.id!);
   }
 
   void _removeSet(int templateId) {
-    Provider.of<WorkoutSessionManager>(context, listen: false)
-        .removeSet(templateId);
+    Provider.of<WorkoutSessionManager>(
+      context,
+      listen: false,
+    ).removeSet(templateId);
   }
 
   void _changeSetType(int templateId, String newType) {
-    Provider.of<WorkoutSessionManager>(context, listen: false)
-        .updateSet(templateId, setType: newType);
+    Provider.of<WorkoutSessionManager>(
+      context,
+      listen: false,
+    ).updateSet(templateId, setType: newType);
     Navigator.pop(context);
   }
 
@@ -1084,17 +1110,21 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         return Wrap(
           children: <Widget>[
             ListTile(
-                title: const Text('Normal'),
-                onTap: () => _changeSetType(templateId, 'normal')),
+              title: const Text('Normal'),
+              onTap: () => _changeSetType(templateId, 'normal'),
+            ),
             ListTile(
-                title: const Text('Warmup'),
-                onTap: () => _changeSetType(templateId, 'warmup')),
+              title: const Text('Warmup'),
+              onTap: () => _changeSetType(templateId, 'warmup'),
+            ),
             ListTile(
-                title: const Text('Failure'),
-                onTap: () => _changeSetType(templateId, 'failure')),
+              title: const Text('Failure'),
+              onTap: () => _changeSetType(templateId, 'failure'),
+            ),
             ListTile(
-                title: const Text('Dropset'),
-                onTap: () => _changeSetType(templateId, 'dropset')),
+              title: const Text('Dropset'),
+              onTap: () => _changeSetType(templateId, 'dropset'),
+            ),
           ],
         );
       },
@@ -1109,8 +1139,11 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.add_circle_outline,
-                size: 80, color: Colors.grey.shade400),
+            Icon(
+              Icons.add_circle_outline,
+              size: 80,
+              color: Colors.grey.shade400,
+            ),
             const SizedBox(height: DesignConstants.spacingL),
             Text(
               l10n.emptyStateAddFirstExercise,
@@ -1121,10 +1154,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
             Text(
               "Füge eine Übung hinzu, um mit dem Protokollieren zu beginnen.", // TODO: l10n
               textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyLarge
-                  ?.copyWith(color: Colors.grey.shade600),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(color: Colors.grey.shade600),
             ),
             const SizedBox(height: DesignConstants.spacingXL),
             ElevatedButton.icon(
@@ -1146,12 +1178,13 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     final manager = Provider.of<WorkoutSessionManager>(context);
     final mgr = manager;
 
-// geplante/angelegte Sets = Anzahl aller SetLogs (egal ob erledigt)
+    // geplante/angelegte Sets = Anzahl aller SetLogs (egal ob erledigt)
     final int planned = mgr.setLogs.length;
 
-// erledigte Sets = isCompleted == true
-    final int completed =
-        mgr.setLogs.values.where((s) => s.isCompleted == true).length;
+    // erledigte Sets = isCompleted == true
+    final int completed = mgr.setLogs.values
+        .where((s) => s.isCompleted == true)
+        .length;
 
     final double progress = planned == 0 ? 0.0 : completed / planned;
 
@@ -1171,10 +1204,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         centerTitle: false,
         title: Text(
           manager.workoutLog?.routineName ?? l10n.freeWorkoutTitle,
-          style: Theme.of(context)
-              .textTheme
-              .titleLarge
-              ?.copyWith(fontWeight: FontWeight.w900),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
         ),
         actions: [
           TextButton(
@@ -1182,8 +1214,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
             child: Text(
               l10n.finishWorkoutButton,
               style: TextStyle(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.bold),
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -1200,12 +1233,12 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                   progress: progress, // LIVE: echter Fortschritt
                 ),
                 Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurfaceVariant
-                        .withOpacity(0.1)),
+                  height: 1,
+                  thickness: 1,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurfaceVariant.withOpacity(0.1),
+                ),
                 Expanded(
                   child: manager.exercises.isEmpty
                       ? _buildEmptyState(l10n)
@@ -1222,63 +1255,73 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                 children: [
                                   ListTile(
                                     contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 16.0, vertical: 8.0),
+                                      horizontal: 16.0,
+                                      vertical: 8.0,
+                                    ),
                                     leading: ReorderableDragStartListener(
                                       index: index,
                                       child: const Icon(Icons.drag_handle),
                                     ),
                                     title: InkWell(
                                       onTap: () => Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                              builder: (context) =>
-                                                  ExerciseDetailScreen(
-                                                      exercise: routineExercise
-                                                          .exercise))),
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              ExerciseDetailScreen(
+                                                exercise:
+                                                    routineExercise.exercise,
+                                              ),
+                                        ),
+                                      ),
                                       child: Padding(
                                         padding: const EdgeInsets.symmetric(
-                                            vertical: 4.0),
+                                          vertical: 4.0,
+                                        ),
                                         child: Text(
                                           routineExercise.exercise
                                               .getLocalizedName(context),
                                           style: textTheme.titleLarge?.copyWith(
-                                              fontWeight: FontWeight.bold),
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                     ),
-// NEUER, KORRIGIERTER trailing-Block
+                                    // NEUER, KORRIGIERTER trailing-Block
                                     trailing: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         // Zeigt die eingestellte Pausenzeit an
-                                        if (manager.pauseTimes[
-                                                    routineExercise.id!] !=
+                                        if (manager.pauseTimes[routineExercise
+                                                    .id!] !=
                                                 null &&
-                                            manager.pauseTimes[
-                                                    routineExercise.id!]! >
+                                            manager.pauseTimes[routineExercise
+                                                    .id!]! >
                                                 0)
                                           Padding(
                                             padding: const EdgeInsets.only(
-                                                right: 4.0),
+                                              right: 4.0,
+                                            ),
                                             child: Text(
                                               "${manager.pauseTimes[routineExercise.id!]}s",
                                               style: textTheme.bodyMedium
                                                   ?.copyWith(
-                                                      color:
-                                                          colorScheme.primary,
-                                                      fontWeight:
-                                                          FontWeight.bold),
+                                                    color: colorScheme.primary,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
                                             ),
                                           ),
                                         IconButton(
-                                          icon:
-                                              const Icon(Icons.timer_outlined),
+                                          icon: const Icon(
+                                            Icons.timer_outlined,
+                                          ),
                                           tooltip: l10n.editPauseTime,
                                           onPressed: () =>
                                               _editPauseTime(routineExercise),
                                         ),
                                         IconButton(
-                                          icon: const Icon(Icons.delete_outline,
-                                              color: Colors.redAccent),
+                                          icon: const Icon(
+                                            Icons.delete_outline,
+                                            color: Colors.redAccent,
+                                          ),
                                           tooltip: l10n.removeExercise,
                                           onPressed: () =>
                                               _removeExercise(routineExercise),
@@ -1288,7 +1331,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                   ),
                                   Padding(
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 0.0),
+                                      horizontal: 0.0,
+                                    ),
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
@@ -1298,58 +1342,61 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                               CrossAxisAlignment.center,
                                           children: [
                                             Expanded(
-                                                flex: 2,
-                                                child: Center(
-                                                    child: Text(l10n.setLabel,
-                                                        textAlign:
-                                                            TextAlign.center,
-                                                        style: TextStyle(
-                                                          color:
-                                                              Colors.grey[600],
-                                                          fontSize: 12,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        )))),
+                                              flex: 2,
+                                              child: Center(
+                                                child: Text(
+                                                  l10n.setLabel,
+                                                  textAlign: TextAlign.center,
+                                                  style: TextStyle(
+                                                    color: Colors.grey[600],
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
                                             Expanded(
-                                                flex: 3,
-                                                child: Center(
-                                                    child: Text(
-                                                        l10n.lastTimeLabel,
-                                                        textAlign:
-                                                            TextAlign.center,
-                                                        style: TextStyle(
-                                                          color:
-                                                              Colors.grey[600],
-                                                          fontSize: 12,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        )))),
+                                              flex: 3,
+                                              child: Center(
+                                                child: Text(
+                                                  l10n.lastTimeLabel,
+                                                  textAlign: TextAlign.center,
+                                                  style: TextStyle(
+                                                    color: Colors.grey[600],
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
                                             Expanded(
-                                                flex: 2,
-                                                child: Center(
-                                                    child: Text(l10n.kgLabel,
-                                                        textAlign:
-                                                            TextAlign.center,
-                                                        style: TextStyle(
-                                                          color:
-                                                              Colors.grey[600],
-                                                          fontSize: 12,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        )))),
+                                              flex: 2,
+                                              child: Center(
+                                                child: Text(
+                                                  l10n.kgLabel,
+                                                  textAlign: TextAlign.center,
+                                                  style: TextStyle(
+                                                    color: Colors.grey[600],
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
                                             Expanded(
-                                                flex: 2,
-                                                child: Center(
-                                                    child: Text(l10n.repsLabel,
-                                                        textAlign:
-                                                            TextAlign.center,
-                                                        style: TextStyle(
-                                                          color:
-                                                              Colors.grey[600],
-                                                          fontSize: 12,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        )))),
+                                              flex: 2,
+                                              child: Center(
+                                                child: Text(
+                                                  l10n.repsLabel,
+                                                  textAlign: TextAlign.center,
+                                                  style: TextStyle(
+                                                    color: Colors.grey[600],
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
                                             const SizedBox(width: 48),
                                           ],
                                         ),
@@ -1357,39 +1404,45 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                             .asMap()
                                             .entries
                                             .map((setEntry) {
-                                          final templateId = setEntry.value.id!;
-                                          final setLog =
-                                              manager.setLogs[templateId];
-                                          if (setLog == null) {
-                                            return const SizedBox.shrink();
-                                          }
-                                          int workingSetIndex = 0;
-                                          for (int i = 0;
-                                              i <= setEntry.key;
-                                              i++) {
-                                            final currentTemplateId =
-                                                routineExercise
-                                                    .setTemplates[i].id!;
-                                            if (manager
-                                                    .setLogs[currentTemplateId]
-                                                    ?.setType !=
-                                                'warmup') {
-                                              workingSetIndex++;
-                                            }
-                                          }
-                                          return _buildSetRow(
-                                            workingSetIndex,
-                                            setEntry.key,
-                                            templateId,
-                                            setLog,
-                                            _lastPerformances[routineExercise
-                                                    .exercise.nameEn] ??
-                                                [], // Hier die Liste übergeben
-                                          );
-                                        }),
+                                              final templateId =
+                                                  setEntry.value.id!;
+                                              final setLog =
+                                                  manager.setLogs[templateId];
+                                              if (setLog == null) {
+                                                return const SizedBox.shrink();
+                                              }
+                                              int workingSetIndex = 0;
+                                              for (
+                                                int i = 0;
+                                                i <= setEntry.key;
+                                                i++
+                                              ) {
+                                                final currentTemplateId =
+                                                    routineExercise
+                                                        .setTemplates[i]
+                                                        .id!;
+                                                if (manager
+                                                        .setLogs[currentTemplateId]
+                                                        ?.setType !=
+                                                    'warmup') {
+                                                  workingSetIndex++;
+                                                }
+                                              }
+                                              return _buildSetRow(
+                                                workingSetIndex,
+                                                setEntry.key,
+                                                templateId,
+                                                setLog,
+                                                _lastPerformances[routineExercise
+                                                        .exercise
+                                                        .nameEn] ??
+                                                    [], // Hier die Liste übergeben
+                                              );
+                                            }),
                                         Padding(
                                           padding: const EdgeInsets.symmetric(
-                                              horizontal: 16.0),
+                                            horizontal: 16.0,
+                                          ),
                                           child: TextButton.icon(
                                             onPressed: () =>
                                                 _addSet(routineExercise),
@@ -1433,8 +1486,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
             Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
               child: WgerAttributionWidget(
-                textStyle:
-                    textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                textStyle: textTheme.bodySmall?.copyWith(
+                  color: Colors.grey[600],
+                ),
               ),
             ),
         ],
@@ -1442,7 +1496,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     );
   }
 
-// Ersetze diese Methode im _LiveWorkoutScreenState
+  // Ersetze diese Methode im _LiveWorkoutScreenState
 
   Widget _buildSetRow(
     int setIndex,
@@ -1457,8 +1511,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     final bool isColoredRow = rowIndex > 0 && rowIndex.isOdd;
     final Color rowColor = isColoredRow
         ? (isLightMode
-            ? Colors.grey.withOpacity(0.1)
-            : Colors.white.withOpacity(0.1))
+              ? Colors.grey.withOpacity(0.1)
+              : Colors.white.withOpacity(0.1))
         : Colors.transparent;
 
     // Finde den korrespondierenden Satz vom letzten Mal
@@ -1477,9 +1531,10 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
               child: Text(
                 _getSetDisplayText(setLog.setType, setIndex),
                 style: TextStyle(
-                    color: _getSetTypeColor(setLog.setType),
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold),
+                  color: _getSetTypeColor(setLog.setType),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
@@ -1501,9 +1556,10 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
             textAlign: TextAlign.center,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: const InputDecoration(
-                border: InputBorder.none,
-                isDense: true,
-                fillColor: Colors.transparent),
+              border: InputBorder.none,
+              isDense: true,
+              fillColor: Colors.transparent,
+            ),
             enabled: !isCompleted,
           ),
         ),
@@ -1515,9 +1571,10 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(
-                border: InputBorder.none,
-                isDense: true,
-                fillColor: Colors.transparent),
+              border: InputBorder.none,
+              isDense: true,
+              fillColor: Colors.transparent,
+            ),
             enabled: !isCompleted,
           ),
         ),
@@ -1527,8 +1584,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
             width: 48,
             child: IconButton(
               icon: Icon(
-                  isCompleted ? Icons.check_circle : Icons.check_circle_outline,
-                  color: isCompleted ? Colors.green : Colors.grey),
+                isCompleted ? Icons.check_circle : Icons.check_circle_outline,
+                color: isCompleted ? Colors.green : Colors.grey,
+              ),
               onPressed: () {
                 manager.updateSet(templateId, isCompleted: !isCompleted);
               },
@@ -1540,8 +1598,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
 
     return Dismissible(
       key: ValueKey('set_$templateId'),
-      direction:
-          isCompleted ? DismissDirection.none : DismissDirection.endToStart,
+      direction: isCompleted
+          ? DismissDirection.none
+          : DismissDirection.endToStart,
       onDismissed: (_) => _removeSet(templateId),
       background: Container(
         color: Colors.redAccent,
@@ -1552,17 +1611,21 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       child: Stack(
         children: [
           Positioned.fill(
-              child: Container(
-                  color:
-                      isCompleted ? Colors.green.withOpacity(0.2) : rowColor)),
+            child: Container(
+              color: isCompleted ? Colors.green.withOpacity(0.2) : rowColor,
+            ),
+          ),
           rowContent,
         ],
       ),
     );
   }
 
-  Widget? _buildRestBottomBar(AppLocalizations l10n, ColorScheme colorScheme,
-      WorkoutSessionManager manager) {
+  Widget? _buildRestBottomBar(
+    AppLocalizations l10n,
+    ColorScheme colorScheme,
+    WorkoutSessionManager manager,
+  ) {
     final isRunning = manager.remainingRestSeconds > 0;
     final isDoneBanner = !isRunning && manager.showRestDone;
     if (!isRunning && !isDoneBanner) return null;
@@ -1576,16 +1639,20 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("${l10n.restTimerLabel}: ${manager.remainingRestSeconds}s",
-                  style: theme.textTheme.titleLarge?.copyWith(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: colorScheme.primary)),
+              Text(
+                "${l10n.restTimerLabel}: ${manager.remainingRestSeconds}s",
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: colorScheme.primary,
+                ),
+              ),
               ElevatedButton(
-                  onPressed: () {
-                    manager.cancelRest();
-                  },
-                  child: Text(l10n.skipButton)),
+                onPressed: () {
+                  manager.cancelRest();
+                },
+                child: Text(l10n.skipButton),
+              ),
             ],
           ),
         ),
@@ -1599,21 +1666,29 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Row(children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 8),
-              Text("Pause vorbei!",
+            const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Text(
+                  "Pause vorbei!",
                   style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 18))
-            ]),
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                  ),
+                ),
+              ],
+            ),
             TextButton(
-                onPressed: () {
-                  manager.cancelRest();
-                },
-                child: Text(l10n.snackbar_button_ok,
-                    style: const TextStyle(color: Colors.white))),
+              onPressed: () {
+                manager.cancelRest();
+              },
+              child: Text(
+                l10n.snackbar_button_ok,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
           ],
         ),
       ),

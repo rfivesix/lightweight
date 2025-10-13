@@ -43,9 +43,9 @@ class _ScannerScreenState extends State<ScannerScreen> {
         centerTitle: false,
         title: Text(
           l10n.scann_barcode_capslock,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
         ),
       ),
       backgroundColor: Colors.black,
@@ -68,9 +68,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
             },
           ),
           // Visuelles Overlay
-          CustomPaint(
-            painter: ScannerOverlay(scanWindow: scanWindow),
-          ),
+          CustomPaint(painter: ScannerOverlay(scanWindow: scanWindow)),
         ],
       ),
     );
@@ -91,8 +89,11 @@ class ScannerOverlay extends CustomPainter {
       ..style = PaintingStyle.fill
       ..blendMode = BlendMode.dstOut;
 
-    final backgroundWithCutout =
-        Path.combine(PathOperation.difference, backgroundPath, cutoutPath);
+    final backgroundWithCutout = Path.combine(
+      PathOperation.difference,
+      backgroundPath,
+      cutoutPath,
+    );
     canvas.drawPath(backgroundWithCutout, backgroundPaint);
 
     final borderPaint = Paint()

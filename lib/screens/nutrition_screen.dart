@@ -43,10 +43,13 @@ class _NutritionScreenState extends State<NutritionScreen> {
   bool _isLoading = true;
   DateTimeRange _selectedDateRange = DateTime.now().isSameDate(DateTime.now())
       ? DateTimeRange(
-          start: DateTime.now(), end: DateTime.now()) // Einzeltag für heute
+          start: DateTime.now(),
+          end: DateTime.now(),
+        ) // Einzeltag für heute
       : DateTimeRange(
           start: DateTime.now().subtract(const Duration(days: 6)),
-          end: DateTime.now()); // Standard: Letzte 7 Tage
+          end: DateTime.now(),
+        ); // Standard: Letzte 7 Tage
   bool _isSummaryExpanded = UiStateService.instance.isNutritionSummaryExpanded;
   String _selectedRangeKey = '1D';
   bool _isHeaderVisible = true;
@@ -74,16 +77,19 @@ class _NutritionScreenState extends State<NutritionScreen> {
     final targetSalt = prefs.getInt('targetSalt') ?? 6;
     final targetCaffeine = prefs.getInt('targetCaffeine') ?? 400;
 
-    final foodEntries = await DatabaseHelper.instance
-        .getEntriesForDateRange(range.start, range.end);
+    final foodEntries = await DatabaseHelper.instance.getEntriesForDateRange(
+      range.start,
+      range.end,
+    );
     final fluidEntries = await DatabaseHelper.instance
         .getFluidEntriesForDateRange(range.start, range.end);
     final supplementLogs = await DatabaseHelper.instance
         .getAllSupplementLogs(); // Annahme: Methode existiert
     final supplements = await DatabaseHelper.instance.getAllSupplements();
 
-    final caffeineSupplementId =
-        supplements.firstWhere((s) => s.code == 'caffeine').id;
+    final caffeineSupplementId = supplements
+        .firstWhere((s) => s.code == 'caffeine')
+        .id;
 
     final numberOfDays = range.duration.inDays + 1;
     final newNutritionSummary = DailyNutrition(
@@ -100,8 +106,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
 
     final List<FoodTimelineEntry> foodTimeline = [];
     for (final entry in foodEntries) {
-      final foodItem = await ProductDatabaseHelper.instance
-          .getProductByBarcode(entry.barcode);
+      final foodItem = await ProductDatabaseHelper.instance.getProductByBarcode(
+        entry.barcode,
+      );
       if (foodItem != null) {
         final factor = entry.quantityInGrams / 100.0;
         newNutritionSummary.calories += (foodItem.calories * factor).round();
@@ -112,34 +119,42 @@ class _NutritionScreenState extends State<NutritionScreen> {
         newNutritionSummary.fiber += (foodItem.fiber ?? 0) * factor;
         newNutritionSummary.salt += (foodItem.salt ?? 0) * factor;
         foodTimeline.add(
-            FoodTimelineEntry(TrackedFoodItem(entry: entry, item: foodItem)));
+          FoodTimelineEntry(TrackedFoodItem(entry: entry, item: foodItem)),
+        );
       }
     }
 
     // *** KORREKTURBLOCK START ***
     // Nährwerte aus Flüssigkeiten zur Summe addieren
-    newNutritionSummary.water =
-        fluidEntries.fold(0, (sum, entry) => sum + entry.quantityInMl);
+    newNutritionSummary.water = fluidEntries.fold(
+      0,
+      (sum, entry) => sum + entry.quantityInMl,
+    );
     for (final entry in fluidEntries) {
       final factor = entry.quantityInMl / 100.0;
       newNutritionSummary.calories += entry.kcal ?? 0;
-      newNutritionSummary.carbs +=
-          ((entry.carbsPer100ml ?? 0) * factor).round();
+      newNutritionSummary.carbs += ((entry.carbsPer100ml ?? 0) * factor)
+          .round();
       newNutritionSummary.sugar += (entry.sugarPer100ml ?? 0) * factor;
     }
 
     // Koffein aus Supplement-Logs berechnen
     if (caffeineSupplementId != null) {
-      final relevantLogs = supplementLogs.where((log) =>
-          log.supplementId == caffeineSupplementId &&
-          log.timestamp.isAfter(range.start) &&
-          log.timestamp.isBefore(range.end));
-      newNutritionSummary.caffeine =
-          relevantLogs.fold(0.0, (sum, log) => sum + log.dose);
+      final relevantLogs = supplementLogs.where(
+        (log) =>
+            log.supplementId == caffeineSupplementId &&
+            log.timestamp.isAfter(range.start) &&
+            log.timestamp.isBefore(range.end),
+      );
+      newNutritionSummary.caffeine = relevantLogs.fold(
+        0.0,
+        (sum, log) => sum + log.dose,
+      );
     }
 
-    final fluidTimeline =
-        fluidEntries.map((e) => FluidTimelineEntry(e)).toList();
+    final fluidTimeline = fluidEntries
+        .map((e) => FluidTimelineEntry(e))
+        .toList();
     // *** KORREKTURBLOCK ENDE ***
 
     final List<dynamic> finalDisplayList = [];
@@ -160,13 +175,14 @@ class _NutritionScreenState extends State<NutritionScreen> {
         "mealtypeBreakfast",
         "mealtypeLunch",
         "mealtypeDinner",
-        "mealtypeSnack"
+        "mealtypeSnack",
       ];
       for (final mealKey in mealOrder) {
         if (groupedFood.containsKey(mealKey)) {
           finalDisplayList.add(mealKey);
-          groupedFood[mealKey]!
-              .sort((a, b) => b.timestamp.compareTo(a.timestamp));
+          groupedFood[mealKey]!.sort(
+            (a, b) => b.timestamp.compareTo(a.timestamp),
+          );
           finalDisplayList.addAll(groupedFood[mealKey]!);
         }
       }
@@ -179,7 +195,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
     } else {
       final List<TimelineEntry> combinedList = [
         ...foodTimeline,
-        ...fluidTimeline
+        ...fluidTimeline,
       ];
       combinedList.sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
@@ -230,8 +246,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
         start = now.subtract(const Duration(days: 29));
         break;
       case 'All':
-        final earliest =
-            await DatabaseHelper.instance.getEarliestFoodEntryDate();
+        final earliest = await DatabaseHelper.instance
+            .getEarliestFoodEntryDate();
         start = earliest ?? now;
         break;
       case '1D':
@@ -240,8 +256,10 @@ class _NutritionScreenState extends State<NutritionScreen> {
     }
 
     final normalizedStart = DateTime(start.year, start.month, start.day);
-    setState(() =>
-        _selectedDateRange = DateTimeRange(start: normalizedStart, end: end));
+    setState(
+      () =>
+          _selectedDateRange = DateTimeRange(start: normalizedStart, end: end),
+    );
     _loadEntriesForDateRange(_selectedDateRange);
   }
 
@@ -263,8 +281,11 @@ class _NutritionScreenState extends State<NutritionScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(trackedItem.item.name,
-              maxLines: 2, overflow: TextOverflow.ellipsis),
+          title: Text(
+            trackedItem.item.name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
           content: QuantityDialogContent(
             key: dialogStateKey,
             item: trackedItem.item,
@@ -274,24 +295,26 @@ class _NutritionScreenState extends State<NutritionScreen> {
           ),
           actions: [
             TextButton(
-                child: Text(l10n.cancel),
-                onPressed: () => Navigator.of(context).pop()),
+              child: Text(l10n.cancel),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
             FilledButton(
-                child: Text(l10n.save),
-                onPressed: () {
-                  final state = dialogStateKey.currentState;
-                  if (state != null) {
-                    final quantity = int.tryParse(state.quantityText);
-                    if (quantity != null && quantity > 0) {
-                      Navigator.of(context).pop((
-                        quantity,
-                        state.selectedDateTime,
-                        state.selectedMealType,
-                        double.tryParse(state.caffeineText.replaceAll(',', '.'))
-                      ));
-                    }
+              child: Text(l10n.save),
+              onPressed: () {
+                final state = dialogStateKey.currentState;
+                if (state != null) {
+                  final quantity = int.tryParse(state.quantityText);
+                  if (quantity != null && quantity > 0) {
+                    Navigator.of(context).pop((
+                      quantity,
+                      state.selectedDateTime,
+                      state.selectedMealType,
+                      double.tryParse(state.caffeineText.replaceAll(',', '.')),
+                    ));
                   }
-                }),
+                }
+              },
+            ),
           ],
         );
       },
@@ -326,24 +349,26 @@ class _NutritionScreenState extends State<NutritionScreen> {
           ),
           actions: [
             TextButton(
-                child: Text(l10n.cancel),
-                onPressed: () => Navigator.of(context).pop()),
+              child: Text(l10n.cancel),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
             FilledButton(
-                child: Text(l10n.save),
-                onPressed: () {
-                  final state = dialogStateKey.currentState;
-                  if (state != null) {
-                    final quantity = int.tryParse(state.quantityText);
-                    if (quantity != null && quantity > 0) {
-                      Navigator.of(context).pop((
-                        state.nameText,
-                        quantity,
-                        double.tryParse(state.sugarText.replaceAll(',', '.')),
-                        double.tryParse(state.caffeineText.replaceAll(',', '.'))
-                      ));
-                    }
+              child: Text(l10n.save),
+              onPressed: () {
+                final state = dialogStateKey.currentState;
+                if (state != null) {
+                  final quantity = int.tryParse(state.quantityText);
+                  if (quantity != null && quantity > 0) {
+                    Navigator.of(context).pop((
+                      state.nameText,
+                      quantity,
+                      double.tryParse(state.sugarText.replaceAll(',', '.')),
+                      double.tryParse(state.caffeineText.replaceAll(',', '.')),
+                    ));
                   }
-                }),
+                }
+              },
+            ),
           ],
         );
       },
@@ -390,9 +415,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
         centerTitle: false,
         title: Text(
           l10n.nutritionScreenTitle,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
         ),
       ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -406,7 +431,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
                   color: Theme.of(context).scaffoldBackgroundColor,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0, vertical: 0.0),
+                      horizontal: 16.0,
+                      vertical: 0.0,
+                    ),
                     //padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -417,16 +444,18 @@ class _NutritionScreenState extends State<NutritionScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             IconButton(
-                                icon: const Icon(Icons.chevron_left),
-                                onPressed: () => _navigateDay(false)),
+                              icon: const Icon(Icons.chevron_left),
+                              onPressed: () => _navigateDay(false),
+                            ),
                             Expanded(
                               child: InkWell(
                                 onTap: () async {
                                   final picked = await showDateRangePicker(
-                                      context: context,
-                                      initialDateRange: _selectedDateRange,
-                                      firstDate: DateTime(2020),
-                                      lastDate: DateTime.now());
+                                    context: context,
+                                    initialDateRange: _selectedDateRange,
+                                    firstDate: DateTime(2020),
+                                    lastDate: DateTime.now(),
+                                  );
                                   if (picked != null) {
                                     setState(() {
                                       _selectedDateRange = picked;
@@ -437,19 +466,23 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                 },
                                 child: Text(
                                   rangeText,
-                                  style: textTheme.titleMedium
-                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                  style: textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                   textAlign: TextAlign.center,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ),
                             IconButton(
-                                icon: const Icon(Icons.chevron_right),
-                                onPressed: _selectedDateRange.end
-                                        .isSameDate(DateTime.now())
-                                    ? null
-                                    : () => _navigateDay(true)),
+                              icon: const Icon(Icons.chevron_right),
+                              onPressed:
+                                  _selectedDateRange.end.isSameDate(
+                                    DateTime.now(),
+                                  )
+                                  ? null
+                                  : () => _navigateDay(true),
+                            ),
                           ],
                         ),
                         const SizedBox(height: DesignConstants.spacingL),
@@ -462,15 +495,17 @@ class _NutritionScreenState extends State<NutritionScreen> {
                           ],
                         ),
                         const SizedBox(
-                            height: DesignConstants.spacingL), // <- DIESE ZEILE
+                          height: DesignConstants.spacingL,
+                        ), // <- DIESE ZEILE
                       ],
                     ),
                   ),
                 ),
                 Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
+                  height: 1,
+                  thickness: 1,
+                  color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+                ),
                 AnimatedSize(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
@@ -483,12 +518,13 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                   // KORREKTUR: NutritionSummaryWidget in einem Padding, das dem horizontalen ListView-Padding entspricht.
                                   Padding(
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal:
-                                            16.0), // <- Dieser Padding ist wichtig!
+                                      horizontal: 16.0,
+                                    ), // <- Dieser Padding ist wichtig!
                                     child: NutritionSummaryWidget(
-                                        nutritionData: _nutritionData!,
-                                        isExpandedView: _isSummaryExpanded,
-                                        l10n: l10n),
+                                      nutritionData: _nutritionData!,
+                                      isExpandedView: _isSummaryExpanded,
+                                      l10n: l10n,
+                                    ),
                                   ),
                                   Row(
                                     mainAxisAlignment:
@@ -499,18 +535,22 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                           setState(() {
                                             _isSummaryExpanded =
                                                 !_isSummaryExpanded;
-                                            UiStateService.instance
+                                            UiStateService
+                                                    .instance
                                                     .isNutritionSummaryExpanded =
                                                 _isSummaryExpanded;
                                           });
                                         },
-                                        child: Text(_isSummaryExpanded
-                                            ? l10n.showLess
-                                            : l10n.showMoreDetails),
+                                        child: Text(
+                                          _isSummaryExpanded
+                                              ? l10n.showLess
+                                              : l10n.showMoreDetails,
+                                        ),
                                       ),
                                       TextButton(
                                         onPressed: () => setState(
-                                            () => _isHeaderVisible = false),
+                                          () => _isHeaderVisible = false,
+                                        ),
                                         child: Text(l10n.hideSummary),
                                       ),
                                     ],
@@ -522,8 +562,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
                       : Align(
                           alignment: Alignment.centerRight,
                           child: Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 16.0),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                            ),
                             child: TextButton(
                               onPressed: () =>
                                   setState(() => _isHeaderVisible = true),
@@ -533,19 +574,22 @@ class _NutritionScreenState extends State<NutritionScreen> {
                         ),
                 ),
                 Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
+                  height: 1,
+                  thickness: 1,
+                  color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+                ),
                 Expanded(
                   child: _displayItems.isEmpty
                       ? Center(child: Text(l10n.noEntriesForPeriod))
                       : ListView.separated(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16.0, vertical: 8.0),
+                            horizontal: 16.0,
+                            vertical: 8.0,
+                          ),
                           itemCount: _displayItems.length,
                           separatorBuilder: (context, index) => const SizedBox(
-                              height: DesignConstants
-                                  .spacingM), // KORREKTUR: Trenner
+                            height: DesignConstants.spacingM,
+                          ), // KORREKTUR: Trenner
                           itemBuilder: (context, index) {
                             final item = _displayItems[index];
 
@@ -569,12 +613,16 @@ class _NutritionScreenState extends State<NutritionScreen> {
                             if (item is DateTime) {
                               return Padding(
                                 padding: const EdgeInsets.only(
-                                    top: 24.0, bottom: 8.0, left: 8.0),
+                                  top: 24.0,
+                                  bottom: 8.0,
+                                  left: 8.0,
+                                ),
                                 child: Text(
                                   DateFormat.yMMMMEEEEd(locale).format(item),
                                   style: textTheme.titleLarge?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: colorScheme.primary),
+                                    fontWeight: FontWeight.bold,
+                                    color: colorScheme.primary,
+                                  ),
                                 ),
                               );
                             }
@@ -582,10 +630,16 @@ class _NutritionScreenState extends State<NutritionScreen> {
                             if (item is String) {
                               return Padding(
                                 padding: const EdgeInsets.only(
-                                    top: 24.0, bottom: 8.0, left: 8.0),
-                                child: Text(getLocalizedMealName(item),
-                                    style: textTheme.titleLarge?.copyWith(
-                                        fontWeight: FontWeight.bold)),
+                                  top: 24.0,
+                                  bottom: 8.0,
+                                  left: 8.0,
+                                ),
+                                child: Text(
+                                  getLocalizedMealName(item),
+                                  style: textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               );
                             }
 
@@ -601,10 +655,10 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                 ),
                                 secondaryBackground:
                                     const SwipeActionBackground(
-                                  color: Colors.redAccent,
-                                  icon: Icons.delete,
-                                  alignment: Alignment.centerRight,
-                                ),
+                                      color: Colors.redAccent,
+                                      icon: Icons.delete,
+                                      alignment: Alignment.centerRight,
+                                    ),
                                 confirmDismiss: (direction) async {
                                   if (direction ==
                                       DismissDirection.startToEnd) {
@@ -615,21 +669,25 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                           context: context,
                                           builder: (BuildContext context) {
                                             return AlertDialog(
-                                              title:
-                                                  Text(l10n.deleteConfirmTitle),
+                                              title: Text(
+                                                l10n.deleteConfirmTitle,
+                                              ),
                                               content: Text(
-                                                  l10n.deleteConfirmContent),
+                                                l10n.deleteConfirmContent,
+                                              ),
                                               actions: <Widget>[
                                                 TextButton(
-                                                    onPressed: () =>
-                                                        Navigator.of(context)
-                                                            .pop(false),
-                                                    child: Text(l10n.cancel)),
+                                                  onPressed: () => Navigator.of(
+                                                    context,
+                                                  ).pop(false),
+                                                  child: Text(l10n.cancel),
+                                                ),
                                                 TextButton(
-                                                    onPressed: () =>
-                                                        Navigator.of(context)
-                                                            .pop(true),
-                                                    child: Text(l10n.delete)),
+                                                  onPressed: () => Navigator.of(
+                                                    context,
+                                                  ).pop(true),
+                                                  child: Text(l10n.delete),
+                                                ),
                                               ],
                                             );
                                           },
@@ -648,19 +706,33 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                   child: ListTile(
                                     leading: const Icon(Icons.restaurant),
                                     title: Text(trackedItem.item.name),
-                                    subtitle: Text(l10n.foodListSubtitle(
+                                    subtitle: Text(
+                                      l10n.foodListSubtitle(
                                         trackedItem.entry.quantityInGrams,
-                                        DateFormat.Hm(locale).format(
-                                            trackedItem.entry.timestamp))),
-                                    trailing: Text(l10n.foodListTrailingKcal(
-                                        trackedItem.calculatedCalories)),
+                                        DateFormat.Hm(
+                                          locale,
+                                        ).format(trackedItem.entry.timestamp),
+                                      ),
+                                    ),
+                                    trailing: Text(
+                                      l10n.foodListTrailingKcal(
+                                        trackedItem.calculatedCalories,
+                                      ),
+                                    ),
                                     onTap: () => Navigator.of(context)
-                                        .push(MaterialPageRoute(
+                                        .push(
+                                          MaterialPageRoute(
                                             builder: (context) =>
                                                 FoodDetailScreen(
-                                                    trackedItem: trackedItem)))
-                                        .then((_) => _loadEntriesForDateRange(
-                                            _selectedDateRange)),
+                                                  trackedItem: trackedItem,
+                                                ),
+                                          ),
+                                        )
+                                        .then(
+                                          (_) => _loadEntriesForDateRange(
+                                            _selectedDateRange,
+                                          ),
+                                        ),
                                   ),
                                 ),
                               );
@@ -678,10 +750,10 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                 ),
                                 secondaryBackground:
                                     const SwipeActionBackground(
-                                  color: Colors.redAccent,
-                                  icon: Icons.delete,
-                                  alignment: Alignment.centerRight,
-                                ),
+                                      color: Colors.redAccent,
+                                      icon: Icons.delete,
+                                      alignment: Alignment.centerRight,
+                                    ),
                                 confirmDismiss: (direction) async {
                                   if (direction ==
                                       DismissDirection.startToEnd) {
@@ -692,21 +764,25 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                           context: context,
                                           builder: (BuildContext context) {
                                             return AlertDialog(
-                                              title:
-                                                  Text(l10n.deleteConfirmTitle),
+                                              title: Text(
+                                                l10n.deleteConfirmTitle,
+                                              ),
                                               content: Text(
-                                                  l10n.deleteConfirmContent),
+                                                l10n.deleteConfirmContent,
+                                              ),
                                               actions: <Widget>[
                                                 TextButton(
-                                                    onPressed: () =>
-                                                        Navigator.of(context)
-                                                            .pop(false),
-                                                    child: Text(l10n.cancel)),
+                                                  onPressed: () => Navigator.of(
+                                                    context,
+                                                  ).pop(false),
+                                                  child: Text(l10n.cancel),
+                                                ),
                                                 TextButton(
-                                                    onPressed: () =>
-                                                        Navigator.of(context)
-                                                            .pop(true),
-                                                    child: Text(l10n.delete)),
+                                                  onPressed: () => Navigator.of(
+                                                    context,
+                                                  ).pop(true),
+                                                  child: Text(l10n.delete),
+                                                ),
                                               ],
                                             );
                                           },
@@ -723,16 +799,24 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                 child: SummaryCard(
                                   //externalMargin: EdgeInsets.zero,
                                   child: ListTile(
-                                    leading: Icon(Icons.local_drink,
-                                        color: colorScheme.primary),
+                                    leading: Icon(
+                                      Icons.local_drink,
+                                      color: colorScheme.primary,
+                                    ),
                                     title: Text(fluidEntry.name),
-                                    subtitle: Text(DateFormat.Hm(locale)
-                                        .format(fluidEntry.timestamp)),
+                                    subtitle: Text(
+                                      DateFormat.Hm(
+                                        locale,
+                                      ).format(fluidEntry.timestamp),
+                                    ),
                                     trailing: Text(
-                                        l10n.waterListTrailingMl(
-                                            fluidEntry.quantityInMl),
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.bold)),
+                                      l10n.waterListTrailingMl(
+                                        fluidEntry.quantityInMl,
+                                      ),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               );

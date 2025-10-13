@@ -3,11 +3,7 @@ class WaterEntry {
   final DateTime timestamp;
   final int quantityInMl;
 
-  WaterEntry({
-    this.id,
-    required this.timestamp,
-    required this.quantityInMl,
-  });
+  WaterEntry({this.id, required this.timestamp, required this.quantityInMl});
 
   factory WaterEntry.fromMap(Map<String, dynamic> map) {
     return WaterEntry(

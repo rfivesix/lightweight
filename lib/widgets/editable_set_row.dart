@@ -33,11 +33,13 @@ class _EditableSetRowState extends State<EditableSetRow> {
   void initState() {
     super.initState();
     _weightController = TextEditingController(
-        text:
-            widget.setLog.weightKg?.toStringAsFixed(2).replaceAll('.00', '') ??
-                '');
-    _repsController =
-        TextEditingController(text: widget.setLog.reps?.toString() ?? '');
+      text:
+          widget.setLog.weightKg?.toStringAsFixed(2).replaceAll('.00', '') ??
+          '',
+    );
+    _repsController = TextEditingController(
+      text: widget.setLog.reps?.toString() ?? '',
+    );
 
     // Melde Änderungen an den Parent-Screen
     _weightController.addListener(() {
@@ -64,16 +66,22 @@ class _EditableSetRowState extends State<EditableSetRow> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           SetTypeChip(
-              setType: widget.setLog.setType, setIndex: widget.setIndex),
+            setType: widget.setLog.setType,
+            setIndex: widget.setIndex,
+          ),
           const SizedBox(width: 16),
           Expanded(
             child: TextFormField(
               controller: _weightController,
-              decoration:
-                  InputDecoration(labelText: l10n.kgLabel, isDense: true),
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              validator: (value) => (value == null ||
+              decoration: InputDecoration(
+                labelText: l10n.kgLabel,
+                isDense: true,
+              ),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              validator: (value) =>
+                  (value == null ||
                       value.trim().isEmpty ||
                       double.tryParse(value.replaceAll(',', '.')) == null)
                   ? "!"
@@ -86,10 +94,13 @@ class _EditableSetRowState extends State<EditableSetRow> {
           Expanded(
             child: TextFormField(
               controller: _repsController,
-              decoration:
-                  InputDecoration(labelText: l10n.repsLabel, isDense: true),
+              decoration: InputDecoration(
+                labelText: l10n.repsLabel,
+                isDense: true,
+              ),
               keyboardType: TextInputType.number,
-              validator: (value) => (value == null ||
+              validator: (value) =>
+                  (value == null ||
                       value.trim().isEmpty ||
                       int.tryParse(value) == null)
                   ? "!"

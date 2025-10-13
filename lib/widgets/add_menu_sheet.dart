@@ -73,8 +73,10 @@ class AddMenuSheet extends StatelessWidget {
       leading: Icon(icon, color: colorScheme.primary),
       title: Text(
         title,
-        style:
-            TextStyle(color: colorScheme.primary, fontWeight: FontWeight.w500),
+        style: TextStyle(
+          color: colorScheme.primary,
+          fontWeight: FontWeight.w500,
+        ),
       ),
       tileColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

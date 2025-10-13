@@ -3,22 +3,34 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## Release Notes – 0.4.0-alpha.11+4011
+
+### Added
+*   New wger exercise database integrated, providing even more details and laying the groundwork for upcoming advanced analytics features.
+*   First set of curated base foods added to the food catalog. More will follow soon.
+
+### Changed
+*   Adjusted item labels in the bottom navigation bar to max. 1 line for a cleaner UI.
+
+### Fixed
+*   Resolved critical issues with database migration and access, fixing crashes when viewing workout history or adding exercises to routines.
+*   Fixed localization issue in the base foods catalog, ensuring food names are displayed in the correct language.
 
 ## Release Notes - 0.4.0-alpha.10+4010
 
 ### ✨ New Features & Major Improvements
 
 *   **Enhanced Fluid Tracking:**
-  *   Any liquid can now be logged with a name, quantity, sugar, and caffeine content via the new "+" menu.
-  *   When logging food items, you can now specify that it is a liquid ("Add to water intake"). The quantity is then correctly added to the daily water goal.
+    *   Any liquid can now be logged with a name, quantity, sugar, and caffeine content via the new "+" menu.
+    *   When logging food items, you can now specify that it is a liquid ("Add to water intake"). The quantity is then correctly added to the daily water goal.
 *   **Automatic Caffeine Tracking:**
-  *   Daily caffeine intake is now automatically calculated and displayed in the nutrition summary.
-  *   Caffeine can be specified in "mg per 100ml" for both custom liquids and food items marked as liquid.
-  *   A new "Caffeine" entry has been added to the trackable supplements.
+    *   Daily caffeine intake is now automatically calculated and displayed in the nutrition summary.
+    *   Caffeine can be specified in "mg per 100ml" for both custom liquids and food items marked as liquid.
+    *   A new "Caffeine" entry has been added to the trackable supplements.
 *   **Improved Nutrition Analysis:**
-  *   Calculations in the nutrition analysis (`nutrition_screen.dart`) and on the dashboard (`diary_screen.dart`) now correctly include calories, carbs, and sugar from all logged fluids.
+    *   Calculations in the nutrition analysis (`nutrition_screen.dart`) and on the dashboard (`diary_screen.dart`) now correctly include calories, carbs, and sugar from all logged fluids.
 *   **Expanded "Add" Menu:**
-  *   The central speed-dial menu has been expanded with "Add Liquid" and "Log Supplement" options for faster access.
+    *   The central speed-dial menu has been expanded with "Add Liquid" and "Log Supplement" options for faster access.
 
 ### 🐛 Bugfixes & Improvements
 

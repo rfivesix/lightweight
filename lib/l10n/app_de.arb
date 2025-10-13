@@ -263,7 +263,7 @@
   "weightHistoryTitle": "Gewichtsverlauf",
   "hideSummary": "Übersicht ausblenden",
   "showSummary": "Übersicht einblenden",
-  "exerciseDataAttribution": "Übungsdaten von",
+  "exerciseDataAttribution": "Übungsdaten von wger",
   "duplicate": "Duplizieren",
   "deleteRoutineConfirmContent": "Möchtest du den Trainingsplan '{routineName}' wirklich unwiderruflich löschen?",
   "@deleteRoutineConfirmContent": {

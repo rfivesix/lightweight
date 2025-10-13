@@ -97,18 +97,22 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
         return AlertDialog(
           title: Text(localizeSupplementName(supplement, l10n)),
           content: LogSupplementDialogContent(
-              key: dialogStateKey, supplement: supplement),
+            key: dialogStateKey,
+            supplement: supplement,
+          ),
           actions: [
             TextButton(
-                child: Text(l10n.cancel),
-                onPressed: () => Navigator.of(context).pop(null)),
+              child: Text(l10n.cancel),
+              onPressed: () => Navigator.of(context).pop(null),
+            ),
             FilledButton(
               child: Text(l10n.add_button),
               onPressed: () {
                 final state = dialogStateKey.currentState;
                 if (state != null) {
-                  final dose =
-                      double.tryParse(state.doseText.replaceAll(',', '.'));
+                  final dose = double.tryParse(
+                    state.doseText.replaceAll(',', '.'),
+                  );
                   if (dose != null && dose > 0) {
                     Navigator.of(context).pop((dose, state.selectedDateTime));
                   }
@@ -168,9 +172,9 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
+          color: Colors.grey[600],
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -183,18 +187,18 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
     final hasTarget = target > 0;
     final rawProgress = hasTarget ? (ts.totalDosedToday / target) : 0.0;
     final progress = rawProgress.clamp(0.0, 1.0);
-    final progressColor =
-        overTarget ? Colors.red.shade400 : Colors.green.shade400;
+    final progressColor = overTarget
+        ? Colors.red.shade400
+        : Colors.green.shade400;
     final l10n = AppLocalizations.of(context)!;
 
     return Container(
       height: 60,
       margin: const EdgeInsets.symmetric(vertical: 6.0),
       decoration: BoxDecoration(
-        color: Theme.of(context)
-            .colorScheme
-            .surfaceContainerHighest
-            .withOpacity(0.3),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
         borderRadius: BorderRadius.circular(20),
       ),
       child: ClipRRect(
@@ -210,8 +214,10 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
               ),
             ),
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12.0,
+                vertical: 4.0,
+              ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,17 +228,18 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
                       localizeSupplementName(supplement, l10n),
                       maxLines: 1,
                       style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '${ts.totalDosedToday.toStringAsFixed(1)} / ${target.toStringAsFixed(1)} ${supplement.unit}',
                     style: TextStyle(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withOpacity(0.8),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.8),
                       fontSize: 14,
                     ),
                   ),
@@ -277,11 +284,13 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
                     content: Text(l10n.deleteConfirmContent),
                     actions: <Widget>[
                       TextButton(
-                          onPressed: () => Navigator.of(context).pop(false),
-                          child: Text(l10n.cancel)),
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: Text(l10n.cancel),
+                      ),
                       TextButton(
-                          onPressed: () => Navigator.of(context).pop(true),
-                          child: Text(l10n.delete)),
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: Text(l10n.delete),
+                      ),
                     ],
                   );
                 },
@@ -325,7 +334,8 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
         title: Text(l10n.deleteConfirmTitle),
         // TODO: This confirmation message should be localized
         content: Text(
-            "Are you sure you want to permanently delete the supplement '${localizeSupplementName(supplement, l10n)}'? All of its log entries will also be removed."),
+          "Are you sure you want to permanently delete the supplement '${localizeSupplementName(supplement, l10n)}'? All of its log entries will also be removed.",
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -418,15 +428,17 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
           ),
           actions: [
             TextButton(
-                child: Text(l10n.cancel),
-                onPressed: () => Navigator.of(context).pop(null)),
+              child: Text(l10n.cancel),
+              onPressed: () => Navigator.of(context).pop(null),
+            ),
             FilledButton(
               child: Text(l10n.save), // Use 'Save' for editing
               onPressed: () {
                 final state = dialogStateKey.currentState;
                 if (state != null) {
-                  final dose =
-                      double.tryParse(state.doseText.replaceAll(',', '.'));
+                  final dose = double.tryParse(
+                    state.doseText.replaceAll(',', '.'),
+                  );
                   if (dose != null && dose > 0) {
                     Navigator.of(context).pop((dose, state.selectedDateTime));
                   }
@@ -464,49 +476,54 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
         scrolledUnderElevation: 0,
         title: Text(
           l10n.supplementTrackerTitle,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
         ),
       ),
       body: Column(
         children: [
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IconButton(
-                    icon: const Icon(Icons.chevron_left),
-                    onPressed: () => _navigateDay(false)),
+                  icon: const Icon(Icons.chevron_left),
+                  onPressed: () => _navigateDay(false),
+                ),
                 Expanded(
                   child: InkWell(
                     onTap: _pickDate,
                     child: Text(
                       DateFormat.yMMMMd(locale).format(_selectedDate),
-                      style: textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                       textAlign: TextAlign.center,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ),
                 IconButton(
-                    icon: const Icon(Icons.chevron_right),
-                    onPressed: _selectedDate.isSameDate(DateTime.now())
-                        ? null
-                        : () => _navigateDay(true)),
+                  icon: const Icon(Icons.chevron_right),
+                  onPressed: _selectedDate.isSameDate(DateTime.now())
+                      ? null
+                      : () => _navigateDay(true),
+                ),
               ],
             ),
           ),
           Divider(
-              height: 1,
-              thickness: 1,
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurfaceVariant
-                  .withOpacity(0.1)),
+            height: 1,
+            thickness: 1,
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurfaceVariant.withOpacity(0.1),
+          ),
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -517,35 +534,45 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
                       children: [
                         _buildSectionTitle(context, l10n.dailyProgressTitle),
                         if (_trackedSupplements
-                            .where((ts) =>
-                                ts.supplement.dailyGoal != null ||
-                                ts.supplement.dailyLimit != null)
+                            .where(
+                              (ts) =>
+                                  ts.supplement.dailyGoal != null ||
+                                  ts.supplement.dailyLimit != null,
+                            )
                             .isEmpty)
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(l10n.emptySupplementGoals,
-                                textAlign: TextAlign.center),
+                            child: Text(
+                              l10n.emptySupplementGoals,
+                              textAlign: TextAlign.center,
+                            ),
                           ),
                         ..._trackedSupplements
-                            .where((ts) =>
-                                ts.supplement.dailyGoal != null ||
-                                ts.supplement.dailyLimit != null)
+                            .where(
+                              (ts) =>
+                                  ts.supplement.dailyGoal != null ||
+                                  ts.supplement.dailyLimit != null,
+                            )
                             .map((ts) => _buildProgressCard(ts)),
                         const SizedBox(height: DesignConstants.spacingXL),
                         _buildSectionTitle(context, l10n.logIntakeTitle),
-                        ..._trackedSupplements
-                            .map((ts) => _buildLogActionCard(ts.supplement)),
+                        ..._trackedSupplements.map(
+                          (ts) => _buildLogActionCard(ts.supplement),
+                        ),
                         const SizedBox(height: DesignConstants.spacingXL),
                         _buildSectionTitle(context, l10n.todaysLogTitle),
                         if (_todaysLogs.isEmpty)
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(l10n.emptySupplementLogs,
-                                textAlign: TextAlign.center),
+                            child: Text(
+                              l10n.emptySupplementLogs,
+                              textAlign: TextAlign.center,
+                            ),
                           )
                         else
-                          ..._todaysLogs
-                              .map((log) => _buildLogEntry(log, l10n)),
+                          ..._todaysLogs.map(
+                            (log) => _buildLogEntry(log, l10n),
+                          ),
                       ],
                     ),
                   ),
@@ -557,7 +584,8 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
         onPressed: () async {
           final created = await Navigator.of(context).push<bool>(
             MaterialPageRoute(
-                builder: (context) => const CreateSupplementScreen()),
+              builder: (context) => const CreateSupplementScreen(),
+            ),
           );
           if (created == true) {
             _loadData(_selectedDate);

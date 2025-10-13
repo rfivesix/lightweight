@@ -47,9 +47,9 @@ class MealsScreen extends StatelessWidget {
           );
           if (result == true && context.mounted) {
             // TODO: Liste neu laden (später)
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Meal gespeichert')),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('Meal gespeichert')));
           }
         },
         child: const Icon(Icons.add),

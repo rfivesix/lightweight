@@ -58,7 +58,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     super.initState();
     _pageController = PageController();
     _menuController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 400));
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
   }
 
   @override
@@ -104,8 +106,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         break;
       case 'add_measurement':
         final success = await Navigator.of(context).push<bool>(
-            MaterialPageRoute(
-                builder: (context) => const AddMeasurementScreen()));
+          MaterialPageRoute(builder: (context) => const AddMeasurementScreen()),
+        );
         if (success == true) _refreshHomeScreen();
         break;
       case 'add_food':
@@ -153,7 +155,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             color: Colors.white.withOpacity(isDark ? 0.06 : 0.08),
             borderRadius: BorderRadius.circular(18),
             child: Padding(
-              padding: padding ??
+              padding:
+                  padding ??
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               child: child,
             ),
@@ -169,10 +172,12 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
               if (!context.mounted) return;
               close();
               Navigator.of(context)
-                  .push(MaterialPageRoute(
-                    builder: (_) =>
-                        LiveWorkoutScreen(workoutLog: newWorkoutLog),
-                  ))
+                  .push(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          LiveWorkoutScreen(workoutLog: newWorkoutLog),
+                    ),
+                  )
                   .then((_) => _refreshHomeScreen());
             },
             child: Row(
@@ -181,10 +186,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 const SizedBox(width: 12),
                 Text(
                   l10n.startEmptyWorkoutButton,
-                  style: Theme.of(ctx)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                  style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ],
             ),
@@ -222,12 +226,14 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                         if (fullRoutine != null) {
                           close();
                           Navigator.of(context)
-                              .push(MaterialPageRoute(
-                                builder: (_) => LiveWorkoutScreen(
-                                  routine: fullRoutine,
-                                  workoutLog: newWorkoutLog,
+                              .push(
+                                MaterialPageRoute(
+                                  builder: (_) => LiveWorkoutScreen(
+                                    routine: fullRoutine,
+                                    workoutLog: newWorkoutLog,
+                                  ),
                                 ),
-                              ))
+                              )
                               .then((_) => _refreshHomeScreen());
                         }
                       },
@@ -240,9 +246,11 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                         onTap: () {
                           close();
                           Navigator.of(context)
-                              .push(MaterialPageRoute(
-                                builder: (_) => EditRoutineScreen(routine: r),
-                              ))
+                              .push(
+                                MaterialPageRoute(
+                                  builder: (_) => EditRoutineScreen(routine: r),
+                                ),
+                              )
                               .then((_) => _refreshHomeScreen());
                         },
                         child: Column(
@@ -252,9 +260,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                               r.name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(ctx)
-                                  .textTheme
-                                  .titleMedium
+                              style: Theme.of(ctx).textTheme.titleMedium
                                   ?.copyWith(fontWeight: FontWeight.w700),
                             ),
                             const SizedBox(height: 2),
@@ -269,8 +275,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Icon(Icons.more_vert_rounded,
-                        color: Theme.of(ctx).textTheme.bodyMedium?.color),
+                    Icon(
+                      Icons.more_vert_rounded,
+                      color: Theme.of(ctx).textTheme.bodyMedium?.color,
+                    ),
                   ],
                 ),
               );
@@ -295,7 +303,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   Future<void> _handleAddFood() async {
     final FoodItem? selectedFoodItem = await Navigator.of(context)
         .push<FoodItem>(
-            MaterialPageRoute(builder: (context) => const AddFoodScreen()));
+          MaterialPageRoute(builder: (context) => const AddFoodScreen()),
+        );
 
     if (selectedFoodItem == null || !mounted) return;
 
@@ -315,8 +324,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       quantityInGrams: quantity,
       mealType: mealType,
     );
-    final newFoodEntryId =
-        await DatabaseHelper.instance.insertFoodEntry(newFoodEntry);
+    final newFoodEntryId = await DatabaseHelper.instance.insertFoodEntry(
+      newFoodEntry,
+    );
 
     // 2. Wenn es eine Flüssigkeit ist, ZUSÄTZLICH einen FluidEntry NUR FÜR WASSER erstellen
     if (isLiquid) {
@@ -337,8 +347,11 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     // 3. Koffein nur loggen, wenn als Flüssigkeit deklariert, und mit FoodEntry verknüpfen
     if (isLiquid && caffeinePer100 != null && caffeinePer100 > 0) {
       final totalCaffeine = (caffeinePer100 / 100.0) * quantity;
-      await _logCaffeineDose(totalCaffeine, timestamp,
-          foodEntryId: newFoodEntryId);
+      await _logCaffeineDose(
+        totalCaffeine,
+        timestamp,
+        foodEntryId: newFoodEntryId,
+      );
     }
 
     _refreshHomeScreen();
@@ -374,10 +387,12 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                       if (quantity == null || quantity <= 0) return;
 
                       final name = state.nameText;
-                      final sugarPer100ml =
-                          double.tryParse(state.sugarText.replaceAll(',', '.'));
+                      final sugarPer100ml = double.tryParse(
+                        state.sugarText.replaceAll(',', '.'),
+                      );
                       final caffeinePer100ml = double.tryParse(
-                          state.caffeineText.replaceAll(',', '.'));
+                        state.caffeineText.replaceAll(',', '.'),
+                      );
                       final kcal = (sugarPer100ml != null)
                           ? ((sugarPer100ml / 100) * quantity * 4).round()
                           : null;
@@ -399,8 +414,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                         final totalCaffeine =
                             (caffeinePer100ml / 100.0) * quantity;
                         await _logCaffeineDose(
-                            totalCaffeine, state.selectedDateTime,
-                            fluidEntryId: newId);
+                          totalCaffeine,
+                          state.selectedDateTime,
+                          fluidEntryId: newId,
+                        );
                       }
 
                       close();
@@ -417,8 +434,12 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     );
   }
 
-  Future<void> _logCaffeineDose(double doseMg, DateTime timestamp,
-      {int? foodEntryId, int? fluidEntryId}) async {
+  Future<void> _logCaffeineDose(
+    double doseMg,
+    DateTime timestamp, {
+    int? foodEntryId,
+    int? fluidEntryId,
+  }) async {
     if (doseMg <= 0) return;
 
     final supplements = await DatabaseHelper.instance.getAllSupplements();
@@ -445,26 +466,29 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   }
 
   Future<
+    ({
+      int quantity,
+      DateTime timestamp,
+      String mealType,
+      bool isLiquid,
+      double? sugarPer100ml,
+      double? caffeinePer100ml,
+    })?
+  >
+  _showQuantityMenu(FoodItem item) async {
+    final l10n = AppLocalizations.of(context)!;
+    final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
+
+    return showGlassBottomMenu<
       ({
         int quantity,
         DateTime timestamp,
         String mealType,
         bool isLiquid,
         double? sugarPer100ml,
-        double? caffeinePer100ml
-      })?> _showQuantityMenu(FoodItem item) async {
-    final l10n = AppLocalizations.of(context)!;
-    final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
-
-    return showGlassBottomMenu<
-        ({
-          int quantity,
-          DateTime timestamp,
-          String mealType,
-          bool isLiquid,
-          double? sugarPer100ml,
-          double? caffeinePer100ml
-        })>(
+        double? caffeinePer100ml,
+      })
+    >(
       context: context,
       title: item.name,
       contentBuilder: (ctx, close) {
@@ -492,9 +516,11 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                       if (state != null) {
                         final quantity = int.tryParse(state.quantityText);
                         final sugar = double.tryParse(
-                            state.sugarText.replaceAll(',', '.'));
+                          state.sugarText.replaceAll(',', '.'),
+                        );
                         final caffeine = double.tryParse(
-                            state.caffeineText.replaceAll(',', '.'));
+                          state.caffeineText.replaceAll(',', '.'),
+                        );
                         if (quantity != null && quantity > 0) {
                           close();
                           Navigator.of(ctx).pop((
@@ -503,7 +529,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                             mealType: state.selectedMealType,
                             isLiquid: state.isLiquid,
                             sugarPer100ml: sugar,
-                            caffeinePer100ml: caffeine
+                            caffeinePer100ml: caffeine,
                           ));
                         }
                       }
@@ -520,8 +546,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   }
 
   void _handleCreateRoutine() {
-    Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => const EditRoutineScreen()));
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const EditRoutineScreen()));
   }
 
   Future<(int, DateTime)?> _openWaterDialog({
@@ -614,18 +641,22 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         return AlertDialog(
           title: Text(localizeSupplementName(supplement, l10n)),
           content: LogSupplementDialogContent(
-              key: dialogStateKey, supplement: supplement),
+            key: dialogStateKey,
+            supplement: supplement,
+          ),
           actions: [
             TextButton(
-                child: Text(l10n.cancel),
-                onPressed: () => Navigator.of(context).pop(null)),
+              child: Text(l10n.cancel),
+              onPressed: () => Navigator.of(context).pop(null),
+            ),
             FilledButton(
               child: Text(l10n.add_button),
               onPressed: () {
                 final state = dialogStateKey.currentState;
                 if (state != null) {
-                  final dose =
-                      double.tryParse(state.doseText.replaceAll(',', '.'));
+                  final dose = double.tryParse(
+                    state.doseText.replaceAll(',', '.'),
+                  );
                   if (dose != null && dose > 0) {
                     Navigator.of(context).pop((dose, state.selectedDateTime));
                   }
@@ -638,10 +669,11 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     );
     if (result != null) {
       final newLog = SupplementLog(
-          supplementId: supplement.id!,
-          dose: result.$1,
-          unit: supplement.unit,
-          timestamp: result.$2);
+        supplementId: supplement.id!,
+        dose: result.$1,
+        unit: supplement.unit,
+        timestamp: result.$2,
+      );
       await DatabaseHelper.instance.insertSupplementLog(newLog);
       _refreshHomeScreen();
     }
@@ -658,8 +690,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           content: WaterDialogContent(key: dialogStateKey),
           actions: [
             TextButton(
-                child: Text(l10n.cancel),
-                onPressed: () => Navigator.of(context).pop(null)),
+              child: Text(l10n.cancel),
+              onPressed: () => Navigator.of(context).pop(null),
+            ),
             FilledButton(
               child: Text(l10n.add_button),
               onPressed: () {
@@ -667,8 +700,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 if (state != null) {
                   final quantity = int.tryParse(state.quantityText);
                   if (quantity != null && quantity > 0) {
-                    Navigator.of(context)
-                        .pop((quantity, state.selectedDateTime));
+                    Navigator.of(
+                      context,
+                    ).pop((quantity, state.selectedDateTime));
                   }
                 }
               },
@@ -681,11 +715,13 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
   Future<void> _captureSnapshot() async {
     try {
-      final boundary = _pvBoundaryKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
+      final boundary =
+          _pvBoundaryKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
       if (boundary == null) return;
       final img = await boundary.toImage(
-          pixelRatio: MediaQuery.of(context).devicePixelRatio);
+        pixelRatio: MediaQuery.of(context).devicePixelRatio,
+      );
       setState(() => _pvSnapshot = img);
     } catch (_) {
       // fail silently – wir fallen dann einfach auf den bisherigen Warp zurück
@@ -705,10 +741,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         return AppBar(
           title: Text(
             title,
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(fontWeight: FontWeight.w900),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
           ),
           actions: [
             _profileAppBarButton(context), // ⬅️ NEU
@@ -718,10 +753,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         return AppBar(
           title: Text(
             l10n.statistics, // ← NEW (or l10n.stats)
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(fontWeight: FontWeight.w900),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
           ),
           actions: [
             _profileAppBarButton(context), // ⬅️ NEU
@@ -732,10 +766,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         return AppBar(
           title: Text(
             l10n.nutritionHubTitle,
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(fontWeight: FontWeight.w900),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
           ),
           actions: [
             _profileAppBarButton(context), // ⬅️ NEU
@@ -782,27 +815,27 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       {
         'icon': Icons.local_drink,
         'label': l10n.addLiquidOption,
-        'action': 'add_liquid'
+        'action': 'add_liquid',
       },
       {
         'icon': Icons.restaurant_menu,
         'label': l10n.addFoodOption,
-        'action': 'add_food'
+        'action': 'add_food',
       },
       {
         'icon': Icons.straighten_outlined,
         'label': l10n.addMeasurement,
-        'action': 'add_measurement'
+        'action': 'add_measurement',
       },
       {
         'icon': Icons.fitness_center,
         'label': l10n.startWorkout,
-        'action': 'start_workout'
+        'action': 'start_workout',
       },
       {
         'icon': Icons.medication_outlined,
         'label': l10n.logIntakeTitle,
-        'action': 'log_supplement'
+        'action': 'log_supplement',
       },
     ];
   }
@@ -891,19 +924,22 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                       content: Text(l10n.dialogFinishWorkoutBody),
                       actions: [
                         TextButton(
-                            onPressed: () => Navigator.pop(ctx, false),
-                            child: Text(l10n.cancel)),
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: Text(l10n.cancel),
+                        ),
                         FilledButton(
-                            onPressed: () => Navigator.pop(ctx, true),
-                            child: Text(l10n.discard_button)),
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: Text(l10n.discard_button),
+                        ),
                       ],
                     ),
                   );
 
                   if (confirmed == true) {
                     if (logId != null) {
-                      await WorkoutDatabaseHelper.instance
-                          .deleteWorkoutLog(logId);
+                      await WorkoutDatabaseHelper.instance.deleteWorkoutLog(
+                        logId,
+                      );
                     }
                     await wsm.finishWorkout();
                   }
@@ -914,7 +950,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           ),
 
         // GLASS BOTTOM NAV BAR (deine kombinierte Leiste)
-
         Positioned(
           bottom: 24,
           left: 16,
@@ -981,9 +1016,12 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                         },
                         child: BackdropFilter(
                           filter: ImageFilter.blur(
-                              sigmaX: 6.0 * v, sigmaY: 6.0 * v),
+                            sigmaX: 6.0 * v,
+                            sigmaY: 6.0 * v,
+                          ),
                           child: Container(
-                              color: Colors.black.withOpacity(0.4 * v)),
+                            color: Colors.black.withOpacity(0.4 * v),
+                          ),
                         ),
                       ),
                     ),
@@ -998,83 +1036,95 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                               .asMap()
                               .entries
                               .map((entry) {
-                            final index = entry.key;
-                            final action = entry.value;
-                            final curved = CurvedAnimation(
-                              parent: _menuController,
-                              curve: Interval(
-                                  (index * 0.12).clamp(0.0, 0.95), 1.0,
-                                  curve: Curves.easeOutBack),
-                            );
-                            final tv = _safe01(curved.value);
-                            final offsetY = 90.0 * (index + 1);
-                            return Transform.translate(
-                              offset: Offset(0, (1 - tv) * offsetY),
-                              child: Opacity(
-                                opacity: tv,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 10.0),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        action['label'],
-                                        style: TextStyle(
-                                          color: Theme.of(context).brightness ==
-                                                  Brightness.light
-                                              ? Colors.black87
-                                              : Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                        ),
+                                final index = entry.key;
+                                final action = entry.value;
+                                final curved = CurvedAnimation(
+                                  parent: _menuController,
+                                  curve: Interval(
+                                    (index * 0.12).clamp(0.0, 0.95),
+                                    1.0,
+                                    curve: Curves.easeOutBack,
+                                  ),
+                                );
+                                final tv = _safe01(curved.value);
+                                final offsetY = 90.0 * (index + 1);
+                                return Transform.translate(
+                                  offset: Offset(0, (1 - tv) * offsetY),
+                                  child: Opacity(
+                                    opacity: tv,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 10.0,
                                       ),
-                                      const SizedBox(width: 16),
-                                      GestureDetector(
-                                        behavior: HitTestBehavior.opaque,
-                                        onTap: () {
-                                          setState(() {
-                                            _isAddMenuOpen = false;
-                                            _menuController.reverse();
-                                          });
-                                          _executeAddMenuAction(
-                                              action['action']);
-                                        },
-                                        child: ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(20),
-                                          child: BackdropFilter(
-                                            filter: ImageFilter.blur(
-                                                sigmaX: 12, sigmaY: 12),
-                                            child: Container(
-                                              width: 76,
-                                              height: 76,
-                                              decoration: BoxDecoration(
-                                                color: Colors.white
-                                                    .withOpacity(0.15),
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                                border: Border.all(
-                                                  color: Colors.white
-                                                      .withOpacity(0.3),
-                                                  width: 1.5,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            action['label'],
+                                            style: TextStyle(
+                                              color:
+                                                  Theme.of(
+                                                        context,
+                                                      ).brightness ==
+                                                      Brightness.light
+                                                  ? Colors.black87
+                                                  : Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 18,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          GestureDetector(
+                                            behavior: HitTestBehavior.opaque,
+                                            onTap: () {
+                                              setState(() {
+                                                _isAddMenuOpen = false;
+                                                _menuController.reverse();
+                                              });
+                                              _executeAddMenuAction(
+                                                action['action'],
+                                              );
+                                            },
+                                            child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                              child: BackdropFilter(
+                                                filter: ImageFilter.blur(
+                                                  sigmaX: 12,
+                                                  sigmaY: 12,
                                                 ),
-                                              ),
-                                              child: Icon(
-                                                action['icon'],
-                                                size: 34,
-                                                color: Colors.white,
+                                                child: Container(
+                                                  width: 76,
+                                                  height: 76,
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.white
+                                                        .withOpacity(0.15),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          20,
+                                                        ),
+                                                    border: Border.all(
+                                                      color: Colors.white
+                                                          .withOpacity(0.3),
+                                                      width: 1.5,
+                                                    ),
+                                                  ),
+                                                  child: Icon(
+                                                    action['icon'],
+                                                    size: 34,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
                                               ),
                                             ),
                                           ),
-                                        ),
+                                        ],
                                       ),
-                                    ],
+                                    ),
                                   ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
+                                );
+                              })
+                              .toList(),
                         ),
                       ),
                     ),
@@ -1093,14 +1143,15 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
     return Padding(
       // ⬇️ Abstand analog zu SummaryCard
-      padding:
-          const EdgeInsets.only(right: DesignConstants.screenPaddingHorizontal),
+      padding: const EdgeInsets.only(
+        right: DesignConstants.screenPaddingHorizontal,
+      ),
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const ProfileScreen()),
-          );
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const ProfileScreen()));
         },
         child: CircleAvatar(
           radius: 18,
@@ -1186,8 +1237,9 @@ class _RunningWorkoutRow extends StatelessWidget {
                 timeText,
                 style: TextStyle(
                   fontSize: 16,
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.9),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.9),
                   decoration: TextDecoration.none, // ← remove underline
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),

@@ -36,8 +36,9 @@ class HomeState extends State<Home> {
 
   List<ChartDataPoint> _weightChartData = [];
   DateTimeRange _currentDateRange = DateTimeRange(
-      start: DateTime.now().subtract(const Duration(days: 29)),
-      end: DateTime.now());
+    start: DateTime.now().subtract(const Duration(days: 29)),
+    end: DateTime.now(),
+  );
   final String _chartType = 'weight';
   Map<String, int> _workoutStats = {};
   bool _isFirstLoad = true;
@@ -56,14 +57,15 @@ class HomeState extends State<Home> {
     super.didChangeDependencies();
     if (_isFirstLoad) {
       loadAllHomeScreenData(
-          showLoadingIndicator:
-              true); // KORREKTUR: Zeige Indikator nur beim ersten Mal
+        showLoadingIndicator: true,
+      ); // KORREKTUR: Zeige Indikator nur beim ersten Mal
       _isFirstLoad = false;
     }
   }
 
-  Future<void> loadAllHomeScreenData(
-      {bool showLoadingIndicator = false}) async {
+  Future<void> loadAllHomeScreenData({
+    bool showLoadingIndicator = false,
+  }) async {
     if (!mounted) return;
 
     // KORREKTUR: Setze _isLoading nur, wenn der Indikator wirklich gezeigt werden soll
@@ -83,14 +85,17 @@ class HomeState extends State<Home> {
 
     final entries = await dbHelper.getEntriesForDate(DateTime.now());
     final fluidEntries = await dbHelper.getFluidEntriesForDate(DateTime.now());
-    final waterIntake =
-        fluidEntries.fold<int>(0, (sum, entry) => sum + entry.quantityInMl);
+    final waterIntake = fluidEntries.fold<int>(
+      0,
+      (sum, entry) => sum + entry.quantityInMl,
+    );
     final newTodaysNutrition = DailyNutrition(
-        targetCalories: targetCalories,
-        targetProtein: targetProtein,
-        targetCarbs: targetCarbs,
-        targetFat: targetFat,
-        targetWater: targetWater);
+      targetCalories: targetCalories,
+      targetProtein: targetProtein,
+      targetCarbs: targetCarbs,
+      targetFat: targetFat,
+      targetWater: targetWater,
+    );
     newTodaysNutrition.water = waterIntake;
 
     final newWorkoutStats =
@@ -98,8 +103,9 @@ class HomeState extends State<Home> {
     await _loadChartData(); // Lädt Chart-Daten und setzt _weightChartData
 
     for (final entry in entries) {
-      final foodItem = await ProductDatabaseHelper.instance
-          .getProductByBarcode(entry.barcode);
+      final foodItem = await ProductDatabaseHelper.instance.getProductByBarcode(
+        entry.barcode,
+      );
       if (foodItem != null) {
         newTodaysNutrition.calories +=
             (foodItem.calories / 100 * entry.quantityInGrams).round();
@@ -107,15 +113,17 @@ class HomeState extends State<Home> {
             (foodItem.protein / 100 * entry.quantityInGrams).round();
         newTodaysNutrition.carbs +=
             (foodItem.carbs / 100 * entry.quantityInGrams).round();
-        newTodaysNutrition.fat +=
-            (foodItem.fat / 100 * entry.quantityInGrams).round();
+        newTodaysNutrition.fat += (foodItem.fat / 100 * entry.quantityInGrams)
+            .round();
       }
     }
 
     final today = DateTime.now();
     final sevenDaysAgo = today.subtract(const Duration(days: 6));
-    final recentEntries =
-        await dbHelper.getEntriesForDateRange(sevenDaysAgo, today);
+    final recentEntries = await dbHelper.getEntriesForDateRange(
+      sevenDaysAgo,
+      today,
+    );
     String newRecommendation = l10n.recommendationDefault;
     if (recentEntries.isNotEmpty) {
       final uniqueDaysTracked = recentEntries
@@ -137,10 +145,14 @@ class HomeState extends State<Home> {
         final tolerance = totalTargetCalories * 0.05;
         if (difference > tolerance) {
           newRecommendation = l10n.recommendationOverTarget(
-              numberOfTrackedDays, difference.round());
+            numberOfTrackedDays,
+            difference.round(),
+          );
         } else if (difference < -tolerance) {
           newRecommendation = l10n.recommendationUnderTarget(
-              numberOfTrackedDays, (-difference).round());
+            numberOfTrackedDays,
+            (-difference).round(),
+          );
         } else {
           newRecommendation = l10n.recommendationOnTarget(numberOfTrackedDays);
         }
@@ -151,18 +163,24 @@ class HomeState extends State<Home> {
 
     // NEU: Lade Supplement-Daten
     final allSupplements = await dbHelper.getAllSupplements();
-    final todaysSupplementLogs =
-        await dbHelper.getSupplementLogsForDate(DateTime.now());
+    final todaysSupplementLogs = await dbHelper.getSupplementLogsForDate(
+      DateTime.now(),
+    );
     final Map<int, double> todaysDoses = {};
     for (final log in todaysSupplementLogs) {
-      todaysDoses.update(log.supplementId, (value) => value + log.dose,
-          ifAbsent: () => log.dose);
+      todaysDoses.update(
+        log.supplementId,
+        (value) => value + log.dose,
+        ifAbsent: () => log.dose,
+      );
     }
     final trackedSupps = allSupplements
-        .map((s) => TrackedSupplement(
-              supplement: s,
-              totalDosedToday: todaysDoses[s.id] ?? 0.0,
-            ))
+        .map(
+          (s) => TrackedSupplement(
+            supplement: s,
+            totalDosedToday: todaysDoses[s.id] ?? 0.0,
+          ),
+        )
         .toList();
 
     // --- DATEN LADEN ENDE ---
@@ -190,8 +208,8 @@ class HomeState extends State<Home> {
         break;
       case 'All':
         // Für "Alle" holen wir das früheste Datum aus der Datenbank
-        final earliest =
-            await DatabaseHelper.instance.getEarliestMeasurementDate();
+        final earliest = await DatabaseHelper.instance
+            .getEarliestMeasurementDate();
         start = earliest ?? now;
         break;
       case '30D':
@@ -219,7 +237,8 @@ class HomeState extends State<Home> {
       for (final m in s.measurements) {
         if (m.type == _chartType) {
           points.add(
-              ChartDataPoint(date: s.timestamp, value: m.value.toDouble()));
+            ChartDataPoint(date: s.timestamp, value: m.value.toDouble()),
+          );
         }
       }
     }
@@ -252,11 +271,7 @@ class HomeState extends State<Home> {
         volume += ((set.weightKg ?? 0) * (set.reps ?? 0)).round();
       }
     }
-    return {
-      'count': count,
-      'duration': duration,
-      'volume': volume,
-    };
+    return {'count': count, 'duration': duration, 'volume': volume};
   }
 
   void _navigateTimeRange(bool forward) {
@@ -302,38 +317,49 @@ class HomeState extends State<Home> {
           // Der Inhalt wird immer angezeigt, auch wenn _isLoading true ist (alte Daten).
           RefreshIndicator(
             onRefresh: () => loadAllHomeScreenData(
-                showLoadingIndicator:
-                    false), // KORREKTUR: Kein Ladeindikator bei manueller Aktualisierung
+              showLoadingIndicator: false,
+            ), // KORREKTUR: Kein Ladeindikator bei manueller Aktualisierung
             child: ListView(
               padding: DesignConstants.screenPadding,
               children: [
                 _buildBannerCard(l10n),
                 const SizedBox(height: DesignConstants.spacingS),
                 GestureDetector(
-                    onTap: _navigateToNutritionScreen,
-                    child: _nutritionData != null
-                        ? NutritionSummaryWidget(
-                            nutritionData: _nutritionData!,
-                            isExpandedView: false,
-                            l10n: l10n)
-                        : const SizedBox.shrink()),
+                  onTap: _navigateToNutritionScreen,
+                  child: _nutritionData != null
+                      ? NutritionSummaryWidget(
+                          nutritionData: _nutritionData!,
+                          isExpandedView: false,
+                          l10n: l10n,
+                        )
+                      : const SizedBox.shrink(),
+                ),
                 const SizedBox(height: DesignConstants.spacingS),
                 SupplementSummaryWidget(
                   trackedSupplements: _trackedSupplements,
                   onTap: () => Navigator.of(context)
-                      .push(MaterialPageRoute(
-                          builder: (context) => const SupplementTrackScreen()))
-                      .then((_) =>
-                          loadAllHomeScreenData(showLoadingIndicator: false)),
+                      .push(
+                        MaterialPageRoute(
+                          builder: (context) => const SupplementTrackScreen(),
+                        ),
+                      )
+                      .then(
+                        (_) =>
+                            loadAllHomeScreenData(showLoadingIndicator: false),
+                      ),
                 ),
                 if (_weightChartData.isNotEmpty)
                   const SizedBox(height: DesignConstants.spacingS),
                 GestureDetector(
-                    onTap: () => Navigator.of(context)
-                        .push(MaterialPageRoute(
-                            builder: (context) => const MeasurementsScreen()))
-                        .then((_) => loadAllHomeScreenData()),
-                    child: _buildWeightChartCard(context, colorScheme, l10n)),
+                  onTap: () => Navigator.of(context)
+                      .push(
+                        MaterialPageRoute(
+                          builder: (context) => const MeasurementsScreen(),
+                        ),
+                      )
+                      .then((_) => loadAllHomeScreenData()),
+                  child: _buildWeightChartCard(context, colorScheme, l10n),
+                ),
                 const SizedBox(height: DesignConstants.spacingS),
                 _buildWorkoutStatsCard(l10n),
               ],
@@ -364,18 +390,22 @@ class HomeState extends State<Home> {
           _recommendationText,
           textAlign: TextAlign.center,
           style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 22,
-              fontWeight: FontWeight.w500),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 22,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
     );
   }
 
-// In lib/screens/home.dart, innerhalb von HomeState
+  // In lib/screens/home.dart, innerhalb von HomeState
 
   Widget _buildWeightChartCard(
-      BuildContext context, ColorScheme colorScheme, AppLocalizations l10n) {
+    BuildContext context,
+    ColorScheme colorScheme,
+    AppLocalizations l10n,
+  ) {
     return SummaryCard(
       child: Padding(
         padding: DesignConstants.cardPadding,
@@ -384,11 +414,12 @@ class HomeState extends State<Home> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(l10n.weightHistoryTitle,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(fontWeight: FontWeight.bold)),
+                Text(
+                  l10n.weightHistoryTitle,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 Expanded(
                   child: Align(
                     alignment: Alignment.centerRight,
@@ -411,8 +442,9 @@ class HomeState extends State<Home> {
                   onPressed: () => _navigateTimeRange(false),
                 ),
                 Text(
-                    "${DateFormat.MMMd().format(_currentDateRange.start)} - ${DateFormat.MMMd().format(_currentDateRange.end)}",
-                    style: Theme.of(context).textTheme.bodySmall),
+                  "${DateFormat.MMMd().format(_currentDateRange.start)} - ${DateFormat.MMMd().format(_currentDateRange.end)}",
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
                 IconButton(
                   icon: const Icon(Icons.chevron_right),
                   onPressed: _currentDateRange.end.isSameDate(DateTime.now())
@@ -494,8 +526,10 @@ class HomeState extends State<Home> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text(l10n.workoutsLabel,
-                        style: const TextStyle(fontSize: 12)),
+                    Text(
+                      l10n.workoutsLabel,
+                      style: const TextStyle(fontSize: 12),
+                    ),
                   ],
                 ),
                 Column(
@@ -509,8 +543,10 @@ class HomeState extends State<Home> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text(l10n.durationLabel,
-                        style: const TextStyle(fontSize: 12)),
+                    Text(
+                      l10n.durationLabel,
+                      style: const TextStyle(fontSize: 12),
+                    ),
                   ],
                 ),
                 Column(
@@ -524,8 +560,10 @@ class HomeState extends State<Home> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text(l10n.volumeLabel,
-                        style: const TextStyle(fontSize: 12)),
+                    Text(
+                      l10n.volumeLabel,
+                      style: const TextStyle(fontSize: 12),
+                    ),
                   ],
                 ),
               ],

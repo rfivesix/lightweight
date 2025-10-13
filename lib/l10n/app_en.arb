@@ -263,7 +263,7 @@
   "weightHistoryTitle": "Weight History",
   "hideSummary": "Hide Summary",
   "showSummary": "Show Summary",
-  "exerciseDataAttribution": "Exercise data from",
+  "exerciseDataAttribution": "Exercise data from wger",
   "duplicate": "Duplicate",
   "deleteRoutineConfirmContent": "Are you sure you want to permanently delete the routine '{routineName}'?",
   "@deleteRoutineConfirmContent": {

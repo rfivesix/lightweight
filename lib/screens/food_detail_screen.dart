@@ -22,7 +22,7 @@ class FoodDetailScreen extends StatefulWidget {
   final FoodItem? foodItem;
 
   const FoodDetailScreen({super.key, this.trackedItem, this.foodItem})
-      : assert(trackedItem != null || foodItem != null);
+    : assert(trackedItem != null || foodItem != null);
 
   @override
   State<FoodDetailScreen> createState() => _FoodDetailScreenState();
@@ -119,8 +119,12 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
   Future<Map<String, dynamic>?> _loadRawRow(String barcode) async {
     final base = await _openBaseDb(readOnly: true);
     try {
-      final rows = await base.query('products',
-          where: 'barcode = ?', whereArgs: [barcode], limit: 1);
+      final rows = await base.query(
+        'products',
+        where: 'barcode = ?',
+        whereArgs: [barcode],
+        limit: 1,
+      );
       return rows.isNotEmpty ? rows.first : null;
     } finally {
       await base.close();
@@ -135,8 +139,9 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
         'name_de': _deCtrl.text.trim(),
         'name_en': _enCtrl.text.trim().isEmpty ? null : _enCtrl.text.trim(),
         'name': _deCtrl.text.trim(),
-        'category_key':
-            _catCtrl.text.trim().isEmpty ? null : _catCtrl.text.trim(),
+        'category_key': _catCtrl.text.trim().isEmpty
+            ? null
+            : _catCtrl.text.trim(),
         // Nährwerte
         'calories_100g': int.tryParse(_calCtrl.text.trim()),
         'protein_100g': double.tryParse(_proCtrl.text.trim()),
@@ -171,8 +176,12 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
       final baseDb = await _openBaseDb(readOnly: true);
       Map<String, dynamic>? row;
       try {
-        final rows = await baseDb.query('products',
-            where: 'barcode = ?', whereArgs: [barcode], limit: 1);
+        final rows = await baseDb.query(
+          'products',
+          where: 'barcode = ?',
+          whereArgs: [barcode],
+          limit: 1,
+        );
         if (rows.isNotEmpty) row = rows.first;
       } finally {
         await baseDb.close();
@@ -184,14 +193,14 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gespeichert (Basis-DB)')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Gespeichert (Basis-DB)')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Fehler: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Fehler: $e')));
     }
   }
 
@@ -202,17 +211,18 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
       await Share.shareXFiles([file], subject: 'Export: vita_base_foods.db');
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Export-Fehler: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Export-Fehler: $e')));
     }
   }
 
   // ---------- Favoriten / Anzeige ----------
 
   Future<void> _checkIfFavorite() async {
-    final isFav =
-        await DatabaseHelper.instance.isFavorite(_displayItem.barcode);
+    final isFav = await DatabaseHelper.instance.isFavorite(
+      _displayItem.barcode,
+    );
     if (mounted) setState(() => _isFavorite = isFav);
   }
 
@@ -238,16 +248,18 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final displayQuantity =
-        _showPer100g || !_hasPortionInfo ? 100 : _trackedQuantity!;
+    final displayQuantity = _showPer100g || !_hasPortionInfo
+        ? 100
+        : _trackedQuantity!;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: GlassFab(
-          onPressed: () {
-            Navigator.of(context).pop(widget.foodItem);
-          },
-          label: l10n.mealsAddToDiary),
+        onPressed: () {
+          Navigator.of(context).pop(widget.foodItem);
+        },
+        label: l10n.mealsAddToDiary,
+      ),
       appBar: AppBar(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
@@ -281,11 +293,12 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
           IconButton(
             icon: Icon(
               _isFavorite ? Icons.favorite : Icons.favorite_border,
-              color:
-                  _isFavorite ? Colors.redAccent : colorScheme.onSurfaceVariant,
+              color: _isFavorite
+                  ? Colors.redAccent
+                  : colorScheme.onSurfaceVariant,
             ),
             onPressed: _toggleFavorite,
-          )
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -307,34 +320,52 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
               SummaryCard(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0, vertical: 8.0),
+                    horizontal: 16.0,
+                    vertical: 8.0,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       _buildToggleButton(
-                          context, l10n.foodDetailSegmentPortion, false),
+                        context,
+                        l10n.foodDetailSegmentPortion,
+                        false,
+                      ),
                       _buildToggleButton(
-                          context, l10n.foodDetailSegment100g, true),
+                        context,
+                        l10n.foodDetailSegment100g,
+                        true,
+                      ),
                     ],
                   ),
                 ),
               ),
             if (_hasPortionInfo)
               const SizedBox(height: DesignConstants.spacingL),
-            Text("Nährwerte pro ${displayQuantity}g",
-                style: textTheme.titleLarge),
+            Text(
+              "Nährwerte pro ${displayQuantity}g",
+              style: textTheme.titleLarge,
+            ),
             const SizedBox(height: DesignConstants.spacingS),
             SummaryCard(
               child: Column(
                 children: [
-                  _buildNutrientRow(l10n.calories,
-                      "${_getDisplayValue(_displayItem.calories.toDouble()).round()} kcal"),
-                  _buildNutrientRow(l10n.protein,
-                      "${_getDisplayValue(_displayItem.protein).toStringAsFixed(1)} g"),
-                  _buildNutrientRow(l10n.carbs,
-                      "${_getDisplayValue(_displayItem.carbs).toStringAsFixed(1)} g"),
-                  _buildNutrientRow(l10n.fat,
-                      "${_getDisplayValue(_displayItem.fat).toStringAsFixed(1)} g"),
+                  _buildNutrientRow(
+                    l10n.calories,
+                    "${_getDisplayValue(_displayItem.calories.toDouble()).round()} kcal",
+                  ),
+                  _buildNutrientRow(
+                    l10n.protein,
+                    "${_getDisplayValue(_displayItem.protein).toStringAsFixed(1)} g",
+                  ),
+                  _buildNutrientRow(
+                    l10n.carbs,
+                    "${_getDisplayValue(_displayItem.carbs).toStringAsFixed(1)} g",
+                  ),
+                  _buildNutrientRow(
+                    l10n.fat,
+                    "${_getDisplayValue(_displayItem.fat).toStringAsFixed(1)} g",
+                  ),
                 ],
               ),
             ),
@@ -346,14 +377,20 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                 child: Column(
                   children: [
                     if (_displayItem.sugar != null)
-                      _buildNutrientRow(l10n.sugar,
-                          "${_getDisplayValue(_displayItem.sugar).toStringAsFixed(1)} g"),
+                      _buildNutrientRow(
+                        l10n.sugar,
+                        "${_getDisplayValue(_displayItem.sugar).toStringAsFixed(1)} g",
+                      ),
                     if (_displayItem.fiber != null)
-                      _buildNutrientRow(l10n.fiber,
-                          "${_getDisplayValue(_displayItem.fiber).toStringAsFixed(1)} g"),
+                      _buildNutrientRow(
+                        l10n.fiber,
+                        "${_getDisplayValue(_displayItem.fiber).toStringAsFixed(1)} g",
+                      ),
                     if (_displayItem.salt != null)
-                      _buildNutrientRow(l10n.salt,
-                          "${_getDisplayValue(_displayItem.salt).toStringAsFixed(1)} g"),
+                      _buildNutrientRow(
+                        l10n.salt,
+                        "${_getDisplayValue(_displayItem.salt).toStringAsFixed(1)} g",
+                      ),
                   ],
                 ),
               ),
@@ -368,10 +405,12 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('DEV: Eintrag bearbeiten',
-                          style: textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          )),
+                      Text(
+                        'DEV: Eintrag bearbeiten',
+                        style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       const SizedBox(height: 8),
                       _row('Name (DE)', _deCtrl),
                       const SizedBox(height: 8),
@@ -428,8 +467,9 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
               Padding(
                 padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
                 child: OffAttributionWidget(
-                  textStyle:
-                      textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                  textStyle: textTheme.bodySmall?.copyWith(
+                    color: Colors.grey[600],
+                  ),
                 ),
               ),
           ],
@@ -439,7 +479,10 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
   }
 
   Widget _buildToggleButton(
-      BuildContext context, String label, bool is100gOption) {
+    BuildContext context,
+    String label,
+    bool is100gOption,
+  ) {
     final theme = Theme.of(context);
     final isSelected = _showPer100g == is100gOption;
     return Expanded(
@@ -488,25 +531,27 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
   // ---------- DEV: kleine Helfer-Inputs ----------
 
   Widget _row(String label, TextEditingController c) => TextField(
-        controller: c,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-          isDense: true,
-        ),
-      );
+    controller: c,
+    decoration: InputDecoration(
+      labelText: label,
+      border: const OutlineInputBorder(),
+      isDense: true,
+    ),
+  );
 
   Widget _num(String label, TextEditingController c) => SizedBox(
-        width: 160,
-        child: TextField(
-          controller: c,
-          keyboardType: const TextInputType.numberWithOptions(
-              decimal: true, signed: false),
-          decoration: InputDecoration(
-            labelText: label,
-            border: const OutlineInputBorder(),
-            isDense: true,
-          ),
-        ),
-      );
+    width: 160,
+    child: TextField(
+      controller: c,
+      keyboardType: const TextInputType.numberWithOptions(
+        decimal: true,
+        signed: false,
+      ),
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+        isDense: true,
+      ),
+    ),
+  );
 }

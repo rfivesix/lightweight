@@ -15,11 +15,7 @@ class MealScreen extends StatefulWidget {
   final Map<String, dynamic> meal; // erwartet: {id, name, notes}
   final bool startInEdit;
 
-  const MealScreen({
-    super.key,
-    required this.meal,
-    this.startInEdit = false,
-  });
+  const MealScreen({super.key, required this.meal, this.startInEdit = false});
 
   @override
   State<MealScreen> createState() => _MealScreenState();
@@ -42,10 +38,12 @@ class _MealScreenState extends State<MealScreen> {
   void initState() {
     super.initState();
     _editMode = widget.startInEdit;
-    _nameCtrl =
-        TextEditingController(text: widget.meal['name'] as String? ?? '');
-    _notesCtrl =
-        TextEditingController(text: widget.meal['notes'] as String? ?? '');
+    _nameCtrl = TextEditingController(
+      text: widget.meal['name'] as String? ?? '',
+    );
+    _notesCtrl = TextEditingController(
+      text: widget.meal['notes'] as String? ?? '',
+    );
     _loadItems();
   }
 
@@ -100,9 +98,9 @@ class _MealScreenState extends State<MealScreen> {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
+          color: Colors.grey[600],
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -138,12 +136,14 @@ class _MealScreenState extends State<MealScreen> {
         automaticallyImplyLeading: true,
         title: Text(
           _editMode
-              ? l10n.mealsEdit // (L10n: du kannst das zu „Bearbeiten“ ändern)
+              ? l10n
+                    .mealsEdit // (L10n: du kannst das zu „Bearbeiten“ ändern)
               : (_nameCtrl.text.isNotEmpty
-                  ? _nameCtrl.text
-                  : l10n.mealsViewTitle),
-          style:
-              theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                    ? _nameCtrl.text
+                    : l10n.mealsViewTitle),
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w900,
+          ),
         ),
         actions: [
           if (_editMode)
@@ -197,15 +197,17 @@ class _MealScreenState extends State<MealScreen> {
                                 controller: _nameCtrl,
                                 textInputAction: TextInputAction.done,
                                 decoration: InputDecoration(
-                                    labelText: l10n.mealNameLabel),
+                                  labelText: l10n.mealNameLabel,
+                                ),
                                 onChanged: (_) => setState(() {}),
                               )
                             : Text(
                                 _nameCtrl.text.isNotEmpty
                                     ? _nameCtrl.text
                                     : l10n.unknown,
-                                style: theme.textTheme.titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.bold),
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                         const SizedBox(height: 8),
                         _editMode
@@ -213,14 +215,16 @@ class _MealScreenState extends State<MealScreen> {
                                 controller: _notesCtrl,
                                 maxLines: 3,
                                 decoration: InputDecoration(
-                                    labelText: l10n.mealNotesLabel),
+                                  labelText: l10n.mealNotesLabel,
+                                ),
                               )
                             : Text(
                                 _notesCtrl.text.isNotEmpty
                                     ? _notesCtrl.text
                                     : l10n.noNotes,
-                                style: theme.textTheme.bodyMedium
-                                    ?.copyWith(color: Colors.grey.shade600),
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: Colors.grey.shade600,
+                                ),
                               ),
                       ],
                     ),
@@ -234,7 +238,9 @@ class _MealScreenState extends State<MealScreen> {
                 SummaryCard(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 14),
+                      horizontal: 12,
+                      vertical: 14,
+                    ),
                     child: FutureBuilder<void>(
                       future: _recomputeTotals(),
                       builder: (_, __) {
@@ -253,23 +259,26 @@ class _MealScreenState extends State<MealScreen> {
                               runSpacing: 6,
                               children: [
                                 _MacroChip(
-                                    label: 'C',
-                                    value: _items.isEmpty
-                                        ? '–'
-                                        : _format1(_totalC),
-                                    unit: 'g'),
+                                  label: 'C',
+                                  value: _items.isEmpty
+                                      ? '–'
+                                      : _format1(_totalC),
+                                  unit: 'g',
+                                ),
                                 _MacroChip(
-                                    label: 'F',
-                                    value: _items.isEmpty
-                                        ? '–'
-                                        : _format1(_totalF),
-                                    unit: 'g'),
+                                  label: 'F',
+                                  value: _items.isEmpty
+                                      ? '–'
+                                      : _format1(_totalF),
+                                  unit: 'g',
+                                ),
                                 _MacroChip(
-                                    label: 'P',
-                                    value: _items.isEmpty
-                                        ? '–'
-                                        : _format1(_totalP),
-                                    unit: 'g'),
+                                  label: 'P',
+                                  value: _items.isEmpty
+                                      ? '–'
+                                      : _format1(_totalP),
+                                  unit: 'g',
+                                ),
                               ],
                             ),
                           ],
@@ -287,8 +296,10 @@ class _MealScreenState extends State<MealScreen> {
                 if (_items.isEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    child:
-                        Text(l10n.emptyCategory, textAlign: TextAlign.center),
+                    child: Text(
+                      l10n.emptyCategory,
+                      textAlign: TextAlign.center,
+                    ),
                   )
                 else
                   Column(
@@ -305,20 +316,23 @@ class _MealScreenState extends State<MealScreen> {
                           if (mounted) setState(() {});
                         },
                         onDelete: () async {
-                          final ok = await showDialog<bool>(
+                          final ok =
+                              await showDialog<bool>(
                                 context: context,
                                 builder: (ctx) => AlertDialog(
                                   title: Text(l10n.deleteConfirmTitle),
                                   content: Text(l10n.deleteConfirmContent),
                                   actions: [
                                     TextButton(
-                                        onPressed: () =>
-                                            Navigator.of(ctx).pop(false),
-                                        child: Text(l10n.cancel)),
+                                      onPressed: () =>
+                                          Navigator.of(ctx).pop(false),
+                                      child: Text(l10n.cancel),
+                                    ),
                                     TextButton(
-                                        onPressed: () =>
-                                            Navigator.of(ctx).pop(true),
-                                        child: Text(l10n.delete)),
+                                      onPressed: () =>
+                                          Navigator.of(ctx).pop(true),
+                                      child: Text(l10n.delete),
+                                    ),
                                   ],
                                 ),
                               ) ??
@@ -400,8 +414,9 @@ class _MealScreenState extends State<MealScreen> {
                 return;
               }
               setState(() => loading = true);
-              results =
-                  await ProductDatabaseHelper.instance.searchProducts(q.trim());
+              results = await ProductDatabaseHelper.instance.searchProducts(
+                q.trim(),
+              );
               setState(() => loading = false);
             }
 
@@ -436,9 +451,11 @@ class _MealScreenState extends State<MealScreen> {
                                 return ListTile(
                                   dense: true,
                                   title: Text(fi.name),
-                                  subtitle: Text(fi.brand.isNotEmpty
-                                      ? fi.brand
-                                      : l10n.noBrand),
+                                  subtitle: Text(
+                                    fi.brand.isNotEmpty
+                                        ? fi.brand
+                                        : l10n.noBrand,
+                                  ),
                                   trailing: IconButton(
                                     icon: const Icon(Icons.add),
                                     onPressed: () async {
@@ -446,33 +463,40 @@ class _MealScreenState extends State<MealScreen> {
                                         context: context,
                                         builder: (_) => AlertDialog(
                                           title: Text(
-                                              l10n.mealIngredientAmountLabel),
+                                            l10n.mealIngredientAmountLabel,
+                                          ),
                                           content: TextField(
                                             controller: qtyCtrl,
-                                            keyboardType: const TextInputType
-                                                .numberWithOptions(
-                                                decimal: false),
+                                            keyboardType:
+                                                const TextInputType.numberWithOptions(
+                                                  decimal: false,
+                                                ),
                                             decoration: const InputDecoration(
-                                                suffixText: 'g/ml'),
+                                              suffixText: 'g/ml',
+                                            ),
                                           ),
                                           actions: [
                                             TextButton(
-                                                onPressed: () => Navigator.pop(
-                                                    context, null),
-                                                child: Text(l10n.cancel)),
+                                              onPressed: () =>
+                                                  Navigator.pop(context, null),
+                                              child: Text(l10n.cancel),
+                                            ),
                                             TextButton(
-                                                onPressed: () {
-                                                  final val = int.tryParse(
-                                                      qtyCtrl.text.trim());
-                                                  Navigator.pop(context, val);
-                                                },
-                                                child: Text(l10n.add_button)),
+                                              onPressed: () {
+                                                final val = int.tryParse(
+                                                  qtyCtrl.text.trim(),
+                                                );
+                                                Navigator.pop(context, val);
+                                              },
+                                              child: Text(l10n.add_button),
+                                            ),
                                           ],
                                         ),
                                       );
                                       if (grams != null && grams > 0) {
-                                        Navigator.of(ctx)
-                                            .pop((fi.barcode, grams));
+                                        Navigator.of(
+                                          ctx,
+                                        ).pop((fi.barcode, grams));
                                       }
                                     },
                                   ),
@@ -485,8 +509,9 @@ class _MealScreenState extends State<MealScreen> {
               ),
               actions: [
                 TextButton(
-                    onPressed: () => Navigator.pop(ctx, null),
-                    child: Text(l10n.cancel)),
+                  onPressed: () => Navigator.pop(ctx, null),
+                  child: Text(l10n.cancel),
+                ),
               ],
             );
           },
@@ -512,15 +537,17 @@ class _MealScreenState extends State<MealScreen> {
     final Map<String, FoodItem?> products = {};
     for (final it in _items) {
       final bc = it['barcode'] as String;
-      products[bc] =
-          await ProductDatabaseHelper.instance.getProductByBarcode(bc);
+      products[bc] = await ProductDatabaseHelper.instance.getProductByBarcode(
+        bc,
+      );
     }
 
     // Editierbare Mengen
     final Map<String, TextEditingController> qtyCtrls = {
       for (final it in _items)
-        (it['barcode'] as String):
-            TextEditingController(text: '${it['quantity_in_grams']}')
+        (it['barcode'] as String): TextEditingController(
+          text: '${it['quantity_in_grams']}',
+        ),
     };
 
     // Meal-Typen (interne Keys müssen mit Diary übereinstimmen)
@@ -539,7 +566,8 @@ class _MealScreenState extends State<MealScreen> {
       'mealtypeSnack': l10n.mealtypeSnack,
     };
 
-    final ok = await showModalBottomSheet<bool>(
+    final ok =
+        await showModalBottomSheet<bool>(
           context: context,
           isScrollControlled: true,
           backgroundColor: Theme.of(context).colorScheme.surface,
@@ -570,14 +598,15 @@ class _MealScreenState extends State<MealScreen> {
                       const SizedBox(height: 12),
                       Text(
                         l10n.mealsAddToDiary,
-                        style: Theme.of(ctx)
-                            .textTheme
-                            .titleLarge
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                        style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 4),
-                      Text(_nameCtrl.text,
-                          style: Theme.of(ctx).textTheme.titleMedium),
+                      Text(
+                        _nameCtrl.text,
+                        style: Theme.of(ctx).textTheme.titleMedium,
+                      ),
                       const SizedBox(height: 12),
 
                       DropdownButtonFormField<String>(
@@ -588,10 +617,12 @@ class _MealScreenState extends State<MealScreen> {
                           isDense: true,
                         ),
                         items: internalTypes
-                            .map((key) => DropdownMenuItem(
-                                  value: key,
-                                  child: Text(mealTypeLabel[key] ?? key),
-                                ))
+                            .map(
+                              (key) => DropdownMenuItem(
+                                value: key,
+                                child: Text(mealTypeLabel[key] ?? key),
+                              ),
+                            )
                             .toList(),
                         onChanged: (v) {
                           if (v != null) {
@@ -613,8 +644,9 @@ class _MealScreenState extends State<MealScreen> {
                             final it = _items[i];
                             final bc = it['barcode'] as String;
                             final fi = products[bc];
-                            final displayName =
-                                (fi?.name.isNotEmpty ?? false) ? fi!.name : bc;
+                            final displayName = (fi?.name.isNotEmpty ?? false)
+                                ? fi!.name
+                                : bc;
                             final unit = (fi?.isLiquid == true) ? 'ml' : 'g';
 
                             return Row(
@@ -630,7 +662,8 @@ class _MealScreenState extends State<MealScreen> {
                                     controller: qtyCtrls[bc],
                                     keyboardType:
                                         const TextInputType.numberWithOptions(
-                                            decimal: true),
+                                          decimal: true,
+                                        ),
                                     decoration: InputDecoration(
                                       labelText: displayName,
                                       helperText: l10n.amountLabel,
@@ -702,9 +735,9 @@ class _MealScreenState extends State<MealScreen> {
     }
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.mealAddedToDiarySuccess)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.mealAddedToDiarySuccess)));
     }
   }
 
@@ -724,7 +757,8 @@ class _MealScreenState extends State<MealScreen> {
       ),
     );
 
-    final caffeineId = caffeine.id ??
+    final caffeineId =
+        caffeine.id ??
         (await DatabaseHelper.instance.insertSupplement(caffeine)).id!;
 
     await DatabaseHelper.instance.insertSupplementLog(
@@ -817,8 +851,9 @@ class _IngredientCard extends StatelessWidget {
         },
         child: Text(
           name,
-          style:
-              theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+          style: theme.textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
         ),
       );
 
@@ -867,8 +902,9 @@ class _IngredientCard extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   'C ${c.toStringAsFixed(1)} g   •   F ${f.toStringAsFixed(1)} g   •   P ${p.toStringAsFixed(1)} g',
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: Colors.grey.shade600),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.grey.shade600,
+                  ),
                 ),
               ],
             ],

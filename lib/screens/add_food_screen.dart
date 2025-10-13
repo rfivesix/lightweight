@@ -111,8 +111,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     _searchController.addListener(() => setState(() {}));
     _loadFavorites();
     _loadRecentItems();
-    _baseSearchCtrl
-        .addListener(() => _onBaseSearchChanged(_baseSearchCtrl.text));
+    _baseSearchCtrl.addListener(
+      () => _onBaseSearchChanged(_baseSearchCtrl.text),
+    );
     _loadBaseCategories();
     _loadMeals();
   }
@@ -147,8 +148,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       _isLoadingSearch = true;
     });
 
-    final results =
-        await ProductDatabaseHelper.instance.searchProducts(enteredKeyword);
+    final results = await ProductDatabaseHelper.instance.searchProducts(
+      enteredKeyword,
+    );
 
     if (mounted) {
       setState(() {
@@ -163,15 +165,13 @@ class _AddFoodScreenState extends State<AddFoodScreen>
 
   void _navigateAndCreateFood() {
     Navigator.of(context)
-        .push(
-      MaterialPageRoute(builder: (context) => const CreateFoodScreen()),
-    )
+        .push(MaterialPageRoute(builder: (context) => const CreateFoodScreen()))
         .then((_) {
-      _searchController.clear();
-      _runFilter('');
-      _loadFavorites();
-      _loadRecentItems();
-    });
+          _searchController.clear();
+          _runFilter('');
+          _loadFavorites();
+          _loadRecentItems();
+        });
   }
 
   Future<void> _loadFavorites() async {
@@ -229,7 +229,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         await DatabaseHelper.instance.deleteMeal(newMealId);
         await _loadMeals();
       }
-    } catch (_) {/* egal, Cleanup ist optional */}
+    } catch (_) {
+      /* egal, Cleanup ist optional */
+    }
   }
 
   @override
@@ -259,16 +261,18 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         automaticallyImplyLeading: true,
         title: Text(
           l10n.addFoodTitle,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
         ),
       ),
       body: Column(
         children: [
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 12.0,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -282,9 +286,13 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                   labelColor: isLightMode ? Colors.black : Colors.white,
                   unselectedLabelColor: Colors.grey.shade600,
                   labelStyle: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w800),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
                   unselectedLabelStyle: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w800),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
                   tabs: [
                     Tab(text: l10n.tabCatalogSearch),
                     Tab(text: l10n.tabRecent),
@@ -324,7 +332,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     return Padding(
       // KORREKTUR 4: Horizontaler Padding hier angepasst, um das Abschneiden zu verhindern
       padding: const EdgeInsets.symmetric(
-          horizontal: 16.0, vertical: 0), // Vertikalen Padding auf 0 setzen
+        horizontal: 16.0,
+        vertical: 0,
+      ), // Vertikalen Padding auf 0 setzen
       child: Column(
         children: [
           Row(
@@ -332,21 +342,29 @@ class _AddFoodScreenState extends State<AddFoodScreen>
               // Die Suchleiste füllt jetzt den verfügbaren Platz
               Expanded(
                 child: TextField(
-                    controller: _searchController,
-                    onChanged: (value) => _runFilter(value),
-                    decoration: InputDecoration(
-                        hintText: l10n.searchHintText,
-                        prefixIcon: Icon(Icons.search,
-                            color: colorScheme.onSurfaceVariant, size: 20),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: Icon(Icons.clear,
-                                    color: colorScheme.onSurfaceVariant),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  _runFilter('');
-                                })
-                            : null)),
+                  controller: _searchController,
+                  onChanged: (value) => _runFilter(value),
+                  decoration: InputDecoration(
+                    hintText: l10n.searchHintText,
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: colorScheme.onSurfaceVariant,
+                      size: 20,
+                    ),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: Icon(
+                              Icons.clear,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                            onPressed: () {
+                              _searchController.clear();
+                              _runFilter('');
+                            },
+                          )
+                        : null,
+                  ),
+                ),
               ),
               const SizedBox(width: 8), // Kleiner Abstand
               // Der neue Scanner-Button
@@ -367,13 +385,17 @@ class _AddFoodScreenState extends State<AddFoodScreen>
             child: _isLoadingSearch
                 ? const Center(child: CircularProgressIndicator())
                 : _foundFoodItems.isNotEmpty
-                    ? ListView.builder(
-                        itemCount: _foundFoodItems.length,
-                        itemBuilder: (context, index) =>
-                            _buildFoodListItem(_foundFoodItems[index]))
-                    : Center(
-                        child: Text(_searchInitialText,
-                            style: textTheme.titleMedium)),
+                ? ListView.builder(
+                    itemCount: _foundFoodItems.length,
+                    itemBuilder: (context, index) =>
+                        _buildFoodListItem(_foundFoodItems[index]),
+                  )
+                : Center(
+                    child: Text(
+                      _searchInitialText,
+                      style: textTheme.titleMedium,
+                    ),
+                  ),
           ),
           if (_foundFoodItems.any((item) => item.source == FoodItemSource.off))
             const OffAttributionWidget(),
@@ -450,18 +472,21 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                 final emoji = (cat['emoji'] as String?)?.trim();
                 final title =
                     (cat['name_de'] as String?)?.trim().isNotEmpty == true
-                        ? cat['name_de'] as String
-                        : (cat['name_en'] as String? ?? key);
+                    ? cat['name_de'] as String
+                    : (cat['name_en'] as String? ?? key);
 
                 final loading = _loadingCats.contains(key);
                 final items = _catItems[key];
 
                 return Theme(
-                  data: Theme.of(context)
-                      .copyWith(dividerColor: Colors.transparent),
+                  data: Theme.of(
+                    context,
+                  ).copyWith(dividerColor: Colors.transparent),
                   child: ExpansionTile(
-                    leading: Text(emoji?.isNotEmpty == true ? emoji! : '🗂️',
-                        style: const TextStyle(fontSize: 20)),
+                    leading: Text(
+                      emoji?.isNotEmpty == true ? emoji! : '🗂️',
+                      style: const TextStyle(fontSize: 20),
+                    ),
                     title: Text(title),
                     initiallyExpanded: false,
                     onExpansionChanged: (expanded) {
@@ -509,8 +534,11 @@ class _AddFoodScreenState extends State<AddFoodScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.favorite_border,
-                  size: 80, color: Colors.grey.shade400),
+              Icon(
+                Icons.favorite_border,
+                size: 80,
+                color: Colors.grey.shade400,
+              ),
               const SizedBox(height: DesignConstants.spacingL),
               Text(
                 l10n.noFavorites,
@@ -521,26 +549,29 @@ class _AddFoodScreenState extends State<AddFoodScreen>
               Text(
                 l10n.favoritesEmptyState,
                 textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyLarge
-                    ?.copyWith(color: Colors.grey.shade600),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(color: Colors.grey.shade600),
               ),
             ],
           ),
         ),
       );
     }
-    return Column(children: [
-      Expanded(
+    return Column(
+      children: [
+        Expanded(
           child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              itemCount: _favoriteFoodItems.length,
-              itemBuilder: (context, index) =>
-                  _buildFoodListItem(_favoriteFoodItems[index]))),
-      if (_favoriteFoodItems.any((item) => item.source == FoodItemSource.off))
-        const OffAttributionWidget()
-    ]);
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            itemCount: _favoriteFoodItems.length,
+            itemBuilder: (context, index) =>
+                _buildFoodListItem(_favoriteFoodItems[index]),
+          ),
+        ),
+        if (_favoriteFoodItems.any((item) => item.source == FoodItemSource.off))
+          const OffAttributionWidget(),
+      ],
+    );
   }
 
   Widget _buildRecentTab(AppLocalizations l10n) {
@@ -566,26 +597,29 @@ class _AddFoodScreenState extends State<AddFoodScreen>
               Text(
                 l10n.recentEmptyState,
                 textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyLarge
-                    ?.copyWith(color: Colors.grey.shade600),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(color: Colors.grey.shade600),
               ),
             ],
           ),
         ),
       );
     }
-    return Column(children: [
-      Expanded(
+    return Column(
+      children: [
+        Expanded(
           child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              itemCount: _recentFoodItems.length,
-              itemBuilder: (context, index) =>
-                  _buildFoodListItem(_recentFoodItems[index]))),
-      if (_recentFoodItems.any((item) => item.source == FoodItemSource.off))
-        const OffAttributionWidget()
-    ]);
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            itemCount: _recentFoodItems.length,
+            itemBuilder: (context, index) =>
+                _buildFoodListItem(_recentFoodItems[index]),
+          ),
+        ),
+        if (_recentFoodItems.any((item) => item.source == FoodItemSource.off))
+          const OffAttributionWidget(),
+      ],
+    );
   }
 
   Widget _buildFoodListItem(FoodItem item) {
@@ -604,20 +638,31 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     }
 
     return SummaryCard(
-      // KORREKTUR: Jetzt mit SummaryCard
       child: ListTile(
         leading: Icon(sourceIcon, color: colorScheme.primary),
-        title: Text(item.name.isNotEmpty ? item.name : l10n.unknown,
-            style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(l10n.foodItemSubtitle(
-            item.brand.isNotEmpty ? item.brand : l10n.noBrand, item.calories)),
+        // --- HIER IST DIE ÄNDERUNG ---
+        title: Text(
+          item.getLocalizedName(context).isNotEmpty
+              ? item.getLocalizedName(context)
+              : l10n.unknown,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        // --- ENDE DER ÄNDERUNG ---
+        subtitle: Text(
+          l10n.foodItemSubtitle(
+            item.brand.isNotEmpty ? item.brand : l10n.noBrand,
+            item.calories,
+          ),
+        ),
         trailing: IconButton(
-          icon: Icon(Icons.add_circle_outline,
-              color: colorScheme.primary, size: 28),
+          icon: Icon(
+            Icons.add_circle_outline,
+            color: colorScheme.primary,
+            size: 28,
+          ),
           onPressed: () => Navigator.of(context).pop(item),
         ),
         onTap: () async {
-          // KORREKTUR HIER: Navigiere zum Detail-Screen anstatt zu poppen.
           final result = await Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => FoodDetailScreen(foodItem: item),
@@ -627,7 +672,6 @@ class _AddFoodScreenState extends State<AddFoodScreen>
           if (result is FoodItem) {
             Navigator.of(context).pop(result);
           } else {
-            // Lade die Listen neu, falls sich Favoriten geändert haben.
             _loadFavorites();
             _loadRecentItems();
           }
@@ -647,8 +691,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     // Wenn ein Barcode zurückgegeben wurde und der Screen noch existiert...
     if (barcode != null && mounted) {
       // ...suche das Produkt in der Datenbank.
-      final foodItem =
-          await ProductDatabaseHelper.instance.getProductByBarcode(barcode);
+      final foodItem = await ProductDatabaseHelper.instance.getProductByBarcode(
+        barcode,
+      );
 
       // Wenn das Produkt gefunden wurde...
       if (foodItem != null) {
@@ -657,9 +702,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       } else {
         // Wenn nicht, zeige eine kurze Info-Nachricht.
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(l10n.snackbarBarcodeNotFound(barcode)),
-          ));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.snackbarBarcodeNotFound(barcode))),
+          );
         }
       }
     }
@@ -680,12 +725,17 @@ class _AddFoodScreenState extends State<AddFoodScreen>
               onChanged: _runFilter, // nutzt deine bestehende Suche
               decoration: InputDecoration(
                 hintText: l10n.searchHintText,
-                prefixIcon: Icon(Icons.search,
-                    color: colorScheme.onSurfaceVariant, size: 20),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: colorScheme.onSurfaceVariant,
+                  size: 20,
+                ),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: Icon(Icons.clear,
-                            color: colorScheme.onSurfaceVariant),
+                        icon: Icon(
+                          Icons.clear,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                         onPressed: () {
                           _searchController.clear();
                           _runFilter('');
@@ -700,7 +750,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
             style: IconButton.styleFrom(
               backgroundColor: colorScheme.surfaceContainerHighest,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             icon: Icon(Icons.qr_code_scanner, color: colorScheme.primary),
             onPressed: _scanBarcodeAndPop,
@@ -751,11 +802,14 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                   final items = _catItems[key];
 
                   return Theme(
-                    data: Theme.of(context)
-                        .copyWith(dividerColor: Colors.transparent),
+                    data: Theme.of(
+                      context,
+                    ).copyWith(dividerColor: Colors.transparent),
                     child: ExpansionTile(
-                      leading: Text(emoji?.isNotEmpty == true ? emoji! : '🗂️',
-                          style: const TextStyle(fontSize: 20)),
+                      leading: Text(
+                        emoji?.isNotEmpty == true ? emoji! : '🗂️',
+                        style: const TextStyle(fontSize: 20),
+                      ),
                       title: Text(title),
                       initiallyExpanded: false,
                       onExpansionChanged: (expanded) {
@@ -776,8 +830,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                           ListView.builder(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            padding:
-                                DesignConstants.cardPadding.copyWith(top: 0),
+                            padding: DesignConstants.cardPadding.copyWith(
+                              top: 0,
+                            ),
                             itemCount: items.length,
                             itemBuilder: (_, i) => _buildFoodListItem(items[i]),
                           ),
@@ -809,33 +864,39 @@ class _AddFoodScreenState extends State<AddFoodScreen>
           child: _isLoadingSearch
               ? const Center(child: CircularProgressIndicator())
               : (baseHits.isEmpty && otherHits.isEmpty)
-                  ? Center(
-                      child: Text(l10n.searchNoResults,
-                          style: textTheme.titleMedium))
-                  : ListView(
-                      padding: DesignConstants.cardPadding,
-                      children: [
-                        if (baseHits.isNotEmpty) ...[
-                          Text(l10n.searchSectionBase,
-                              style: textTheme.titleMedium),
-                          const SizedBox(height: 8),
-                          ...baseHits.map(_buildFoodListItem),
-                          const SizedBox(height: DesignConstants.spacingL),
-                        ],
-                        if (otherHits.isNotEmpty) ...[
-                          Text(l10n.searchSectionOther,
-                              style: textTheme.titleMedium),
-                          const SizedBox(height: 8),
-                          ...otherHits.map(_buildFoodListItem),
-                        ],
-                        if (otherHits
-                            .any((i) => i.source == FoodItemSource.off))
-                          const Padding(
-                            padding: EdgeInsets.only(top: 12),
-                            child: OffAttributionWidget(),
-                          ),
-                      ],
-                    ),
+              ? Center(
+                  child: Text(
+                    l10n.searchNoResults,
+                    style: textTheme.titleMedium,
+                  ),
+                )
+              : ListView(
+                  padding: DesignConstants.cardPadding,
+                  children: [
+                    if (baseHits.isNotEmpty) ...[
+                      Text(
+                        l10n.searchSectionBase,
+                        style: textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      ...baseHits.map(_buildFoodListItem),
+                      const SizedBox(height: DesignConstants.spacingL),
+                    ],
+                    if (otherHits.isNotEmpty) ...[
+                      Text(
+                        l10n.searchSectionOther,
+                        style: textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      ...otherHits.map(_buildFoodListItem),
+                    ],
+                    if (otherHits.any((i) => i.source == FoodItemSource.off))
+                      const Padding(
+                        padding: EdgeInsets.only(top: 12),
+                        child: OffAttributionWidget(),
+                      ),
+                  ],
+                ),
         ),
       ],
     );
@@ -854,19 +915,25 @@ class _AddFoodScreenState extends State<AddFoodScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.restaurant_menu,
-                  size: 80, color: Colors.grey.shade400),
+              Icon(
+                Icons.restaurant_menu,
+                size: 80,
+                color: Colors.grey.shade400,
+              ),
               const SizedBox(height: DesignConstants.spacingL),
-              Text(l10n.mealsEmptyTitle,
-                  style: Theme.of(context).textTheme.headlineSmall,
-                  textAlign: TextAlign.center),
+              Text(
+                l10n.mealsEmptyTitle,
+                style: Theme.of(context).textTheme.headlineSmall,
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: DesignConstants.spacingS),
-              Text(l10n.mealsEmptyBody,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyLarge
-                      ?.copyWith(color: Colors.grey.shade600)),
+              Text(
+                l10n.mealsEmptyBody,
+                textAlign: TextAlign.center,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(color: Colors.grey.shade600),
+              ),
             ],
           ),
         ),
@@ -906,12 +973,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         f += (fi.fat ?? 0) * factor;
         p += (fi.protein ?? 0) * factor;
       }
-      return {
-        'kcal': kcal,
-        'c': c,
-        'f': f,
-        'p': p,
-      };
+      return {'kcal': kcal, 'c': c, 'f': f, 'p': p};
     }
 
     return SummaryCard(
@@ -950,9 +1012,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                 const SizedBox(height: 2),
                 Text(
                   '$kcal kcal   •   C ${c.toStringAsFixed(1)} g   •   F ${f.toStringAsFixed(1)} g   •   P ${p.toStringAsFixed(1)} g',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey.shade600,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
                 ),
               ],
             );
@@ -988,26 +1050,31 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         ),
         onTap: () async {
           // Neuer Detail-Screen (View)
-          await Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => MealScreen(meal: meal)),
-          );
+          await Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => MealScreen(meal: meal)));
           await _loadMeals();
         },
       ),
     );
   }
 
-  Future<void> _openMealEditor(AppLocalizations l10n,
-      {Map<String, dynamic>? mealToEdit}) async {
+  Future<void> _openMealEditor(
+    AppLocalizations l10n, {
+    Map<String, dynamic>? mealToEdit,
+  }) async {
     final isEdit = mealToEdit != null;
     final nameCtrl = TextEditingController(
-        text: isEdit ? (mealToEdit['name'] as String? ?? '') : '');
+      text: isEdit ? (mealToEdit['name'] as String? ?? '') : '',
+    );
     final notesCtrl = TextEditingController(
-        text: isEdit ? (mealToEdit['notes'] as String? ?? '') : '');
+      text: isEdit ? (mealToEdit['notes'] as String? ?? '') : '',
+    );
 
     List<Map<String, dynamic>> items = isEdit
         ? List<Map<String, dynamic>>.from(
-            await _getMealItems(mealToEdit['id'] as int))
+            await _getMealItems(mealToEdit['id'] as int),
+          )
         : <Map<String, dynamic>>[];
 
     setState(() => _suspendFab = true);
@@ -1017,208 +1084,234 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       isScrollControlled: true,
       backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (ctx) {
-        return StatefulBuilder(builder: (ctx, modalSetState) {
-          // verhindert Doppelklicks auf "Speichern"
-          bool saving = false;
-          Future<void> addIngredient() async {
-            final picked = await _pickIngredient(l10n);
-            if (picked == null) return;
-            final (barcode, grams) = picked;
+        return StatefulBuilder(
+          builder: (ctx, modalSetState) {
+            // verhindert Doppelklicks auf "Speichern"
+            bool saving = false;
+            Future<void> addIngredient() async {
+              final picked = await _pickIngredient(l10n);
+              if (picked == null) return;
+              final (barcode, grams) = picked;
 
-            // Produkt für den Namen (optional) laden
-            final fi = await ProductDatabaseHelper.instance
-                .getProductByBarcode(barcode);
-            final displayName =
-                (fi?.name.isNotEmpty ?? false) ? fi!.name : null;
-            modalSetState(() {
-              items.add({
-                'id': null,
-                'meal_id': mealToEdit?['id'],
-                'barcode': barcode,
-                'quantity_in_grams': grams,
-                'display_name': displayName, // nur Anzeige
+              // Produkt für den Namen (optional) laden
+              final fi = await ProductDatabaseHelper.instance
+                  .getProductByBarcode(barcode);
+              final displayName = (fi?.name.isNotEmpty ?? false)
+                  ? fi!.name
+                  : null;
+              modalSetState(() {
+                items.add({
+                  'id': null,
+                  'meal_id': mealToEdit?['id'],
+                  'barcode': barcode,
+                  'quantity_in_grams': grams,
+                  'display_name': displayName, // nur Anzeige
+                });
               });
-            });
-          }
+            }
 
-          return Padding(
-            padding: EdgeInsets.only(
-              left: 16,
-              right: 16,
-              top: 16,
-              bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 16,
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                        color: Colors.grey.shade500,
-                        borderRadius: BorderRadius.circular(2))),
-                const SizedBox(height: 12),
-                Text(isEdit ? l10n.mealsEdit : l10n.mealsCreate,
-                    style: Theme.of(ctx)
-                        .textTheme
-                        .titleLarge
-                        ?.copyWith(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: nameCtrl,
-                  decoration: InputDecoration(labelText: l10n.mealNameLabel),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: notesCtrl,
-                  decoration: InputDecoration(labelText: l10n.mealNotesLabel),
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    // Live-Validierung: Name + mind. 1 Zutat
-                    // (keine Listener nötig; wir lesen direkt unten aus nameCtrl/items)
-                    // Hinweis: Keine UI-Änderung hier – nur Logik im Save-Handler.
-                    // (enabled/disabled steuern wir über onPressed: null)
-                    Text(l10n.mealIngredientsTitle,
-                        style: Theme.of(ctx).textTheme.titleMedium),
-                    const Spacer(),
-                    TextButton.icon(
+                      color: Colors.grey.shade500,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    isEdit ? l10n.mealsEdit : l10n.mealsCreate,
+                    style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: nameCtrl,
+                    decoration: InputDecoration(labelText: l10n.mealNameLabel),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: notesCtrl,
+                    decoration: InputDecoration(labelText: l10n.mealNotesLabel),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      // Live-Validierung: Name + mind. 1 Zutat
+                      // (keine Listener nötig; wir lesen direkt unten aus nameCtrl/items)
+                      // Hinweis: Keine UI-Änderung hier – nur Logik im Save-Handler.
+                      // (enabled/disabled steuern wir über onPressed: null)
+                      Text(
+                        l10n.mealIngredientsTitle,
+                        style: Theme.of(ctx).textTheme.titleMedium,
+                      ),
+                      const Spacer(),
+                      TextButton.icon(
                         onPressed: addIngredient,
                         icon: const Icon(Icons.add),
-                        label: Text(l10n.mealAddIngredient)),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Flexible(
-                  child: items.isEmpty
-                      ? Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          child: Text(l10n.emptyCategory,
-                              textAlign: TextAlign.center),
-                        )
-                      : ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: items.length,
-                          itemBuilder: (_, i) {
-                            final it = items[i];
-                            final barcode = it['barcode'] as String;
+                        label: Text(l10n.mealAddIngredient),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Flexible(
+                    child: items.isEmpty
+                        ? Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            child: Text(
+                              l10n.emptyCategory,
+                              textAlign: TextAlign.center,
+                            ),
+                          )
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: items.length,
+                            itemBuilder: (_, i) {
+                              final it = items[i];
+                              final barcode = it['barcode'] as String;
 
-                            return FutureBuilder<FoodItem?>(
-                              future: ProductDatabaseHelper.instance
-                                  .getProductByBarcode(barcode),
-                              builder: (_, snap) {
-                                final fi = snap.data;
-                                final displayName =
-                                    (fi?.name.isNotEmpty ?? false)
-                                        ? fi!.name
-                                        : barcode;
-                                final isLiquid = (fi?.isLiquid == true);
-                                final unit = isLiquid ? 'ml' : 'g';
-                                final amount = it['quantity_in_grams'] ?? 0;
+                              return FutureBuilder<FoodItem?>(
+                                future: ProductDatabaseHelper.instance
+                                    .getProductByBarcode(barcode),
+                                builder: (_, snap) {
+                                  final fi = snap.data;
+                                  final displayName =
+                                      (fi?.name.isNotEmpty ?? false)
+                                      ? fi!.name
+                                      : barcode;
+                                  final isLiquid = (fi?.isLiquid == true);
+                                  final unit = isLiquid ? 'ml' : 'g';
+                                  final amount = it['quantity_in_grams'] ?? 0;
 
-                                return ListTile(
-                                  dense: true,
-                                  leading: const Icon(Icons.drag_indicator,
-                                      size: 18),
-                                  title: Text(displayName),
-                                  subtitle: Text('$amount $unit'),
-                                  trailing: IconButton(
-                                    icon: const Icon(Icons.close),
-                                    onPressed: () => modalSetState(
-                                        () => items.removeAt(i)), // <—
-                                  ),
+                                  return ListTile(
+                                    dense: true,
+                                    leading: const Icon(
+                                      Icons.drag_indicator,
+                                      size: 18,
+                                    ),
+                                    title: Text(displayName),
+                                    subtitle: Text('$amount $unit'),
+                                    trailing: IconButton(
+                                      icon: const Icon(Icons.close),
+                                      onPressed: () => modalSetState(
+                                        () => items.removeAt(i),
+                                      ), // <—
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        child: Text(l10n.cancel),
+                      ),
+                      const Spacer(),
+                      FilledButton(
+                        onPressed: () async {
+                          print("save button clicked");
+                          final name = nameCtrl.text.trim();
+                          if (name.isEmpty) return;
+                          try {
+                            if (isEdit) {
+                              final mealId = mealToEdit['id'] as int;
+                              await DatabaseHelper.instance.updateMeal(
+                                mealId,
+                                name: name,
+                                notes: notesCtrl.text.trim(),
+                              );
+                              await DatabaseHelper.instance.clearMealItems(
+                                mealId,
+                              );
+                              for (final it in items) {
+                                await DatabaseHelper.instance.addMealItem(
+                                  mealId,
+                                  barcode: it['barcode'] as String,
+                                  grams: it['quantity_in_grams'] as int,
                                 );
-                              },
-                            );
-                          },
-                        ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.of(ctx).pop(),
-                      child: Text(l10n.cancel),
-                    ),
-                    const Spacer(),
-                    FilledButton(
-                      onPressed: () async {
-                        print("save button clicked");
-                        final name = nameCtrl.text.trim();
-                        if (name.isEmpty) return;
-                        try {
-                          if (isEdit) {
-                            final mealId = mealToEdit['id'] as int;
-                            await DatabaseHelper.instance.updateMeal(mealId,
-                                name: name, notes: notesCtrl.text.trim());
-                            await DatabaseHelper.instance
-                                .clearMealItems(mealId);
-                            for (final it in items) {
-                              await DatabaseHelper.instance.addMealItem(
-                                mealId,
-                                barcode: it['barcode'] as String,
-                                grams: it['quantity_in_grams'] as int,
+                              }
+                            } else {
+                              final mealId = await DatabaseHelper.instance
+                                  .insertMeal(
+                                    name: name,
+                                    notes: notesCtrl.text.trim(),
+                                  );
+                              for (final it in items) {
+                                await DatabaseHelper.instance.addMealItem(
+                                  mealId,
+                                  barcode: it['barcode'] as String,
+                                  grams: it['quantity_in_grams'] as int,
+                                );
+                              }
+                            }
+                            _mealItemsCache.clear();
+                            await _loadMeals();
+                            if (mounted) Navigator.of(ctx).pop();
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(l10n.mealSaved)),
                               );
                             }
-                          } else {
-                            final mealId =
-                                await DatabaseHelper.instance.insertMeal(
-                              name: name,
-                              notes: notesCtrl.text.trim(),
-                            );
-                            for (final it in items) {
-                              await DatabaseHelper.instance.addMealItem(
-                                mealId,
-                                barcode: it['barcode'] as String,
-                                grams: it['quantity_in_grams'] as int,
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('${l10n.error}: $e')),
                               );
                             }
                           }
-                          _mealItemsCache.clear();
-                          await _loadMeals();
-                          if (mounted) Navigator.of(ctx).pop();
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(l10n.mealSaved)));
-                          }
-                        } catch (e) {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('${l10n.error}: $e')));
-                          }
-                        }
-                      },
-                      child: Text(l10n.save),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        });
+                        },
+                        child: Text(l10n.save),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
       },
     );
     if (mounted) setState(() => _suspendFab = false);
   }
 
   Future<void> _deleteMeal(
-      Map<String, dynamic> meal, AppLocalizations l10n) async {
-    final ok = await showDialog<bool>(
+    Map<String, dynamic> meal,
+    AppLocalizations l10n,
+  ) async {
+    final ok =
+        await showDialog<bool>(
           context: context,
           builder: (_) => AlertDialog(
             title: Text(l10n.mealDeleteConfirmTitle),
             content: Text(l10n.mealDeleteConfirmBody(meal['name'] as String)),
             actions: [
               TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: Text(l10n.cancel)),
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(l10n.cancel),
+              ),
               TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: Text(l10n.delete)),
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(l10n.delete),
+              ),
             ],
           ),
         ) ??
@@ -1228,8 +1321,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     _mealItemsCache.remove(meal['id'] as int);
     await _loadMeals();
     if (mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.mealDeleted)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.mealDeleted)));
     }
   }
 
@@ -1250,8 +1344,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
           }
           loading = true;
           (ctx as Element).markNeedsBuild();
-          results =
-              await ProductDatabaseHelper.instance.searchProducts(q.trim());
+          results = await ProductDatabaseHelper.instance.searchProducts(
+            q.trim(),
+          );
           loading = false;
           (ctx).markNeedsBuild();
         }
@@ -1266,8 +1361,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                 TextField(
                   controller: searchCtrl,
                   decoration: InputDecoration(
-                      hintText: l10n.searchHintText,
-                      prefixIcon: const Icon(Icons.search)),
+                    hintText: l10n.searchHintText,
+                    prefixIcon: const Icon(Icons.search),
+                  ),
                   onChanged: runSearch,
                 ),
                 const SizedBox(height: 8),
@@ -1286,9 +1382,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                             return ListTile(
                               dense: true,
                               title: Text(fi.name),
-                              subtitle: Text(fi.brand.isNotEmpty
-                                  ? fi.brand
-                                  : l10n.noBrand),
+                              subtitle: Text(
+                                fi.brand.isNotEmpty ? fi.brand : l10n.noBrand,
+                              ),
                               trailing: IconButton(
                                 icon: const Icon(Icons.add),
                                 onPressed: () async {
@@ -1296,27 +1392,34 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                                   final grams = await showDialog<int>(
                                     context: context,
                                     builder: (_) => AlertDialog(
-                                      title:
-                                          Text(l10n.mealIngredientAmountLabel),
+                                      title: Text(
+                                        l10n.mealIngredientAmountLabel,
+                                      ),
                                       content: TextField(
                                         controller: qtyCtrl,
-                                        keyboardType: const TextInputType
-                                            .numberWithOptions(decimal: false),
+                                        keyboardType:
+                                            const TextInputType.numberWithOptions(
+                                              decimal: false,
+                                            ),
                                         decoration: const InputDecoration(
-                                            suffixText: 'g/ml'),
+                                          suffixText: 'g/ml',
+                                        ),
                                       ),
                                       actions: [
                                         TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(context, null),
-                                            child: Text(l10n.cancel)),
+                                          onPressed: () =>
+                                              Navigator.pop(context, null),
+                                          child: Text(l10n.cancel),
+                                        ),
                                         TextButton(
-                                            onPressed: () {
-                                              final val = int.tryParse(
-                                                  qtyCtrl.text.trim());
-                                              Navigator.pop(context, val);
-                                            },
-                                            child: Text(l10n.add_button)),
+                                          onPressed: () {
+                                            final val = int.tryParse(
+                                              qtyCtrl.text.trim(),
+                                            );
+                                            Navigator.pop(context, val);
+                                          },
+                                          child: Text(l10n.add_button),
+                                        ),
                                       ],
                                     ),
                                   );
@@ -1334,8 +1437,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
           ),
           actions: [
             TextButton(
-                onPressed: () => Navigator.pop(ctx, null),
-                child: Text(l10n.cancel)),
+              onPressed: () => Navigator.pop(ctx, null),
+              child: Text(l10n.cancel),
+            ),
           ],
         );
       },
@@ -1347,23 +1451,26 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     AppLocalizations l10n,
   ) async {
     final mealId = meal['id'] as int;
-    final rawItems =
-        List<Map<String, dynamic>>.from(await _getMealItems(mealId));
+    final rawItems = List<Map<String, dynamic>>.from(
+      await _getMealItems(mealId),
+    );
     if (rawItems.isEmpty) return;
 
     // Produkte vorab laden (für Namen, isLiquid, Koffein)
     final Map<String, FoodItem?> products = {};
     for (final it in rawItems) {
       final bc = it['barcode'] as String;
-      products[bc] =
-          await ProductDatabaseHelper.instance.getProductByBarcode(bc);
+      products[bc] = await ProductDatabaseHelper.instance.getProductByBarcode(
+        bc,
+      );
     }
 
     // Editierbare Mengen pro Zutat
     final Map<String, TextEditingController> qtyCtrls = {
       for (final it in rawItems)
-        (it['barcode'] as String):
-            TextEditingController(text: '${it['quantity_in_grams']}')
+        (it['barcode'] as String): TextEditingController(
+          text: '${it['quantity_in_grams']}',
+        ),
     };
 
     // Interne Keys wie im Diary/Nutrition (WICHTIG: exakt diese Strings)
@@ -1382,7 +1489,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       'mealtypeSnack': l10n.mealtypeSnack,
     };
 
-    final ok = await showModalBottomSheet<bool>(
+    final ok =
+        await showModalBottomSheet<bool>(
           context: context,
           isScrollControlled: true,
           backgroundColor: Theme.of(context).colorScheme.surface,
@@ -1413,10 +1521,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                       const SizedBox(height: 12),
                       Text(
                         l10n.mealsAddToDiary,
-                        style: Theme.of(ctx)
-                            .textTheme
-                            .titleLarge
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                        style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -1434,10 +1541,12 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                           isDense: true,
                         ),
                         items: internalTypes
-                            .map((key) => DropdownMenuItem(
-                                  value: key,
-                                  child: Text(mealTypeLabel[key] ?? key),
-                                ))
+                            .map(
+                              (key) => DropdownMenuItem(
+                                value: key,
+                                child: Text(mealTypeLabel[key] ?? key),
+                              ),
+                            )
                             .toList(),
                         onChanged: (v) {
                           if (v != null) {
@@ -1477,7 +1586,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                                     controller: qtyCtrls[bc],
                                     keyboardType:
                                         const TextInputType.numberWithOptions(
-                                            decimal: true),
+                                          decimal: true,
+                                        ),
                                     decoration: InputDecoration(
                                       labelText:
                                           displayName, // Name statt Barcode
@@ -1552,9 +1662,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     }
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.mealAddedToDiarySuccess)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.mealAddedToDiarySuccess)));
     }
   }
 
@@ -1575,7 +1685,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       ),
     );
 
-    final caffeineId = caffeine.id ??
+    final caffeineId =
+        caffeine.id ??
         (await DatabaseHelper.instance.insertSupplement(caffeine)).id!;
 
     await DatabaseHelper.instance.insertSupplementLog(

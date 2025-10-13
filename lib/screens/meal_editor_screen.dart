@@ -49,9 +49,9 @@ class _MealEditorScreenState extends State<MealEditorScreen> {
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Fehler beim Speichern: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Fehler beim Speichern: $e')));
       setState(() => _saving = false);
     }
   }
@@ -95,10 +95,7 @@ class _MealEditorScreenState extends State<MealEditorScreen> {
             onChanged: (v) => setState(() => _type = v ?? _type),
             decoration: const InputDecoration(labelText: 'Meal-Typ'),
             items: MealType.values
-                .map((t) => DropdownMenuItem(
-                      value: t,
-                      child: Text(_label(t)),
-                    ))
+                .map((t) => DropdownMenuItem(value: t, child: Text(_label(t))))
                 .toList(),
           ),
           const SizedBox(height: 24),

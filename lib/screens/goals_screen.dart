@@ -63,10 +63,10 @@ class _GoalsScreenState extends State<GoalsScreen> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _heightController.text = (prefs.getInt('userHeight') ?? 180).toString();
-      _caloriesController.text =
-          (prefs.getInt('targetCalories') ?? 2500).toString();
-      _proteinController.text =
-          (prefs.getInt('targetProtein') ?? 180).toString();
+      _caloriesController.text = (prefs.getInt('targetCalories') ?? 2500)
+          .toString();
+      _proteinController.text = (prefs.getInt('targetProtein') ?? 180)
+          .toString();
       _carbsController.text = (prefs.getInt('targetCarbs') ?? 250).toString();
       _fatController.text = (prefs.getInt('targetFat') ?? 80).toString();
       _waterController.text = (prefs.getInt('targetWater') ?? 3000).toString();
@@ -94,8 +94,9 @@ class _GoalsScreenState extends State<GoalsScreen> {
 
     if (mounted) {
       final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.snackbarGoalsSaved)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.snackbarGoalsSaved)));
       Navigator.of(context).pop();
     }
   }
@@ -118,20 +119,27 @@ class _GoalsScreenState extends State<GoalsScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context)
-            .colorScheme
-            .surfaceContainerHighest
-            .withOpacity(0.3),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [
-          Text(l10n.macroDistribution,
-              style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            l10n.macroDistribution,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           _buildMacroSliderRow(
-              l10n.protein, _proteinPercent, _macroColors['protein']!),
+            l10n.protein,
+            _proteinPercent,
+            _macroColors['protein']!,
+          ),
           _buildMacroSliderRow(
-              l10n.carbs, _carbsPercent, _macroColors['carbs']!),
+            l10n.carbs,
+            _carbsPercent,
+            _macroColors['carbs']!,
+          ),
           _buildMacroSliderRow(l10n.fat, _fatPercent, _macroColors['fat']!),
         ],
       ),
@@ -179,9 +187,9 @@ class _GoalsScreenState extends State<GoalsScreen> {
       appBar: AppBar(
         title: Text(
           l10n.my_goals,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
         ),
         // KORREKTUR: Save-Button in die AppBar verschoben
         actions: [
@@ -194,7 +202,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-          )
+          ),
         ],
       ),
       body: _isLoading
@@ -206,39 +214,62 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(l10n.personalData,
-                        style: Theme.of(context).textTheme.headlineSmall),
+                    Text(
+                      l10n.personalData,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
                     const SizedBox(height: DesignConstants.spacingL),
                     _buildSettingsField(
-                        controller: _heightController,
-                        label: l10n.profileUserHeight),
+                      controller: _heightController,
+                      label: l10n.profileUserHeight,
+                    ),
                     const SizedBox(height: DesignConstants.spacingXL),
-                    Text(l10n.profileDailyGoals,
-                        style: Theme.of(context).textTheme.headlineSmall),
+                    Text(
+                      l10n.profileDailyGoals,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
                     const SizedBox(height: DesignConstants.spacingL),
                     _buildSettingsField(
-                        controller: _caloriesController, label: l10n.calories),
+                      controller: _caloriesController,
+                      label: l10n.calories,
+                    ),
                     const SizedBox(height: DesignConstants.spacingL),
                     _buildMacroCalculator(),
                     const SizedBox(height: DesignConstants.spacingL),
                     _buildSettingsField(
-                        controller: _proteinController, label: l10n.protein),
+                      controller: _proteinController,
+                      label: l10n.protein,
+                    ),
                     _buildSettingsField(
-                        controller: _carbsController, label: l10n.carbs),
+                      controller: _carbsController,
+                      label: l10n.carbs,
+                    ),
                     _buildSettingsField(
-                        controller: _fatController, label: l10n.fat),
+                      controller: _fatController,
+                      label: l10n.fat,
+                    ),
                     _buildSettingsField(
-                        controller: _waterController, label: l10n.water),
+                      controller: _waterController,
+                      label: l10n.water,
+                    ),
                     const SizedBox(height: DesignConstants.spacingXL),
-                    Text(l10n.detailedNutrientGoals, // HIER DIE ÄNDERUNG
-                        style: Theme.of(context).textTheme.headlineSmall),
+                    Text(
+                      l10n.detailedNutrientGoals, // HIER DIE ÄNDERUNG
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
                     const SizedBox(height: DesignConstants.spacingL),
                     _buildSettingsField(
-                        controller: _sugarController, label: l10n.sugar),
+                      controller: _sugarController,
+                      label: l10n.sugar,
+                    ),
                     _buildSettingsField(
-                        controller: _fiberController, label: l10n.fiber),
+                      controller: _fiberController,
+                      label: l10n.fiber,
+                    ),
                     _buildSettingsField(
-                        controller: _saltController, label: l10n.salt),
+                      controller: _saltController,
+                      label: l10n.salt,
+                    ),
 
                     // KORREKTUR: Der untere Button wurde entfernt
                   ],
@@ -258,7 +289,8 @@ class _GoalsScreenState extends State<GoalsScreen> {
             data: SliderTheme.of(context).copyWith(
               trackHeight: 12.0, // Dicke des Sliders
               thumbShape: const RoundSliderThumbShape(
-                  enabledThumbRadius: 8.0), // Kleinerer Kreis
+                enabledThumbRadius: 8.0,
+              ), // Kleinerer Kreis
               overlayShape: const RoundSliderOverlayShape(overlayRadius: 16.0),
               activeTrackColor: color, // Farbe für den aktiven Teil
               inactiveTrackColor: color.withOpacity(0.2), // Hintergrundfarbe
@@ -278,14 +310,17 @@ class _GoalsScreenState extends State<GoalsScreen> {
           ),
         ),
         SizedBox(
-            width: 50,
-            child: Text("${value.round()}%", textAlign: TextAlign.right)),
+          width: 50,
+          child: Text("${value.round()}%", textAlign: TextAlign.right),
+        ),
       ],
     );
   }
 
-  Widget _buildSettingsField(
-      {required TextEditingController controller, required String label}) {
+  Widget _buildSettingsField({
+    required TextEditingController controller,
+    required String label,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),

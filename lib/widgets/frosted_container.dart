@@ -40,9 +40,10 @@ class FrostedContainer extends StatelessWidget {
               ),
               boxShadow: const [
                 BoxShadow(
-                    blurRadius: 18,
-                    offset: Offset(0, 6),
-                    color: Colors.black26),
+                  blurRadius: 18,
+                  offset: Offset(0, 6),
+                  color: Colors.black26,
+                ),
               ],
             ),
             child: child,

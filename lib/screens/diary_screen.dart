@@ -36,8 +36,9 @@ class DiaryScreen extends StatefulWidget {
 
 class DiaryScreenState extends State<DiaryScreen> {
   bool _isLoading = true;
-  final ValueNotifier<DateTime> selectedDateNotifier =
-      ValueNotifier(DateTime.now());
+  final ValueNotifier<DateTime> selectedDateNotifier = ValueNotifier(
+    DateTime.now(),
+  );
   DateTime get _selectedDate => selectedDateNotifier.value;
   DailyNutrition? _dailyNutrition;
   Map<String, List<TrackedFoodItem>> _entriesByMeal = {};
@@ -64,11 +65,11 @@ class DiaryScreenState extends State<DiaryScreen> {
     super.dispose();
   }
 
-// lib/screens/diary_screen.dart
+  // lib/screens/diary_screen.dart
 
-// ... (Rest der Datei bleibt unverändert)
+  // ... (Rest der Datei bleibt unverändert)
 
-// ERSETZEN SIE DIESE METHODE
+  // ERSETZEN SIE DIESE METHODE
   Future<void> loadDataForDate(DateTime date) async {
     if (!mounted) return;
     setState(() => _isLoading = true);
@@ -82,10 +83,13 @@ class DiaryScreenState extends State<DiaryScreen> {
     final targetCaffeine = prefs.getInt('targetCaffeine') ?? 400;
 
     final foodEntries = await DatabaseHelper.instance.getEntriesForDate(date);
-    final fluidEntries =
-        await DatabaseHelper.instance.getFluidEntriesForDate(date);
-    final waterIntake =
-        fluidEntries.fold<int>(0, (sum, entry) => sum + entry.quantityInMl);
+    final fluidEntries = await DatabaseHelper.instance.getFluidEntriesForDate(
+      date,
+    );
+    final waterIntake = fluidEntries.fold<int>(
+      0,
+      (sum, entry) => sum + entry.quantityInMl,
+    );
 
     final summary = DailyNutrition(
       targetCalories: targetCalories,
@@ -108,17 +112,18 @@ class DiaryScreenState extends State<DiaryScreen> {
       'mealtypeBreakfast': [],
       'mealtypeLunch': [],
       'mealtypeDinner': [],
-      'mealtypeSnack': []
+      'mealtypeSnack': [],
     };
 
     for (final entry in foodEntries) {
-      final foodItem = await ProductDatabaseHelper.instance
-          .getProductByBarcode(entry.barcode);
+      final foodItem = await ProductDatabaseHelper.instance.getProductByBarcode(
+        entry.barcode,
+      );
       if (foodItem != null) {
-        summary.calories +=
-            (foodItem.calories / 100 * entry.quantityInGrams).round();
-        summary.protein +=
-            (foodItem.protein / 100 * entry.quantityInGrams).round();
+        summary.calories += (foodItem.calories / 100 * entry.quantityInGrams)
+            .round();
+        summary.protein += (foodItem.protein / 100 * entry.quantityInGrams)
+            .round();
         summary.carbs += (foodItem.carbs / 100 * entry.quantityInGrams).round();
         summary.fat += (foodItem.fat / 100 * entry.quantityInGrams).round();
 
@@ -132,21 +137,25 @@ class DiaryScreenState extends State<DiaryScreen> {
     }
 
     final allSupplements = await DatabaseHelper.instance.getAllSupplements();
-    final todaysSupplementLogs =
-        await DatabaseHelper.instance.getSupplementLogsForDate(date);
+    final todaysSupplementLogs = await DatabaseHelper.instance
+        .getSupplementLogsForDate(date);
 
     final Map<int, double> todaysDoses = {};
     for (final log in todaysSupplementLogs) {
-      todaysDoses.update(log.supplementId, (value) => value + log.dose,
-          ifAbsent: () => log.dose);
+      todaysDoses.update(
+        log.supplementId,
+        (value) => value + log.dose,
+        ifAbsent: () => log.dose,
+      );
     }
 
     // *** KORREKTUR HIER ***
     // Wir fangen den Fehler ab, falls das Supplement nicht gefunden wird.
     Supplement? caffeineSupplement;
     try {
-      caffeineSupplement =
-          allSupplements.firstWhere((s) => s.code == 'caffeine');
+      caffeineSupplement = allSupplements.firstWhere(
+        (s) => s.code == 'caffeine',
+      );
     } catch (e) {
       caffeineSupplement =
           null; // Sicherstellen, dass es null ist, wenn nicht gefunden
@@ -157,10 +166,12 @@ class DiaryScreenState extends State<DiaryScreen> {
     }
 
     final trackedSupps = allSupplements
-        .map((s) => TrackedSupplement(
-              supplement: s,
-              totalDosedToday: todaysDoses[s.id] ?? 0.0,
-            ))
+        .map(
+          (s) => TrackedSupplement(
+            supplement: s,
+            totalDosedToday: todaysDoses[s.id] ?? 0.0,
+          ),
+        )
         .toList();
 
     if (mounted) {
@@ -175,7 +186,7 @@ class DiaryScreenState extends State<DiaryScreen> {
     }
   }
 
-// ... (Rest der Datei bleibt unverändert)
+  // ... (Rest der Datei bleibt unverändert)
 
   Future<void> _deleteFoodEntry(int id) async {
     await DatabaseHelper.instance.deleteFoodEntry(id);
@@ -195,8 +206,11 @@ class DiaryScreenState extends State<DiaryScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(trackedItem.item.name,
-              maxLines: 2, overflow: TextOverflow.ellipsis),
+          title: Text(
+            trackedItem.item.name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
           content: QuantityDialogContent(
             key: dialogStateKey,
             item: trackedItem.item,
@@ -206,26 +220,29 @@ class DiaryScreenState extends State<DiaryScreen> {
           ),
           actions: [
             TextButton(
-                child: Text(l10n.cancel),
-                onPressed: () => Navigator.of(context).pop()),
+              child: Text(l10n.cancel),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
             FilledButton(
-                child: Text(l10n.save),
-                onPressed: () {
-                  final state = dialogStateKey.currentState;
-                  if (state != null) {
-                    final quantity = int.tryParse(state.quantityText);
-                    final caffeine = double.tryParse(
-                        state.caffeineText.replaceAll(',', '.'));
-                    if (quantity != null && quantity > 0) {
-                      Navigator.of(context).pop((
-                        quantity,
-                        state.selectedDateTime,
-                        state.selectedMealType,
-                        caffeine
-                      ));
-                    }
+              child: Text(l10n.save),
+              onPressed: () {
+                final state = dialogStateKey.currentState;
+                if (state != null) {
+                  final quantity = int.tryParse(state.quantityText);
+                  final caffeine = double.tryParse(
+                    state.caffeineText.replaceAll(',', '.'),
+                  );
+                  if (quantity != null && quantity > 0) {
+                    Navigator.of(context).pop((
+                      quantity,
+                      state.selectedDateTime,
+                      state.selectedMealType,
+                      caffeine,
+                    ));
                   }
-                }),
+                }
+              },
+            ),
           ],
         );
       },
@@ -247,7 +264,8 @@ class DiaryScreenState extends State<DiaryScreen> {
   Future<void> _addFoodToMeal(String mealType) async {
     final FoodItem? selectedFoodItem = await Navigator.of(context)
         .push<FoodItem>(
-            MaterialPageRoute(builder: (context) => const AddFoodScreen()));
+          MaterialPageRoute(builder: (context) => const AddFoodScreen()),
+        );
 
     if (selectedFoodItem == null || !mounted) return;
 
@@ -267,8 +285,9 @@ class DiaryScreenState extends State<DiaryScreen> {
       quantityInGrams: quantity,
       mealType: resultMealType,
     );
-    final newFoodEntryId =
-        await DatabaseHelper.instance.insertFoodEntry(newFoodEntry);
+    final newFoodEntryId = await DatabaseHelper.instance.insertFoodEntry(
+      newFoodEntry,
+    );
 
     // 2. Wenn es eine Flüssigkeit ist, ZUSÄTZLICH einen FluidEntry NUR FÜR WASSER erstellen
     if (isLiquid) {
@@ -288,8 +307,11 @@ class DiaryScreenState extends State<DiaryScreen> {
     // 3. Koffein nur loggen, wenn als Flüssigkeit deklariert
     if (isLiquid && caffeinePer100 != null && caffeinePer100 > 0) {
       final totalCaffeine = (caffeinePer100 / 100.0) * quantity;
-      await _logCaffeineDose(totalCaffeine, timestamp,
-          foodEntryId: newFoodEntryId);
+      await _logCaffeineDose(
+        totalCaffeine,
+        timestamp,
+        foodEntryId: newFoodEntryId,
+      );
     }
 
     loadDataForDate(_selectedDate);
@@ -297,26 +319,29 @@ class DiaryScreenState extends State<DiaryScreen> {
 
   // FÜGEN SIE DIESE ZWEI NEUEN METHODEN ZUR KLASSE HINZU
   Future<
+    ({
+      int quantity,
+      DateTime timestamp,
+      String mealType,
+      bool isLiquid,
+      double? sugarPer100ml,
+      double? caffeinePer100ml,
+    })?
+  >
+  _showQuantityMenu(FoodItem item, String mealType) async {
+    final l10n = AppLocalizations.of(context)!;
+    final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
+
+    return showGlassBottomMenu<
       ({
         int quantity,
         DateTime timestamp,
         String mealType,
         bool isLiquid,
         double? sugarPer100ml,
-        double? caffeinePer100ml
-      })?> _showQuantityMenu(FoodItem item, String mealType) async {
-    final l10n = AppLocalizations.of(context)!;
-    final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
-
-    return showGlassBottomMenu<
-        ({
-          int quantity,
-          DateTime timestamp,
-          String mealType,
-          bool isLiquid,
-          double? sugarPer100ml,
-          double? caffeinePer100ml
-        })>(
+        double? caffeinePer100ml,
+      })
+    >(
       context: context,
       title: item.name,
       contentBuilder: (ctx, close) {
@@ -349,9 +374,11 @@ class DiaryScreenState extends State<DiaryScreen> {
                       if (state != null) {
                         final quantity = int.tryParse(state.quantityText);
                         final sugar = double.tryParse(
-                            state.sugarText.replaceAll(',', '.'));
+                          state.sugarText.replaceAll(',', '.'),
+                        );
                         final caffeine = double.tryParse(
-                            state.caffeineText.replaceAll(',', '.'));
+                          state.caffeineText.replaceAll(',', '.'),
+                        );
 
                         if (quantity != null && quantity > 0) {
                           close();
@@ -361,7 +388,7 @@ class DiaryScreenState extends State<DiaryScreen> {
                             mealType: state.selectedMealType,
                             isLiquid: state.isLiquid,
                             sugarPer100ml: sugar,
-                            caffeinePer100ml: caffeine
+                            caffeinePer100ml: caffeine,
                           ));
                         }
                       }
@@ -377,8 +404,12 @@ class DiaryScreenState extends State<DiaryScreen> {
     );
   }
 
-  Future<void> _logCaffeineDose(double doseMg, DateTime timestamp,
-      {int? foodEntryId, int? fluidEntryId}) async {
+  Future<void> _logCaffeineDose(
+    double doseMg,
+    DateTime timestamp, {
+    int? foodEntryId,
+    int? fluidEntryId,
+  }) async {
     if (doseMg <= 0) return;
 
     final supplements = await DatabaseHelper.instance.getAllSupplements();
@@ -428,8 +459,9 @@ class DiaryScreenState extends State<DiaryScreen> {
     } else if (_selectedDate.isSameDate(dayBeforeYesterday)) {
       return l10n.dayBeforeYesterday; // ← NEW
     } else {
-      return DateFormat.yMMMMd(Localizations.localeOf(context).toString())
-          .format(_selectedDate);
+      return DateFormat.yMMMMd(
+        Localizations.localeOf(context).toString(),
+      ).format(_selectedDate);
     }
   }
 
@@ -442,7 +474,10 @@ class DiaryScreenState extends State<DiaryScreen> {
   }
 
   Widget _buildWeightChartCard(
-      BuildContext context, ColorScheme colorScheme, AppLocalizations l10n) {
+    BuildContext context,
+    ColorScheme colorScheme,
+    AppLocalizations l10n,
+  ) {
     return SummaryCard(
       child: Padding(
         padding: DesignConstants.cardPadding,
@@ -451,20 +486,23 @@ class DiaryScreenState extends State<DiaryScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(l10n.weightHistoryTitle,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(fontWeight: FontWeight.bold)),
+                Text(
+                  l10n.weightHistoryTitle,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 Expanded(
                   child: Align(
                     alignment: Alignment.centerRight,
                     child: Wrap(
                       spacing: 8.0,
                       alignment: WrapAlignment.end,
-                      children: ['30D', '90D', 'All']
-                          .map((key) => _buildFilterButton(key, key))
-                          .toList(),
+                      children: [
+                        '30D',
+                        '90D',
+                        'All',
+                      ].map((key) => _buildFilterButton(key, key)).toList(),
                     ),
                   ),
                 ),
@@ -551,16 +589,19 @@ class DiaryScreenState extends State<DiaryScreen> {
                   _buildSectionTitle(context, l10n.today_overview_text),
                   if (_dailyNutrition != null)
                     NutritionSummaryWidget(
-                        nutritionData: _dailyNutrition!,
-                        l10n: l10n,
-                        isExpandedView: false),
+                      nutritionData: _dailyNutrition!,
+                      l10n: l10n,
+                      isExpandedView: false,
+                    ),
                   const SizedBox(height: DesignConstants.spacingXS),
                   SupplementSummaryWidget(
                     trackedSupplements: _trackedSupplements,
                     onTap: () => Navigator.of(context)
-                        .push(MaterialPageRoute(
-                            builder: (context) =>
-                                const SupplementTrackScreen()))
+                        .push(
+                          MaterialPageRoute(
+                            builder: (context) => const SupplementTrackScreen(),
+                          ),
+                        )
                         .then((_) => loadDataForDate(_selectedDate)),
                   ),
                   const SizedBox(height: DesignConstants.spacingXL),
@@ -569,7 +610,10 @@ class DiaryScreenState extends State<DiaryScreen> {
                   const SizedBox(height: DesignConstants.spacingXL),
                   _buildSectionTitle(context, l10n.measurementWeightCapslock),
                   _buildWeightChartCard(
-                      context, Theme.of(context).colorScheme, l10n),
+                    context,
+                    Theme.of(context).colorScheme,
+                    l10n,
+                  ),
                   const BottomContentSpacer(),
                 ],
               ),
@@ -580,11 +624,13 @@ class DiaryScreenState extends State<DiaryScreen> {
   Widget _buildSectionTitle(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
-      child: Text(title,
-          style: Theme.of(context)
-              .textTheme
-              .labelLarge
-              ?.copyWith(color: Colors.grey[600], fontWeight: FontWeight.bold)),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+          color: Colors.grey[600],
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 
@@ -593,7 +639,7 @@ class DiaryScreenState extends State<DiaryScreen> {
       "mealtypeBreakfast",
       "mealtypeLunch",
       "mealtypeDinner",
-      "mealtypeSnack"
+      "mealtypeSnack",
     ];
 
     return Column(
@@ -679,8 +725,9 @@ class DiaryScreenState extends State<DiaryScreen> {
 
           // Inhalt (animiert ein-/ausklappen)
           AnimatedCrossFade(
-            crossFadeState:
-                isOpen ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+            crossFadeState: isOpen
+                ? CrossFadeState.showFirst
+                : CrossFadeState.showSecond,
             duration: const Duration(milliseconds: 180),
             firstChild: Column(
               children: [
@@ -724,14 +771,16 @@ class DiaryScreenState extends State<DiaryScreen> {
             ),
           ),
           AnimatedCrossFade(
-            crossFadeState:
-                isOpen ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+            crossFadeState: isOpen
+                ? CrossFadeState.showFirst
+                : CrossFadeState.showSecond,
             duration: const Duration(milliseconds: 180),
             firstChild: Column(
               children: [
                 if (_fluidEntries.isNotEmpty) const Divider(height: 16),
-                ..._fluidEntries
-                    .map((entry) => _buildFluidEntryTile(l10n, entry)),
+                ..._fluidEntries.map(
+                  (entry) => _buildFluidEntryTile(l10n, entry),
+                ),
               ],
             ),
             secondChild: const SizedBox.shrink(),
@@ -746,8 +795,9 @@ class DiaryScreenState extends State<DiaryScreen> {
         ? (entry.sugarPer100ml! / 100 * entry.quantityInMl).toStringAsFixed(1)
         : '0';
     final totalCaffeine = (entry.caffeinePer100ml != null)
-        ? (entry.caffeinePer100ml! / 100 * entry.quantityInMl)
-            .toStringAsFixed(1)
+        ? (entry.caffeinePer100ml! / 100 * entry.quantityInMl).toStringAsFixed(
+            1,
+          )
         : '0';
 
     return Dismissible(
@@ -767,11 +817,13 @@ class DiaryScreenState extends State<DiaryScreen> {
                   content: Text(l10n.deleteConfirmContent),
                   actions: <Widget>[
                     TextButton(
-                        onPressed: () => Navigator.of(context).pop(false),
-                        child: Text(l10n.cancel)),
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: Text(l10n.cancel),
+                    ),
                     TextButton(
-                        onPressed: () => Navigator.of(context).pop(true),
-                        child: Text(l10n.delete)),
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: Text(l10n.delete),
+                    ),
                   ],
                 );
               },
@@ -785,7 +837,8 @@ class DiaryScreenState extends State<DiaryScreen> {
         child: ListTile(
           title: Text(entry.name),
           subtitle: Text(
-              "${entry.quantityInMl}ml · Sugar: ${totalSugar}g · Caffeine: ${totalCaffeine}mg"),
+            "${entry.quantityInMl}ml · Sugar: ${totalSugar}g · Caffeine: ${totalCaffeine}mg",
+          ),
           trailing: Text("${entry.kcal ?? 0} kcal"),
         ),
       ),
@@ -804,7 +857,9 @@ class DiaryScreenState extends State<DiaryScreen> {
   }
 
   Widget _buildFoodEntryTile(
-      AppLocalizations l10n, TrackedFoodItem trackedItem) {
+    AppLocalizations l10n,
+    TrackedFoodItem trackedItem,
+  ) {
     return Dismissible(
       key: Key('food_hub_entry_${trackedItem.entry.id}'),
       background: const SwipeActionBackground(
@@ -830,11 +885,13 @@ class DiaryScreenState extends State<DiaryScreen> {
                     content: Text(l10n.deleteConfirmContent),
                     actions: <Widget>[
                       TextButton(
-                          onPressed: () => Navigator.of(context).pop(false),
-                          child: Text(l10n.cancel)),
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: Text(l10n.cancel),
+                      ),
                       TextButton(
-                          onPressed: () => Navigator.of(context).pop(true),
-                          child: Text(l10n.delete)),
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: Text(l10n.delete),
+                      ),
                     ],
                   );
                 },
@@ -854,9 +911,12 @@ class DiaryScreenState extends State<DiaryScreen> {
           trailing: Text("${trackedItem.calculatedCalories} kcal"),
           onTap: () {
             Navigator.of(context)
-                .push(MaterialPageRoute(
+                .push(
+                  MaterialPageRoute(
                     builder: (context) =>
-                        FoodDetailScreen(trackedItem: trackedItem)))
+                        FoodDetailScreen(trackedItem: trackedItem),
+                  ),
+                )
                 .then((_) => loadDataForDate(_selectedDate));
           },
         ),
@@ -905,7 +965,10 @@ class DiaryAppBar extends StatelessWidget {
   const DiaryAppBar({super.key, required this.selectedDateNotifier});
 
   String _getAppBarTitle(
-      BuildContext context, AppLocalizations l10n, DateTime selectedDate) {
+    BuildContext context,
+    AppLocalizations l10n,
+    DateTime selectedDate,
+  ) {
     final today = DateTime.now();
     final yesterday = today.subtract(const Duration(days: 1));
     final dayBeforeYesterday = today.subtract(const Duration(days: 2));
@@ -917,8 +980,9 @@ class DiaryAppBar extends StatelessWidget {
     } else if (selectedDate.isSameDate(dayBeforeYesterday)) {
       return l10n.dayBeforeYesterday; // ← NEW
     } else {
-      return DateFormat.yMMMMd(Localizations.localeOf(context).toString())
-          .format(selectedDate);
+      return DateFormat.yMMMMd(
+        Localizations.localeOf(context).toString(),
+      ).format(selectedDate);
     }
   }
 
@@ -932,10 +996,9 @@ class DiaryAppBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Text(
           l10n.today, // Default to 'Today'
-          style: Theme.of(context)
-              .textTheme
-              .titleLarge
-              ?.copyWith(fontWeight: FontWeight.w900),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
         ),
       );
     }
@@ -948,10 +1011,9 @@ class DiaryAppBar extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Text(
             title,
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(fontWeight: FontWeight.w900),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
           ),
         );
       },

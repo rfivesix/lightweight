@@ -40,8 +40,9 @@ class DesignConstants {
 
   // === EDGE INSETS SHORTCUTS ===
   static const EdgeInsets cardPadding = EdgeInsets.all(cardPaddingInternal);
-  static const EdgeInsets cardMargin =
-      EdgeInsets.symmetric(vertical: cardPaddingExternal);
+  static const EdgeInsets cardMargin = EdgeInsets.symmetric(
+    vertical: cardPaddingExternal,
+  );
   static const EdgeInsets screenPadding = EdgeInsets.symmetric(
     horizontal: screenPaddingHorizontal,
     vertical: screenPaddingVertical,

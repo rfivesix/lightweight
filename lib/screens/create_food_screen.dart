@@ -101,8 +101,8 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      // KORREKTUR: Eine AppBar hinzugefügt, die den Titel und den Speicher-Button enthält
 
+      // KORREKTUR: Eine AppBar hinzugefügt, die den Titel und den Speicher-Button enthält
       appBar: AppBar(
         title: Text(l10n.createFoodScreenTitle),
         actions: [
@@ -117,7 +117,7 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
               l10n.buttonSave,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-          )
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -131,34 +131,50 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
 
               // Formularfelder (unverändert)
               _buildFoodInputField(
-                  controller: _nameController,
-                  label: l10n.formFieldName,
-                  isRequired: true),
+                controller: _nameController,
+                label: l10n.formFieldName,
+                isRequired: true,
+              ),
               _buildFoodInputField(
-                  controller: _brandController, label: l10n.formFieldBrand),
+                controller: _brandController,
+                label: l10n.formFieldBrand,
+              ),
 
               const SizedBox(height: DesignConstants.spacingXL),
               _buildSectionTitle(context, l10n.formSectionMainNutrients),
               const SizedBox(height: DesignConstants.spacingL),
               _buildFoodInputField(
-                  controller: _caloriesController,
-                  label: l10n.formFieldCalories),
+                controller: _caloriesController,
+                label: l10n.formFieldCalories,
+              ),
               _buildFoodInputField(
-                  controller: _proteinController, label: l10n.formFieldProtein),
+                controller: _proteinController,
+                label: l10n.formFieldProtein,
+              ),
               _buildFoodInputField(
-                  controller: _carbsController, label: l10n.formFieldCarbs),
+                controller: _carbsController,
+                label: l10n.formFieldCarbs,
+              ),
               _buildFoodInputField(
-                  controller: _fatController, label: l10n.formFieldFat),
+                controller: _fatController,
+                label: l10n.formFieldFat,
+              ),
 
               const SizedBox(height: DesignConstants.spacingXL),
               _buildSectionTitle(context, l10n.formSectionOptionalNutrients),
               const SizedBox(height: DesignConstants.spacingL),
               _buildFoodInputField(
-                  controller: _sugarController, label: l10n.formFieldSugar),
+                controller: _sugarController,
+                label: l10n.formFieldSugar,
+              ),
               _buildFoodInputField(
-                  controller: _fiberController, label: l10n.formFieldFiber),
+                controller: _fiberController,
+                label: l10n.formFieldFiber,
+              ),
               _buildFoodInputField(
-                  controller: _saltController, label: l10n.formFieldSalt),
+                controller: _saltController,
+                label: l10n.formFieldSalt,
+              ),
 
               const SizedBox(height: 32),
             ],
@@ -175,9 +191,9 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
+          color: Colors.grey[600],
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -192,9 +208,7 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
       padding: const EdgeInsets.only(bottom: 12.0),
       child: TextFormField(
         controller: controller,
-        decoration: InputDecoration(
-          labelText: label,
-        ),
+        decoration: InputDecoration(labelText: label),
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         validator: (value) {
           if (isRequired && (value == null || value.isEmpty)) {

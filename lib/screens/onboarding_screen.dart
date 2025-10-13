@@ -60,9 +60,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           icon: Icons.edit_outlined,
           label: l10n.onbSetGoalsCta,
           onTap: () async {
-            await Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const GoalsScreen()),
-            );
+            await Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const GoalsScreen()));
             if (!mounted) return;
             setState(() => _goalVisited = true);
           },
@@ -82,7 +82,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         footer: _Hint(text: l10n.onbTipAddEntry),
       ),
 
-// 3) Measurements (neue Folie)
+      // 3) Measurements (neue Folie)
       _Slide(
         icon: Icons.monitor_weight_outlined,
         title: l10n.onbMeasureTitle,
@@ -91,7 +91,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         footer: _Hint(text: l10n.onbTipMeasureToday),
       ),
 
-// 4) Training: Routine erstellen + Workout starten (neue Folie)
+      // 4) Training: Routine erstellen + Workout starten (neue Folie)
       _Slide(
         icon: Icons.fitness_center,
         title: l10n.onbTrainTitle,
@@ -100,7 +100,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         footer: _Hint(text: l10n.onbTipStartWorkout),
       ),
 
-// 5) Offline & Privacy bleibt
+      // 5) Offline & Privacy bleibt
       _Slide(
         icon: Icons.lock_outline,
         title: l10n.onbPrivacyTitle,
@@ -109,7 +109,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         footer: _Hint(text: l10n.onbTipLocalControl),
       ),
 
-// 6) Finish bleibt
+      // 6) Finish bleibt
       _FinalSlide(
         title: l10n.onbFinishTitle,
         body: l10n.onbFinishBody,
@@ -211,10 +211,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       onPressed: _index == 0
                           ? null
                           : () => _page.animateToPage(
-                                _index - 1,
-                                duration: const Duration(milliseconds: 250),
-                                curve: Curves.easeOut,
-                              ),
+                              _index - 1,
+                              duration: const Duration(milliseconds: 250),
+                              curve: Curves.easeOut,
+                            ),
                       icon: const Icon(Icons.chevron_left),
                       label: Text(l10n.onbBack),
                     ),
@@ -223,12 +223,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () => _next(lastIndex),
-                      icon: Icon(_index < lastIndex
-                          ? Icons.chevron_right
-                          : Icons.check),
-                      label: Text(_index < lastIndex
-                          ? l10n.onbNext
-                          : l10n.onbFinishCta),
+                      icon: Icon(
+                        _index < lastIndex ? Icons.chevron_right : Icons.check,
+                      ),
+                      label: Text(
+                        _index < lastIndex ? l10n.onbNext : l10n.onbFinishCta,
+                      ),
                     ),
                   ),
                 ],
@@ -265,12 +265,17 @@ class _Slide extends StatelessWidget {
         children: [
           Icon(icon, size: 72, color: theme.colorScheme.primary),
           const SizedBox(height: DesignConstants.spacingL),
-          Text(title,
-              style: theme.textTheme.headlineSmall,
-              textAlign: TextAlign.center),
+          Text(
+            title,
+            style: theme.textTheme.headlineSmall,
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: DesignConstants.spacingS),
-          Text(body,
-              textAlign: TextAlign.center, style: theme.textTheme.bodyLarge),
+          Text(
+            body,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyLarge,
+          ),
           const SizedBox(height: DesignConstants.spacingXL),
           if (primaryCta != null)
             SizedBox(
@@ -311,12 +316,17 @@ class _FinalSlide extends StatelessWidget {
         children: [
           Icon(Icons.rocket_launch, size: 72, color: theme.colorScheme.primary),
           const SizedBox(height: DesignConstants.spacingL),
-          Text(title,
-              style: theme.textTheme.headlineSmall,
-              textAlign: TextAlign.center),
+          Text(
+            title,
+            style: theme.textTheme.headlineSmall,
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: DesignConstants.spacingS),
-          Text(body,
-              textAlign: TextAlign.center, style: theme.textTheme.bodyLarge),
+          Text(
+            body,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyLarge,
+          ),
           const SizedBox(height: DesignConstants.spacingXL),
           SizedBox(
             width: double.infinity,
@@ -357,8 +367,10 @@ class _Badge extends StatelessWidget {
         children: [
           Icon(Icons.check_circle, size: 16, color: c.primary),
           const SizedBox(width: 6),
-          Text(text,
-              style: TextStyle(color: c.primary, fontWeight: FontWeight.w600)),
+          Text(
+            text,
+            style: TextStyle(color: c.primary, fontWeight: FontWeight.w600),
+          ),
         ],
       ),
     );
@@ -370,10 +382,11 @@ class _Hint extends StatelessWidget {
   const _Hint({required this.text});
   @override
   Widget build(BuildContext context) {
-    return Text(text,
-        style: Theme.of(context)
-            .textTheme
-            .bodySmall
-            ?.copyWith(color: Colors.grey));
+    return Text(
+      text,
+      style: Theme.of(
+        context,
+      ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+    );
   }
 }

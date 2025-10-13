@@ -14,11 +14,7 @@ class GlassMenu extends StatefulWidget {
   final List<GlassMenuItem> items;
   final VoidCallback onDismiss;
 
-  const GlassMenu({
-    super.key,
-    required this.items,
-    required this.onDismiss,
-  });
+  const GlassMenu({super.key, required this.items, required this.onDismiss});
 
   @override
   State<GlassMenu> createState() => _GlassMenuState();
@@ -60,8 +56,11 @@ class _GlassMenuState extends State<GlassMenu>
 
               final animation = CurvedAnimation(
                 parent: _controller,
-                curve: Interval(intervalStart, intervalEnd,
-                    curve: Curves.easeOutBack),
+                curve: Interval(
+                  intervalStart,
+                  intervalEnd,
+                  curve: Curves.easeOutBack,
+                ),
               );
 
               return ScaleTransition(
@@ -80,11 +79,11 @@ class _GlassMenuState extends State<GlassMenu>
                         const SizedBox(height: DesignConstants.spacingM),
                         Text(
                           item.label,
-                          style:
-                              Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                       ],
                     ),

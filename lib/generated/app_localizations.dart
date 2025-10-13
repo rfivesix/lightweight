@@ -1217,7 +1217,7 @@ abstract class AppLocalizations {
   /// No description provided for @exerciseDataAttribution.
   ///
   /// In en, this message translates to:
-  /// **'Exercise data from'**
+  /// **'Exercise data from wger'**
   String get exerciseDataAttribution;
 
   /// No description provided for @duplicate.

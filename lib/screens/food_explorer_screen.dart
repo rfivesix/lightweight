@@ -58,8 +58,9 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
     setState(() {
       _isLoadingSearch = true;
     });
-    final results =
-        await ProductDatabaseHelper.instance.searchProducts(enteredKeyword);
+    final results = await ProductDatabaseHelper.instance.searchProducts(
+      enteredKeyword,
+    );
     if (mounted) {
       setState(() {
         _foundFoodItems = results;
@@ -73,13 +74,11 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
 
   void _navigateAndCreateFood() {
     Navigator.of(context)
-        .push(
-      MaterialPageRoute(builder: (context) => const CreateFoodScreen()),
-    )
+        .push(MaterialPageRoute(builder: (context) => const CreateFoodScreen()))
         .then((_) {
-      _searchController.clear();
-      _runFilter('');
-    });
+          _searchController.clear();
+          _runFilter('');
+        });
   }
 
   Future<void> _loadFavorites() async {
@@ -108,14 +107,20 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
       body: Column(
         children: [
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 24.0,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l10n.drawerFoodExplorer,
-                    style: textTheme.headlineMedium
-                        ?.copyWith(fontWeight: FontWeight.w900, fontSize: 28)),
+                Text(
+                  l10n.drawerFoodExplorer,
+                  style: textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 28,
+                  ),
+                ),
                 const SizedBox(height: DesignConstants.spacingL),
                 TabBar(
                   controller: _tabController,
@@ -128,13 +133,15 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
                   labelColor: isLightMode ? Colors.black : Colors.white,
                   unselectedLabelColor: Colors.grey.shade600,
                   labelStyle: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.0),
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.0,
+                  ),
                   unselectedLabelStyle: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.0),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.0,
+                  ),
                   tabs: [
                     Tab(text: l10n.tabSearch),
                     Tab(text: l10n.tabFavorites),
@@ -144,16 +151,14 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
             ),
           ),
           Divider(
-              height: 1,
-              thickness: 1,
-              color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
+            height: 1,
+            thickness: 1,
+            color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+          ),
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: [
-                _buildSearchTab(l10n),
-                _buildFavoritesTab(l10n),
-              ],
+              children: [_buildSearchTab(l10n), _buildFavoritesTab(l10n)],
             ),
           ),
         ],
@@ -175,33 +180,45 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
         children: [
           // KORREKTUR 4: TextField nutzt globale InputDecorationTheme
           TextField(
-              controller: _searchController,
-              onChanged: (value) => _runFilter(value),
-              decoration: InputDecoration(
-                  hintText: l10n.searchHintText,
-                  prefixIcon: Icon(Icons.search,
-                      color: colorScheme.onSurfaceVariant, size: 20),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: Icon(Icons.clear,
-                              color: colorScheme.onSurfaceVariant),
-                          onPressed: () {
-                            _searchController.clear();
-                            _runFilter('');
-                          })
-                      : null)),
+            controller: _searchController,
+            onChanged: (value) => _runFilter(value),
+            decoration: InputDecoration(
+              hintText: l10n.searchHintText,
+              prefixIcon: Icon(
+                Icons.search,
+                color: colorScheme.onSurfaceVariant,
+                size: 20,
+              ),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: Icon(
+                        Icons.clear,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      onPressed: () {
+                        _searchController.clear();
+                        _runFilter('');
+                      },
+                    )
+                  : null,
+            ),
+          ),
           const SizedBox(height: 20),
           Expanded(
             child: _isLoadingSearch
                 ? const Center(child: CircularProgressIndicator())
                 : _foundFoodItems.isNotEmpty
-                    ? ListView.builder(
-                        itemCount: _foundFoodItems.length,
-                        itemBuilder: (context, index) =>
-                            _buildFoodListItem(_foundFoodItems[index]))
-                    : Center(
-                        child: Text(_searchInitialText,
-                            style: textTheme.titleMedium)),
+                ? ListView.builder(
+                    itemCount: _foundFoodItems.length,
+                    itemBuilder: (context, index) =>
+                        _buildFoodListItem(_foundFoodItems[index]),
+                  )
+                : Center(
+                    child: Text(
+                      _searchInitialText,
+                      style: textTheme.titleMedium,
+                    ),
+                  ),
           ),
           if (_foundFoodItems.any((item) => item.source == FoodItemSource.off))
             const OffAttributionWidget(),
@@ -216,24 +233,29 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
     }
     if (_favoriteFoodItems.isEmpty) {
       return Center(
-          child: Text(l10n.favoritesEmptyState,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withOpacity(0.6))));
+        child: Text(
+          l10n.favoritesEmptyState,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+          ),
+        ),
+      );
     }
-    return Column(children: [
-      Expanded(
+    return Column(
+      children: [
+        Expanded(
           child: ListView.builder(
-              padding: DesignConstants.cardPadding,
-              itemCount: _favoriteFoodItems.length,
-              itemBuilder: (context, index) =>
-                  _buildFoodListItem(_favoriteFoodItems[index]))),
-      if (_favoriteFoodItems.any((item) => item.source == FoodItemSource.off))
-        const OffAttributionWidget()
-    ]);
+            padding: DesignConstants.cardPadding,
+            itemCount: _favoriteFoodItems.length,
+            itemBuilder: (context, index) =>
+                _buildFoodListItem(_favoriteFoodItems[index]),
+          ),
+        ),
+        if (_favoriteFoodItems.any((item) => item.source == FoodItemSource.off))
+          const OffAttributionWidget(),
+      ],
+    );
   }
 
   // KORREKTUR 5: _buildFoodListItem verwendet jetzt SummaryCard
@@ -256,21 +278,33 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
       // KORREKTUR: Jetzt mit SummaryCard
       child: ListTile(
         leading: Icon(sourceIcon, color: colorScheme.primary),
-        title: Text(item.name.isNotEmpty ? item.name : l10n.unknown,
-            style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(l10n.foodItemSubtitle(
-            item.brand.isNotEmpty ? item.brand : l10n.noBrand, item.calories)),
+        title: Text(
+          item.name.isNotEmpty ? item.name : l10n.unknown,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(
+          l10n.foodItemSubtitle(
+            item.brand.isNotEmpty ? item.brand : l10n.noBrand,
+            item.calories,
+          ),
+        ),
         trailing: IconButton(
-          icon: Icon(Icons.add_circle_outline,
-              color: colorScheme.primary, size: 28),
+          icon: Icon(
+            Icons.add_circle_outline,
+            color: colorScheme.primary,
+            size: 28,
+          ),
           onPressed: () => Navigator.of(context).pop(item),
         ),
         onTap: () => Navigator.of(context)
-            .push(MaterialPageRoute(
-                builder: (context) => FoodDetailScreen(foodItem: item)))
+            .push(
+              MaterialPageRoute(
+                builder: (context) => FoodDetailScreen(foodItem: item),
+              ),
+            )
             .then((_) {
-          _loadFavorites();
-        }),
+              _loadFavorites();
+            }),
       ),
     );
   }

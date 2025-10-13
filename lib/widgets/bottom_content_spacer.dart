@@ -15,10 +15,12 @@ class BottomContentSpacer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isRunning =
-        context.select<WorkoutSessionManager, bool>((m) => m.isActive);
+    final bool isRunning = context.select<WorkoutSessionManager, bool>(
+      (m) => m.isActive,
+    );
     final double safe = MediaQuery.of(context).padding.bottom;
-    final double h = kOverlayBaseHeight +
+    final double h =
+        kOverlayBaseHeight +
         (isRunning ? kOverlayRunningExtra : 0) +
         safe +
         extra;

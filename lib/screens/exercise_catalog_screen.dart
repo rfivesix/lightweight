@@ -75,8 +75,9 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: _allCategories.map((category) {
-                    final isSelected =
-                        tempSelectedCategories.contains(category);
+                    final isSelected = tempSelectedCategories.contains(
+                      category,
+                    );
                     return ListTile(
                       title: Text(category),
                       leading: Checkbox(
@@ -98,8 +99,9 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
               ),
               actions: [
                 TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text(l10n.cancel)),
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(l10n.cancel),
+                ),
                 ElevatedButton(
                   // Nutzt globales Theme
                   onPressed: () {
@@ -135,9 +137,9 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
         centerTitle: false,
         title: Text(
           l10n.exerciseCatalogTitle,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
         ),
         actions: [
           if (widget.isSelectionMode)
@@ -156,12 +158,14 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
 
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       // KORREKTUR 1: AppBar entfernt, Titel und Aktionen im Body
-// Body ohne doppelten Titel
+      // Body ohne doppelten Titel
       body: Column(
         children: [
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 24.0,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -170,12 +174,17 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
                   controller: _searchController,
                   decoration: InputDecoration(
                     hintText: l10n.searchHintText,
-                    prefixIcon: Icon(Icons.search,
-                        color: colorScheme.onSurfaceVariant, size: 20),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: colorScheme.onSurfaceVariant,
+                      size: 20,
+                    ),
                     suffixIcon: _searchController.text.isNotEmpty
                         ? IconButton(
-                            icon: Icon(Icons.clear,
-                                color: colorScheme.onSurfaceVariant),
+                            icon: Icon(
+                              Icons.clear,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
                             onPressed: () => _searchController.clear(),
                           )
                         : null,
@@ -195,48 +204,57 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _foundExercises.isEmpty
-                    ? Center(
-                        child: Text(l10n.noExercisesFound,
-                            style: textTheme.titleMedium))
-                    : ListView.builder(
-                        padding: DesignConstants.cardPadding,
-                        itemCount: _foundExercises.length,
-                        itemBuilder: (context, index) {
-                          final exercise = _foundExercises[index];
-                          return SummaryCard(
-                            // KORREKTUR 3: Übungs-Card
-                            child: ListTile(
-                              leading: const Icon(Icons.fitness_center),
-                              title: Text(exercise.getLocalizedName(context),
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold)),
-                              subtitle: Text(exercise.categoryName),
-                              trailing: widget.isSelectionMode
-                                  ? IconButton(
-                                      // Auswahl-Modus: Hinzufügen-Icon
-                                      icon: Icon(Icons.add_circle_outline,
-                                          color: colorScheme.primary),
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(exercise),
-                                    )
-                                  : const Icon(Icons
-                                      .chevron_right), // Anzeige-Modus: Pfeil
-                              onTap: () {
-                                if (widget.isSelectionMode) {
-                                  // Im Auswahl-Modus: Bei Klick auch auswählen
-                                  Navigator.of(context).pop(exercise);
-                                } else {
-                                  // Im Anzeige-Modus: Detail-Screen öffnen
-                                  Navigator.of(context).push(MaterialPageRoute(
-                                      builder: (context) =>
-                                          ExerciseDetailScreen(
-                                              exercise: exercise)));
-                                }
-                              },
-                            ),
-                          );
-                        },
-                      ),
+                ? Center(
+                    child: Text(
+                      l10n.noExercisesFound,
+                      style: textTheme.titleMedium,
+                    ),
+                  )
+                : ListView.builder(
+                    padding: DesignConstants.cardPadding,
+                    itemCount: _foundExercises.length,
+                    itemBuilder: (context, index) {
+                      final exercise = _foundExercises[index];
+                      return SummaryCard(
+                        // KORREKTUR 3: Übungs-Card
+                        child: ListTile(
+                          leading: const Icon(Icons.fitness_center),
+                          title: Text(
+                            exercise.getLocalizedName(context),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(exercise.categoryName),
+                          trailing: widget.isSelectionMode
+                              ? IconButton(
+                                  // Auswahl-Modus: Hinzufügen-Icon
+                                  icon: Icon(
+                                    Icons.add_circle_outline,
+                                    color: colorScheme.primary,
+                                  ),
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(exercise),
+                                )
+                              : const Icon(
+                                  Icons.chevron_right,
+                                ), // Anzeige-Modus: Pfeil
+                          onTap: () {
+                            if (widget.isSelectionMode) {
+                              // Im Auswahl-Modus: Bei Klick auch auswählen
+                              Navigator.of(context).pop(exercise);
+                            } else {
+                              // Im Anzeige-Modus: Detail-Screen öffnen
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      ExerciseDetailScreen(exercise: exercise),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      );
+                    },
+                  ),
           ),
           // KORREKTUR 4: WgerAttributionWidget am Ende
           Padding(
@@ -252,16 +270,17 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
         onPressed: () {
           Navigator.of(context)
               .push(
-            MaterialPageRoute(
-                builder: (context) => const CreateExerciseScreen()),
-          )
+                MaterialPageRoute(
+                  builder: (context) => const CreateExerciseScreen(),
+                ),
+              )
               .then((wasCreated) {
-            // Wenn der Screen mit 'true' zurückkehrt, wurde eine Übung erstellt.
-            // Lade die Liste neu, um die neue Übung anzuzeigen.
-            if (wasCreated == true) {
-              _runFilter(_searchController.text);
-            }
-          });
+                // Wenn der Screen mit 'true' zurückkehrt, wurde eine Übung erstellt.
+                // Lade die Liste neu, um die neue Übung anzuzeigen.
+                if (wasCreated == true) {
+                  _runFilter(_searchController.text);
+                }
+              });
         },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
@@ -289,11 +308,13 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.filter_list,
-                  size: 20,
-                  color: _selectedCategories.isNotEmpty
-                      ? colorScheme.onPrimary
-                      : colorScheme.onSurfaceVariant),
+              Icon(
+                Icons.filter_list,
+                size: 20,
+                color: _selectedCategories.isNotEmpty
+                    ? colorScheme.onPrimary
+                    : colorScheme.onSurfaceVariant,
+              ),
               const SizedBox(width: 8),
               Text(
                 l10n.filterByCategory,

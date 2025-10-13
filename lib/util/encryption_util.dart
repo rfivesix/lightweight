@@ -8,7 +8,9 @@ class EncryptionUtil {
   static const wrapperVersion = 'LWENC-1';
 
   static Future<Map<String, dynamic>> encryptString(
-      String plaintext, String passphrase) async {
+    String plaintext,
+    String passphrase,
+  ) async {
     final salt = _randomBytes(16);
     final nonce = _randomBytes(12);
     final key = await _deriveKey(passphrase, salt);
@@ -27,7 +29,9 @@ class EncryptionUtil {
   }
 
   static Future<String> decryptToString(
-      Map<String, dynamic> wrapper, String passphrase) async {
+    Map<String, dynamic> wrapper,
+    String passphrase,
+  ) async {
     if (wrapper['enc'] != wrapperVersion) {
       throw ArgumentError('Unknown encryption wrapper');
     }

@@ -41,9 +41,9 @@ class MeasurementSessionDetailScreen extends StatelessWidget {
         centerTitle: false,
         title: Text(
           DateFormat.yMMMMd('de_DE').format(session.timestamp),
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
         ),
       ),
       body: ListView(
@@ -54,13 +54,14 @@ class MeasurementSessionDetailScreen extends StatelessWidget {
               elevation: 2,
               margin: const EdgeInsets.symmetric(vertical: 6),
               child: ListTile(
-                title:
-                    Text(_getLocalizedMeasurementName(measurement.type, l10n)),
+                title: Text(
+                  _getLocalizedMeasurementName(measurement.type, l10n),
+                ),
                 trailing: Text(
                   "${measurement.value.toStringAsFixed(1)} ${measurement.unit}",
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             );

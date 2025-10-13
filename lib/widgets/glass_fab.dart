@@ -60,10 +60,7 @@ class _GlassFabState extends State<GlassFab>
         animation: _controller,
         builder: (context, child) {
           final scale = 1 - _controller.value;
-          return Transform.scale(
-            scale: scale,
-            child: child,
-          );
+          return Transform.scale(scale: scale, child: child);
         },
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20),

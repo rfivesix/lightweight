@@ -1,20 +1,20 @@
 // lib/models/exercise.dart
-
-import 'dart:convert';
-import 'package:flutter/material.dart';
-import 'package:lightweight/generated/app_localizations.dart';
+import 'dart:convert' show jsonDecode;
 
 class Exercise {
-  final int? id;
+  final int? id; // optional für neu angelegte Datensätze
   final String nameDe;
   final String nameEn;
   final String descriptionDe;
   final String descriptionEn;
   final String categoryName;
+  final String? imagePath;
+
+  /// sauber getrennt
   final List<String> primaryMuscles;
   final List<String> secondaryMuscles;
 
-  Exercise({
+  const Exercise({
     this.id,
     required this.nameDe,
     required this.nameEn,
@@ -23,73 +23,108 @@ class Exercise {
     required this.categoryName,
     required this.primaryMuscles,
     required this.secondaryMuscles,
+    this.imagePath,
   });
 
-  String getLocalizedName(BuildContext context) {
-    final locale = Localizations.localeOf(context);
-    return locale.languageCode == 'de' ? nameDe : nameEn;
-  }
+  // ---------- Parsing helpers ----------
+  static List<String> _parseMuscleList(dynamic raw) {
+    if (raw == null) return const [];
+    final s = raw.toString().trim();
+    if (s.isEmpty) return const [];
 
-  String getLocalizedDescription(BuildContext context) {
-    final locale = Localizations.localeOf(context);
-    final desc = locale.languageCode == 'de' ? descriptionDe : descriptionEn;
-    // Fallback, falls eine Beschreibung leer ist
-    if (desc.trim().isEmpty) {
-      return AppLocalizations.of(context)!.noDescriptionAvailable;
+    // JSON-Array?
+    if (s.startsWith('[')) {
+      try {
+        final data = jsonDecode(s);
+        if (data is List) {
+          return data
+              .map((e) => (e ?? '').toString().trim())
+              .where((e) => e.isNotEmpty)
+              .cast<String>()
+              .toList(growable: false);
+        }
+      } catch (_) {
+        // fällt auf CSV zurück
+      }
     }
-    return desc;
+
+    // CSV (GROUP_CONCAT)
+    return s
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList(growable: false);
   }
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
+  // ---------- Factory: DB -> Model ----------
+  factory Exercise.fromMap(Map<String, Object?> m) {
+    final primRaw =
+        m['primaryMuscles_json_de'] ??
+        m['primaryMuscles_json_en'] ??
+        m['primaryMuscles'];
+    final secRaw =
+        m['secondaryMuscles_json_de'] ??
+        m['secondaryMuscles_json_en'] ??
+        m['secondaryMuscles'];
+
+    return Exercise(
+      id: (m['id'] is num) ? (m['id'] as num).toInt() : m['id'] as int?,
+      nameDe: (m['name_de'] ?? '') as String,
+      nameEn: (m['name_en'] ?? '') as String,
+      descriptionDe: (m['description_de'] ?? '') as String,
+      descriptionEn: (m['description_en'] ?? '') as String,
+      categoryName: (m['category_name'] ?? '') as String,
+      imagePath: m['image_path'] as String?,
+      primaryMuscles: _parseMuscleList(primRaw),
+      secondaryMuscles: _parseMuscleList(secRaw),
+    );
+  }
+
+  // ---------- Model -> DB (für Inserts/Updates) ----------
+  //
+  // Achtung: Wir serialisieren Muskulatur als CSV, weil dein Insert
+  // in workout_database_helper aktuell CSV erwartet.
+  Map<String, Object?> toMap() {
+    return <String, Object?>{
+      if (id != null) 'id': id,
       'name_de': nameDe,
       'name_en': nameEn,
       'description_de': descriptionDe,
       'description_en': descriptionEn,
       'category_name': categoryName,
-      'primaryMuscles': jsonEncode(primaryMuscles),
-      'secondaryMuscles': jsonEncode(secondaryMuscles),
+      'image_path': imagePath,
+      'primaryMuscles': primaryMuscles.join(','),
+      'secondaryMuscles': secondaryMuscles.join(','),
     };
   }
 
-  factory Exercise.fromMap(Map<String, dynamic> map) {
-    // Diese Hilfsfunktion wandelt den JSON-String aus der DB in eine List<String> um
-    List<String> parseMuscles(String? jsonString) {
-      if (jsonString == null || jsonString.isEmpty) return [];
-      try {
-        // jsonDecode kann eine List<dynamic> zurückgeben, daher der cast.
-        return (jsonDecode(jsonString) as List)
-            .map((item) => item.toString())
-            .toList();
-      } catch (e) {
-        return []; // Im Fehlerfall leere Liste zurückgeben
-      }
-    }
-
-    return Exercise(
-      id: map['id'],
-      nameDe: map['name_de'] ?? '',
-      nameEn: map['name_en'] ?? '',
-      descriptionDe: map['description_de'] ?? '',
-      descriptionEn: map['description_en'] ?? '',
-      categoryName: map['category_name'] ?? '',
-      // KORREKTUR: Schlüsselnamen auf camelCase ('primaryMuscles') geändert
-      primaryMuscles: parseMuscles(map['primaryMuscles']),
-      secondaryMuscles: parseMuscles(map['secondaryMuscles']),
-    );
-  }
-
-  Exercise copyWith({int? id}) {
+  // ---------- convenient ----------
+  Exercise copyWith({
+    int? id,
+    String? nameDe,
+    String? nameEn,
+    String? descriptionDe,
+    String? descriptionEn,
+    String? categoryName,
+    String? imagePath,
+    List<String>? primaryMuscles,
+    List<String>? secondaryMuscles,
+  }) {
     return Exercise(
       id: id ?? this.id,
-      nameDe: nameDe,
-      nameEn: nameEn,
-      descriptionDe: descriptionDe,
-      descriptionEn: descriptionEn,
-      categoryName: categoryName,
-      primaryMuscles: primaryMuscles,
-      secondaryMuscles: secondaryMuscles,
+      nameDe: nameDe ?? this.nameDe,
+      nameEn: nameEn ?? this.nameEn,
+      descriptionDe: descriptionDe ?? this.descriptionDe,
+      descriptionEn: descriptionEn ?? this.descriptionEn,
+      categoryName: categoryName ?? this.categoryName,
+      imagePath: imagePath ?? this.imagePath,
+      primaryMuscles: primaryMuscles ?? this.primaryMuscles,
+      secondaryMuscles: secondaryMuscles ?? this.secondaryMuscles,
     );
   }
+
+  // Optional hilfreich im UI:
+  String getLocalizedName(context) => nameDe.isNotEmpty ? nameDe : nameEn;
+  String getLocalizedDescription(context) =>
+      descriptionDe.isNotEmpty ? descriptionDe : descriptionEn;
 }

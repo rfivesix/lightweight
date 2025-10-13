@@ -97,10 +97,9 @@ class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
       appBar: AppBar(
         title: Text(
           _isEditing ? l10n.edit : l10n.createSupplementTitle,
-          style: Theme.of(context)
-              .textTheme
-              .titleLarge
-              ?.copyWith(fontWeight: FontWeight.w900),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
         ),
         actions: [
           TextButton(
@@ -122,8 +121,11 @@ class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildTextField(_nameController, l10n.supplementNameLabel,
-                  isRequired: true),
+              _buildTextField(
+                _nameController,
+                l10n.supplementNameLabel,
+                isRequired: true,
+              ),
               const SizedBox(height: DesignConstants.spacingL),
               Row(
                 children: [
@@ -141,8 +143,12 @@ class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
                     child: DropdownButtonFormField<String>(
                       initialValue: _unit,
                       items: allowedUnits
-                          .map((u) => DropdownMenuItem<String>(
-                              value: u, child: Text(u)))
+                          .map(
+                            (u) => DropdownMenuItem<String>(
+                              value: u,
+                              child: Text(u),
+                            ),
+                          )
                           .toList(),
                       onChanged: isBuiltinCaffeine
                           ? null
@@ -153,8 +159,9 @@ class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
                       decoration: InputDecoration(
                         labelText: l10n.unitLabel,
                         isDense: true, // optional, macht's kompakter
-                        helperText:
-                            isBuiltinCaffeine ? l10n.caffeineUnitLocked : null,
+                        helperText: isBuiltinCaffeine
+                            ? l10n.caffeineUnitLocked
+                            : null,
                       ),
                       validator: (val) {
                         if (val == null || val.isEmpty) {
@@ -170,11 +177,17 @@ class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
                 ],
               ),
               const SizedBox(height: DesignConstants.spacingXL),
-              _buildTextField(_goalController, l10n.dailyGoalLabel,
-                  isNumeric: true),
+              _buildTextField(
+                _goalController,
+                l10n.dailyGoalLabel,
+                isNumeric: true,
+              ),
               const SizedBox(height: DesignConstants.spacingL),
-              _buildTextField(_limitController, l10n.dailyLimitLabel,
-                  isNumeric: true),
+              _buildTextField(
+                _limitController,
+                l10n.dailyLimitLabel,
+                isNumeric: true,
+              ),
               const SizedBox(height: DesignConstants.spacingL),
               _buildTextField(_notesController, l10n.notesLabel, maxLines: 3),
             ],

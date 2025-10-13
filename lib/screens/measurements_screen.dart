@@ -80,8 +80,8 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
         start = now.subtract(const Duration(days: 179));
         break;
       case 'All':
-        final earliest =
-            await DatabaseHelper.instance.getEarliestMeasurementDate();
+        final earliest = await DatabaseHelper.instance
+            .getEarliestMeasurementDate();
         start = earliest ?? now;
         break;
       case '30D':
@@ -101,8 +101,9 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
 
   void _navigateToCreateMeasurement() {
     Navigator.of(context)
-        .push(MaterialPageRoute(
-            builder: (context) => const AddMeasurementScreen()))
+        .push(
+          MaterialPageRoute(builder: (context) => const AddMeasurementScreen()),
+        )
         .then((_) => _loadMeasurements());
   }
 
@@ -120,30 +121,35 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
         centerTitle: false,
         title: Text(
           l10n.measurementsScreenTitle,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
         ),
       ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _sessions.isEmpty
-              ? _buildEmptyState(l10n, context)
-              : ListView(
-                  padding: DesignConstants.cardPadding,
-                  children: [
-                    if (_availableMeasurementTypes.isNotEmpty) ...[
-                      _buildChartSection(
-                          l10n, colorScheme, Theme.of(context).textTheme),
-                      const SizedBox(height: DesignConstants.spacingXL),
-                    ],
-                    _buildSectionTitle(context, l10n.all_measurements),
-                    ..._sessions.map((session) => _buildMeasurementSessionCard(
-                        l10n, colorScheme, session)),
-                    const BottomContentSpacer(),
-                  ],
+          ? _buildEmptyState(l10n, context)
+          : ListView(
+              padding: DesignConstants.cardPadding,
+              children: [
+                if (_availableMeasurementTypes.isNotEmpty) ...[
+                  _buildChartSection(
+                    l10n,
+                    colorScheme,
+                    Theme.of(context).textTheme,
+                  ),
+                  const SizedBox(height: DesignConstants.spacingXL),
+                ],
+                _buildSectionTitle(context, l10n.all_measurements),
+                ..._sessions.map(
+                  (session) =>
+                      _buildMeasurementSessionCard(l10n, colorScheme, session),
                 ),
+                const BottomContentSpacer(),
+              ],
+            ),
       floatingActionButton: GlassFab(
         label: l10n.addMeasurement,
         onPressed: _navigateToCreateMeasurement,
@@ -159,9 +165,11 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(l10n.measurementsEmptyState,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              l10n.measurementsEmptyState,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: DesignConstants.spacingXL),
             ElevatedButton.icon(
               onPressed: _navigateToCreateMeasurement,
@@ -180,15 +188,18 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
+          color: Colors.grey[600],
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
 
   Widget _buildChartSection(
-      AppLocalizations l10n, ColorScheme colorScheme, TextTheme textTheme) {
+    AppLocalizations l10n,
+    ColorScheme colorScheme,
+    TextTheme textTheme,
+  ) {
     if (_selectedChartType == null) return const SizedBox.shrink();
 
     return SummaryCard(
@@ -215,15 +226,21 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
                       },
                       items: _availableMeasurementTypes
                           .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(l10n.getLocalizedMeasurementName(value)),
-                        );
-                      }).toList(),
-                      style: textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                      icon: Icon(Icons.arrow_drop_down,
-                          color: colorScheme.onSurfaceVariant),
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(
+                                l10n.getLocalizedMeasurementName(value),
+                              ),
+                            );
+                          })
+                          .toList(),
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      icon: Icon(
+                        Icons.arrow_drop_down,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ),
@@ -280,8 +297,11 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
     );
   }
 
-  Widget _buildMeasurementSessionCard(AppLocalizations l10n,
-      ColorScheme colorScheme, MeasurementSession session) {
+  Widget _buildMeasurementSessionCard(
+    AppLocalizations l10n,
+    ColorScheme colorScheme,
+    MeasurementSession session,
+  ) {
     final locale = Localizations.localeOf(context).toString();
     final sortedMeasurements = session.measurements.toList()
       ..sort((a, b) => a.type.compareTo(b.type));
@@ -296,7 +316,8 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
         alignment: Alignment.centerRight,
       ),
       confirmDismiss: (direction) async {
-        final confirmed = await showDialog<bool>(
+        final confirmed =
+            await showDialog<bool>(
               context: context,
               builder: (ctx) => AlertDialog(
                 title: Text(l10n.deleteConfirmTitle),
@@ -323,10 +344,11 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
             ListTile(
               contentPadding: DesignConstants.screenPadding,
               title: Text(
-                  DateFormat.yMMMMEEEEd(locale)
-                      .add_Hm()
-                      .format(session.timestamp),
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
+                DateFormat.yMMMMEEEEd(
+                  locale,
+                ).add_Hm().format(session.timestamp),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -335,19 +357,24 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
               },
             ),
             Divider(
-                height: 1,
-                thickness: 1,
-                color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
-            ...sortedMeasurements.map((measurement) => ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16.0, vertical: 4.0),
-                  leading: _getMeasurementIcon(measurement.type),
-                  title:
-                      Text(l10n.getLocalizedMeasurementName(measurement.type)),
-                  trailing: Text(
-                      "${measurement.value.toStringAsFixed(1)} ${measurement.unit}",
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                )),
+              height: 1,
+              thickness: 1,
+              color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+            ),
+            ...sortedMeasurements.map(
+              (measurement) => ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 4.0,
+                ),
+                leading: _getMeasurementIcon(measurement.type),
+                title: Text(l10n.getLocalizedMeasurementName(measurement.type)),
+                trailing: Text(
+                  "${measurement.value.toStringAsFixed(1)} ${measurement.unit}",
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
           ],
         ),
       ),

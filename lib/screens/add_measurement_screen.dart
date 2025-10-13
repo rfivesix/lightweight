@@ -60,19 +60,23 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
       if (controller.text.isNotEmpty) {
         final value = double.tryParse(controller.text.replaceAll(',', '.'));
         if (value != null) {
-          measurements.add(Measurement(
-            sessionId: 0,
-            type: key,
-            value: value,
-            unit: _measurementTypes[key]!,
-          ));
+          measurements.add(
+            Measurement(
+              sessionId: 0,
+              type: key,
+              value: value,
+              unit: _measurementTypes[key]!,
+            ),
+          );
         }
       }
     });
 
     if (measurements.isNotEmpty) {
       final session = MeasurementSession(
-          timestamp: _selectedDateTime, measurements: measurements);
+        timestamp: _selectedDateTime,
+        measurements: measurements,
+      );
       await DatabaseHelper.instance.insertMeasurementSession(session);
       if (mounted) {
         Navigator.of(context).pop(true);
@@ -130,8 +134,13 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
     );
     if (picked != null && picked != _selectedDateTime) {
       setState(() {
-        _selectedDateTime = DateTime(picked.year, picked.month, picked.day,
-            _selectedDateTime.hour, _selectedDateTime.minute);
+        _selectedDateTime = DateTime(
+          picked.year,
+          picked.month,
+          picked.day,
+          _selectedDateTime.hour,
+          _selectedDateTime.minute,
+        );
       });
     }
   }
@@ -144,11 +153,12 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
     if (picked != null) {
       setState(() {
         _selectedDateTime = DateTime(
-            _selectedDateTime.year,
-            _selectedDateTime.month,
-            _selectedDateTime.day,
-            picked.hour,
-            picked.minute);
+          _selectedDateTime.year,
+          _selectedDateTime.month,
+          _selectedDateTime.day,
+          picked.hour,
+          picked.minute,
+        );
       });
     }
   }
@@ -165,9 +175,9 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
       appBar: AppBar(
         title: Text(
           l10n.addMeasurementDialogTitle, // or whatever your l10n key is
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
         ),
         actions: [
           TextButton(
@@ -188,57 +198,74 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Datum & Uhrzeit Sektion
-              Text(l10n.date_and_time_of_measurement,
-                  style: textTheme.titleMedium),
+              Text(
+                l10n.date_and_time_of_measurement,
+                style: textTheme.titleMedium,
+              ),
               const SizedBox(height: DesignConstants.spacingS),
               SummaryCard(
                 // KORREKTUR 2: Datum/Uhrzeit in SummaryCard
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0, vertical: 8.0),
+                    horizontal: 16.0,
+                    vertical: 8.0,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       InkWell(
-                          onTap: _selectDate,
-                          child: Row(children: [
+                        onTap: _selectDate,
+                        child: Row(
+                          children: [
                             const Icon(Icons.calendar_today, size: 20),
                             const SizedBox(width: 8),
-                            Text(formattedDate,
-                                style: const TextStyle(fontSize: 16))
-                          ])),
+                            Text(
+                              formattedDate,
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ],
+                        ),
+                      ),
                       InkWell(
-                          onTap: _selectTime,
-                          child: Row(children: [
+                        onTap: _selectTime,
+                        child: Row(
+                          children: [
                             const Icon(Icons.access_time, size: 20),
                             const SizedBox(width: 8),
-                            Text(formattedTime,
-                                style: const TextStyle(fontSize: 16))
-                          ])),
+                            Text(
+                              formattedTime,
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ),
               const SizedBox(
-                  height: DesignConstants
-                      .spacingXL), // KORREKTUR 3: Abstand angepasst
-
+                height: DesignConstants.spacingXL,
+              ), // KORREKTUR 3: Abstand angepasst
               // Messwerte-Sektion
-              Text(l10n.drawerMeasurements,
-                  style: textTheme.titleMedium), // TODO: Lokalisieren
+              Text(
+                l10n.drawerMeasurements,
+                style: textTheme.titleMedium,
+              ), // TODO: Lokalisieren
               const SizedBox(height: DesignConstants.spacingS),
               ..._measurementTypes.keys.map((key) {
                 return Padding(
                   padding: const EdgeInsets.only(
-                      bottom: 12.0), // KORREKTUR 4: Padding angepasst
+                    bottom: 12.0,
+                  ), // KORREKTUR 4: Padding angepasst
                   child: TextFormField(
                     controller: _controllers[key],
                     decoration: InputDecoration(
                       labelText: _getLocalizedMeasurementName(key, l10n),
                       suffixText: _measurementTypes[key],
                     ),
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     validator: (value) {
                       // Nur validieren, wenn etwas eingegeben wurde
                       if (value != null &&
@@ -252,7 +279,8 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
                 );
               }),
               const SizedBox(
-                  height: DesignConstants.spacingL), // Abstand zum Ende
+                height: DesignConstants.spacingL,
+              ), // Abstand zum Ende
             ],
           ),
         ),

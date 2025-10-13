@@ -49,14 +49,17 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
       // Wenn eine initialRoutineId übergeben wurde, direkt dorthin navigieren
       if (widget.initialRoutineId != null) {
         final routineToEdit = _routines.firstWhere(
-            (r) => r.id == widget.initialRoutineId,
-            orElse: () => throw Exception(
-                l10n.errorRoutineNotFound)); // l10n hier verwenden
+          (r) => r.id == widget.initialRoutineId,
+          orElse: () => throw Exception(l10n.errorRoutineNotFound),
+        ); // l10n hier verwenden
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Navigator.of(context)
-              .push(MaterialPageRoute(
+              .push(
+                MaterialPageRoute(
                   builder: (context) =>
-                      EditRoutineScreen(routine: routineToEdit)))
+                      EditRoutineScreen(routine: routineToEdit),
+                ),
+              )
               .then((_) => _loadRoutines(l10n)); // l10n hier übergeben
         });
       }
@@ -65,35 +68,45 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
 
   void _startWorkout(Routine routine) async {
     showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator()));
-    final fullRoutine =
-        await WorkoutDatabaseHelper.instance.getRoutineById(routine.id!);
-    final newWorkoutLog = await WorkoutDatabaseHelper.instance
-        .startWorkout(routineName: routine.name);
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+    final fullRoutine = await WorkoutDatabaseHelper.instance.getRoutineById(
+      routine.id!,
+    );
+    final newWorkoutLog = await WorkoutDatabaseHelper.instance.startWorkout(
+      routineName: routine.name,
+    );
     if (!mounted) return;
     Navigator.of(context).pop();
     if (fullRoutine != null) {
       final l10n = AppLocalizations.of(context)!; // l10n im Build-Kontext holen
       Navigator.of(context)
-          .push(MaterialPageRoute(
-            builder: (context) => LiveWorkoutScreen(
-                routine: fullRoutine, workoutLog: newWorkoutLog),
-          ))
+          .push(
+            MaterialPageRoute(
+              builder: (context) => LiveWorkoutScreen(
+                routine: fullRoutine,
+                workoutLog: newWorkoutLog,
+              ),
+            ),
+          )
           .then((_) => _loadRoutines(l10n)); // l10n hier übergeben
     }
   }
 
   void _startEmptyWorkout() async {
     final l10n = AppLocalizations.of(context)!;
-    final newWorkoutLog = await WorkoutDatabaseHelper.instance
-        .startWorkout(routineName: l10n.freeWorkoutTitle);
+    final newWorkoutLog = await WorkoutDatabaseHelper.instance.startWorkout(
+      routineName: l10n.freeWorkoutTitle,
+    );
     if (!mounted) return;
     Navigator.of(context)
-        .push(MaterialPageRoute(
-          builder: (context) => LiveWorkoutScreen(workoutLog: newWorkoutLog),
-        ))
+        .push(
+          MaterialPageRoute(
+            builder: (context) => LiveWorkoutScreen(workoutLog: newWorkoutLog),
+          ),
+        )
         .then((_) => _loadRoutines(l10n)); // l10n hier übergeben
   }
 
@@ -101,11 +114,12 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
     final l10n = AppLocalizations.of(context)!; // l10n im Build-Kontext holen
     Navigator.of(context)
         .push(
-            MaterialPageRoute(builder: (context) => const EditRoutineScreen()))
+          MaterialPageRoute(builder: (context) => const EditRoutineScreen()),
+        )
         .then((_) => _loadRoutines(l10n)); // l10n hier übergeben
   }
 
-// NEUE METHODEN FÜR DAS MENÜ
+  // NEUE METHODEN FÜR DAS MENÜ
   void _duplicateRoutine(int routineId) async {
     await WorkoutDatabaseHelper.instance.duplicateRoutine(routineId);
     final l10n = AppLocalizations.of(context)!; // l10n im Build-Kontext holen
@@ -121,11 +135,13 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
         content: Text(l10n.deleteRoutineConfirmContent(routine.name)),
         actions: [
           TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: Text(l10n.cancel)),
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancel),
+          ),
           TextButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: Text(l10n.delete)),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.delete),
+          ),
         ],
       ),
     );
@@ -151,109 +167,118 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
         centerTitle: false,
         title: Text(
           l10n.workoutRoutinesTitle,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
         ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _routines.isEmpty
-              ? _buildEmptyState(context, l10n, textTheme)
-              : ListView.builder(
-                  padding: DesignConstants.cardPadding,
-                  itemCount: _routines.length + 1, // statt +2
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return _buildStartEmptyWorkoutCard(context, l10n);
-                    }
-                    final routine = _routines[index - 1];
-                    return Dismissible(
-                      key: Key('routine_${routine.id}'),
-                      direction: DismissDirection.endToStart,
+          ? _buildEmptyState(context, l10n, textTheme)
+          : ListView.builder(
+              padding: DesignConstants.cardPadding,
+              itemCount: _routines.length + 1, // statt +2
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return _buildStartEmptyWorkoutCard(context, l10n);
+                }
+                final routine = _routines[index - 1];
+                return Dismissible(
+                  key: Key('routine_${routine.id}'),
+                  direction: DismissDirection.endToStart,
 
-                      // gleiche Hintergründe wie im Nutrition Screen
-                      background: const SwipeActionBackground(
-                        color: Colors.redAccent,
-                        icon: Icons.delete,
-                        alignment: Alignment.centerRight,
-                      ),
+                  // gleiche Hintergründe wie im Nutrition Screen
+                  background: const SwipeActionBackground(
+                    color: Colors.redAccent,
+                    icon: Icons.delete,
+                    alignment: Alignment.centerRight,
+                  ),
 
-                      // Swipe-Logik wie bei Nutrition:
-                      // links→rechts = Edit (nicht wirklich dismissen),
-                      // rechts→links = Delete (mit Bestätigung)
-                      confirmDismiss: (direction) async {
-                        final confirmed = await showDialog<bool>(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: Text(l10n.deleteConfirmTitle),
-                                content: Text(l10n.deleteConfirmContent),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(ctx).pop(false),
-                                    child: Text(l10n.cancel),
-                                  ),
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(ctx).pop(true),
-                                    child: Text(l10n.delete),
-                                  ),
-                                ],
+                  // Swipe-Logik wie bei Nutrition:
+                  // links→rechts = Edit (nicht wirklich dismissen),
+                  // rechts→links = Delete (mit Bestätigung)
+                  confirmDismiss: (direction) async {
+                    final confirmed =
+                        await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: Text(l10n.deleteConfirmTitle),
+                            content: Text(l10n.deleteConfirmContent),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(ctx).pop(false),
+                                child: Text(l10n.cancel),
                               ),
-                            ) ??
-                            false;
-                        return confirmed;
-                      },
-
-                      onDismissed: (direction) {
-                        if (direction == DismissDirection.endToStart) {
-                          _deleteRoutine(context, routine); // wirklich löschen
-                        }
-                      },
-
-                      child: SummaryCard(
-                        child: ListTile(
-                          leading: ElevatedButton(
-                            onPressed: () => _startWorkout(routine),
-                            child: Text(l10n.startButton),
-                          ),
-                          title: Text(routine.name,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text(l10n.editRoutineSubtitle),
-                          trailing: PopupMenuButton<String>(
-                            icon: Icon(Icons.more_vert,
-                                color: textTheme.bodyMedium?.color),
-                            onSelected: (value) {
-                              if (value == 'duplicate') {
-                                _duplicateRoutine(routine.id!);
-                              } else if (value == 'delete') {
-                                _deleteRoutine(context, routine);
-                              }
-                            },
-                            itemBuilder: (BuildContext context) =>
-                                <PopupMenuEntry<String>>[
-                              PopupMenuItem<String>(
-                                  value: 'duplicate',
-                                  child: Text(l10n.duplicate)),
-                              PopupMenuItem<String>(
-                                  value: 'delete', child: Text(l10n.delete)),
+                              TextButton(
+                                onPressed: () => Navigator.of(ctx).pop(true),
+                                child: Text(l10n.delete),
+                              ),
                             ],
                           ),
-                          onTap: () {
-                            Navigator.of(context)
-                                .push(MaterialPageRoute(
-                                    builder: (context) =>
-                                        EditRoutineScreen(routine: routine)))
-                                .then((_) =>
-                                    _loadRoutines(l10n)); // l10n hier übergeben
-                          },
-                        ),
-                      ),
-                    );
+                        ) ??
+                        false;
+                    return confirmed;
                   },
-                ),
+
+                  onDismissed: (direction) {
+                    if (direction == DismissDirection.endToStart) {
+                      _deleteRoutine(context, routine); // wirklich löschen
+                    }
+                  },
+
+                  child: SummaryCard(
+                    child: ListTile(
+                      leading: ElevatedButton(
+                        onPressed: () => _startWorkout(routine),
+                        child: Text(l10n.startButton),
+                      ),
+                      title: Text(
+                        routine.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(l10n.editRoutineSubtitle),
+                      trailing: PopupMenuButton<String>(
+                        icon: Icon(
+                          Icons.more_vert,
+                          color: textTheme.bodyMedium?.color,
+                        ),
+                        onSelected: (value) {
+                          if (value == 'duplicate') {
+                            _duplicateRoutine(routine.id!);
+                          } else if (value == 'delete') {
+                            _deleteRoutine(context, routine);
+                          }
+                        },
+                        itemBuilder: (BuildContext context) =>
+                            <PopupMenuEntry<String>>[
+                              PopupMenuItem<String>(
+                                value: 'duplicate',
+                                child: Text(l10n.duplicate),
+                              ),
+                              PopupMenuItem<String>(
+                                value: 'delete',
+                                child: Text(l10n.delete),
+                              ),
+                            ],
+                      ),
+                      onTap: () {
+                        Navigator.of(context)
+                            .push(
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    EditRoutineScreen(routine: routine),
+                              ),
+                            )
+                            .then(
+                              (_) => _loadRoutines(l10n),
+                            ); // l10n hier übergeben
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
       floatingActionButton: GlassFab(
         label: l10n.addRoutineButton,
         onPressed: _createNewRoutine,
@@ -264,31 +289,42 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
 
   // KORREKTUR 5: _buildStartEmptyWorkoutCard als SummaryCard-Button
   Widget _buildStartEmptyWorkoutCard(
-      BuildContext context, AppLocalizations l10n) {
+    BuildContext context,
+    AppLocalizations l10n,
+  ) {
     return SummaryCard(
       child: ListTile(
         leading: const Icon(Icons.play_circle_fill),
-        title: Text(l10n.startEmptyWorkoutButton,
-            style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          l10n.startEmptyWorkoutButton,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         onTap: _startEmptyWorkout,
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(DesignConstants.borderRadiusM)),
+          borderRadius: BorderRadius.circular(DesignConstants.borderRadiusM),
+        ),
       ),
     );
   }
 
-// In RoutinesScreen: _buildEmptyState ersetzen/erweitern
+  // In RoutinesScreen: _buildEmptyState ersetzen/erweitern
 
   Widget _buildEmptyState(
-      BuildContext context, AppLocalizations l10n, TextTheme textTheme) {
+    BuildContext context,
+    AppLocalizations l10n,
+    TextTheme textTheme,
+  ) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.list_alt_outlined,
-                size: 80, color: Colors.grey.shade400),
+            Icon(
+              Icons.list_alt_outlined,
+              size: 80,
+              color: Colors.grey.shade400,
+            ),
             const SizedBox(height: DesignConstants.spacingL),
             Text(
               l10n.emptyRoutinesTitle,
@@ -306,8 +342,10 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
             // Bestehender Button: Routine erstellen
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
               ),
               onPressed: _createNewRoutine,
               icon: const Icon(Icons.add),
@@ -324,8 +362,10 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
             // NEU: Freies Training starten (sichtbar auch im Empty-State)
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
               ),
               onPressed: _startEmptyWorkout,
               icon: const Icon(Icons.play_circle_fill),

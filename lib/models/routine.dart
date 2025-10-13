@@ -6,11 +6,7 @@ class Routine {
   final String name;
   final List<RoutineExercise> exercises;
 
-  Routine({
-    this.id,
-    required this.name,
-    this.exercises = const [],
-  });
+  Routine({this.id, required this.name, this.exercises = const []});
 
   // BITTE DIESE METHODE HINZUFÜGEN
   Map<String, dynamic> toMap() {

@@ -15,7 +15,7 @@ class GlassBottomNavBar extends StatelessWidget {
     required this.onFabTap,
     required this.items,
   });
-// Add inside class GlassBottomNavBar
+  // Add inside class GlassBottomNavBar
   Widget _buildNavItem(
     BuildContext context,
     BottomNavigationBarItem item,
@@ -46,14 +46,15 @@ class GlassBottomNavBar extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       item.label ?? '',
-                      maxLines: 2,
-                      overflow: TextOverflow.fade,
+                      maxLines: 1,
+                      //overflow: TextOverflow.,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: color,
                         fontSize: 12,
-                        fontWeight:
-                            isSelected ? FontWeight.w400 : FontWeight.w400,
+                        fontWeight: isSelected
+                            ? FontWeight.w400
+                            : FontWeight.w400,
                       ),
                     ),
                   ],
@@ -71,8 +72,9 @@ class GlassBottomNavBar extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
-    final backgroundColor =
-        isDark ? summary_card_dark_mode : summary_card_white_mode;
+    final backgroundColor = isDark
+        ? summary_card_dark_mode
+        : summary_card_white_mode;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
@@ -186,8 +188,9 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final Color color =
-        isSelected ? cs.primary : cs.onSurface.withOpacity(0.60);
+    final Color color = isSelected
+        ? cs.primary
+        : cs.onSurface.withOpacity(0.60);
 
     return Expanded(
       child: Material(
@@ -217,8 +220,9 @@ class _NavItem extends StatelessWidget {
                       style: TextStyle(
                         color: color,
                         fontSize: 12,
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.w400,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w400,
                       ),
                     ),
                   ],

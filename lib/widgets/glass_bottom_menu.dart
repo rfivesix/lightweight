@@ -27,9 +27,10 @@ Future<T?> showGlassBottomMenu<T>({
   Widget Function(BuildContext, VoidCallback)? contentBuilder, // ⬅️ NEU
 }) {
   assert(
-      (actions != null && contentBuilder == null) ||
-          (actions == null && contentBuilder != null),
-      'Either actions OR contentBuilder must be provided');
+    (actions != null && contentBuilder == null) ||
+        (actions == null && contentBuilder != null),
+    'Either actions OR contentBuilder must be provided',
+  );
   final isDark = Theme.of(context).brightness == Brightness.dark;
   return showModalBottomSheet<T>(
     context: context,
@@ -119,7 +120,9 @@ class _GlassBottomMenuSheet extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: contentBuilder!(
-                        context, () => Navigator.of(context).maybePop()),
+                      context,
+                      () => Navigator.of(context).maybePop(),
+                    ),
                   ),
                 ] else if (actions.isNotEmpty) ...[
                   Flexible(
@@ -139,16 +142,17 @@ class _GlassBottomMenuSheet extends StatelessWidget {
                             onTap: () {
                               HapticFeedback.selectionClick();
                               Navigator.of(context).maybePop();
-                              WidgetsBinding.instance
-                                  .addPostFrameCallback((_) => a.onTap());
+                              WidgetsBinding.instance.addPostFrameCallback(
+                                (_) => a.onTap(),
+                              );
                             },
                           );
                         },
                       ),
                     ),
                   ),
-                ]
-/*if (contentBuilder != null) ...[
+                ],
+                /*if (contentBuilder != null) ...[
   const SizedBox(height: 12),
   Padding(
     padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
@@ -217,7 +221,7 @@ class _GlassSurface extends StatelessWidget {
           ),
         ),
         // Straight top divider line (not following the curve)
-// Hard top edge that follows the rounded corners
+        // Hard top edge that follows the rounded corners
         Positioned.fill(
           child: IgnorePointer(
             child: CustomPaint(

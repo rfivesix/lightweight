@@ -611,7 +611,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get showSummary => 'Show Summary';
 
   @override
-  String get exerciseDataAttribution => 'Exercise data from';
+  String get exerciseDataAttribution => 'Exercise data from wger';
 
   @override
   String get duplicate => 'Duplicate';

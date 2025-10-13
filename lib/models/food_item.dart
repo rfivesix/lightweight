@@ -1,14 +1,17 @@
 // lib/models/food_item.dart
+import 'package:flutter/widgets.dart'; // HINZUGEFÜGT für BuildContext
 
 enum FoodItemSource {
   off, // Open Food Facts
   base, // Grundnahrungsmittel-DB
-  user // Vom Benutzer erstellt (Standard)
+  user, // Vom Benutzer erstellt (Standard)
 }
 
 class FoodItem {
   final String barcode;
-  final String name;
+  final String name; // Behalten wir als Fallback
+  final String nameDe; // NEU
+  final String nameEn; // NEU
   final String brand;
   final int calories; // pro 100g
   final double protein; // pro 100g
@@ -22,12 +25,14 @@ class FoodItem {
   final double? salt;
   final double? sodium;
   final double? calcium;
-  final bool? isLiquid; // NEW (nullable)
-  final double? caffeineMgPer100ml; // NEW (nullable)
+  final bool? isLiquid;
+  final double? caffeineMgPer100ml;
 
   FoodItem({
     required this.barcode,
     required this.name,
+    this.nameDe = '', // NEU
+    this.nameEn = '', // NEU
     this.brand = '',
     required this.calories,
     required this.protein,
@@ -44,12 +49,30 @@ class FoodItem {
     this.caffeineMgPer100ml,
   });
 
-  factory FoodItem.fromMap(Map<String, dynamic> map,
-      {required FoodItemSource source}) {
+  // NEUE METHODE: Gibt den Namen in der richtigen Sprache zurück
+  String getLocalizedName(BuildContext context) {
+    final locale = Localizations.localeOf(context).languageCode;
+    if (locale == 'de' && nameDe.isNotEmpty) {
+      return nameDe;
+    }
+    // Fallback auf Englisch, wenn 'en' vorhanden ist oder die Sprache nicht Deutsch ist
+    if (nameEn.isNotEmpty) {
+      return nameEn;
+    }
+    // Letzter Fallback auf den generischen Namen
+    return name;
+  }
+
+  factory FoodItem.fromMap(
+    Map<String, dynamic> map, {
+    required FoodItemSource source,
+  }) {
     return FoodItem(
       barcode: map['barcode'] ?? '',
-      // KORREKTUR: Kein hartcodierter Fallback mehr. Die UI kümmert sich darum.
-      name: map['name'] ?? '',
+      // KORRIGIERTE LOGIK: Alle Namensvarianten auslesen
+      name: map['name'] ?? map['name_en'] ?? map['name_de'] ?? '',
+      nameDe: map['name_de'] ?? '',
+      nameEn: map['name_en'] ?? '',
       brand: map['brand'] ?? '',
       calories: (map['calories_100g'] as num?)?.round() ?? 0,
       protein: (map['protein_100g'] as num?)?.toDouble() ?? 0.0,
@@ -71,6 +94,8 @@ class FoodItem {
     return {
       'barcode': barcode,
       'name': name,
+      'name_de': nameDe, // NEU
+      'name_en': nameEn, // NEU
       'brand': brand,
       'calories_100g': calories,
       'protein_100g': protein,

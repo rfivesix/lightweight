@@ -17,7 +17,7 @@ class ProductDatabaseHelper {
 
   // Ein einfacher Sperrmechanismus, um doppelte Initialisierung zu verhindern.
   static bool _isInitializing = false;
-// --- NEU: kleine Helpers ganz oben in der Klasse ---
+  // --- NEU: kleine Helpers ganz oben in der Klasse ---
   bool _isOpen(Database? db) => db != null && db.isOpen;
 
   Future<void> _ensureDatabasesAlive() async {
@@ -59,14 +59,16 @@ class ProductDatabaseHelper {
       _offDatabase = await _initDB('vita_prep_de.db');
     } catch (e) {
       print(
-          "KRITISCHER FEHLER: Die Haupt-Produktdatenbank konnte nicht geladen werden: $e");
+        "KRITISCHER FEHLER: Die Haupt-Produktdatenbank konnte nicht geladen werden: $e",
+      );
     }
 
     try {
       _baseDatabase = await _initDB('vita_base_foods.db');
     } catch (e) {
       print(
-          "INFO: Die optionale Grundnahrungsmittel-DB wurde nicht gefunden. Das ist normal, wenn sie noch nicht hinzugefügt wurde. Fehler: $e");
+        "INFO: Die optionale Grundnahrungsmittel-DB wurde nicht gefunden. Das ist normal, wenn sie noch nicht hinzugefügt wurde. Fehler: $e",
+      );
     }
 
     _isInitializing = false;
@@ -79,19 +81,23 @@ class ProductDatabaseHelper {
 
     if (!exists) {
       print(
-          "Datenbank '$fileName' existiert nicht, kopiere sie aus den Assets...");
+        "Datenbank '$fileName' existiert nicht, kopiere sie aus den Assets...",
+      );
       try {
         await Directory(dirname(path)).create(recursive: true);
         ByteData data = await rootBundle.load(join('assets/db', fileName));
-        List<int> bytes =
-            data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+        List<int> bytes = data.buffer.asUint8List(
+          data.offsetInBytes,
+          data.lengthInBytes,
+        );
         await File(path).writeAsBytes(bytes, flush: true);
         print("Datenbank '$fileName' erfolgreich kopiert.");
       } catch (e) {
         print("Fehler beim Kopieren der Datenbank '$fileName': $e");
         if (await File(path).exists()) await File(path).delete();
         throw Exception(
-            "Konnte Datenbank '$fileName' nicht aus den Assets laden.");
+          "Konnte Datenbank '$fileName' nicht aus den Assets laden.",
+        );
       }
     } else {
       print("Bestehende Datenbank '$fileName' gefunden.");
@@ -112,23 +118,29 @@ class ProductDatabaseHelper {
 
     if (_baseDatabase != null) {
       final List<Map<String, dynamic>> baseMaps = await _baseDatabase!.query(
-          'products',
-          where: 'name LIKE ?',
-          whereArgs: ['%$query%'],
-          limit: 25);
-      combinedResults.addAll(baseMaps
-          .map((map) => FoodItem.fromMap(map, source: FoodItemSource.base)));
+        'products',
+        where: 'name LIKE ?',
+        whereArgs: ['%$query%'],
+        limit: 25,
+      );
+      combinedResults.addAll(
+        baseMaps.map(
+          (map) => FoodItem.fromMap(map, source: FoodItemSource.base),
+        ),
+      );
     }
 
     // Die Haupt-DB muss existieren, sonst stürzt die App hier ab, was korrekt ist.
     if (_offDatabase != null) {
       final List<Map<String, dynamic>> offMaps = await _offDatabase!.query(
-          'products',
-          where: 'name LIKE ? OR brand LIKE ?',
-          whereArgs: ['%$query%', '%$query%'],
-          limit: 50);
-      combinedResults.addAll(offMaps
-          .map((map) => FoodItem.fromMap(map, source: FoodItemSource.off)));
+        'products',
+        where: 'name LIKE ? OR brand LIKE ?',
+        whereArgs: ['%$query%', '%$query%'],
+        limit: 50,
+      );
+      combinedResults.addAll(
+        offMaps.map((map) => FoodItem.fromMap(map, source: FoodItemSource.off)),
+      );
     }
 
     final uniqueResults = <String, FoodItem>{};
@@ -189,8 +201,11 @@ class ProductDatabaseHelper {
     await _ensureDatabasesInitialized();
     await _ensureDatabasesAlive();
     if (_offDatabase == null) return;
-    await _offDatabase!.insert('products', item.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    await _offDatabase!.insert(
+      'products',
+      item.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<List<FoodItem>> _getProductsByBarcodes(List<String> barcodes) async {
@@ -204,14 +219,14 @@ class ProductDatabaseHelper {
   }
 
   Future<List<FoodItem>> getFavoriteProducts() async {
-    final favoriteBarcodes =
-        await DatabaseHelper.instance.getFavoriteBarcodes();
+    final favoriteBarcodes = await DatabaseHelper.instance
+        .getFavoriteBarcodes();
     return await _getProductsByBarcodes(favoriteBarcodes);
   }
 
   Future<List<FoodItem>> getRecentProducts() async {
-    final recentBarcodes =
-        await DatabaseHelper.instance.getRecentlyUsedBarcodes();
+    final recentBarcodes = await DatabaseHelper.instance
+        .getRecentlyUsedBarcodes();
     return await _getProductsByBarcodes(recentBarcodes);
   }
 
@@ -287,7 +302,7 @@ class ProductDatabaseHelper {
         .toList();
   }
 
-// === NEU: Kategorien (für späteren Filter / Anzeige) ===
+  // === NEU: Kategorien (für späteren Filter / Anzeige) ===
   Future<List<Map<String, dynamic>>> getBaseCategories() async {
     await _ensureDatabasesInitialized();
     await _ensureDatabasesAlive();
@@ -299,7 +314,7 @@ class ProductDatabaseHelper {
     );
   }
 
-// === DEV: Felder eines Basis-Eintrags aktualisieren (barcode bleibt) ===
+  // === DEV: Felder eines Basis-Eintrags aktualisieren (barcode bleibt) ===
   Future<void> updateBaseProductFields({
     required String barcode,
     required Map<String, Object?> fields, // nur Spalten, die du ändern willst
@@ -323,7 +338,7 @@ class ProductDatabaseHelper {
     );
   }
 
-// === DEV: Pfad der Basis-DB ermitteln (für Export/Share) ===
+  // === DEV: Pfad der Basis-DB ermitteln (für Export/Share) ===
   Future<String> getBaseDbPath() async {
     final dbPath = await getDatabasesPath();
     return join(dbPath, 'vita_base_foods.db');

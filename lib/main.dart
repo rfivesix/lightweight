@@ -37,7 +37,8 @@ void main() async {
           },
         ),
         ChangeNotifierProvider.value(
-            value: themeService), // Provide the ThemeService
+          value: themeService,
+        ), // Provide the ThemeService
       ],
       child: const MyApp(),
     ),
@@ -73,9 +74,7 @@ class MyApp extends StatelessWidget {
         final lightScheme = ColorScheme.fromSeed(
           seedColor: lightSeed,
           brightness: Brightness.light,
-        ).copyWith(
-          surface: Colors.white,
-        );
+        ).copyWith(surface: Colors.white);
 
         // --- Dark Scheme aus Seed + OLED-Schwarz ---
         final seededDark = ColorScheme.fromSeed(
@@ -128,8 +127,10 @@ class MyApp extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: lightScheme.primary, width: 2),
             ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 12,
+            ),
           ),
 
           bottomSheetTheme: const BottomSheetThemeData(
@@ -147,8 +148,9 @@ class MyApp extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
             behavior: SnackBarBehavior.floating,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
 
           dividerTheme: DividerThemeData(
@@ -163,24 +165,25 @@ class MyApp extends StatelessWidget {
             foregroundColor: Colors.black,
             centerTitle: false,
             titleTextStyle: ThemeData.light().textTheme.titleLarge?.copyWith(
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w900,
-                  color: Colors.black,
-                ),
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w900,
+              color: Colors.black,
+            ),
           ),
 
           textTheme: ThemeData.light().textTheme.apply(
-                fontFamily: 'Inter', // Das ist weiterhin korrekt
-                bodyColor: Colors.black87,
-                displayColor: Colors.black87,
-              ),
+            fontFamily: 'Inter', // Das ist weiterhin korrekt
+            bodyColor: Colors.black87,
+            displayColor: Colors.black87,
+          ),
           // Stellen sicher, dass Akzent sichtbar "lebt"
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
               backgroundColor: lightScheme.primary,
               foregroundColor: lightScheme.onPrimary,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           ),
           floatingActionButtonTheme: FloatingActionButtonThemeData(
@@ -188,8 +191,9 @@ class MyApp extends StatelessWidget {
             foregroundColor: lightScheme.onPrimary,
           ),
           //toggleableActiveColor: lightScheme.primary,
-          progressIndicatorTheme:
-              ProgressIndicatorThemeData(color: lightScheme.primary),
+          progressIndicatorTheme: ProgressIndicatorThemeData(
+            color: lightScheme.primary,
+          ),
           textSelectionTheme: TextSelectionThemeData(
             cursorColor: lightScheme.primary,
             selectionColor: lightScheme.primary.withOpacity(0.25),
@@ -202,15 +206,18 @@ class MyApp extends StatelessWidget {
             fillColor: WidgetStateProperty.all(lightScheme.primary),
           ),
           switchTheme: SwitchThemeData(
-            thumbColor:
-                WidgetStateProperty.resolveWith((s) => lightScheme.primary),
+            thumbColor: WidgetStateProperty.resolveWith(
+              (s) => lightScheme.primary,
+            ),
             trackColor: WidgetStateProperty.resolveWith(
-                (s) => lightScheme.primary.withOpacity(0.5)),
+              (s) => lightScheme.primary.withOpacity(0.5),
+            ),
           ),
           dialogTheme: DialogThemeData(
             backgroundColor: cardLight,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
           ),
         );
 
@@ -249,8 +256,10 @@ class MyApp extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: darkScheme.primary, width: 2),
             ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 12,
+            ),
           ),
 
           bottomSheetTheme: const BottomSheetThemeData(
@@ -268,8 +277,9 @@ class MyApp extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
             behavior: SnackBarBehavior.floating,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
 
           dividerTheme: DividerThemeData(
@@ -284,23 +294,24 @@ class MyApp extends StatelessWidget {
             foregroundColor: Colors.white,
             centerTitle: false,
             titleTextStyle: ThemeData.dark().textTheme.titleLarge?.copyWith(
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                ),
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+            ),
           ),
 
           textTheme: ThemeData.dark().textTheme.apply(
-                fontFamily: 'Inter', // Das ist weiterhin korrekt
-                bodyColor: Colors.white,
-                displayColor: Colors.white,
-              ),
+            fontFamily: 'Inter', // Das ist weiterhin korrekt
+            bodyColor: Colors.white,
+            displayColor: Colors.white,
+          ),
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
               backgroundColor: darkScheme.primary,
               foregroundColor: darkScheme.onPrimary,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           ),
           floatingActionButtonTheme: FloatingActionButtonThemeData(
@@ -308,8 +319,9 @@ class MyApp extends StatelessWidget {
             foregroundColor: darkScheme.onPrimary,
           ),
           //toggleableActiveColor: darkScheme.primary,
-          progressIndicatorTheme:
-              ProgressIndicatorThemeData(color: darkScheme.primary),
+          progressIndicatorTheme: ProgressIndicatorThemeData(
+            color: darkScheme.primary,
+          ),
           textSelectionTheme: TextSelectionThemeData(
             cursorColor: darkScheme.primary,
             selectionColor: darkScheme.primary.withOpacity(0.35),
@@ -322,18 +334,21 @@ class MyApp extends StatelessWidget {
             fillColor: WidgetStateProperty.all(darkScheme.primary),
           ),
           switchTheme: SwitchThemeData(
-            thumbColor:
-                WidgetStateProperty.resolveWith((s) => darkScheme.primary),
+            thumbColor: WidgetStateProperty.resolveWith(
+              (s) => darkScheme.primary,
+            ),
             trackColor: WidgetStateProperty.resolveWith(
-                (s) => darkScheme.primary.withOpacity(0.5)),
+              (s) => darkScheme.primary.withOpacity(0.5),
+            ),
           ),
           dialogTheme: DialogThemeData(
             backgroundColor: cardDark,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
           ),
         );
-// KORREKTUR HIER: Wir verwenden einen Consumer, um an den ThemeService zu kommen.
+        // KORREKTUR HIER: Wir verwenden einen Consumer, um an den ThemeService zu kommen.
         return Consumer<ThemeService>(
           builder: (context, themeService, child) {
             return MaterialApp(
@@ -374,7 +389,10 @@ class MyApp extends StatelessWidget {
 class NoGlowScrollBehavior extends ScrollBehavior {
   @override
   Widget buildOverscrollIndicator(
-      BuildContext context, Widget child, ScrollableDetails details) {
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) {
     // Keine Glow-Effekte
     return child;
   }

@@ -47,18 +47,24 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
 
     final l10n = AppLocalizations.of(context)!;
     if (success) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.snackbarExportSuccess)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.snackbarExportSuccess)));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
           content: Text(l10n.snackbarExportFailed),
-          backgroundColor: Colors.orange));
+          backgroundColor: Colors.orange,
+        ),
+      );
     }
   }
 
   void _performFullImport() async {
-    final result = await FilePicker.platform
-        .pickFiles(type: FileType.custom, allowedExtensions: ['json']);
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['json'],
+    );
     if (result == null || result.files.single.path == null) return;
 
     final filePath = result.files.single.path!;
@@ -71,11 +77,13 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
         content: Text(l10n.dialogConfirmImportContent),
         actions: [
           TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(l10n.dialogButtonCancel)),
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.dialogButtonCancel),
+          ),
           FilledButton(
             style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
             onPressed: () => Navigator.of(context).pop(true),
             child: Text(l10n.dialogButtonOverwrite),
           ),
@@ -91,8 +99,10 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
         final pw = await _askPassword(title: l10n.dialogEnterPasswordImport);
         if (pw != null) {
           // <-- wichtig: leer zulassen
-          success = await BackupManager()
-              .importFullBackupAuto(filePath, passphrase: pw);
+          success = await BackupManager().importFullBackupAuto(
+            filePath,
+            passphrase: pw,
+          );
         }
       }
 
@@ -101,12 +111,13 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
 
       if (success) {
         // Neu: Unbekannte Übungsnamen ermitteln und ggf. Mapping anbieten
-        final unknown =
-            await WorkoutDatabaseHelper.instance.findUnknownExerciseNames();
+        final unknown = await WorkoutDatabaseHelper.instance
+            .findUnknownExerciseNames();
         if (mounted && unknown.isNotEmpty) {
           final bool? changed = await Navigator.of(context).push<bool>(
             MaterialPageRoute(
-                builder: (_) => ExerciseMappingScreen(unknownNames: unknown)),
+              builder: (_) => ExerciseMappingScreen(unknownNames: unknown),
+            ),
           );
           // Optional: Nach Anwendung erneut prüfen/refreshen, aber keine Pflicht.
         }
@@ -126,9 +137,12 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
           ),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
             content: Text(l10n.snackbarImportError),
-            backgroundColor: Colors.red));
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -141,39 +155,50 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     setState(() => _isMigrationRunning = false);
 
     if (count > 0) {
-      final unknown =
-          await WorkoutDatabaseHelper.instance.findUnknownExerciseNames();
+      final unknown = await WorkoutDatabaseHelper.instance
+          .findUnknownExerciseNames();
       if (mounted && unknown.isNotEmpty) {
         await Navigator.of(context).push(
           MaterialPageRoute(
-              builder: (_) => ExerciseMappingScreen(unknownNames: unknown)),
+            builder: (_) => ExerciseMappingScreen(unknownNames: unknown),
+          ),
         );
       }
     }
     final l10n = AppLocalizations.of(context)!;
     if (count > 0) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.hevyImportSuccess(count))));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.hevyImportSuccess(count))));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(l10n.hevyImportFailed), backgroundColor: Colors.red));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.hevyImportFailed),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
   // --- NEU: Helfer-Methode für alle CSV-Exporte ---
-  void _exportCsv(Future<bool> Function() exportFunction, String successMessage,
-      String failureMessage) async {
+  void _exportCsv(
+    Future<bool> Function() exportFunction,
+    String successMessage,
+    String failureMessage,
+  ) async {
     setState(() => _isCsvExportRunning = true);
     final success = await exportFunction();
     if (!mounted) return;
     setState(() => _isCsvExportRunning = false);
 
     if (success) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(successMessage)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(successMessage)));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(failureMessage), backgroundColor: Colors.orange));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(failureMessage), backgroundColor: Colors.orange),
+      );
     }
   }
 
@@ -191,9 +216,9 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
         centerTitle: false,
         title: Text(
           "Data Hub",
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
         ),
       ),
       body: SafeArea(
@@ -221,18 +246,25 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
   // --- WIDGET BUILDER ---
 
   Widget _buildFullBackupCard(
-      BuildContext context, AppLocalizations l10n, ThemeData theme) {
+    BuildContext context,
+    AppLocalizations l10n,
+    ThemeData theme,
+  ) {
     return SummaryCard(
       child: Padding(
         padding: DesignConstants.cardPadding,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.dataManagementBackupTitle,
-                style: theme.textTheme.headlineSmall),
+            Text(
+              l10n.dataManagementBackupTitle,
+              style: theme.textTheme.headlineSmall,
+            ),
             const SizedBox(height: DesignConstants.spacingS),
-            Text(l10n.dataManagementBackupDescription,
-                style: theme.textTheme.bodyMedium),
+            Text(
+              l10n.dataManagementBackupDescription,
+              style: theme.textTheme.bodyMedium,
+            ),
             const SizedBox(height: DesignConstants.spacingL),
             Row(
               children: [
@@ -249,14 +281,15 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                     icon: const Icon(Icons.download_for_offline),
                     label: Text(l10n.data_import_button),
                     style: FilledButton.styleFrom(
-                        backgroundColor: theme.colorScheme.error),
+                      backgroundColor: theme.colorScheme.error,
+                    ),
                     onPressed: _isFullBackupRunning ? null : _performFullImport,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: DesignConstants.spacingS),
-// NEU: Verschlüsselt exportieren
+            // NEU: Verschlüsselt exportieren
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
@@ -266,18 +299,22 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                     ? null
                     : () async {
                         final pw = await _askPassword(
-                            title: l10n.dialogPasswordForExport);
+                          title: l10n.dialogPasswordForExport,
+                        );
                         if (pw == null || pw.isEmpty) return;
                         setState(() => _isFullBackupRunning = true);
-                        final ok =
-                            await BackupManager().exportFullBackupEncrypted(pw);
+                        final ok = await BackupManager()
+                            .exportFullBackupEncrypted(pw);
                         if (!mounted) return;
                         setState(() => _isFullBackupRunning = false);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                              content: Text(ok
+                            content: Text(
+                              ok
                                   ? l10n.snackbarEncryptedBackupShared
-                                  : l10n.exportFailed)),
+                                  : l10n.exportFailed,
+                            ),
+                          ),
                         );
                       },
               ),
@@ -295,7 +332,10 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
   }
 
   Widget _buildCsvExportCard(
-      BuildContext context, AppLocalizations l10n, ThemeData theme) {
+    BuildContext context,
+    AppLocalizations l10n,
+    ThemeData theme,
+  ) {
     return SummaryCard(
       child: Padding(
         padding: DesignConstants.cardPadding,
@@ -314,7 +354,8 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                   : () => _exportCsv(
                       BackupManager().exportNutritionAsCsv,
                       l10n.snackbarSharingNutrition,
-                      l10n.snackbarExportFailedNoEntries),
+                      l10n.snackbarExportFailedNoEntries,
+                    ),
             ),
             _buildExportTile(
               icon: Icons.monitor_weight_outlined,
@@ -324,7 +365,8 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                   : () => _exportCsv(
                       BackupManager().exportMeasurementsAsCsv,
                       l10n.snackbarSharingMeasurements,
-                      l10n.snackbarExportFailedNoEntries),
+                      l10n.snackbarExportFailedNoEntries,
+                    ),
             ),
             _buildExportTile(
               icon: Icons.fitness_center,
@@ -334,7 +376,8 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                   : () => _exportCsv(
                       BackupManager().exportWorkoutsAsCsv,
                       l10n.snackbarSharingWorkouts,
-                      l10n.snackbarExportFailedNoEntries),
+                      l10n.snackbarExportFailedNoEntries,
+                    ),
             ),
             if (_isCsvExportRunning)
               const Padding(
@@ -348,7 +391,10 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
   }
 
   Widget _buildMigrationCard(
-      BuildContext context, AppLocalizations l10n, ThemeData theme) {
+    BuildContext context,
+    AppLocalizations l10n,
+    ThemeData theme,
+  ) {
     return SummaryCard(
       child: Padding(
         padding: DesignConstants.cardPadding,
@@ -378,10 +424,11 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     );
   }
 
-  Widget _buildExportTile(
-      {required IconData icon,
-      required String title,
-      required VoidCallback? onTap}) {
+  Widget _buildExportTile({
+    required IconData icon,
+    required String title,
+    required VoidCallback? onTap,
+  }) {
     return ListTile(
       leading: Icon(icon),
       title: Text(title),
@@ -392,7 +439,10 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
   }
 
   Widget _buildExerciseMappingCard(
-      BuildContext context, AppLocalizations l10n, ThemeData theme) {
+    BuildContext context,
+    AppLocalizations l10n,
+    ThemeData theme,
+  ) {
     return SummaryCard(
       child: Padding(
         padding: DesignConstants.cardPadding,
@@ -420,9 +470,12 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     );
   }
 
-// lib/screens/data_management_screen.dart – Auszug: neue Card
+  // lib/screens/data_management_screen.dart – Auszug: neue Card
   Widget _buildAutoBackupCard(
-      BuildContext context, AppLocalizations l10n, ThemeData theme) {
+    BuildContext context,
+    AppLocalizations l10n,
+    ThemeData theme,
+  ) {
     return SummaryCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -431,10 +484,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
           children: [
             Text(l10n.autoBackupTitle, style: theme.textTheme.headlineSmall),
             const SizedBox(height: DesignConstants.spacingS),
-            Text(
-              l10n.autoBackupDescription,
-              style: theme.textTheme.bodyMedium,
-            ),
+            Text(l10n.autoBackupDescription, style: theme.textTheme.bodyMedium),
             const SizedBox(height: DesignConstants.spacingS),
             SelectableText(
               _autoBackupDir ?? l10n.autoBackupDefaultFolder,
@@ -457,8 +507,8 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                     label: Text(l10n.autoBackupCopyPath),
                     onPressed:
                         (_autoBackupDir == null || _autoBackupDir!.isEmpty)
-                            ? null
-                            : _copyAutoBackupPathToClipboard,
+                        ? null
+                        : _copyAutoBackupPathToClipboard,
                   ),
                 ),
               ],
@@ -481,9 +531,12 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                   if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content: Text(ok
+                      content: Text(
+                        ok
                             ? l10n.snackbarAutoBackupSuccess
-                            : l10n.snackbarAutoBackupFailed)),
+                            : l10n.snackbarAutoBackupFailed,
+                      ),
+                    ),
                   );
                 },
               ),
@@ -495,19 +548,20 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
   }
 
   Future<void> _openExerciseMapping() async {
-    final unknown =
-        await WorkoutDatabaseHelper.instance.findUnknownExerciseNames();
+    final unknown = await WorkoutDatabaseHelper.instance
+        .findUnknownExerciseNames();
     final l10n = AppLocalizations.of(context)!;
     if (!mounted) return;
     if (unknown.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.noUnknownExercisesFound)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.noUnknownExercisesFound)));
       return;
     }
     await Navigator.of(context).push(
       MaterialPageRoute(
-          builder: (_) => ExerciseMappingScreen(unknownNames: unknown)),
+        builder: (_) => ExerciseMappingScreen(unknownNames: unknown),
+      ),
     );
   }
 
@@ -531,9 +585,9 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     if (path == null || path.isEmpty) return;
     await Clipboard.setData(ClipboardData(text: path));
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.snackbarPathCopied)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.snackbarPathCopied)));
   }
 
   Future<String?> _askPassword({required String title}) async {

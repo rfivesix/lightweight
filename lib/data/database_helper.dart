@@ -143,17 +143,23 @@ class DatabaseHelper {
 
     // --- Indizes (NACH den Tabellen) ---
     await db.execute(
-        'CREATE UNIQUE INDEX IF NOT EXISTS idx_supplements_code ON supplements(code)');
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_supplements_code ON supplements(code)',
+    );
     await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_food_entries_timestamp ON food_entries(timestamp)');
+      'CREATE INDEX IF NOT EXISTS idx_food_entries_timestamp ON food_entries(timestamp)',
+    );
     await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_food_entries_mealtype_ts ON food_entries(meal_type, timestamp)');
+      'CREATE INDEX IF NOT EXISTS idx_food_entries_mealtype_ts ON food_entries(meal_type, timestamp)',
+    );
     await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_fluid_entries_timestamp ON fluid_entries(timestamp)');
+      'CREATE INDEX IF NOT EXISTS idx_fluid_entries_timestamp ON fluid_entries(timestamp)',
+    );
     await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_supplement_logs_timestamp ON supplement_logs(timestamp)');
+      'CREATE INDEX IF NOT EXISTS idx_supplement_logs_timestamp ON supplement_logs(timestamp)',
+    );
     await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_supplement_logs_supplement ON supplement_logs(supplement_id)');
+      'CREATE INDEX IF NOT EXISTS idx_supplement_logs_supplement ON supplement_logs(supplement_id)',
+    );
 
     // --- Built-ins einmalig einfüllen (idempotent) ---
     final caffeRows = await db.query(
@@ -214,7 +220,8 @@ class DatabaseHelper {
     }
     if (oldVersion < 5) {
       await db.execute(
-          'ALTER TABLE food_entries ADD COLUMN meal_type TEXT NOT NULL DEFAULT "Snack"');
+        'ALTER TABLE food_entries ADD COLUMN meal_type TEXT NOT NULL DEFAULT "Snack"',
+      );
     }
 
     // Upgrade von jedem Zustand vor v9 auf v9 (bereinigt alle alten Measurement-Tabellen)
@@ -224,49 +231,61 @@ class DatabaseHelper {
       await db.execute('DROP TABLE IF EXISTS measurement_sessions');
       // Erstelle die Tabellen in der korrekten, finalen Struktur.
       await db.execute(
-          'CREATE TABLE measurement_sessions (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT NOT NULL)');
+        'CREATE TABLE measurement_sessions (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT NOT NULL)',
+      );
       await db.execute(
-          'CREATE TABLE measurements (id INTEGER PRIMARY KEY AUTOINCREMENT, session_id INTEGER NOT NULL, type TEXT NOT NULL, value REAL NOT NULL, unit TEXT NOT NULL, FOREIGN KEY (session_id) REFERENCES measurement_sessions(id) ON DELETE CASCADE)');
+        'CREATE TABLE measurements (id INTEGER PRIMARY KEY AUTOINCREMENT, session_id INTEGER NOT NULL, type TEXT NOT NULL, value REAL NOT NULL, unit TEXT NOT NULL, FOREIGN KEY (session_id) REFERENCES measurement_sessions(id) ON DELETE CASCADE)',
+      );
       print(
-          "Datenbank auf Version 9 aktualisiert: Measurement-Tabellen sauber erstellt.");
+        "Datenbank auf Version 9 aktualisiert: Measurement-Tabellen sauber erstellt.",
+      );
     }
     // NEU: Upgrade auf Version 10
     if (oldVersion < 10) {
       await db.execute(
-          'CREATE TABLE supplements (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, default_dose REAL NOT NULL, unit TEXT NOT NULL, daily_goal REAL, daily_limit REAL, notes TEXT)');
+        'CREATE TABLE supplements (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, default_dose REAL NOT NULL, unit TEXT NOT NULL, daily_goal REAL, daily_limit REAL, notes TEXT)',
+      );
       await db.execute(
-          'CREATE TABLE supplement_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, supplement_id INTEGER NOT NULL, dose REAL NOT NULL, unit TEXT NOT NULL, timestamp TEXT NOT NULL, FOREIGN KEY (supplement_id) REFERENCES supplements(id) ON DELETE CASCADE)');
+        'CREATE TABLE supplement_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, supplement_id INTEGER NOT NULL, dose REAL NOT NULL, unit TEXT NOT NULL, timestamp TEXT NOT NULL, FOREIGN KEY (supplement_id) REFERENCES supplements(id) ON DELETE CASCADE)',
+      );
 
       await db.insert('supplements', {
         'name': 'Caffeine',
         'default_dose': 100,
         'unit': 'mg',
-        'daily_limit': 400
+        'daily_limit': 400,
       });
       await db.insert('supplements', {
         'name': 'Creatine Monohydrate',
         'default_dose': 5,
         'unit': 'g',
-        'daily_goal': 5
+        'daily_goal': 5,
       });
       print(
-          "Datenbank auf Version 10 aktualisiert: Supplement-Tabellen hinzugefügt.");
+        "Datenbank auf Version 10 aktualisiert: Supplement-Tabellen hinzugefügt.",
+      );
     }
     // Upgrade auf Version 11
     if (oldVersion < 11) {
       // 1) Spalten ergänzen (ALTER kann fehlschlagen, falls bereits vorhanden – deshalb try/catch)
       try {
         await db.execute(
-            'ALTER TABLE supplements ADD COLUMN is_builtin INTEGER NOT NULL DEFAULT 0');
+          'ALTER TABLE supplements ADD COLUMN is_builtin INTEGER NOT NULL DEFAULT 0',
+        );
       } catch (_) {}
       try {
         await db.execute(
-            'ALTER TABLE supplement_logs ADD COLUMN source_food_entry_id INTEGER');
+          'ALTER TABLE supplement_logs ADD COLUMN source_food_entry_id INTEGER',
+        );
       } catch (_) {}
 
       // 2) Caffeine absichern/vereinheitlichen
-      final rows = await db.query('supplements',
-          where: 'name = ?', whereArgs: ['Caffeine'], limit: 1);
+      final rows = await db.query(
+        'supplements',
+        where: 'name = ?',
+        whereArgs: ['Caffeine'],
+        limit: 1,
+      );
       if (rows.isEmpty) {
         await db.insert('supplements', {
           'name': 'Caffeine',
@@ -277,59 +296,79 @@ class DatabaseHelper {
         });
       } else {
         await db.update(
-            'supplements',
-            {
-              'unit': 'mg',
-              'is_builtin': 1,
-            },
-            where: 'name = ?',
-            whereArgs: ['Caffeine']);
+          'supplements',
+          {'unit': 'mg', 'is_builtin': 1},
+          where: 'name = ?',
+          whereArgs: ['Caffeine'],
+        );
       }
 
       print(
-          "Datenbank auf Version 11 aktualisiert: builtin-Flag & FoodEntry-Link für Supplements.");
+        "Datenbank auf Version 11 aktualisiert: builtin-Flag & FoodEntry-Link für Supplements.",
+      );
     }
-// Upgrade auf Version 12
+    // Upgrade auf Version 12
     if (oldVersion < 12) {
       try {
         await db.execute('ALTER TABLE supplements ADD COLUMN code TEXT');
       } catch (_) {}
       try {
         await db.execute(
-            'CREATE UNIQUE INDEX IF NOT EXISTS idx_supplements_code ON supplements(code)');
+          'CREATE UNIQUE INDEX IF NOT EXISTS idx_supplements_code ON supplements(code)',
+        );
       } catch (_) {}
 
       // Backfill Codes für bestehende Einträge
       // Caffeine
-      final caff = await db.query('supplements',
-          where: 'name = ?', whereArgs: ['Caffeine'], limit: 1);
+      final caff = await db.query(
+        'supplements',
+        where: 'name = ?',
+        whereArgs: ['Caffeine'],
+        limit: 1,
+      );
       if (caff.isNotEmpty) {
         await db.update(
-            'supplements', {'code': 'caffeine', 'is_builtin': 1, 'unit': 'mg'},
-            where: 'id = ?', whereArgs: [caff.first['id']]);
+          'supplements',
+          {'code': 'caffeine', 'is_builtin': 1, 'unit': 'mg'},
+          where: 'id = ?',
+          whereArgs: [caff.first['id']],
+        );
       }
       // Creatine
-      final crea = await db.query('supplements',
-          where: 'name LIKE ?', whereArgs: ['Creatine%'], limit: 1);
+      final crea = await db.query(
+        'supplements',
+        where: 'name LIKE ?',
+        whereArgs: ['Creatine%'],
+        limit: 1,
+      );
       if (crea.isNotEmpty) {
-        await db.update('supplements', {'code': 'creatine_monohydrate'},
-            where: 'id = ?', whereArgs: [crea.first['id']]);
+        await db.update(
+          'supplements',
+          {'code': 'creatine_monohydrate'},
+          where: 'id = ?',
+          whereArgs: [crea.first['id']],
+        );
       }
 
       print("DB v12: supplements.code hinzugefügt & befüllt.");
     }
-// Upgrade auf Version 13: Indizes nachziehen
+    // Upgrade auf Version 13: Indizes nachziehen
     if (oldVersion < 13) {
       await db.execute(
-          'CREATE UNIQUE INDEX IF NOT EXISTS idx_supplements_code ON supplements(code)');
+        'CREATE UNIQUE INDEX IF NOT EXISTS idx_supplements_code ON supplements(code)',
+      );
       await db.execute(
-          'CREATE INDEX IF NOT EXISTS idx_food_entries_timestamp ON food_entries(timestamp)');
+        'CREATE INDEX IF NOT EXISTS idx_food_entries_timestamp ON food_entries(timestamp)',
+      );
       await db.execute(
-          'CREATE INDEX IF NOT EXISTS idx_fluid_entries_timestamp ON fluid_entries(timestamp)');
+        'CREATE INDEX IF NOT EXISTS idx_fluid_entries_timestamp ON fluid_entries(timestamp)',
+      );
       await db.execute(
-          'CREATE INDEX IF NOT EXISTS idx_supp_logs_ts ON supplement_logs(timestamp)');
+        'CREATE INDEX IF NOT EXISTS idx_supp_logs_ts ON supplement_logs(timestamp)',
+      );
       await db.execute(
-          'CREATE INDEX IF NOT EXISTS idx_supp_logs_supp ON supplement_logs(supplement_id)');
+        'CREATE INDEX IF NOT EXISTS idx_supp_logs_supp ON supplement_logs(supplement_id)',
+      );
       print("DB v13: Performance-Indizes erstellt.");
     }
     // Upgrade auf Version 14: Mahlzeiten
@@ -433,46 +472,56 @@ class DatabaseHelper {
 
       // Indizes
       await db.execute(
-          'CREATE UNIQUE INDEX IF NOT EXISTS idx_supplements_code ON supplements(code)');
+        'CREATE UNIQUE INDEX IF NOT EXISTS idx_supplements_code ON supplements(code)',
+      );
       await db.execute(
-          'CREATE INDEX IF NOT EXISTS idx_food_entries_timestamp ON food_entries(timestamp)');
+        'CREATE INDEX IF NOT EXISTS idx_food_entries_timestamp ON food_entries(timestamp)',
+      );
       await db.execute(
-          'CREATE INDEX IF NOT EXISTS idx_food_entries_mealtype_ts ON food_entries(meal_type, timestamp)');
+        'CREATE INDEX IF NOT EXISTS idx_food_entries_mealtype_ts ON food_entries(meal_type, timestamp)',
+      );
       await db.execute(
-          'CREATE INDEX IF NOT EXISTS idx_fluid_entries_timestamp ON fluid_entries(timestamp)');
+        'CREATE INDEX IF NOT EXISTS idx_fluid_entries_timestamp ON fluid_entries(timestamp)',
+      );
       await db.execute(
-          'CREATE INDEX IF NOT EXISTS idx_supplement_logs_timestamp ON supplement_logs(timestamp)');
+        'CREATE INDEX IF NOT EXISTS idx_supplement_logs_timestamp ON supplement_logs(timestamp)',
+      );
       await db.execute(
-          'CREATE INDEX IF NOT EXISTS idx_supplement_logs_supplement ON supplement_logs(supplement_id)');
+        'CREATE INDEX IF NOT EXISTS idx_supplement_logs_supplement ON supplement_logs(supplement_id)',
+      );
 
       debugPrint('Catch-up: Tabellen + Indizes bis v14 sichergestellt.');
     }
 
     if (oldVersion < 15) {
       try {
-        await db
-            .execute('ALTER TABLE food_entries ADD COLUMN sugar_in_grams REAL');
+        await db.execute(
+          'ALTER TABLE food_entries ADD COLUMN sugar_in_grams REAL',
+        );
       } catch (_) {}
       debugPrint("DB v15: food_entries.sugar_in_grams added.");
     }
     if (oldVersion < 16) {
       try {
         await db.execute(
-            'ALTER TABLE fluid_entries ADD COLUMN carbs_per_100ml REAL');
+          'ALTER TABLE fluid_entries ADD COLUMN carbs_per_100ml REAL',
+        );
       } catch (_) {}
       debugPrint("DB v16: fluid_entries.carbs_per_100ml added.");
     }
     if (oldVersion < 17) {
       try {
         await db.execute(
-            'ALTER TABLE supplement_logs ADD COLUMN source_fluid_entry_id INTEGER');
+          'ALTER TABLE supplement_logs ADD COLUMN source_fluid_entry_id INTEGER',
+        );
       } catch (_) {}
       debugPrint("DB v17: supplement_logs.source_fluid_entry_id added.");
     }
     if (oldVersion < 18) {
       try {
         await db.execute(
-            'ALTER TABLE supplement_logs ADD COLUMN source_fluid_entry_id INTEGER');
+          'ALTER TABLE supplement_logs ADD COLUMN source_fluid_entry_id INTEGER',
+        );
         // Füge die Fremdschlüsselbeziehung hinzu, falls sie nicht existiert
         // HINWEIS: Das Hinzufügen von Foreign Keys zu einer bestehenden Tabelle ist in SQLite komplex.
         // Für Einfachheit verlassen wir uns auf die Löschlogik in der App.
@@ -482,7 +531,8 @@ class DatabaseHelper {
       // Korrigiere auch den Foreign Key für food_entries, falls er falsch war
       try {
         await db.execute(
-            'DROP INDEX IF EXISTS idx_supp_logs_food_entry'); // Beispiel, falls alter Index existierte
+          'DROP INDEX IF EXISTS idx_supp_logs_food_entry',
+        ); // Beispiel, falls alter Index existierte
         await db.execute('''
           -- Rekonstruktion der Tabelle, um Foreign Key hinzuzufügen, ist aufwändig.
           -- Stattdessen stellen wir sicher, dass die Logik in der App stimmt.
@@ -491,13 +541,15 @@ class DatabaseHelper {
       } catch (_) {}
 
       debugPrint(
-          "DB v18: supplement_logs.source_fluid_entry_id hinzugefügt und Foreign Keys sichergestellt.");
+        "DB v18: supplement_logs.source_fluid_entry_id hinzugefügt und Foreign Keys sichergestellt.",
+      );
     }
 
     if (oldVersion < 19) {
       try {
         await db.execute(
-            'ALTER TABLE fluid_entries ADD COLUMN linked_food_entry_id INTEGER');
+          'ALTER TABLE fluid_entries ADD COLUMN linked_food_entry_id INTEGER',
+        );
       } catch (_) {}
       debugPrint("DB v19: fluid_entries.linked_food_entry_id added.");
     }
@@ -506,10 +558,14 @@ class DatabaseHelper {
   // --- FOOD ENTRIES ---
   Future<int> insertFoodEntry(FoodEntry entry) async {
     final db = await database;
-    final id = await db.insert('food_entries', entry.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    final id = await db.insert(
+      'food_entries',
+      entry.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
     print(
-        "Neuer FoodEntry erfolgreich in der Benutzer-DB gespeichert (id=$id).");
+      "Neuer FoodEntry erfolgreich in der Benutzer-DB gespeichert (id=$id).",
+    );
     return id;
   }
 
@@ -534,7 +590,9 @@ class DatabaseHelper {
   }
 
   Future<List<FoodEntry>> getEntriesForDateRange(
-      DateTime start, DateTime end) async {
+    DateTime start,
+    DateTime end,
+  ) async {
     final db = await database;
     final startDateString = DateFormat('yyyy-MM-dd').format(start);
     final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
@@ -559,25 +617,36 @@ class DatabaseHelper {
     final db = await database;
     await db.transaction((txn) async {
       // Lösche zuerst verknüpfte Supplement-Logs (z.B. Koffein)
-      await txn.delete('supplement_logs',
-          where: 'source_food_entry_id = ?', whereArgs: [id]);
+      await txn.delete(
+        'supplement_logs',
+        where: 'source_food_entry_id = ?',
+        whereArgs: [id],
+      );
       // Lösche dann den verknüpften Fluid-Eintrag (falls vorhanden)
-      await txn.delete('fluid_entries',
-          where: 'linked_food_entry_id = ?', whereArgs: [id]);
+      await txn.delete(
+        'fluid_entries',
+        where: 'linked_food_entry_id = ?',
+        whereArgs: [id],
+      );
       // Lösche zuletzt den Food-Eintrag selbst
       await txn.delete('food_entries', where: 'id = ?', whereArgs: [id]);
     });
     print(
-        "Eintrag mit ID $id und alle verknüpften Daten erfolgreich gelöscht.");
+      "Eintrag mit ID $id und alle verknüpften Daten erfolgreich gelöscht.",
+    );
   }
 
   // --- FLUID ENTRIES ---
   Future<int> insertFluidEntry(FluidEntry entry) async {
     final db = await database;
-    final id = await db.insert('fluid_entries', entry.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    final id = await db.insert(
+      'fluid_entries',
+      entry.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
     print(
-        "Neuer FluidEntry erfolgreich in der Benutzer-DB gespeichert (id=$id).");
+      "Neuer FluidEntry erfolgreich in der Benutzer-DB gespeichert (id=$id).",
+    );
     return id;
   }
 
@@ -617,18 +686,24 @@ class DatabaseHelper {
         // Dies ist ein eigenständiger FluidEntry (z.B. "Wasser" oder manueller Proteinshake).
         // Er hat möglicherweise einen eigenen Koffein-Log.
         await db.transaction((txn) async {
-          await txn.delete('supplement_logs',
-              where: 'source_fluid_entry_id = ?', whereArgs: [id]);
+          await txn.delete(
+            'supplement_logs',
+            where: 'source_fluid_entry_id = ?',
+            whereArgs: [id],
+          );
           await txn.delete('fluid_entries', where: 'id = ?', whereArgs: [id]);
         });
       }
       print(
-          "Fluid-Eintrag mit ID $id und alle verknüpften Daten erfolgreich gelöscht.");
+        "Fluid-Eintrag mit ID $id und alle verknüpften Daten erfolgreich gelöscht.",
+      );
     }
   }
 
   Future<List<FluidEntry>> getFluidEntriesForDateRange(
-      DateTime start, DateTime end) async {
+    DateTime start,
+    DateTime end,
+  ) async {
     final db = await database;
     final startDateString = DateFormat('yyyy-MM-dd').format(start);
     final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
@@ -669,8 +744,11 @@ class DatabaseHelper {
 
   Future<bool> isFavorite(String barcode) async {
     final db = await database;
-    final List<Map<String, dynamic>> maps =
-        await db.query('favorites', where: 'barcode = ?', whereArgs: [barcode]);
+    final List<Map<String, dynamic>> maps = await db.query(
+      'favorites',
+      where: 'barcode = ?',
+      whereArgs: [barcode],
+    );
     return maps.isNotEmpty;
   }
 
@@ -702,10 +780,9 @@ class DatabaseHelper {
   Future<void> insertMeasurementSession(MeasurementSession session) async {
     final db = await database;
     await db.transaction((txn) async {
-      final sessionId = await txn.insert(
-        'measurement_sessions',
-        {'timestamp': session.timestamp.toIso8601String()},
-      );
+      final sessionId = await txn.insert('measurement_sessions', {
+        'timestamp': session.timestamp.toIso8601String(),
+      });
 
       for (final measurement in session.measurements) {
         // WICHTIG: Wir erstellen hier eine NEUE Map aus dem Measurement-Objekt,
@@ -741,14 +818,17 @@ class DatabaseHelper {
       );
 
       // Die fromMap-Methode im korrigierten Measurement-Modell wird hier verwendet.
-      final measurements =
-          measurementMaps.map((map) => Measurement.fromMap(map)).toList();
+      final measurements = measurementMaps
+          .map((map) => Measurement.fromMap(map))
+          .toList();
 
-      sessions.add(MeasurementSession(
-        id: sessionId,
-        timestamp: DateTime.parse(sessionMap['timestamp'] as String),
-        measurements: measurements,
-      ));
+      sessions.add(
+        MeasurementSession(
+          id: sessionId,
+          timestamp: DateTime.parse(sessionMap['timestamp'] as String),
+          measurements: measurements,
+        ),
+      );
     }
     return sessions;
   }
@@ -757,7 +837,8 @@ class DatabaseHelper {
     final db = await database;
     await db.delete('measurement_sessions', where: 'id = ?', whereArgs: [id]);
     print(
-        "Measurement-Session mit ID $id (und zugehörige Messwerte) gelöscht.");
+      "Measurement-Session mit ID $id (und zugehörige Messwerte) gelöscht.",
+    );
   }
 
   // --- CHART DATA HELPERS ---
@@ -771,7 +852,8 @@ class DatabaseHelper {
     // Sie holt den 'value' aus der 'measurements'-Tabelle und den zugehörigen
     // 'timestamp' aus der 'measurement_sessions'-Tabelle, filtert nach dem
     // gewünschten Typ und sortiert nach Datum.
-    final List<Map<String, dynamic>> maps = await db.rawQuery('''
+    final List<Map<String, dynamic>> maps = await db.rawQuery(
+      '''
       SELECT
         s.timestamp,
         m.value
@@ -779,7 +861,9 @@ class DatabaseHelper {
       INNER JOIN measurement_sessions s ON m.session_id = s.id
       WHERE m.type = ?
       ORDER BY s.timestamp ASC 
-    ''', [type]);
+    ''',
+      [type],
+    );
 
     if (maps.isEmpty) {
       return [];
@@ -795,10 +879,13 @@ class DatabaseHelper {
   }
 
   Future<List<ChartDataPoint>> getChartDataForTypeAndRange(
-      String type, DateTimeRange range) async {
+    String type,
+    DateTimeRange range,
+  ) async {
     final db = await database;
 
-    final List<Map<String, dynamic>> maps = await db.rawQuery('''
+    final List<Map<String, dynamic>> maps = await db.rawQuery(
+      '''
       SELECT
         s.timestamp,
         m.value
@@ -806,11 +893,9 @@ class DatabaseHelper {
       INNER JOIN measurement_sessions s ON m.session_id = s.id
       WHERE m.type = ? AND s.timestamp BETWEEN ? AND ?
       ORDER BY s.timestamp ASC 
-    ''', [
-      type,
-      range.start.toIso8601String(),
-      range.end.toIso8601String(),
-    ]);
+    ''',
+      [type, range.start.toIso8601String(), range.end.toIso8601String()],
+    );
 
     if (maps.isEmpty) {
       return [];
@@ -837,8 +922,11 @@ class DatabaseHelper {
 
   Future<DateTime?> getEarliestMeasurementDate() async {
     final db = await database;
-    final maps = await db.query('measurement_sessions',
-        orderBy: 'timestamp ASC', limit: 1);
+    final maps = await db.query(
+      'measurement_sessions',
+      orderBy: 'timestamp ASC',
+      limit: 1,
+    );
     if (maps.isNotEmpty) {
       return DateTime.parse(maps.first['timestamp'] as String);
     }
@@ -847,8 +935,11 @@ class DatabaseHelper {
 
   Future<DateTime?> getEarliestFoodEntryDate() async {
     final db = await database;
-    final maps =
-        await db.query('food_entries', orderBy: 'timestamp ASC', limit: 1);
+    final maps = await db.query(
+      'food_entries',
+      orderBy: 'timestamp ASC',
+      limit: 1,
+    );
     if (maps.isNotEmpty) {
       return DateTime.parse(maps.first['timestamp'] as String);
     }
@@ -859,13 +950,15 @@ class DatabaseHelper {
     final db = await database;
     final maps = await db.query('food_entries');
     return maps
-        .map((map) => FoodEntry(
-              id: map['id'] as int?,
-              barcode: map['barcode'] as String,
-              timestamp: DateTime.parse(map['timestamp'] as String),
-              quantityInGrams: map['quantity_in_grams'] as int,
-              mealType: map['meal_type'] as String,
-            ))
+        .map(
+          (map) => FoodEntry(
+            id: map['id'] as int?,
+            barcode: map['barcode'] as String,
+            timestamp: DateTime.parse(map['timestamp'] as String),
+            quantityInGrams: map['quantity_in_grams'] as int,
+            mealType: map['meal_type'] as String,
+          ),
+        )
         .toList();
   }
 
@@ -896,8 +989,9 @@ class DatabaseHelper {
       }
       for (final session in measurementSessions) {
         // KORREKTUR: Erstellt die Map für die Session direkt hier.
-        final sessionId = await txn.insert('measurement_sessions',
-            {'timestamp': session.timestamp.toIso8601String()});
+        final sessionId = await txn.insert('measurement_sessions', {
+          'timestamp': session.timestamp.toIso8601String(),
+        });
         for (final measurement in session.measurements) {
           // KORREKTUR: Erstellt die Map für das Measurement hier und fügt die NEUE sessionId hinzu.
           await txn.insert('measurements', {
@@ -921,7 +1015,7 @@ class DatabaseHelper {
       where: 'timestamp BETWEEN ? AND ?',
       whereArgs: [
         firstDayOfMonth.toIso8601String(),
-        lastDayOfMonth.toIso8601String()
+        lastDayOfMonth.toIso8601String(),
       ],
     );
 
@@ -937,17 +1031,21 @@ class DatabaseHelper {
 
   Future<Supplement> insertSupplement(Supplement supplement) async {
     final db = await database;
-    final id = await db.insert('supplements', supplement.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    final id = await db.insert(
+      'supplements',
+      supplement.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
     // Erstelle eine neue Instanz mit der zurückgegebenen ID
     return Supplement(
-        id: id,
-        name: supplement.name,
-        defaultDose: supplement.defaultDose,
-        unit: supplement.unit,
-        dailyGoal: supplement.dailyGoal,
-        dailyLimit: supplement.dailyLimit,
-        notes: supplement.notes);
+      id: id,
+      name: supplement.name,
+      defaultDose: supplement.defaultDose,
+      unit: supplement.unit,
+      dailyGoal: supplement.dailyGoal,
+      dailyLimit: supplement.dailyLimit,
+      notes: supplement.notes,
+    );
   }
 
   Future<List<Supplement>> getAllSupplements() async {
@@ -960,16 +1058,23 @@ class DatabaseHelper {
     final db = await database;
 
     // Built-in blockieren
-    final check = await db.query('supplements',
-        where: 'id = ?', whereArgs: [id], limit: 1);
+    final check = await db.query(
+      'supplements',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
     if (check.isNotEmpty && (check.first['is_builtin'] as int? ?? 0) == 1) {
       throw Exception("Built-in supplement can't be deleted.");
     }
 
     // Logs + Supplement löschen
     await db.transaction((txn) async {
-      await txn.delete('supplement_logs',
-          where: 'supplement_id = ?', whereArgs: [id]);
+      await txn.delete(
+        'supplement_logs',
+        where: 'supplement_id = ?',
+        whereArgs: [id],
+      );
       await txn.delete('supplements', where: 'id = ?', whereArgs: [id]);
     });
   }
@@ -978,11 +1083,12 @@ class DatabaseHelper {
     final db = await database;
     final id = await db.insert('supplement_logs', log.toMap());
     return SupplementLog(
-        id: id,
-        supplementId: log.supplementId,
-        dose: log.dose,
-        unit: log.unit,
-        timestamp: log.timestamp);
+      id: id,
+      supplementId: log.supplementId,
+      dose: log.dose,
+      unit: log.unit,
+      timestamp: log.timestamp,
+    );
   }
 
   Future<void> updateSupplement(Supplement supplement) async {
@@ -1042,8 +1148,13 @@ class DatabaseHelper {
 
   Future<int> _getCaffeineSupplementId() async {
     final db = await database;
-    final r = await db.query('supplements',
-        columns: ['id'], where: 'code = ?', whereArgs: ['caffeine'], limit: 1);
+    final r = await db.query(
+      'supplements',
+      columns: ['id'],
+      where: 'code = ?',
+      whereArgs: ['caffeine'],
+      limit: 1,
+    );
     if (r.isEmpty) {
       throw Exception('Caffeine supplement missing');
     }
@@ -1062,8 +1173,11 @@ class DatabaseHelper {
     final db = await database;
 
     // Vorherige (falls vorhanden) löschen
-    await db.delete('supplement_logs',
-        where: 'source_food_entry_id = ?', whereArgs: [foodEntryId]);
+    await db.delete(
+      'supplement_logs',
+      where: 'source_food_entry_id = ?',
+      whereArgs: [foodEntryId],
+    );
 
     if (caffeinePer100ml == null) return;
 
@@ -1072,16 +1186,13 @@ class DatabaseHelper {
     // mg = (mg / 100 ml) * (ml / 100)
     final double doseMg = caffeinePer100ml * (quantityInMl / 100.0);
 
-    await db.insert(
-        'supplement_logs',
-        {
-          'supplement_id': caffeineId,
-          'dose': doseMg,
-          'unit': 'mg',
-          'timestamp': timestamp.toIso8601String(),
-          'source_food_entry_id': foodEntryId,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert('supplement_logs', {
+      'supplement_id': caffeineId,
+      'dose': doseMg,
+      'unit': 'mg',
+      'timestamp': timestamp.toIso8601String(),
+      'source_food_entry_id': foodEntryId,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   @override
@@ -1127,7 +1238,7 @@ class DatabaseHelper {
       where: 'timestamp BETWEEN ? AND ?',
       whereArgs: [
         firstDayOfMonth.toIso8601String(),
-        lastDayOfMonth.toIso8601String()
+        lastDayOfMonth.toIso8601String(),
       ],
     );
 
@@ -1177,12 +1288,18 @@ class DatabaseHelper {
 
   Future<List<Map<String, dynamic>>> getMealItems(int mealId) async {
     final db = await database;
-    return await db
-        .query('meal_items', where: 'meal_id = ?', whereArgs: [mealId]);
+    return await db.query(
+      'meal_items',
+      where: 'meal_id = ?',
+      whereArgs: [mealId],
+    );
   }
 
-  Future<int> addMealItem(int mealId,
-      {required String barcode, required int grams}) async {
+  Future<int> addMealItem(
+    int mealId, {
+    required String barcode,
+    required int grams,
+  }) async {
     final db = await database;
     return await db.insert('meal_items', {
       'meal_id': mealId,

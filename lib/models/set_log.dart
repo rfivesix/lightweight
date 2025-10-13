@@ -10,7 +10,7 @@ class SetLog {
   final int? reps;
   final int? restTimeSeconds;
   final bool?
-      isCompleted; // WAR bool?, ist es schon, perfekt. Keine Änderung nötig.
+  isCompleted; // WAR bool?, ist es schon, perfekt. Keine Änderung nötig.
   final int? log_order;
   final String? notes;
   final double? distanceKm;

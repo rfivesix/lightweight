@@ -390,7 +390,7 @@ class NutritionSummaryWidget extends StatelessWidget {
                 ],
               ),
             ),
-          ]
+          ],
         ],
       ),
     );
@@ -423,10 +423,7 @@ class _InfoBox extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(9),
-        border: Border.all(
-          color: borderColor,
-          width: 1.0,
-        ),
+        border: Border.all(color: borderColor, width: 1.0),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(9),
@@ -447,8 +444,10 @@ class _InfoBox extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10.0,
+                  vertical: 4.0,
+                ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -459,9 +458,10 @@ class _InfoBox extends StatelessWidget {
                         spec.label,
                         maxLines: 1,
                         style: TextStyle(
-                            color: colorScheme.onSurface,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold),
+                          color: colorScheme.onSurface,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 4),
