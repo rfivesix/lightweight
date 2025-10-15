@@ -161,9 +161,9 @@ Widget _buildSectionTitle(BuildContext context, String title) {
     child: Text(
       title,
       style: Theme.of(context).textTheme.labelLarge?.copyWith(
-        color: Colors.grey[600],
-        fontWeight: FontWeight.bold,
-      ),
+            color: Colors.grey[600],
+            fontWeight: FontWeight.bold,
+          ),
     ),
   );
 }

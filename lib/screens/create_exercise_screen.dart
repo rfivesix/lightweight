@@ -106,8 +106,8 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                       ),
                       validator: (value) =>
                           value == null || value.trim().isEmpty
-                          ? l10n.validatorPleaseEnterName
-                          : null,
+                              ? l10n.validatorPleaseEnterName
+                              : null,
                     ),
                     const SizedBox(height: DesignConstants.spacingL),
 
@@ -119,37 +119,35 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                         }
                         return _allCategories.where((String option) {
                           return option.toLowerCase().contains(
-                            textEditingValue.text.toLowerCase(),
-                          );
+                                textEditingValue.text.toLowerCase(),
+                              );
                         });
                       },
                       onSelected: (String selection) {
                         _categoryController.text = selection;
                       },
-                      fieldViewBuilder:
-                          (
-                            context,
-                            textEditingController,
-                            focusNode,
-                            onFieldSubmitted,
-                          ) {
-                            _categoryController.value =
-                                textEditingController.value;
-                            return TextFormField(
-                              controller: textEditingController,
-                              focusNode: focusNode,
-                              decoration: InputDecoration(
-                                labelText: l10n.category_label,
-                                hintText: l10n.categoryHint,
-                              ),
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return l10n.validatorPleaseEnterCategory;
-                                }
-                                return null;
-                              },
-                            );
+                      fieldViewBuilder: (
+                        context,
+                        textEditingController,
+                        focusNode,
+                        onFieldSubmitted,
+                      ) {
+                        _categoryController.value = textEditingController.value;
+                        return TextFormField(
+                          controller: textEditingController,
+                          focusNode: focusNode,
+                          decoration: InputDecoration(
+                            labelText: l10n.category_label,
+                            hintText: l10n.categoryHint,
+                          ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return l10n.validatorPleaseEnterCategory;
+                            }
+                            return null;
                           },
+                        );
+                      },
                     ),
 
                     const SizedBox(height: DesignConstants.spacingL),

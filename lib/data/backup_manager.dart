@@ -33,8 +33,7 @@ class BackupManager {
       final favoriteBarcodes = await _userDb.getFavoriteBarcodes();
       final measurementSessions = await _userDb.getMeasurementSessions();
       final productDb = await _productDb.offDatabase;
-      final customFoodMaps =
-          await productDb?.query(
+      final customFoodMaps = await productDb?.query(
             'products',
             where: 'barcode LIKE ?',
             whereArgs: ['user_created_%'],
@@ -134,15 +133,13 @@ class BackupManager {
           await prefs.setStringList(key, value);
         }
       }
-      final supplements = await _userDb.getAllSupplements();
-      final supplementLogs = await _userDb.getAllSupplementLogs();
       await _userDb.importUserData(
         foodEntries: backup.foodEntries,
         fluidEntries: backup.fluidEntries,
         favoriteBarcodes: backup.favoriteBarcodes,
         measurementSessions: backup.measurementSessions,
-        supplements: supplements,
-        supplementLogs: supplementLogs,
+        supplements: backup.supplements,
+        supplementLogs: backup.supplementLogs,
       );
       if (productDb != null) {
         final cols = await _getTableColumns(productDb, 'products'); // <-- neu
@@ -323,8 +320,7 @@ class BackupManager {
       final favoriteBarcodes = await _userDb.getFavoriteBarcodes();
       final measurementSessions = await _userDb.getMeasurementSessions();
       final productDb = await _productDb.offDatabase;
-      final customFoodMaps =
-          await productDb?.query(
+      final customFoodMaps = await productDb?.query(
             'products',
             where: 'barcode LIKE ?',
             whereArgs: ['user_created_%'],
@@ -445,8 +441,7 @@ class BackupManager {
           await prefs.setDouble(k, v);
         else if (v is String)
           await prefs.setString(k, v);
-        else if (v is List<String>)
-          await prefs.setStringList(k, v);
+        else if (v is List<String>) await prefs.setStringList(k, v);
       }
 
       await _userDb.importUserData(
@@ -511,8 +506,7 @@ class BackupManager {
       final favoriteBarcodes = await _userDb.getFavoriteBarcodes();
       final measurementSessions = await _userDb.getMeasurementSessions();
       final productDb = await _productDb.offDatabase;
-      final customFoodMaps =
-          await productDb?.query(
+      final customFoodMaps = await productDb?.query(
             'products',
             where: 'barcode LIKE ?',
             whereArgs: ['user_created_%'],
@@ -550,8 +544,8 @@ class BackupManager {
       Directory baseDir = (dirPath != null && dirPath.trim().isNotEmpty)
           ? Directory(dirPath)
           : ((saved != null && saved.trim().isNotEmpty)
-                ? Directory(saved)
-                : Directory(p.join(docs.path, 'Backups')));
+              ? Directory(saved)
+              : Directory(p.join(docs.path, 'Backups')));
       await baseDir.create(recursive: true);
       final ts = DateFormat('yyyy-MM-dd_HH-mm').format(DateTime.now());
 
@@ -591,15 +585,14 @@ class BackupManager {
       print('Auto-Backup geschrieben: ${outFile.path}');
 
       // 5) Retention
-      final files =
-          baseDir
-              .listSync()
-              .whereType<File>()
-              .where((f) => p.basename(f.path).startsWith('lightweight_auto'))
-              .toList()
-            ..sort(
-              (a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()),
-            );
+      final files = baseDir
+          .listSync()
+          .whereType<File>()
+          .where((f) => p.basename(f.path).startsWith('lightweight_auto'))
+          .toList()
+        ..sort(
+          (a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()),
+        );
       for (var i = retention; i < files.length; i++) {
         try {
           files[i].deleteSync();
@@ -640,7 +633,7 @@ class ProbeResult {
 ProbeResult _probeBackup(Uint8List bytes) {
   // 1) Quick JSON sniff
   if (bytes.isNotEmpty &&
-      (bytes.first == 0x7B /* '{' */ || bytes.first == 0x5B /* '[' */ )) {
+      (bytes.first == 0x7B /* '{' */ || bytes.first == 0x5B /* '[' */)) {
     // Looks like plain JSON (very common for unencrypted exports)
     return ProbeResult(encrypted: false, gzipped: false);
   }

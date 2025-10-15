@@ -50,8 +50,7 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
   Future<void> _delete(Supplement s) async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      final ok =
-          await showDialog<bool>(
+      final ok = await showDialog<bool>(
             context: context,
             builder: (_) => AlertDialog(
               title: Text(l10n.deleteConfirmTitle),

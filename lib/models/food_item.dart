@@ -70,7 +70,7 @@ class FoodItem {
     return FoodItem(
       barcode: map['barcode'] ?? '',
       // KORRIGIERTE LOGIK: Alle Namensvarianten auslesen
-      name: map['name'] ?? map['name_en'] ?? map['name_de'] ?? '',
+      name: map['name'] ?? '',
       nameDe: map['name_de'] ?? '',
       nameEn: map['name_en'] ?? '',
       brand: map['brand'] ?? '',

@@ -19,8 +19,11 @@ import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/off_attribution_widget.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 
+// lib/screens/add_food_screen.dart
+
 class AddFoodScreen extends StatefulWidget {
-  const AddFoodScreen({super.key});
+  final int initialTab;
+  const AddFoodScreen({super.key, this.initialTab = 0});
 
   @override
   State<AddFoodScreen> createState() => _AddFoodScreenState();
@@ -98,7 +101,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this); // 4 Tabs
+    _tabController =
+        TabController(length: 4, vsync: this, initialIndex: widget.initialTab);
     _currentTab = _tabController.index;
     _tabController.addListener(() {
       if (_currentTab != _tabController.index) {
@@ -167,11 +171,11 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     Navigator.of(context)
         .push(MaterialPageRoute(builder: (context) => const CreateFoodScreen()))
         .then((_) {
-          _searchController.clear();
-          _runFilter('');
-          _loadFavorites();
-          _loadRecentItems();
-        });
+      _searchController.clear();
+      _runFilter('');
+      _loadFavorites();
+      _loadRecentItems();
+    });
   }
 
   Future<void> _loadFavorites() async {
@@ -385,17 +389,17 @@ class _AddFoodScreenState extends State<AddFoodScreen>
             child: _isLoadingSearch
                 ? const Center(child: CircularProgressIndicator())
                 : _foundFoodItems.isNotEmpty
-                ? ListView.builder(
-                    itemCount: _foundFoodItems.length,
-                    itemBuilder: (context, index) =>
-                        _buildFoodListItem(_foundFoodItems[index]),
-                  )
-                : Center(
-                    child: Text(
-                      _searchInitialText,
-                      style: textTheme.titleMedium,
-                    ),
-                  ),
+                    ? ListView.builder(
+                        itemCount: _foundFoodItems.length,
+                        itemBuilder: (context, index) =>
+                            _buildFoodListItem(_foundFoodItems[index]),
+                      )
+                    : Center(
+                        child: Text(
+                          _searchInitialText,
+                          style: textTheme.titleMedium,
+                        ),
+                      ),
           ),
           if (_foundFoodItems.any((item) => item.source == FoodItemSource.off))
             const OffAttributionWidget(),
@@ -472,8 +476,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                 final emoji = (cat['emoji'] as String?)?.trim();
                 final title =
                     (cat['name_de'] as String?)?.trim().isNotEmpty == true
-                    ? cat['name_de'] as String
-                    : (cat['name_en'] as String? ?? key);
+                        ? cat['name_de'] as String
+                        : (cat['name_en'] as String? ?? key);
 
                 final loading = _loadingCats.contains(key);
                 final items = _catItems[key];
@@ -864,39 +868,40 @@ class _AddFoodScreenState extends State<AddFoodScreen>
           child: _isLoadingSearch
               ? const Center(child: CircularProgressIndicator())
               : (baseHits.isEmpty && otherHits.isEmpty)
-              ? Center(
-                  child: Text(
-                    l10n.searchNoResults,
-                    style: textTheme.titleMedium,
-                  ),
-                )
-              : ListView(
-                  padding: DesignConstants.cardPadding,
-                  children: [
-                    if (baseHits.isNotEmpty) ...[
-                      Text(
-                        l10n.searchSectionBase,
+                  ? Center(
+                      child: Text(
+                        l10n.searchNoResults,
                         style: textTheme.titleMedium,
                       ),
-                      const SizedBox(height: 8),
-                      ...baseHits.map(_buildFoodListItem),
-                      const SizedBox(height: DesignConstants.spacingL),
-                    ],
-                    if (otherHits.isNotEmpty) ...[
-                      Text(
-                        l10n.searchSectionOther,
-                        style: textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      ...otherHits.map(_buildFoodListItem),
-                    ],
-                    if (otherHits.any((i) => i.source == FoodItemSource.off))
-                      const Padding(
-                        padding: EdgeInsets.only(top: 12),
-                        child: OffAttributionWidget(),
-                      ),
-                  ],
-                ),
+                    )
+                  : ListView(
+                      padding: DesignConstants.cardPadding,
+                      children: [
+                        if (baseHits.isNotEmpty) ...[
+                          Text(
+                            l10n.searchSectionBase,
+                            style: textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 8),
+                          ...baseHits.map(_buildFoodListItem),
+                          const SizedBox(height: DesignConstants.spacingL),
+                        ],
+                        if (otherHits.isNotEmpty) ...[
+                          Text(
+                            l10n.searchSectionOther,
+                            style: textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 8),
+                          ...otherHits.map(_buildFoodListItem),
+                        ],
+                        if (otherHits
+                            .any((i) => i.source == FoodItemSource.off))
+                          const Padding(
+                            padding: EdgeInsets.only(top: 12),
+                            child: OffAttributionWidget(),
+                          ),
+                      ],
+                    ),
         ),
       ],
     );
@@ -1099,9 +1104,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
               // Produkt für den Namen (optional) laden
               final fi = await ProductDatabaseHelper.instance
                   .getProductByBarcode(barcode);
-              final displayName = (fi?.name.isNotEmpty ?? false)
-                  ? fi!.name
-                  : null;
+              final displayName =
+                  (fi?.name.isNotEmpty ?? false) ? fi!.name : null;
               modalSetState(() {
                 items.add({
                   'id': null,
@@ -1135,8 +1139,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                   Text(
                     isEdit ? l10n.mealsEdit : l10n.mealsCreate,
                     style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
@@ -1192,8 +1196,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                                   final fi = snap.data;
                                   final displayName =
                                       (fi?.name.isNotEmpty ?? false)
-                                      ? fi!.name
-                                      : barcode;
+                                          ? fi!.name
+                                          : barcode;
                                   final isLiquid = (fi?.isLiquid == true);
                                   final unit = isLiquid ? 'ml' : 'g';
                                   final amount = it['quantity_in_grams'] ?? 0;
@@ -1250,11 +1254,11 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                                 );
                               }
                             } else {
-                              final mealId = await DatabaseHelper.instance
-                                  .insertMeal(
-                                    name: name,
-                                    notes: notesCtrl.text.trim(),
-                                  );
+                              final mealId =
+                                  await DatabaseHelper.instance.insertMeal(
+                                name: name,
+                                notes: notesCtrl.text.trim(),
+                              );
                               for (final it in items) {
                                 await DatabaseHelper.instance.addMealItem(
                                   mealId,
@@ -1297,8 +1301,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     Map<String, dynamic> meal,
     AppLocalizations l10n,
   ) async {
-    final ok =
-        await showDialog<bool>(
+    final ok = await showDialog<bool>(
           context: context,
           builder: (_) => AlertDialog(
             title: Text(l10n.mealDeleteConfirmTitle),
@@ -1397,10 +1400,10 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                                       ),
                                       content: TextField(
                                         controller: qtyCtrl,
-                                        keyboardType:
-                                            const TextInputType.numberWithOptions(
-                                              decimal: false,
-                                            ),
+                                        keyboardType: const TextInputType
+                                            .numberWithOptions(
+                                          decimal: false,
+                                        ),
                                         decoration: const InputDecoration(
                                           suffixText: 'g/ml',
                                         ),
@@ -1489,8 +1492,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       'mealtypeSnack': l10n.mealtypeSnack,
     };
 
-    final ok =
-        await showModalBottomSheet<bool>(
+    final ok = await showModalBottomSheet<bool>(
           context: context,
           isScrollControlled: true,
           backgroundColor: Theme.of(context).colorScheme.surface,
@@ -1522,8 +1524,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                       Text(
                         l10n.mealsAddToDiary,
                         style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -1586,8 +1588,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                                     controller: qtyCtrls[bc],
                                     keyboardType:
                                         const TextInputType.numberWithOptions(
-                                          decimal: true,
-                                        ),
+                                      decimal: true,
+                                    ),
                                     decoration: InputDecoration(
                                       labelText:
                                           displayName, // Name statt Barcode
@@ -1685,8 +1687,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       ),
     );
 
-    final caffeineId =
-        caffeine.id ??
+    final caffeineId = caffeine.id ??
         (await DatabaseHelper.instance.insertSupplement(caffeine)).id!;
 
     await DatabaseHelper.instance.insertSupplementLog(

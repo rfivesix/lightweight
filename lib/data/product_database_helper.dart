@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import '../models/food_item.dart';
 import './database_helper.dart';
@@ -77,31 +78,71 @@ class ProductDatabaseHelper {
   Future<Database> _initDB(String fileName) async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, fileName);
+
+    // --- KORREKTUR START: Versionierungslogik für Asset-DBs ---
+    // Definiere hier die aktuellen Versionen deiner Asset-Datenbanken.
+    // **WICHTIG: Erhöhe die Version hier, wenn du die entsprechende Datei in /assets/db änderst!**
+    const assetVersions = {
+      'vita_base_foods.db': 1, // Start mit Version 1
+      'vita_prep_de.db': 1, // Start mit Version 1
+    };
+    const assetVersionKeys = {
+      'vita_base_foods.db': 'base_foods_db_asset_version',
+      'vita_prep_de.db': 'off_db_asset_version',
+    };
+
+    final currentAssetVersion = assetVersions[fileName];
+    final assetVersionKey = assetVersionKeys[fileName];
     final exists = await databaseExists(path);
 
-    if (!exists) {
-      print(
-        "Datenbank '$fileName' existiert nicht, kopiere sie aus den Assets...",
-      );
-      try {
-        await Directory(dirname(path)).create(recursive: true);
-        ByteData data = await rootBundle.load(join('assets/db', fileName));
-        List<int> bytes = data.buffer.asUint8List(
-          data.offsetInBytes,
-          data.lengthInBytes,
+    if (currentAssetVersion != null && assetVersionKey != null) {
+      final prefs = await SharedPreferences.getInstance();
+      final lastCopiedVersion = prefs.getInt(assetVersionKey) ?? 0;
+
+      if (!exists || lastCopiedVersion < currentAssetVersion) {
+        print(
+          "Datenbank '$fileName' ist veraltet (Lokal: v$lastCopiedVersion, Asset: v$currentAssetVersion) oder nicht vorhanden. Kopiere neu...",
         );
-        await File(path).writeAsBytes(bytes, flush: true);
-        print("Datenbank '$fileName' erfolgreich kopiert.");
-      } catch (e) {
-        print("Fehler beim Kopieren der Datenbank '$fileName': $e");
-        if (await File(path).exists()) await File(path).delete();
-        throw Exception(
-          "Konnte Datenbank '$fileName' nicht aus den Assets laden.",
-        );
+        try {
+          if (exists) {
+            await deleteDatabase(path);
+          }
+          await Directory(dirname(path)).create(recursive: true);
+          ByteData data = await rootBundle.load(join('assets/db', fileName));
+          List<int> bytes =
+              data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+          await File(path).writeAsBytes(bytes, flush: true);
+
+          await prefs.setInt(assetVersionKey, currentAssetVersion);
+          print(
+              "Datenbank '$fileName' erfolgreich auf v$currentAssetVersion kopiert.");
+        } catch (e) {
+          print("Fehler beim Kopieren der Datenbank '$fileName': $e");
+          if (await File(path).exists()) await File(path).delete();
+          throw Exception(
+              "Konnte Datenbank '$fileName' nicht aus den Assets laden.");
+        }
+      } else {
+        print(
+            "Bestehende und aktuelle Datenbank '$fileName' (v$lastCopiedVersion) gefunden.");
       }
     } else {
-      print("Bestehende Datenbank '$fileName' gefunden.");
+      // Fallback für nicht-versionierte DBs (altes Verhalten)
+      if (!exists) {
+        try {
+          await Directory(dirname(path)).create(recursive: true);
+          ByteData data = await rootBundle.load(join('assets/db', fileName));
+          List<int> bytes =
+              data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+          await File(path).writeAsBytes(bytes, flush: true);
+        } catch (e) {
+          throw Exception(
+              "Konnte Datenbank '$fileName' nicht aus den Assets laden.");
+        }
+      }
     }
+    // --- KORREKTUR ENDE ---
+
     return await openDatabase(path);
   }
 
@@ -119,8 +160,8 @@ class ProductDatabaseHelper {
     if (_baseDatabase != null) {
       final List<Map<String, dynamic>> baseMaps = await _baseDatabase!.query(
         'products',
-        where: 'name LIKE ?',
-        whereArgs: ['%$query%'],
+        where: 'name LIKE ? OR name_de LIKE ? OR name_en LIKE ?',
+        whereArgs: ['%$query%', '%$query%', '%$query%'],
         limit: 25,
       );
       combinedResults.addAll(
@@ -219,14 +260,14 @@ class ProductDatabaseHelper {
   }
 
   Future<List<FoodItem>> getFavoriteProducts() async {
-    final favoriteBarcodes = await DatabaseHelper.instance
-        .getFavoriteBarcodes();
+    final favoriteBarcodes =
+        await DatabaseHelper.instance.getFavoriteBarcodes();
     return await _getProductsByBarcodes(favoriteBarcodes);
   }
 
   Future<List<FoodItem>> getRecentProducts() async {
-    final recentBarcodes = await DatabaseHelper.instance
-        .getRecentlyUsedBarcodes();
+    final recentBarcodes =
+        await DatabaseHelper.instance.getRecentlyUsedBarcodes();
     return await _getProductsByBarcodes(recentBarcodes);
   }
 

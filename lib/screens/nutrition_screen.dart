@@ -87,9 +87,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
         .getAllSupplementLogs(); // Annahme: Methode existiert
     final supplements = await DatabaseHelper.instance.getAllSupplements();
 
-    final caffeineSupplementId = supplements
-        .firstWhere((s) => s.code == 'caffeine')
-        .id;
+    final caffeineSupplementId =
+        supplements.firstWhere((s) => s.code == 'caffeine').id;
 
     final numberOfDays = range.duration.inDays + 1;
     final newNutritionSummary = DailyNutrition(
@@ -133,8 +132,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
     for (final entry in fluidEntries) {
       final factor = entry.quantityInMl / 100.0;
       newNutritionSummary.calories += entry.kcal ?? 0;
-      newNutritionSummary.carbs += ((entry.carbsPer100ml ?? 0) * factor)
-          .round();
+      newNutritionSummary.carbs +=
+          ((entry.carbsPer100ml ?? 0) * factor).round();
       newNutritionSummary.sugar += (entry.sugarPer100ml ?? 0) * factor;
     }
 
@@ -152,9 +151,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
       );
     }
 
-    final fluidTimeline = fluidEntries
-        .map((e) => FluidTimelineEntry(e))
-        .toList();
+    final fluidTimeline =
+        fluidEntries.map((e) => FluidTimelineEntry(e)).toList();
     // *** KORREKTURBLOCK ENDE ***
 
     final List<dynamic> finalDisplayList = [];
@@ -246,8 +244,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
         start = now.subtract(const Duration(days: 29));
         break;
       case 'All':
-        final earliest = await DatabaseHelper.instance
-            .getEarliestFoodEntryDate();
+        final earliest =
+            await DatabaseHelper.instance.getEarliestFoodEntryDate();
         start = earliest ?? now;
         break;
       case '1D':
@@ -476,10 +474,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
                             ),
                             IconButton(
                               icon: const Icon(Icons.chevron_right),
-                              onPressed:
-                                  _selectedDateRange.end.isSameDate(
-                                    DateTime.now(),
-                                  )
+                              onPressed: _selectedDateRange.end.isSameDate(
+                                DateTime.now(),
+                              )
                                   ? null
                                   : () => _navigateDay(true),
                             ),
@@ -535,8 +532,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                           setState(() {
                                             _isSummaryExpanded =
                                                 !_isSummaryExpanded;
-                                            UiStateService
-                                                    .instance
+                                            UiStateService.instance
                                                     .isNutritionSummaryExpanded =
                                                 _isSummaryExpanded;
                                           });
@@ -655,10 +651,10 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                 ),
                                 secondaryBackground:
                                     const SwipeActionBackground(
-                                      color: Colors.redAccent,
-                                      icon: Icons.delete,
-                                      alignment: Alignment.centerRight,
-                                    ),
+                                  color: Colors.redAccent,
+                                  icon: Icons.delete,
+                                  alignment: Alignment.centerRight,
+                                ),
                                 confirmDismiss: (direction) async {
                                   if (direction ==
                                       DismissDirection.startToEnd) {
@@ -724,8 +720,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                           MaterialPageRoute(
                                             builder: (context) =>
                                                 FoodDetailScreen(
-                                                  trackedItem: trackedItem,
-                                                ),
+                                              trackedItem: trackedItem,
+                                            ),
                                           ),
                                         )
                                         .then(
@@ -750,10 +746,10 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                 ),
                                 secondaryBackground:
                                     const SwipeActionBackground(
-                                      color: Colors.redAccent,
-                                      icon: Icons.delete,
-                                      alignment: Alignment.centerRight,
-                                    ),
+                                  color: Colors.redAccent,
+                                  icon: Icons.delete,
+                                  alignment: Alignment.centerRight,
+                                ),
                                 confirmDismiss: (direction) async {
                                   if (direction ==
                                       DismissDirection.startToEnd) {

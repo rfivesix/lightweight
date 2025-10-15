@@ -4,6 +4,7 @@
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lightweight/data/backup_manager.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/screens/main_screen.dart';
 import 'package:lightweight/services/profile_service.dart';
@@ -15,6 +16,10 @@ import 'package:lightweight/services/theme_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Führe das Auto-Backup im Hintergrund aus, ohne darauf zu warten.
+  // Fehler werden innerhalb des Managers abgefangen und geloggt.
+  BackupManager().runAutoBackupIfDue();
 
   // 1. Erstelle die Manager-Instanz
   final workoutSessionManager = WorkoutSessionManager();
@@ -165,17 +170,17 @@ class MyApp extends StatelessWidget {
             foregroundColor: Colors.black,
             centerTitle: false,
             titleTextStyle: ThemeData.light().textTheme.titleLarge?.copyWith(
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w900,
-              color: Colors.black,
-            ),
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w900,
+                  color: Colors.black,
+                ),
           ),
 
           textTheme: ThemeData.light().textTheme.apply(
-            fontFamily: 'Inter', // Das ist weiterhin korrekt
-            bodyColor: Colors.black87,
-            displayColor: Colors.black87,
-          ),
+                fontFamily: 'Inter', // Das ist weiterhin korrekt
+                bodyColor: Colors.black87,
+                displayColor: Colors.black87,
+              ),
           // Stellen sicher, dass Akzent sichtbar "lebt"
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
@@ -294,17 +299,17 @@ class MyApp extends StatelessWidget {
             foregroundColor: Colors.white,
             centerTitle: false,
             titleTextStyle: ThemeData.dark().textTheme.titleLarge?.copyWith(
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-            ),
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                ),
           ),
 
           textTheme: ThemeData.dark().textTheme.apply(
-            fontFamily: 'Inter', // Das ist weiterhin korrekt
-            bodyColor: Colors.white,
-            displayColor: Colors.white,
-          ),
+                fontFamily: 'Inter', // Das ist weiterhin korrekt
+                bodyColor: Colors.white,
+                displayColor: Colors.white,
+              ),
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
               backgroundColor: darkScheme.primary,

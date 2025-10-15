@@ -211,10 +211,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       onPressed: _index == 0
                           ? null
                           : () => _page.animateToPage(
-                              _index - 1,
-                              duration: const Duration(milliseconds: 250),
-                              curve: Curves.easeOut,
-                            ),
+                                _index - 1,
+                                duration: const Duration(milliseconds: 250),
+                                curve: Curves.easeOut,
+                              ),
                       icon: const Icon(Icons.chevron_left),
                       label: Text(l10n.onbBack),
                     ),

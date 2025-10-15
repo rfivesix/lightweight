@@ -63,10 +63,10 @@ class _GoalsScreenState extends State<GoalsScreen> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _heightController.text = (prefs.getInt('userHeight') ?? 180).toString();
-      _caloriesController.text = (prefs.getInt('targetCalories') ?? 2500)
-          .toString();
-      _proteinController.text = (prefs.getInt('targetProtein') ?? 180)
-          .toString();
+      _caloriesController.text =
+          (prefs.getInt('targetCalories') ?? 2500).toString();
+      _proteinController.text =
+          (prefs.getInt('targetProtein') ?? 180).toString();
       _carbsController.text = (prefs.getInt('targetCarbs') ?? 250).toString();
       _fatController.text = (prefs.getInt('targetFat') ?? 80).toString();
       _waterController.text = (prefs.getInt('targetWater') ?? 3000).toString();

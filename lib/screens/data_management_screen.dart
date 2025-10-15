@@ -111,8 +111,8 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
 
       if (success) {
         // Neu: Unbekannte Übungsnamen ermitteln und ggf. Mapping anbieten
-        final unknown = await WorkoutDatabaseHelper.instance
-            .findUnknownExerciseNames();
+        final unknown =
+            await WorkoutDatabaseHelper.instance.findUnknownExerciseNames();
         if (mounted && unknown.isNotEmpty) {
           final bool? changed = await Navigator.of(context).push<bool>(
             MaterialPageRoute(
@@ -155,8 +155,8 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     setState(() => _isMigrationRunning = false);
 
     if (count > 0) {
-      final unknown = await WorkoutDatabaseHelper.instance
-          .findUnknownExerciseNames();
+      final unknown =
+          await WorkoutDatabaseHelper.instance.findUnknownExerciseNames();
       if (mounted && unknown.isNotEmpty) {
         await Navigator.of(context).push(
           MaterialPageRoute(
@@ -303,8 +303,8 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                         );
                         if (pw == null || pw.isEmpty) return;
                         setState(() => _isFullBackupRunning = true);
-                        final ok = await BackupManager()
-                            .exportFullBackupEncrypted(pw);
+                        final ok =
+                            await BackupManager().exportFullBackupEncrypted(pw);
                         if (!mounted) return;
                         setState(() => _isFullBackupRunning = false);
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -352,10 +352,10 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
               onTap: _isCsvExportRunning
                   ? null
                   : () => _exportCsv(
-                      BackupManager().exportNutritionAsCsv,
-                      l10n.snackbarSharingNutrition,
-                      l10n.snackbarExportFailedNoEntries,
-                    ),
+                        BackupManager().exportNutritionAsCsv,
+                        l10n.snackbarSharingNutrition,
+                        l10n.snackbarExportFailedNoEntries,
+                      ),
             ),
             _buildExportTile(
               icon: Icons.monitor_weight_outlined,
@@ -363,10 +363,10 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
               onTap: _isCsvExportRunning
                   ? null
                   : () => _exportCsv(
-                      BackupManager().exportMeasurementsAsCsv,
-                      l10n.snackbarSharingMeasurements,
-                      l10n.snackbarExportFailedNoEntries,
-                    ),
+                        BackupManager().exportMeasurementsAsCsv,
+                        l10n.snackbarSharingMeasurements,
+                        l10n.snackbarExportFailedNoEntries,
+                      ),
             ),
             _buildExportTile(
               icon: Icons.fitness_center,
@@ -374,10 +374,10 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
               onTap: _isCsvExportRunning
                   ? null
                   : () => _exportCsv(
-                      BackupManager().exportWorkoutsAsCsv,
-                      l10n.snackbarSharingWorkouts,
-                      l10n.snackbarExportFailedNoEntries,
-                    ),
+                        BackupManager().exportWorkoutsAsCsv,
+                        l10n.snackbarSharingWorkouts,
+                        l10n.snackbarExportFailedNoEntries,
+                      ),
             ),
             if (_isCsvExportRunning)
               const Padding(
@@ -507,8 +507,8 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                     label: Text(l10n.autoBackupCopyPath),
                     onPressed:
                         (_autoBackupDir == null || _autoBackupDir!.isEmpty)
-                        ? null
-                        : _copyAutoBackupPathToClipboard,
+                            ? null
+                            : _copyAutoBackupPathToClipboard,
                   ),
                 ),
               ],
@@ -548,8 +548,8 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
   }
 
   Future<void> _openExerciseMapping() async {
-    final unknown = await WorkoutDatabaseHelper.instance
-        .findUnknownExerciseNames();
+    final unknown =
+        await WorkoutDatabaseHelper.instance.findUnknownExerciseNames();
     final l10n = AppLocalizations.of(context)!;
     if (!mounted) return;
     if (unknown.isEmpty) {

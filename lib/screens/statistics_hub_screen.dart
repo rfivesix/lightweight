@@ -54,12 +54,12 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }
 
   Future<void> _loadMonthData(DateTime month) async {
-    final workoutDays = await WorkoutDatabaseHelper.instance
-        .getWorkoutDaysInMonth(month);
-    final nutritionDays = await DatabaseHelper.instance
-        .getNutritionLogDaysInMonth(month);
-    final supplementDays = await DatabaseHelper.instance
-        .getSupplementLogDaysInMonth(month);
+    final workoutDays =
+        await WorkoutDatabaseHelper.instance.getWorkoutDaysInMonth(month);
+    final nutritionDays =
+        await DatabaseHelper.instance.getNutritionLogDaysInMonth(month);
+    final supplementDays =
+        await DatabaseHelper.instance.getSupplementLogDaysInMonth(month);
 
     if (mounted) {
       setState(() {
@@ -84,9 +84,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       return l10n.recommendationDefault;
     }
 
-    final uniqueDaysTracked = recentEntries
-        .map((e) => DateFormat.yMd().format(e.timestamp))
-        .toSet();
+    final uniqueDaysTracked =
+        recentEntries.map((e) => DateFormat.yMd().format(e.timestamp)).toSet();
     final numberOfTrackedDays = uniqueDaysTracked.length;
     int totalRecentCalories = 0;
     for (final entry in recentEntries) {
@@ -94,8 +93,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         entry.barcode,
       );
       if (foodItem != null) {
-        totalRecentCalories += (foodItem.calories / 100 * entry.quantityInGrams)
-            .round();
+        totalRecentCalories +=
+            (foodItem.calories / 100 * entry.quantityInGrams).round();
       }
     }
 
@@ -233,8 +232,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: DesignConstants.spacingS),
-                  _buildBannerCard(l10n),
+                  //const SizedBox(height: DesignConstants.spacingS),
+                  //_buildBannerCard(l10n),
                   const SizedBox(height: DesignConstants.spacingXL),
                   _buildSectionTitle(context, l10n.in_depth_analysis),
                   _buildAnalysisGateway(
@@ -307,9 +306,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: Colors.grey[600],
-          fontWeight: FontWeight.bold,
-        ),
+              color: Colors.grey[600],
+              fontWeight: FontWeight.bold,
+            ),
       ),
     );
   }

@@ -155,8 +155,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             color: Colors.white.withOpacity(isDark ? 0.06 : 0.08),
             borderRadius: BorderRadius.circular(18),
             child: Padding(
-              padding:
-                  padding ??
+              padding: padding ??
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               child: child,
             ),
@@ -187,8 +186,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 Text(
                   l10n.startEmptyWorkoutButton,
                   style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
               ],
             ),
@@ -260,7 +259,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                               r.name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(ctx).textTheme.titleMedium
+                              style: Theme.of(ctx)
+                                  .textTheme
+                                  .titleMedium
                                   ?.copyWith(fontWeight: FontWeight.w700),
                             ),
                             const SizedBox(height: 2),
@@ -301,10 +302,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _handleAddFood() async {
-    final FoodItem? selectedFoodItem = await Navigator.of(context)
-        .push<FoodItem>(
-          MaterialPageRoute(builder: (context) => const AddFoodScreen()),
-        );
+    final FoodItem? selectedFoodItem =
+        await Navigator.of(context).push<FoodItem>(
+      MaterialPageRoute(builder: (context) => const AddFoodScreen()),
+    );
 
     if (selectedFoodItem == null || !mounted) return;
 
@@ -466,20 +467,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   }
 
   Future<
-    ({
-      int quantity,
-      DateTime timestamp,
-      String mealType,
-      bool isLiquid,
-      double? sugarPer100ml,
-      double? caffeinePer100ml,
-    })?
-  >
-  _showQuantityMenu(FoodItem item) async {
-    final l10n = AppLocalizations.of(context)!;
-    final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
-
-    return showGlassBottomMenu<
       ({
         int quantity,
         DateTime timestamp,
@@ -487,8 +474,19 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         bool isLiquid,
         double? sugarPer100ml,
         double? caffeinePer100ml,
-      })
-    >(
+      })?> _showQuantityMenu(FoodItem item) async {
+    final l10n = AppLocalizations.of(context)!;
+    final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
+
+    return showGlassBottomMenu<
+        ({
+          int quantity,
+          DateTime timestamp,
+          String mealType,
+          bool isLiquid,
+          double? sugarPer100ml,
+          double? caffeinePer100ml,
+        })>(
       context: context,
       title: item.name,
       contentBuilder: (ctx, close) {
@@ -715,9 +713,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
   Future<void> _captureSnapshot() async {
     try {
-      final boundary =
-          _pvBoundaryKey.currentContext?.findRenderObject()
-              as RenderRepaintBoundary?;
+      final boundary = _pvBoundaryKey.currentContext?.findRenderObject()
+          as RenderRepaintBoundary?;
       if (boundary == null) return;
       final img = await boundary.toImage(
         pixelRatio: MediaQuery.of(context).devicePixelRatio,
@@ -1036,95 +1033,93 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                               .asMap()
                               .entries
                               .map((entry) {
-                                final index = entry.key;
-                                final action = entry.value;
-                                final curved = CurvedAnimation(
-                                  parent: _menuController,
-                                  curve: Interval(
-                                    (index * 0.12).clamp(0.0, 0.95),
-                                    1.0,
-                                    curve: Curves.easeOutBack,
+                            final index = entry.key;
+                            final action = entry.value;
+                            final curved = CurvedAnimation(
+                              parent: _menuController,
+                              curve: Interval(
+                                (index * 0.12).clamp(0.0, 0.95),
+                                1.0,
+                                curve: Curves.easeOutBack,
+                              ),
+                            );
+                            final tv = _safe01(curved.value);
+                            final offsetY = 90.0 * (index + 1);
+                            return Transform.translate(
+                              offset: Offset(0, (1 - tv) * offsetY),
+                              child: Opacity(
+                                opacity: tv,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 10.0,
                                   ),
-                                );
-                                final tv = _safe01(curved.value);
-                                final offsetY = 90.0 * (index + 1);
-                                return Transform.translate(
-                                  offset: Offset(0, (1 - tv) * offsetY),
-                                  child: Opacity(
-                                    opacity: tv,
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 10.0,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        action['label'],
+                                        style: TextStyle(
+                                          color: Theme.of(
+                                                    context,
+                                                  ).brightness ==
+                                                  Brightness.light
+                                              ? Colors.black87
+                                              : Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                        ),
                                       ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            action['label'],
-                                            style: TextStyle(
-                                              color:
-                                                  Theme.of(
-                                                        context,
-                                                      ).brightness ==
-                                                      Brightness.light
-                                                  ? Colors.black87
-                                                  : Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 18,
+                                      const SizedBox(width: 16),
+                                      GestureDetector(
+                                        behavior: HitTestBehavior.opaque,
+                                        onTap: () {
+                                          setState(() {
+                                            _isAddMenuOpen = false;
+                                            _menuController.reverse();
+                                          });
+                                          _executeAddMenuAction(
+                                            action['action'],
+                                          );
+                                        },
+                                        child: ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                          child: BackdropFilter(
+                                            filter: ImageFilter.blur(
+                                              sigmaX: 12,
+                                              sigmaY: 12,
                                             ),
-                                          ),
-                                          const SizedBox(width: 16),
-                                          GestureDetector(
-                                            behavior: HitTestBehavior.opaque,
-                                            onTap: () {
-                                              setState(() {
-                                                _isAddMenuOpen = false;
-                                                _menuController.reverse();
-                                              });
-                                              _executeAddMenuAction(
-                                                action['action'],
-                                              );
-                                            },
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                              child: BackdropFilter(
-                                                filter: ImageFilter.blur(
-                                                  sigmaX: 12,
-                                                  sigmaY: 12,
+                                            child: Container(
+                                              width: 76,
+                                              height: 76,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white
+                                                    .withOpacity(0.15),
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                  20,
                                                 ),
-                                                child: Container(
-                                                  width: 76,
-                                                  height: 76,
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.white
-                                                        .withOpacity(0.15),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          20,
-                                                        ),
-                                                    border: Border.all(
-                                                      color: Colors.white
-                                                          .withOpacity(0.3),
-                                                      width: 1.5,
-                                                    ),
-                                                  ),
-                                                  child: Icon(
-                                                    action['icon'],
-                                                    size: 34,
-                                                    color: Colors.white,
-                                                  ),
+                                                border: Border.all(
+                                                  color: Colors.white
+                                                      .withOpacity(0.3),
+                                                  width: 1.5,
                                                 ),
+                                              ),
+                                              child: Icon(
+                                                action['icon'],
+                                                size: 34,
+                                                color: Colors.white,
                                               ),
                                             ),
                                           ),
-                                        ],
+                                        ),
                                       ),
-                                    ),
+                                    ],
                                   ),
-                                );
-                              })
-                              .toList(),
+                                ),
+                              ),
+                            );
+                          }).toList(),
                         ),
                       ),
                     ),

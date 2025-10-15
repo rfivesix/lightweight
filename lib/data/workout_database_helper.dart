@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:lightweight/util/mapping_prefs.dart';
 import 'package:path/path.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:lightweight/models/exercise.dart';
 import 'package:lightweight/models/routine.dart';
@@ -29,9 +30,24 @@ class WorkoutDatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, fileName);
 
+    // --- KORREKTUR START: Versionierungslogik für Asset-DB ---
+    const int currentAssetVersion =
+        9; // Erhöhe diese Zahl, wenn du die vita_training.db in den Assets aktualisierst
+    const String assetVersionKey = 'training_db_asset_version';
+
+    final prefs = await SharedPreferences.getInstance();
+    final lastCopiedVersion = prefs.getInt(assetVersionKey) ?? 0;
     final exists = await databaseExists(path);
-    if (!exists) {
+
+    if (!exists || lastCopiedVersion < currentAssetVersion) {
+      print(
+        "Datenbank '$fileName' ist veraltet (Lokal: v$lastCopiedVersion, Asset: v$currentAssetVersion) oder nicht vorhanden. Kopiere neu...",
+      );
       try {
+        // Alte DB löschen, falls vorhanden, um eine saubere Kopie zu gewährleisten
+        if (exists) {
+          await deleteDatabase(path);
+        }
         await Directory(dirname(path)).create(recursive: true);
         ByteData data = await rootBundle.load(join('assets/db', fileName));
         List<int> bytes = data.buffer.asUint8List(
@@ -39,10 +55,20 @@ class WorkoutDatabaseHelper {
           data.lengthInBytes,
         );
         await File(path).writeAsBytes(bytes, flush: true);
+
+        // Neue Version in SharedPreferences speichern
+        await prefs.setInt(assetVersionKey, currentAssetVersion);
+        print(
+            "Datenbank '$fileName' erfolgreich auf v$currentAssetVersion kopiert.");
       } catch (e) {
+        print("Fehler beim Kopieren der Datenbank '$fileName': $e");
         rethrow;
       }
+    } else {
+      print(
+          "Bestehende und aktuelle Datenbank '$fileName' (v$lastCopiedVersion) gefunden.");
     }
+    // --- KORREKTUR ENDE ---
 
     return await openDatabase(path, version: 9, onUpgrade: _upgradeDB);
   }
@@ -134,10 +160,13 @@ class WorkoutDatabaseHelper {
         print("Migriere ${oldMappings.length} bestehende Mappings...");
         final batch = db.batch();
         for (final entry in oldMappings.entries) {
-          batch.insert('exercise_mapping', {
-            'external_name': entry.key,
-            'target_name': entry.value,
-          }, conflictAlgorithm: ConflictAlgorithm.replace);
+          batch.insert(
+              'exercise_mapping',
+              {
+                'external_name': entry.key,
+                'target_name': entry.value,
+              },
+              conflictAlgorithm: ConflictAlgorithm.replace);
         }
         await batch.commit(noResult: true);
         print("Migration abgeschlossen.");
@@ -210,11 +239,9 @@ class WorkoutDatabaseHelper {
       whereClauses.add('category_name IN ($placeholders)');
       whereArgs.addAll(selectedCategories);
     }
-    String finalWhere = whereClauses.isNotEmpty
-        ? whereClauses.join(' AND ')
-        : '';
-    final String sql =
-        '''
+    String finalWhere =
+        whereClauses.isNotEmpty ? whereClauses.join(' AND ') : '';
+    final String sql = '''
       SELECT e.*, CASE WHEN sl.id IS NOT NULL THEN 0 ELSE 1 END as sort_priority
       FROM exercises_flat e -- WAR: 'exercises e'
       LEFT JOIN (SELECT exercise_name, MAX(id) as id FROM set_logs GROUP BY exercise_name) sl
@@ -251,9 +278,12 @@ class WorkoutDatabaseHelper {
   // --- ROUTINE MANAGEMENT ---
   Future<Routine> createRoutine(String name) async {
     final db = await database;
-    final id = await db.insert('routines', {
-      'name': name,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    final id = await db.insert(
+        'routines',
+        {
+          'name': name,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace);
     return Routine(id: id, name: name);
   }
 
@@ -375,9 +405,8 @@ class WorkoutDatabaseHelper {
         whereArgs: [routineExerciseId],
         orderBy: 'set_index ASC',
       );
-      final setTemplates = setTemplateMaps
-          .map((stMap) => SetTemplate.fromMap(stMap))
-          .toList();
+      final setTemplates =
+          setTemplateMaps.map((stMap) => SetTemplate.fromMap(stMap)).toList();
       routineExercises.add(
         RoutineExercise(
           id: routineExerciseId,
@@ -623,16 +652,26 @@ class WorkoutDatabaseHelper {
     }
     return null;
   }
+// lib/data/workout_database_helper.dart
 
   Future<List<WorkoutLog>> getWorkoutLogsForDateRange(
     DateTime start,
     DateTime end,
   ) async {
     final db = await database;
+
+    // HIER IST DIE KORREKTUR: Erzeuge einen validen Datumsbereich für den ganzen Tag.
+    final effectiveStart = DateTime(start.year, start.month, start.day);
+    final effectiveEnd = DateTime(end.year, end.month, end.day, 23, 59, 59);
+
     final maps = await db.query(
       'workout_logs',
-      where: 'start_time >= ? AND start_time <= ?',
-      whereArgs: [start.toIso8601String(), end.toIso8601String()],
+      where: 'start_time >= ? AND start_time <= ? AND status = ?',
+      whereArgs: [
+        effectiveStart.toIso8601String(),
+        effectiveEnd.toIso8601String(),
+        'completed'
+      ],
       orderBy: 'start_time DESC',
     );
 
@@ -815,10 +854,13 @@ class WorkoutDatabaseHelper {
     await db.transaction((txn) async {
       final batch = txn.batch();
       for (final e in map.entries) {
-        batch.insert('exercise_mapping', {
-          'external_name': e.key,
-          'target_name': e.value,
-        }, conflictAlgorithm: ConflictAlgorithm.replace);
+        batch.insert(
+            'exercise_mapping',
+            {
+              'external_name': e.key,
+              'target_name': e.value,
+            },
+            conflictAlgorithm: ConflictAlgorithm.replace);
       }
       await batch.commit(noResult: true);
 

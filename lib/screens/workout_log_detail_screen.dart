@@ -196,8 +196,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     final List<SetLog> setsToInsert = [];
 
     for (final setLog in currentSets) {
-      final weight =
-          double.tryParse(
+      final weight = double.tryParse(
             _weightControllers[setLog.id!]?.text.replaceAll(',', '.') ?? '0',
           ) ??
           0.0;
@@ -236,16 +235,16 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
   }
 
   Widget _buildHeader(String text) => Expanded(
-    child: Text(
-      text,
-      textAlign: TextAlign.center,
-      style: TextStyle(
-        color: Colors.grey[600],
-        fontSize: 12,
-        fontWeight: FontWeight.bold,
-      ),
-    ),
-  );
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -298,158 +297,163 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _log == null
-          ? Center(child: Text(l10n.workoutNotFound))
-          : Column(
-              children: [
-                WorkoutSummaryBar(
-                  duration: duration,
-                  volume: totalVolume,
-                  sets: _log!.sets.length,
-                  progress: null,
-                ),
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: colorScheme.onSurfaceVariant.withOpacity(0.1),
-                ),
-                Expanded(
-                  child: ListView(
-                    padding: EdgeInsets.zero,
-                    children: [
-                      // Header Info Section mit SummaryCard
-                      Padding(
-                        padding: DesignConstants.cardPadding,
-                        child: SummaryCard(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Form(
-                              key: _formKey,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _log!.routineName ?? l10n.freeWorkoutTitle,
-                                    style: textTheme.headlineMedium,
-                                  ),
-                                  Row(
+              ? Center(child: Text(l10n.workoutNotFound))
+              : Column(
+                  children: [
+                    WorkoutSummaryBar(
+                      duration: duration,
+                      volume: totalVolume,
+                      sets: _log!.sets.length,
+                      progress: null,
+                    ),
+                    Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+                    ),
+                    Expanded(
+                      child: ListView(
+                        padding: EdgeInsets.zero,
+                        children: [
+                          // Header Info Section mit SummaryCard
+                          Padding(
+                            padding: DesignConstants.cardPadding,
+                            child: SummaryCard(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Form(
+                                  key: _formKey,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        DateFormat.yMMMMd(
-                                          locale,
-                                        ).add_Hm().format(
-                                          _editedStartTime ?? _log!.startTime,
-                                        ),
+                                        _log!.routineName ??
+                                            l10n.freeWorkoutTitle,
+                                        style: textTheme.headlineMedium,
                                       ),
-                                      if (_isEditMode)
-                                        IconButton(
-                                          icon: Icon(
-                                            Icons.calendar_today,
-                                            size: 18,
-                                            color: colorScheme.primary,
+                                      Row(
+                                        children: [
+                                          Text(
+                                            DateFormat.yMMMMd(
+                                              locale,
+                                            ).add_Hm().format(
+                                                  _editedStartTime ??
+                                                      _log!.startTime,
+                                                ),
                                           ),
-                                          onPressed: _pickDateTime,
+                                          if (_isEditMode)
+                                            IconButton(
+                                              icon: Icon(
+                                                Icons.calendar_today,
+                                                size: 18,
+                                                color: colorScheme.primary,
+                                              ),
+                                              onPressed: _pickDateTime,
+                                            ),
+                                        ],
+                                      ),
+                                      const SizedBox(
+                                        height: DesignConstants.spacingM,
+                                      ),
+                                      _isEditMode
+                                          ? TextFormField(
+                                              controller: _notesController,
+                                              decoration: InputDecoration(
+                                                labelText: l10n.notesLabel,
+                                              ),
+                                              maxLines: 3,
+                                            )
+                                          : (_log!.notes != null &&
+                                                  _log!.notes!.isNotEmpty
+                                              ? Text(
+                                                  '${l10n.notesLabel}: ${_log!.notes!}',
+                                                  style: const TextStyle(
+                                                    fontStyle: FontStyle.italic,
+                                                  ),
+                                                )
+                                              : const SizedBox.shrink()),
+                                      if (_categoryVolume.isNotEmpty) ...[
+                                        const Divider(height: 24),
+                                        Text(
+                                          l10n.muscleSplitLabel,
+                                          style: textTheme.titleMedium,
                                         ),
+                                        const SizedBox(
+                                          height: DesignConstants.spacingS,
+                                        ),
+                                        ..._buildCategoryBars(context),
+                                      ],
                                     ],
                                   ),
-                                  const SizedBox(
-                                    height: DesignConstants.spacingM,
-                                  ),
-                                  _isEditMode
-                                      ? TextFormField(
-                                          controller: _notesController,
-                                          decoration: InputDecoration(
-                                            labelText: l10n.notesLabel,
-                                          ),
-                                          maxLines: 3,
-                                        )
-                                      : (_log!.notes != null &&
-                                                _log!.notes!.isNotEmpty
-                                            ? Text(
-                                                '${l10n.notesLabel}: ${_log!.notes!}',
-                                                style: const TextStyle(
-                                                  fontStyle: FontStyle.italic,
-                                                ),
-                                              )
-                                            : const SizedBox.shrink()),
-                                  if (_categoryVolume.isNotEmpty) ...[
-                                    const Divider(height: 24),
-                                    Text(
-                                      l10n.muscleSplitLabel,
-                                      style: textTheme.titleMedium,
-                                    ),
-                                    const SizedBox(
-                                      height: DesignConstants.spacingS,
-                                    ),
-                                    ..._buildCategoryBars(context),
-                                  ],
-                                ],
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ),
 
-                      // Exercise Sets mit WorkoutCard
-                      ..._buildSetList(context, l10n),
+                          // Exercise Sets mit WorkoutCard
+                          ..._buildSetList(context, l10n),
 
-                      // Add Exercise Button
-                      if (_isEditMode)
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: TextButton.icon(
-                            onPressed: () async {
-                              final selectedExercise =
-                                  await Navigator.of(context).push<Exercise>(
+                          // Add Exercise Button
+                          if (_isEditMode)
+                            Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: TextButton.icon(
+                                onPressed: () async {
+                                  final selectedExercise =
+                                      await Navigator.of(context)
+                                          .push<Exercise>(
                                     MaterialPageRoute(
                                       builder: (context) =>
                                           const ExerciseCatalogScreen(
-                                            isSelectionMode: true,
-                                          ),
+                                        isSelectionMode: true,
+                                      ),
                                     ),
                                   );
-                              if (selectedExercise != null) {
-                                setState(() {
-                                  final newSet = SetLog(
-                                    id: DateTime.now().millisecondsSinceEpoch,
-                                    workoutLogId: _log!.id!,
-                                    exerciseName: selectedExercise
-                                        .getLocalizedName(context),
-                                    setType: 'normal',
-                                  );
-                                  _groupedSets[selectedExercise
-                                      .getLocalizedName(context)] = [
-                                    newSet,
-                                  ];
-                                  _weightControllers[newSet.id!] =
-                                      TextEditingController();
-                                  _repsControllers[newSet.id!] =
-                                      TextEditingController();
-                                });
-                              }
-                            },
-                            icon: const Icon(Icons.add),
-                            label: Text(l10n.addExerciseToWorkoutButton),
-                          ),
-                        ),
+                                  if (selectedExercise != null) {
+                                    setState(() {
+                                      final newSet = SetLog(
+                                        id: DateTime.now()
+                                            .millisecondsSinceEpoch,
+                                        workoutLogId: _log!.id!,
+                                        exerciseName: selectedExercise
+                                            .getLocalizedName(context),
+                                        setType: 'normal',
+                                      );
+                                      _groupedSets[selectedExercise
+                                          .getLocalizedName(context)] = [
+                                        newSet,
+                                      ];
+                                      _weightControllers[newSet.id!] =
+                                          TextEditingController();
+                                      _repsControllers[newSet.id!] =
+                                          TextEditingController();
+                                    });
+                                  }
+                                },
+                                icon: const Icon(Icons.add),
+                                label: Text(l10n.addExerciseToWorkoutButton),
+                              ),
+                            ),
 
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          16.0,
-                          24.0,
-                          16.0,
-                          8.0,
-                        ),
-                        child: WgerAttributionWidget(
-                          textStyle: textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[600],
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              16.0,
+                              24.0,
+                              16.0,
+                              8.0,
+                            ),
+                            child: WgerAttributionWidget(
+                              textStyle: textTheme.bodySmall?.copyWith(
+                                color: Colors.grey[600],
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
     );
   }
 

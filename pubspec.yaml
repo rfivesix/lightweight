@@ -1,7 +1,7 @@
 name: lightweight
 description: "A modern, privacy-first fitness and nutrition tracking app. Offline-first, no cloud dependency, built with Flutter."
 publish_to: 'none' 
-version: 0.4.0-alpha.11+4011
+version: 0.4.0-alpha.12+4012
 
 environment:
   sdk: '>=3.0.0 <4.0.0' # Angepasst für moderne SDKs

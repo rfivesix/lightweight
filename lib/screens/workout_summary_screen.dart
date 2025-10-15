@@ -79,71 +79,72 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _log == null
-          ? Center(child: Text(l10n.workoutNotFound))
-          : Padding(
-              padding: DesignConstants.cardPadding,
-              child: Column(
-                children: [
-                  // Gesamt-Statistiken
-                  WorkoutSummaryBar(
-                    duration: _log!.endTime?.difference(_log!.startTime),
-                    volume: _volumePerExercise.values.fold(0, (a, b) => a + b),
-                    sets: _log!.sets.length,
-                    progress: null,
-                  ),
-                  const SizedBox(height: DesignConstants.spacingXL),
+              ? Center(child: Text(l10n.workoutNotFound))
+              : Padding(
+                  padding: DesignConstants.cardPadding,
+                  child: Column(
+                    children: [
+                      // Gesamt-Statistiken
+                      WorkoutSummaryBar(
+                        duration: _log!.endTime?.difference(_log!.startTime),
+                        volume:
+                            _volumePerExercise.values.fold(0, (a, b) => a + b),
+                        sets: _log!.sets.length,
+                        progress: null,
+                      ),
+                      const SizedBox(height: DesignConstants.spacingXL),
 
-                  // Liste der Übungen
-                  Expanded(
-                    child: ListView(
-                      children: [
-                        Text(
-                          l10n.workoutSummaryExerciseOverview,
-                          style: textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: DesignConstants.spacingS),
-                        ..._volumePerExercise.entries.map((entry) {
-                          return SummaryCard(
-                            child: ListTile(
-                              title: Text(
-                                entry.key,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              trailing: Text(
-                                "${entry.value.toStringAsFixed(0)} kg",
-                                style: textTheme.bodyLarge,
-                              ),
+                      // Liste der Übungen
+                      Expanded(
+                        child: ListView(
+                          children: [
+                            Text(
+                              l10n.workoutSummaryExerciseOverview,
+                              style: textTheme.titleMedium,
                             ),
-                          );
-                        }),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: DesignConstants.spacingXL),
+                            const SizedBox(height: DesignConstants.spacingS),
+                            ..._volumePerExercise.entries.map((entry) {
+                              return SummaryCard(
+                                child: ListTile(
+                                  title: Text(
+                                    entry.key,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  trailing: Text(
+                                    "${entry.value.toStringAsFixed(0)} kg",
+                                    style: textTheme.bodyLarge,
+                                  ),
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: DesignConstants.spacingXL),
 
-                  // Fertig-Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      // Fertig-Button
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          onPressed: () {
+                            // Schließt den Summary-Screen und kehrt zum vorherigen Screen zurück
+                            // (vermutlich der Routines- oder Home-Screen)
+                            Navigator.of(context).pop();
+                          },
+                          child: Text(
+                            l10n.doneButtonLabel,
+                            style: const TextStyle(fontSize: 18),
+                          ),
+                        ),
                       ),
-                      onPressed: () {
-                        // Schließt den Summary-Screen und kehrt zum vorherigen Screen zurück
-                        // (vermutlich der Routines- oder Home-Screen)
-                        Navigator.of(context).pop();
-                      },
-                      child: Text(
-                        l10n.doneButtonLabel,
-                        style: const TextStyle(fontSize: 18),
-                      ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
-            ),
+                ),
     );
   }
 }

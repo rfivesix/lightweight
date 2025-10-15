@@ -57,18 +57,15 @@ class WorkoutSessionManager extends ChangeNotifier {
     // 1. Hole alle einzigartigen Übungen, sortiert nach ihrem ersten Auftreten (log_order)
     final sortedSets = logToRestore.sets
       ..sort((a, b) => (a.log_order ?? 999).compareTo(b.log_order ?? 999));
-    final orderedUniqueExerciseNames = sortedSets
-        .map((s) => s.exerciseName)
-        .toSet()
-        .toList();
+    final orderedUniqueExerciseNames =
+        sortedSets.map((s) => s.exerciseName).toSet().toList();
 
     // 2. Baue die _exercises-Liste in der korrekten Reihenfolge auf
     for (final name in orderedUniqueExerciseNames) {
       final exerciseDetail = await db.getExerciseByName(name);
       if (exerciseDetail != null) {
-        final setsForThisExercise = sortedSets
-            .where((s) => s.exerciseName == name)
-            .toList();
+        final setsForThisExercise =
+            sortedSets.where((s) => s.exerciseName == name).toList();
 
         final routineExercise = RoutineExercise(
           id: DateTime.now().millisecondsSinceEpoch + _exercises.length,

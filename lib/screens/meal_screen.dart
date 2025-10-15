@@ -98,9 +98,9 @@ class _MealScreenState extends State<MealScreen> {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: Colors.grey[600],
-          fontWeight: FontWeight.bold,
-        ),
+              color: Colors.grey[600],
+              fontWeight: FontWeight.bold,
+            ),
       ),
     );
   }
@@ -136,11 +136,10 @@ class _MealScreenState extends State<MealScreen> {
         automaticallyImplyLeading: true,
         title: Text(
           _editMode
-              ? l10n
-                    .mealsEdit // (L10n: du kannst das zu „Bearbeiten“ ändern)
+              ? l10n.mealsEdit // (L10n: du kannst das zu „Bearbeiten“ ändern)
               : (_nameCtrl.text.isNotEmpty
-                    ? _nameCtrl.text
-                    : l10n.mealsViewTitle),
+                  ? _nameCtrl.text
+                  : l10n.mealsViewTitle),
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w900,
           ),
@@ -260,23 +259,20 @@ class _MealScreenState extends State<MealScreen> {
                               children: [
                                 _MacroChip(
                                   label: 'C',
-                                  value: _items.isEmpty
-                                      ? '–'
-                                      : _format1(_totalC),
+                                  value:
+                                      _items.isEmpty ? '–' : _format1(_totalC),
                                   unit: 'g',
                                 ),
                                 _MacroChip(
                                   label: 'F',
-                                  value: _items.isEmpty
-                                      ? '–'
-                                      : _format1(_totalF),
+                                  value:
+                                      _items.isEmpty ? '–' : _format1(_totalF),
                                   unit: 'g',
                                 ),
                                 _MacroChip(
                                   label: 'P',
-                                  value: _items.isEmpty
-                                      ? '–'
-                                      : _format1(_totalP),
+                                  value:
+                                      _items.isEmpty ? '–' : _format1(_totalP),
                                   unit: 'g',
                                 ),
                               ],
@@ -316,8 +312,7 @@ class _MealScreenState extends State<MealScreen> {
                           if (mounted) setState(() {});
                         },
                         onDelete: () async {
-                          final ok =
-                              await showDialog<bool>(
+                          final ok = await showDialog<bool>(
                                 context: context,
                                 builder: (ctx) => AlertDialog(
                                   title: Text(l10n.deleteConfirmTitle),
@@ -467,10 +462,10 @@ class _MealScreenState extends State<MealScreen> {
                                           ),
                                           content: TextField(
                                             controller: qtyCtrl,
-                                            keyboardType:
-                                                const TextInputType.numberWithOptions(
-                                                  decimal: false,
-                                                ),
+                                            keyboardType: const TextInputType
+                                                .numberWithOptions(
+                                              decimal: false,
+                                            ),
                                             decoration: const InputDecoration(
                                               suffixText: 'g/ml',
                                             ),
@@ -566,8 +561,7 @@ class _MealScreenState extends State<MealScreen> {
       'mealtypeSnack': l10n.mealtypeSnack,
     };
 
-    final ok =
-        await showModalBottomSheet<bool>(
+    final ok = await showModalBottomSheet<bool>(
           context: context,
           isScrollControlled: true,
           backgroundColor: Theme.of(context).colorScheme.surface,
@@ -599,8 +593,8 @@ class _MealScreenState extends State<MealScreen> {
                       Text(
                         l10n.mealsAddToDiary,
                         style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -644,9 +638,8 @@ class _MealScreenState extends State<MealScreen> {
                             final it = _items[i];
                             final bc = it['barcode'] as String;
                             final fi = products[bc];
-                            final displayName = (fi?.name.isNotEmpty ?? false)
-                                ? fi!.name
-                                : bc;
+                            final displayName =
+                                (fi?.name.isNotEmpty ?? false) ? fi!.name : bc;
                             final unit = (fi?.isLiquid == true) ? 'ml' : 'g';
 
                             return Row(
@@ -662,8 +655,8 @@ class _MealScreenState extends State<MealScreen> {
                                     controller: qtyCtrls[bc],
                                     keyboardType:
                                         const TextInputType.numberWithOptions(
-                                          decimal: true,
-                                        ),
+                                      decimal: true,
+                                    ),
                                     decoration: InputDecoration(
                                       labelText: displayName,
                                       helperText: l10n.amountLabel,
@@ -757,8 +750,7 @@ class _MealScreenState extends State<MealScreen> {
       ),
     );
 
-    final caffeineId =
-        caffeine.id ??
+    final caffeineId = caffeine.id ??
         (await DatabaseHelper.instance.insertSupplement(caffeine)).id!;
 
     await DatabaseHelper.instance.insertSupplementLog(

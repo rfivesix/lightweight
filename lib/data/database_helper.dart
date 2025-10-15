@@ -818,9 +818,8 @@ class DatabaseHelper {
       );
 
       // Die fromMap-Methode im korrigierten Measurement-Modell wird hier verwendet.
-      final measurements = measurementMaps
-          .map((map) => Measurement.fromMap(map))
-          .toList();
+      final measurements =
+          measurementMaps.map((map) => Measurement.fromMap(map)).toList();
 
       sessions.add(
         MeasurementSession(
@@ -1186,13 +1185,16 @@ class DatabaseHelper {
     // mg = (mg / 100 ml) * (ml / 100)
     final double doseMg = caffeinePer100ml * (quantityInMl / 100.0);
 
-    await db.insert('supplement_logs', {
-      'supplement_id': caffeineId,
-      'dose': doseMg,
-      'unit': 'mg',
-      'timestamp': timestamp.toIso8601String(),
-      'source_food_entry_id': foodEntryId,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+        'supplement_logs',
+        {
+          'supplement_id': caffeineId,
+          'dose': doseMg,
+          'unit': 'mg',
+          'timestamp': timestamp.toIso8601String(),
+          'source_food_entry_id': foodEntryId,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   @override

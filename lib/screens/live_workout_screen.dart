@@ -1182,9 +1182,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     final int planned = mgr.setLogs.length;
 
     // erledigte Sets = isCompleted == true
-    final int completed = mgr.setLogs.values
-        .where((s) => s.isCompleted == true)
-        .length;
+    final int completed =
+        mgr.setLogs.values.where((s) => s.isCompleted == true).length;
 
     final double progress = planned == 0 ? 0.0 : completed / planned;
 
@@ -1267,9 +1266,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                         MaterialPageRoute(
                                           builder: (context) =>
                                               ExerciseDetailScreen(
-                                                exercise:
-                                                    routineExercise.exercise,
-                                              ),
+                                            exercise: routineExercise.exercise,
+                                          ),
                                         ),
                                       ),
                                       child: Padding(
@@ -1290,11 +1288,11 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         // Zeigt die eingestellte Pausenzeit an
-                                        if (manager.pauseTimes[routineExercise
-                                                    .id!] !=
+                                        if (manager.pauseTimes[
+                                                    routineExercise.id!] !=
                                                 null &&
-                                            manager.pauseTimes[routineExercise
-                                                    .id!]! >
+                                            manager.pauseTimes[
+                                                    routineExercise.id!]! >
                                                 0)
                                           Padding(
                                             padding: const EdgeInsets.only(
@@ -1304,9 +1302,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                               "${manager.pauseTimes[routineExercise.id!]}s",
                                               style: textTheme.bodyMedium
                                                   ?.copyWith(
-                                                    color: colorScheme.primary,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
+                                                color: colorScheme.primary,
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                             ),
                                           ),
                                         IconButton(
@@ -1404,41 +1402,36 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                             .asMap()
                                             .entries
                                             .map((setEntry) {
-                                              final templateId =
-                                                  setEntry.value.id!;
-                                              final setLog =
-                                                  manager.setLogs[templateId];
-                                              if (setLog == null) {
-                                                return const SizedBox.shrink();
-                                              }
-                                              int workingSetIndex = 0;
-                                              for (
-                                                int i = 0;
-                                                i <= setEntry.key;
-                                                i++
-                                              ) {
-                                                final currentTemplateId =
-                                                    routineExercise
-                                                        .setTemplates[i]
-                                                        .id!;
-                                                if (manager
-                                                        .setLogs[currentTemplateId]
-                                                        ?.setType !=
-                                                    'warmup') {
-                                                  workingSetIndex++;
-                                                }
-                                              }
-                                              return _buildSetRow(
-                                                workingSetIndex,
-                                                setEntry.key,
-                                                templateId,
-                                                setLog,
-                                                _lastPerformances[routineExercise
-                                                        .exercise
-                                                        .nameEn] ??
-                                                    [], // Hier die Liste übergeben
-                                              );
-                                            }),
+                                          final templateId = setEntry.value.id!;
+                                          final setLog =
+                                              manager.setLogs[templateId];
+                                          if (setLog == null) {
+                                            return const SizedBox.shrink();
+                                          }
+                                          int workingSetIndex = 0;
+                                          for (int i = 0;
+                                              i <= setEntry.key;
+                                              i++) {
+                                            final currentTemplateId =
+                                                routineExercise
+                                                    .setTemplates[i].id!;
+                                            if (manager
+                                                    .setLogs[currentTemplateId]
+                                                    ?.setType !=
+                                                'warmup') {
+                                              workingSetIndex++;
+                                            }
+                                          }
+                                          return _buildSetRow(
+                                            workingSetIndex,
+                                            setEntry.key,
+                                            templateId,
+                                            setLog,
+                                            _lastPerformances[routineExercise
+                                                    .exercise.nameEn] ??
+                                                [], // Hier die Liste übergeben
+                                          );
+                                        }),
                                         Padding(
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: 16.0,
@@ -1511,8 +1504,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     final bool isColoredRow = rowIndex > 0 && rowIndex.isOdd;
     final Color rowColor = isColoredRow
         ? (isLightMode
-              ? Colors.grey.withOpacity(0.1)
-              : Colors.white.withOpacity(0.1))
+            ? Colors.grey.withOpacity(0.1)
+            : Colors.white.withOpacity(0.1))
         : Colors.transparent;
 
     // Finde den korrespondierenden Satz vom letzten Mal
@@ -1598,9 +1591,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
 
     return Dismissible(
       key: ValueKey('set_$templateId'),
-      direction: isCompleted
-          ? DismissDirection.none
-          : DismissDirection.endToStart,
+      direction:
+          isCompleted ? DismissDirection.none : DismissDirection.endToStart,
       onDismissed: (_) => _removeSet(templateId),
       background: Container(
         color: Colors.redAccent,
