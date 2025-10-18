@@ -36,7 +36,8 @@ import 'package:lightweight/widgets/keep_alive_page.dart';
 import 'package:provider/provider.dart';
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  final int? initialTabIndex; // <-- NEU
+  const MainScreen({super.key, this.initialTabIndex}); // <-- NEU
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
@@ -56,7 +57,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController();
+    _currentIndex = widget.initialTabIndex ?? 0; // <-- NEU: Initialer Tab
+    _pageController =
+        PageController(initialPage: _currentIndex); // <-- NEU: Initial Page
     _menuController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
@@ -859,6 +862,11 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     const basePad = 120.0; // nav bar + FAB visual height
     final runningPad = manager.isActive ? 68.0 : 0.0;
 
+    // --- NEU: HIER DEFINIEREN ---
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
+    // --- ENDE NEU: HIER DEFINIEREN ---
+
     return Stack(
       children: [
         Scaffold(
@@ -1070,6 +1078,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                         ),
                                       ),
                                       const SizedBox(width: 16),
+                                      // --- HIER WIRD DER GLAS-BUTTON ERSETZT ---
                                       GestureDetector(
                                         behavior: HitTestBehavior.opaque,
                                         onTap: () {
@@ -1093,27 +1102,44 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                               width: 76,
                                               height: 76,
                                               decoration: BoxDecoration(
-                                                color: Colors.white
-                                                    .withOpacity(0.15),
+                                                // KORREKTUR: Hintergrundfarbe wie GlassFab
+                                                color: bg.withOpacity(0.80),
                                                 borderRadius:
                                                     BorderRadius.circular(
                                                   20,
                                                 ),
                                                 border: Border.all(
-                                                  color: Colors.white
-                                                      .withOpacity(0.3),
+                                                  // KORREKTUR: Rahmenfarbe wie GlassFab
+                                                  color: isDark
+                                                      ? Colors.white
+                                                          .withOpacity(0.30)
+                                                      : Colors.black
+                                                          .withOpacity(0.10),
                                                   width: 1.5,
                                                 ),
+                                                // Schatten für Konsistenz mit GlassFab
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withOpacity(0.3),
+                                                    blurRadius: 12,
+                                                    offset: const Offset(0, 6),
+                                                  ),
+                                                ],
                                               ),
                                               child: Icon(
                                                 action['icon'],
                                                 size: 34,
-                                                color: Colors.white,
+                                                // KORREKTUR: Dynamische Icon-Farbe
+                                                color: isDark
+                                                    ? Colors.white
+                                                    : Colors.black,
                                               ),
                                             ),
                                           ),
                                         ),
                                       ),
+                                      // --- ENDE DES GLAS-BUTTON ERSATZES ---
                                     ],
                                   ),
                                 ),

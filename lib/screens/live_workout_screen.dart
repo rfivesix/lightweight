@@ -1242,7 +1242,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                   child: manager.exercises.isEmpty
                       ? _buildEmptyState(l10n)
                       : ReorderableListView.builder(
-                          padding: EdgeInsets.zero,
+                          padding: const EdgeInsets.only(
+                              bottom: DesignConstants.bottomContentSpacer),
                           onReorder: _onReorder,
                           itemCount: manager.exercises.length,
                           itemBuilder: (context, index) {

@@ -1,3 +1,5 @@
+// lib/widgets/glass_bottom_menu.dart
+
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -35,7 +37,8 @@ Future<T?> showGlassBottomMenu<T>({
   return showModalBottomSheet<T>(
     context: context,
     isScrollControlled: true,
-    useRootNavigator: false, // lassen wir so
+    useRootNavigator:
+        true, // <--- FIX: Stellt sicher, dass das Menü über allen Navigatoren erscheint
     useSafeArea: false,
     backgroundColor: Colors.transparent,
     // 👇 animiert automatisch mit dem Sheet (kein „an/aus“)
@@ -75,7 +78,7 @@ class _GlassBottomMenuSheet extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final bottomInset = media.viewPadding.bottom;
-    final keyboard = media.viewInsets.bottom; // ⬅️ NEU: Tastaturhöhe
+    // final keyboard = media.viewInsets.bottom; // ⬅️ wird jetzt über den äußeren AnimatedPadding abgedeckt
 
     return SafeArea(
       top: false,
@@ -88,6 +91,8 @@ class _GlassBottomMenuSheet extends StatelessWidget {
               ? Colors.white.withOpacity(0.22)
               : Colors.black.withOpacity(0.10),
           child: Padding(
+            // WICHTIG: Hier nur den Bottom-Padding der Safe-Area berücksichtigen.
+            // Die Tastatur (kb) wird bereits im äußeren AnimatedPadding berücksichtigt.
             padding: EdgeInsets.only(bottom: bottomInset),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -152,27 +157,7 @@ class _GlassBottomMenuSheet extends StatelessWidget {
                     ),
                   ),
                 ],
-                /*if (contentBuilder != null) ...[
-  const SizedBox(height: 12),
-  Padding(
-    padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-    child: Row(
-      children: [
-        Expanded(
-          child: OutlinedButton(
-            onPressed: () => Navigator.of(context).maybePop(),
-            child: Text(AppLocalizations.of(context)!.cancel),
-          ),
-        ),1
-        const SizedBox(width: 12),
-        Expanded(
-          child: _InlinePrimaryButton(), // ⬅️ Handler wird im Aufrufer gesetzt (siehe unten)
-        ),
-      ],
-    ),
-  ),
-]
-*/
+                // Die auskommentierten "InlinePrimaryButton" Blöcke wurden entfernt, da sie nicht vollständig waren.
               ],
             ),
           ),

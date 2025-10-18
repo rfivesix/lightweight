@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Vita'**
+  /// **'Lightweight'**
   String get appTitle;
 
   /// No description provided for @bannerText.
@@ -167,13 +167,13 @@ abstract class AppLocalizations {
   /// No description provided for @addFoodOption.
   ///
   /// In en, this message translates to:
-  /// **'Food'**
+  /// **'add Food'**
   String get addFoodOption;
 
   /// No description provided for @addLiquidOption.
   ///
   /// In en, this message translates to:
-  /// **'Liquid'**
+  /// **'add Liquid'**
   String get addLiquidOption;
 
   /// No description provided for @searchHintText.
@@ -452,6 +452,12 @@ abstract class AppLocalizations {
   /// **'Daily Goals'**
   String get profileDailyGoals;
 
+  /// No description provided for @profileDailyGoalsCL.
+  ///
+  /// In en, this message translates to:
+  /// **'DAILY GOALS'**
+  String get profileDailyGoalsCL;
+
   /// No description provided for @snackbarGoalsSaved.
   ///
   /// In en, this message translates to:
@@ -593,7 +599,7 @@ abstract class AppLocalizations {
   /// No description provided for @drawerMenuTitle.
   ///
   /// In en, this message translates to:
-  /// **'Vita Menu'**
+  /// **'Lightweight Menu'**
   String get drawerMenuTitle;
 
   /// No description provided for @drawerDashboard.
@@ -1049,7 +1055,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupFileSubject.
   ///
   /// In en, this message translates to:
-  /// **'Vita App Backup - {timestamp}'**
+  /// **'Lightweight App Backup - {timestamp}'**
   String backupFileSubject(String timestamp);
 
   /// No description provided for @foodItemSubtitle.
@@ -2204,6 +2210,12 @@ abstract class AppLocalizations {
   /// **'Personal Data'**
   String get personalData;
 
+  /// No description provided for @personalDataCL.
+  ///
+  /// In en, this message translates to:
+  /// **'PERSONAL DATA'**
+  String get personalDataCL;
+
   /// No description provided for @macroDistribution.
   ///
   /// In en, this message translates to:
@@ -2257,6 +2269,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Detailed Nutrients'**
   String get detailedNutrientGoals;
+
+  /// No description provided for @detailedNutrientGoalsCL.
+  ///
+  /// In en, this message translates to:
+  /// **'DETAILED NUTRIENTS'**
+  String get detailedNutrientGoalsCL;
 
   /// No description provided for @supplementTrackerTitle.
   ///
@@ -2437,6 +2455,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'add food'**
   String get addFoodTitle;
+
+  /// No description provided for @nutritionExplorerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition Explorer'**
+  String get nutritionExplorerTitle;
+
+  /// No description provided for @myMeals.
+  ///
+  /// In en, this message translates to:
+  /// **'My Meals'**
+  String get myMeals;
+
+  /// No description provided for @myMealsCL.
+  ///
+  /// In en, this message translates to:
+  /// **'MY MEALS'**
+  String get myMealsCL;
 
   /// No description provided for @supplement_caffeine.
   ///

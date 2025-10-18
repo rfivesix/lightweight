@@ -82,7 +82,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ),
-          const SizedBox(height: DesignConstants.spacingM),
+          //const SizedBox(height: DesignConstants.spacingM),
 
           // Sektion für Navigation
           // HINWEIS: Der redundante Titel "EINSTELLUNGEN" wurde entfernt.
@@ -97,7 +97,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
             },
           ),
-          const SizedBox(height: DesignConstants.spacingM),
+          //const SizedBox(height: DesignConstants.spacingM),
           _buildNavigationCard(
             icon: Icons.flag_outlined,
             title: l10n.my_goals,
@@ -108,7 +108,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
             },
           ),
-          const SizedBox(height: DesignConstants.spacingM),
+          //const SizedBox(height: DesignConstants.spacingM),
           _buildOnboardingCard(l10n),
           const BottomContentSpacer(),
         ],

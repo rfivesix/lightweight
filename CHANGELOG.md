@@ -3,6 +3,52 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## [0.4.0-alpha.12] - 2025-10-15
+
+### Added
+
+*   **New Feature: Today's Workout Summary on Diary Screen**
+    *   Workout statistics (Duration, Volume, Set Count) for the current day are now displayed directly on the Diary/Nutrition screen (Issue #55).
+*   **New Hub UI: Nutrition Hub Overhaul**
+    *   The **Nutrition Hub** (`/nutrition-hub` - Issue #53) has been completely redesigned with an improved UI and UX, including new statistical cards and analysis gateways.
+*   **Database Asset Versioning**
+    *   Implemented a robust versioning system for all internal asset databases (`vita_base_foods.db`, `vita_prep_de.db`, `vita_training.db`). This ensures that core app data is updated when the app version changes, preventing outdated database contents.
+*   **Workout History Details**
+    *   The Workout History screen now displays the **Total Volume** (in kg) and **Total Sets** for each logged workout, providing more context at a glance.
+*   **Automatic Backup Check**
+    *   The app now checks for and runs the automated daily backup process upon startup, increasing data security.
+*   **New Routine Quick-Create Card**
+    *   A new "Create Routine" card has been added to the Workout Hub for quick access.
+
+### Fixed
+
+*   **Critical: Database Name Display**
+    *   Fixed a critical bug where localized food names (e.g., German, English) were not correctly retrieved from the product database, leading to the display of wrong or empty names in some parts of the app (Issue #56).
+*   **Critical: Backup and Restore Stability**
+    *   Fixed multiple critical issues related to the full backup/restore process (Issue #52), ensuring that **Supplements**, **Supplement Logs**, and detailed **Workout Set Logs** are correctly serialized, backed up, and restored.
+*   **Workout History Filtering**
+    *   Fixed a bug in the workout database helper that caused uncompleted/draft workout logs to be included in the history; only workouts with the status `completed` are now shown.
+*   **Exercise Name Localization**
+    *   Corrected the logic for displaying exercise names in the Exercise Catalog and Detail screens to correctly prioritize localized names (`name_de`, `name_en`).
+*   **Profile Picture Deletion**
+    *   Fixed an issue where deleting the profile picture did not work as intended (Issue #31).
+*   **Fluid Log Processing**
+    *   The calculation for Carbs and Sugar in fluid entries is now correctly scaled by the logged quantity.
+
+### Changed
+
+*   **Reworked Add Menu (FAB)**
+    *   The Floating Action Button (FAB) menu on the main screen has been refined for better usability and visual feedback (Issue #50).
+*   **Improved Water Section UI/UX**
+    *   The Water section in the Diary screen has received general UI/UX enhancements (Issue #54).
+*   **Routineless Workout Restoration**
+    *   Restoring a workout that was not based on a routine now correctly determines the order of exercises based on the original log order.
+*   **Enhanced Swipe-to-Delete Confirmation**
+    *   Added explicit confirmation dialogues for the swipe-to-delete actions on Routines, Meals, and Nutrition/Fluid Logs to prevent accidental data loss.
+*   **Improved Search Queries**
+    *   Product search now searches across `name`, `name_de`, and `name_en` fields, significantly improving discoverability.
+*   **UI/UX Refinements**
+    *   Numerous minor style adjustments across the app (typography, button padding, list item shadows) for a cleaner, more consistent look.
 ## Release Notes – 0.4.0-alpha.11+4011
 
 ### Added

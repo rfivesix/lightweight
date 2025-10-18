@@ -6,6 +6,7 @@ import 'package:lightweight/data/product_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/screens/add_food_screen.dart';
 import 'package:lightweight/screens/meal_screen.dart';
+import 'package:lightweight/screens/goals_screen.dart';
 import 'package:lightweight/screens/supplement_track_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/bottom_content_spacer.dart';
@@ -89,6 +90,7 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
     return {
       'meals': meals,
       'recommendation': recommendation,
+      'targetCalories': targetCalories,
     };
   }
 
@@ -141,6 +143,7 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
           final data = snapshot.data!;
           final meals = data['meals'] as List<Map<String, dynamic>>;
           final recommendationText = data['recommendation'] as String;
+          final targetCalories = data['targetCalories'] as int;
 
           return RefreshIndicator(
             onRefresh: _refreshData,
@@ -148,24 +151,10 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
               padding: DesignConstants.cardPadding,
               children: [
                 _buildSectionTitle(context, l10n.today_overview_text),
-                SummaryCard(
-                  child: Container(
-                    height: 100,
-                    alignment: Alignment.center,
-                    child: Text(
-                      recommendationText,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
+                _buildGoalsAndRecommendationCard(
+                    context, recommendationText, targetCalories, theme, l10n),
                 const SizedBox(height: DesignConstants.spacingXL),
-                _buildSectionTitle(context,
-                    l10n.my_plans_capslock.replaceAll('PLÄNE', 'MAHLZEITEN')),
+                _buildSectionTitle(context, l10n.myMealsCL),
                 meals.isEmpty
                     ? _buildEmptyMealsCard(context, l10n)
                     : SizedBox(
@@ -194,8 +183,7 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
                     Navigator.of(context)
                         .push(
                           MaterialPageRoute(
-                              builder: (_) =>
-                                  const AddFoodScreen(initialTab: 3)),
+                              builder: (_) => const AddFoodScreen()),
                         )
                         .then((_) => _refreshData());
                   },
@@ -229,6 +217,45 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildGoalsAndRecommendationCard(
+      BuildContext context,
+      String recommendationText,
+      int targetCalories,
+      ThemeData theme,
+      AppLocalizations l10n) {
+    return SummaryCard(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Text(
+              recommendationText,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '${l10n.profileDailyGoals}: $targetCalories kcal',
+              style: theme.textTheme.titleMedium,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const GoalsScreen()));
+              },
+              child: Text(l10n.my_goals),
+            ),
+          ],
+        ),
       ),
     );
   }

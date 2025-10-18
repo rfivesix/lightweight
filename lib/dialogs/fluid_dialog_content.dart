@@ -1,4 +1,4 @@
-// lib/dialogs/fluid_dialog_content.dart
+// lib/dialogs/fluid_dialog_content.dart - ERSETZE DIE GESAMTE DATEI
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -8,11 +8,17 @@ import 'package:lightweight/util/design_constants.dart';
 class FluidDialogContent extends StatefulWidget {
   final int? initialQuantity;
   final DateTime? initialTimestamp;
+  final String? initialName; // <--- NEU
+  final double? initialSugar; // <--- NEU
+  final double? initialCaffeine; // <--- NEU
 
   const FluidDialogContent({
     super.key,
     this.initialQuantity,
     this.initialTimestamp,
+    this.initialName, // <--- NEU
+    this.initialSugar, // <--- NEU
+    this.initialCaffeine, // <--- NEU
   });
 
   @override
@@ -35,12 +41,19 @@ class FluidDialogContentState extends State<FluidDialogContent> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: 'Water');
+    _nameController = TextEditingController(
+        text: widget.initialName ?? 'Water'); // <--- Initialisierung anpassen
     _quantityController = TextEditingController(
       text: widget.initialQuantity?.toString() ?? '',
     );
-    _caffeineController = TextEditingController();
-    _sugarController = TextEditingController();
+    // <--- Hinzufügen der Initialisierung für Nährstoffe
+    _caffeineController = TextEditingController(
+      text:
+          widget.initialCaffeine?.toStringAsFixed(1).replaceAll('.0', '') ?? '',
+    );
+    _sugarController = TextEditingController(
+      text: widget.initialSugar?.toStringAsFixed(1).replaceAll('.0', '') ?? '',
+    );
     _selectedDateTime = widget.initialTimestamp ?? DateTime.now();
   }
 

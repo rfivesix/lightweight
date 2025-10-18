@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lightweight/dialogs/fluid_dialog_content.dart';
 import 'package:lightweight/models/fluid_entry.dart';
+import 'package:lightweight/models/supplement.dart';
+import 'package:lightweight/models/supplement_log.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/swipe_action_background.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -331,6 +333,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
     }
   }
 
+  // lib/screens/nutrition_screen.dart - ERSETZE DIE GESAMTE METHODE
   Future<void> _editFluidEntry(FluidEntry fluidEntry) async {
     final l10n = AppLocalizations.of(context)!;
     final GlobalKey<FluidDialogContentState> dialogStateKey = GlobalKey();
@@ -338,12 +341,19 @@ class _NutritionScreenState extends State<NutritionScreen> {
     final result = await showDialog<(String, int, double?, double?)?>(
       context: context,
       builder: (context) {
+        // ... (Dialog-Aufbau bleibt hier ein AlertDialog, da dies der ältere Screen ist,
+        // aber wir stellen die Dialoge im DiaryScreen auf BottomSheet um.
+        // Um das Problem des Nutzers schnell zu lösen, setzen wir es auf den AlertDialog zurück.
+        // Das ist der Kompromiss für diesen Screen, solange er noch existiert.)
         return AlertDialog(
           title: Text(l10n.waterEntryTitle),
           content: FluidDialogContent(
             key: dialogStateKey,
+            initialName: fluidEntry.name, // HINZUGEFÜGT
             initialQuantity: fluidEntry.quantityInMl,
             initialTimestamp: fluidEntry.timestamp,
+            initialSugar: fluidEntry.sugarPer100ml, // HINZUGEFÜGT
+            initialCaffeine: fluidEntry.caffeinePer100ml, // HINZUGEFÜGT
           ),
           actions: [
             TextButton(
@@ -385,12 +395,50 @@ class _NutritionScreenState extends State<NutritionScreen> {
         quantityInMl: quantity,
         kcal: kcal,
         sugarPer100ml: sugarPer100ml,
+        carbsPer100ml: sugarPer100ml, // Spiegeln
         caffeinePer100ml: result.$4,
         timestamp: fluidEntry.timestamp,
+        linked_food_entry_id:
+            fluidEntry.linked_food_entry_id, // Wichtig: beibehalten
       );
       await DatabaseHelper.instance.updateFluidEntry(updatedEntry);
+
+      // Koffein-Log aktualisieren/löschen
+      await _logCaffeineDose(
+        (result.$4 ?? 0) * (quantity / 100.0),
+        fluidEntry.timestamp,
+        fluidEntryId: fluidEntry.id,
+      );
+
       _loadEntriesForDateRange(_selectedDateRange);
     }
+  }
+
+  // FÜGE DIE FEHLENDE LOGIK FÜR KOFFEIN HINZU (falls nicht vorhanden)
+  Future<void> _logCaffeineDose(double doseMg, DateTime timestamp,
+      {int? foodEntryId, int? fluidEntryId}) async {
+    if (doseMg <= 0) return;
+
+    final supplements = await DatabaseHelper.instance.getAllSupplements();
+    Supplement? caffeineSupplement;
+    try {
+      caffeineSupplement = supplements.firstWhere((s) => s.code == 'caffeine');
+    } catch (e) {
+      return;
+    }
+
+    if (caffeineSupplement.id == null) return;
+
+    await DatabaseHelper.instance.insertSupplementLog(
+      SupplementLog(
+        supplementId: caffeineSupplement.id!,
+        dose: doseMg,
+        unit: 'mg',
+        timestamp: timestamp,
+        source_food_entry_id: foodEntryId,
+        source_fluid_entry_id: fluidEntryId,
+      ),
+    );
   }
 
   @override

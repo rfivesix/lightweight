@@ -214,28 +214,22 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      l10n.personalData,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: DesignConstants.spacingL),
+                    _buildSectionTitle(context, l10n.personalDataCL),
+                    const SizedBox(height: DesignConstants.spacingM),
                     _buildSettingsField(
                       controller: _heightController,
                       label: l10n.profileUserHeight,
                     ),
                     const SizedBox(height: DesignConstants.spacingXL),
-                    Text(
-                      l10n.profileDailyGoals,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: DesignConstants.spacingL),
+                    _buildSectionTitle(context, l10n.profileDailyGoalsCL),
+                    const SizedBox(height: DesignConstants.spacingM),
                     _buildSettingsField(
                       controller: _caloriesController,
                       label: l10n.calories,
                     ),
-                    const SizedBox(height: DesignConstants.spacingL),
-                    _buildMacroCalculator(),
-                    const SizedBox(height: DesignConstants.spacingL),
+                    //const SizedBox(height: DesignConstants.spacingL),
+                    //_buildMacroCalculator(),
+                    //const SizedBox(height: DesignConstants.spacingL),
                     _buildSettingsField(
                       controller: _proteinController,
                       label: l10n.protein,
@@ -253,11 +247,8 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       label: l10n.water,
                     ),
                     const SizedBox(height: DesignConstants.spacingXL),
-                    Text(
-                      l10n.detailedNutrientGoals, // HIER DIE ÄNDERUNG
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: DesignConstants.spacingL),
+                    _buildSectionTitle(context, l10n.detailedNutrientGoalsCL),
+                    const SizedBox(height: DesignConstants.spacingM),
                     _buildSettingsField(
                       controller: _sugarController,
                       label: l10n.sugar,
@@ -334,6 +325,19 @@ class _GoalsScreenState extends State<GoalsScreen> {
           }
           return null;
         },
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(BuildContext context, String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: Colors.grey[600],
+              fontWeight: FontWeight.bold,
+            ),
       ),
     );
   }

@@ -9,7 +9,7 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
-  String get appTitle => 'Vita';
+  String get appTitle => 'Lightweight';
 
   @override
   String get bannerText => 'Empfehlung / Aktuelles Workout';
@@ -42,10 +42,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get addMenuTitle => 'Was möchtest du hinzufügen?';
 
   @override
-  String get addFoodOption => 'Lebensmittel';
+  String get addFoodOption => 'Lebensmittel hinzufügen';
 
   @override
-  String get addLiquidOption => 'Flüssigkeit';
+  String get addLiquidOption => 'Flüssigkeit hinzufügen';
 
   @override
   String get searchHintText => 'Suchen...';
@@ -191,6 +191,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get profileDailyGoals => 'Tägliche Ziele';
 
   @override
+  String get profileDailyGoalsCL => 'TÄGLICHE ZIELE';
+
+  @override
   String get snackbarGoalsSaved => 'Ziele erfolgreich gespeichert!';
 
   @override
@@ -263,7 +266,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get measurementRightCalf => 'Rechte Wade';
 
   @override
-  String get drawerMenuTitle => 'Vita Menü';
+  String get drawerMenuTitle => 'Lightweight Menü';
 
   @override
   String get drawerDashboard => 'Dashboard';
@@ -512,7 +515,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String backupFileSubject(String timestamp) {
-    return 'Vita App Backup - $timestamp';
+    return 'Lightweight App Backup - $timestamp';
   }
 
   @override
@@ -1145,6 +1148,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get personalData => 'Persönliche Daten';
 
   @override
+  String get personalDataCL => 'PERSÖNLICHE DATEN';
+
+  @override
   String get macroDistribution => 'Makronährstoff-Verteilung';
 
   @override
@@ -1172,6 +1178,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get detailedNutrientGoals => 'Detail-Nährwerte';
+
+  @override
+  String get detailedNutrientGoalsCL => 'DETAIL-NÄHRWERTE';
 
   @override
   String get supplementTrackerTitle => 'Supplement-Tracker';
@@ -1265,6 +1274,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get addFoodTitle => 'Lebensmittel hinzufügen';
+
+  @override
+  String get nutritionExplorerTitle => 'Lebensmittel Explorer';
+
+  @override
+  String get myMeals => 'Meine Mahlzeiten';
+
+  @override
+  String get myMealsCL => 'MEINE MAHLZEITEN';
 
   @override
   String get supplement_caffeine => 'Koffein';

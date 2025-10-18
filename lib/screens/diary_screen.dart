@@ -231,50 +231,190 @@ class DiaryScreenState extends State<DiaryScreen> {
     loadDataForDate(_selectedDate);
   }
 
+  // lib/screens/diary_screen.dart - ERSETZE DIE GESAMTE METHODE
   Future<void> _editFoodEntry(TrackedFoodItem trackedItem) async {
     final l10n = AppLocalizations.of(context)!;
     final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
 
-    final result = await showDialog<(int, DateTime, String, double?)?>(
+    final result = await showGlassBottomMenu<
+        ({
+          int quantity,
+          DateTime timestamp,
+          String mealType,
+          bool isLiquid,
+          double? sugarPer100ml,
+          double? caffeinePer100ml,
+        })?>(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(
-            trackedItem.item.name,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          content: QuantityDialogContent(
-            key: dialogStateKey,
-            item: trackedItem.item,
-            initialQuantity: trackedItem.entry.quantityInGrams,
-            initialTimestamp: trackedItem.entry.timestamp,
-            initialMealType: trackedItem.entry.mealType,
-          ),
-          actions: [
-            TextButton(
-              child: Text(l10n.cancel),
-              onPressed: () => Navigator.of(context).pop(),
+      title: trackedItem.item.getLocalizedName(context),
+      contentBuilder: (ctx, close) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Der Inhalt des Dialogs (jetzt als Bottom-Sheet-Inhalt)
+            QuantityDialogContent(
+              key: dialogStateKey,
+              item: trackedItem.item,
+              initialQuantity: trackedItem.entry.quantityInGrams,
+              initialTimestamp: trackedItem.entry.timestamp,
+              initialMealType: trackedItem.entry.mealType,
+              // Die aktuellen Nährwerte des Eintrags als Initial-Werte
+              // Annahme: Wenn der Eintrag existiert, sind die Nährwerte fix.
+              // Wir setzen nur die Liquid-Status, falls nötig.
             ),
-            FilledButton(
-              child: Text(l10n.save),
-              onPressed: () {
-                final state = dialogStateKey.currentState;
-                if (state != null) {
-                  final quantity = int.tryParse(state.quantityText);
-                  final caffeine = double.tryParse(
-                    state.caffeineText.replaceAll(',', '.'),
-                  );
-                  if (quantity != null && quantity > 0) {
-                    Navigator.of(context).pop((
-                      quantity,
-                      state.selectedDateTime,
-                      state.selectedMealType,
-                      caffeine,
-                    ));
-                  }
-                }
-              },
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: close,
+                    child: Text(l10n.cancel),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      final state = dialogStateKey.currentState;
+                      if (state != null) {
+                        final quantity = int.tryParse(state.quantityText);
+                        final caffeine = double.tryParse(
+                          state.caffeineText.replaceAll(',', '.'),
+                        );
+                        final sugar = double.tryParse(
+                          state.sugarText.replaceAll(',', '.'),
+                        );
+
+                        if (quantity != null && quantity > 0) {
+                          close();
+                          // Hier geben wir das korrekte, anonyme Tupel zurück
+                          Navigator.of(ctx).pop((
+                            quantity: quantity,
+                            timestamp: state.selectedDateTime,
+                            mealType: state.selectedMealType,
+                            isLiquid: state.isLiquid,
+                            sugarPer100ml: sugar,
+                            caffeinePer100ml: caffeine,
+                          ));
+                        }
+                      }
+                    },
+                    child: Text(l10n.save),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+
+    // Weiterhin die Daten aus dem Ergebnis verarbeiten
+    if (result != null) {
+      final updatedEntry = FoodEntry(
+        id: trackedItem.entry.id,
+        barcode: trackedItem.item.barcode,
+        quantityInGrams: result.quantity,
+        timestamp: result.timestamp,
+        mealType: result.mealType,
+      );
+      await DatabaseHelper.instance.updateFoodEntry(updatedEntry);
+
+      // 1. FluidEntry löschen (falls verknüpft)
+      if (trackedItem.entry.id != null) {
+        await DatabaseHelper.instance.deleteFluidEntryByLinkedFoodId(
+          trackedItem.entry.id!,
+        );
+      }
+      // 2. FluidEntry neu erstellen (falls jetzt flüssig)
+      if (result.isLiquid) {
+        final newFluidEntry = FluidEntry(
+          timestamp: result.timestamp,
+          quantityInMl: result.quantity,
+          name: trackedItem.item.name,
+          kcal: null,
+          sugarPer100ml: result.sugarPer100ml,
+          carbsPer100ml: result.sugarPer100ml, // Spiegeln
+          caffeinePer100ml: result.caffeinePer100ml,
+          linked_food_entry_id: trackedItem.entry.id, // Verknüpfung beibehalten
+        );
+        await DatabaseHelper.instance.insertFluidEntry(newFluidEntry);
+      }
+
+      // 3. Koffein-Log aktualisieren/löschen (in jedem Fall)
+      await _logCaffeineDose(
+        (result.caffeinePer100ml ?? 0) * (result.quantity / 100.0),
+        result.timestamp,
+        foodEntryId: trackedItem.entry.id,
+      );
+
+      loadDataForDate(_selectedDate);
+    }
+  }
+
+// Auch die Methode für FluidEntry Edit muss angepasst werden, um den AlertDialog zu vermeiden.
+
+  Future<void> _editFluidEntry(FluidEntry fluidEntry) async {
+    final l10n = AppLocalizations.of(context)!;
+    final GlobalKey<FluidDialogContentState> dialogStateKey = GlobalKey();
+
+    // Wir ersetzen showDialog durch showGlassBottomMenu
+    final result = await showGlassBottomMenu<
+        (
+          String name,
+          int quantity,
+          double? sugarPer100ml,
+          double? caffeinePer100ml
+        )?>(
+      context: context,
+      title: l10n.waterEntryTitle,
+      contentBuilder: (ctx, close) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FluidDialogContent(
+              key: dialogStateKey,
+              initialName: fluidEntry.name,
+              initialQuantity: fluidEntry.quantityInMl,
+              initialTimestamp: fluidEntry.timestamp,
+              initialSugar: fluidEntry.sugarPer100ml,
+              initialCaffeine: fluidEntry.caffeinePer100ml,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: close,
+                    child: Text(l10n.cancel),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    child: Text(l10n.save),
+                    onPressed: () {
+                      final state = dialogStateKey.currentState;
+                      if (state != null) {
+                        final quantity = int.tryParse(state.quantityText);
+                        if (quantity != null && quantity > 0) {
+                          close();
+                          Navigator.of(ctx).pop((
+                            state.nameText,
+                            quantity,
+                            double.tryParse(
+                              state.sugarText.replaceAll(',', '.'),
+                            ),
+                            double.tryParse(
+                              state.caffeineText.replaceAll(',', '.'),
+                            ),
+                          ));
+                        }
+                      }
+                    },
+                  ),
+                ),
+              ],
             ),
           ],
         );
@@ -282,14 +422,32 @@ class DiaryScreenState extends State<DiaryScreen> {
     );
 
     if (result != null) {
-      final updatedEntry = FoodEntry(
-        id: trackedItem.entry.id,
-        barcode: trackedItem.item.barcode,
-        quantityInGrams: result.$1,
-        timestamp: result.$2,
-        mealType: result.$3,
+      final sugarPer100ml = result.$3;
+      final quantity = result.$2;
+      final kcal = (sugarPer100ml != null)
+          ? ((sugarPer100ml / 100) * quantity * 4).round()
+          : null;
+
+      final updatedEntry = FluidEntry(
+        id: fluidEntry.id,
+        name: result.$1,
+        quantityInMl: quantity,
+        kcal: kcal,
+        sugarPer100ml: sugarPer100ml,
+        carbsPer100ml: sugarPer100ml, // Spiegeln
+        caffeinePer100ml: result.$4,
+        timestamp: fluidEntry.timestamp,
+        linked_food_entry_id: fluidEntry.linked_food_entry_id,
       );
-      await DatabaseHelper.instance.updateFoodEntry(updatedEntry);
+      await DatabaseHelper.instance.updateFluidEntry(updatedEntry);
+
+      // Koffein-Log aktualisieren/löschen
+      await _logCaffeineDose(
+        (result.$4 ?? 0) * (quantity / 100.0),
+        fluidEntry.timestamp,
+        fluidEntryId: fluidEntry.id,
+      );
+
       loadDataForDate(_selectedDate);
     }
   }

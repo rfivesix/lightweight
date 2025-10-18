@@ -14,6 +14,7 @@ class DesignConstants {
   static const double spacingL = 16.0; // Standard-Abstände
   static const double spacingXL = 24.0; // Große Abstände
   static const double spacingXXL = 32.0; // Sehr große Abstände
+  static const double bottomContentSpacer = 80.0; // Platz für FAB etc.
 
   // Screen Padding
   static const double screenPaddingHorizontal = 16.0;

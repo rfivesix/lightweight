@@ -6,7 +6,6 @@ import 'package:lightweight/data/product_database_helper.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/screens/measurements_screen.dart';
-import 'package:lightweight/screens/nutrition_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/bottom_content_spacer.dart';
 import 'package:lightweight/widgets/summary_card.dart';
@@ -249,7 +248,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                       );
                     },
                   ),
-                  const SizedBox(height: DesignConstants.spacingM),
+                  //const SizedBox(height: DesignConstants.spacingM),
+                  /*
                   _buildAnalysisGateway(
                     context: context,
                     icon: Icons.pie_chart_outline_rounded,
@@ -263,7 +263,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                       );
                     },
                   ),
-                  const SizedBox(height: DesignConstants.spacingM),
+                  //const SizedBox(height: DesignConstants.spacingM),
                   _buildAnalysisGateway(
                     context: context,
                     icon: Icons.bar_chart_rounded,
@@ -275,6 +275,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                       );
                     },
                   ),
+                  */
                   const BottomContentSpacer(),
                 ],
               ),

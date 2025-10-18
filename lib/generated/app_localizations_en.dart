@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Vita';
+  String get appTitle => 'Lightweight';
 
   @override
   String get bannerText => 'Recommendation / Current Workout';
@@ -42,10 +42,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addMenuTitle => 'What do you want to add?';
 
   @override
-  String get addFoodOption => 'Food';
+  String get addFoodOption => 'add Food';
 
   @override
-  String get addLiquidOption => 'Liquid';
+  String get addLiquidOption => 'add Liquid';
 
   @override
   String get searchHintText => 'Search...';
@@ -191,6 +191,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileDailyGoals => 'Daily Goals';
 
   @override
+  String get profileDailyGoalsCL => 'DAILY GOALS';
+
+  @override
   String get snackbarGoalsSaved => 'Goals saved successfully!';
 
   @override
@@ -263,7 +266,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get measurementRightCalf => 'Right Calf';
 
   @override
-  String get drawerMenuTitle => 'Vita Menu';
+  String get drawerMenuTitle => 'Lightweight Menu';
 
   @override
   String get drawerDashboard => 'Dashboard';
@@ -508,7 +511,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String backupFileSubject(String timestamp) {
-    return 'Vita App Backup - $timestamp';
+    return 'Lightweight App Backup - $timestamp';
   }
 
   @override
@@ -1139,6 +1142,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get personalData => 'Personal Data';
 
   @override
+  String get personalDataCL => 'PERSONAL DATA';
+
+  @override
   String get macroDistribution => 'Macronutrient Distribution';
 
   @override
@@ -1166,6 +1172,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get detailedNutrientGoals => 'Detailed Nutrients';
+
+  @override
+  String get detailedNutrientGoalsCL => 'DETAILED NUTRIENTS';
 
   @override
   String get supplementTrackerTitle => 'Supplement Tracker';
@@ -1257,6 +1266,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addFoodTitle => 'add food';
+
+  @override
+  String get nutritionExplorerTitle => 'Nutrition Explorer';
+
+  @override
+  String get myMeals => 'My Meals';
+
+  @override
+  String get myMealsCL => 'MY MEALS';
 
   @override
   String get supplement_caffeine => 'Caffeine';

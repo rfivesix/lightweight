@@ -663,6 +663,8 @@ class DatabaseHelper {
     });
   }
 
+  // lib/data/database_helper.dart - ERSETZE DIE GESAMTE METHODE deleteFluidEntry
+
   Future<void> deleteFluidEntry(int id) async {
     final db = await database;
 
@@ -678,19 +680,21 @@ class DatabaseHelper {
       final linkedFoodEntryId = maps.first['linked_food_entry_id'] as int?;
 
       if (linkedFoodEntryId != null) {
-        // *** DAS IST DER FIX ***
-        // Wenn es einen verknüpften FoodEntry gibt, rufen wir dessen Löschmethode auf.
-        // Diese kümmert sich um das Löschen von ALLEM (FoodEntry, FluidEntry und SupplementLog).
+        // Dies ist ein FluidEntry, der über einen FoodEntry geloggt wurde (z.B. Saft).
+        // Das Löschen dieses FluidEntrys sollte implizit über den FoodEntry erfolgen (Cascading Delete).
+        // ABER: Da kein Foreign Key besteht, rufen wir manuell die FoodEntry-Löschung auf,
+        // um die Konsistenz zu gewährleisten (löscht FoodEntry, FluidEntry und SuppLogs).
         await deleteFoodEntry(linkedFoodEntryId);
       } else {
         // Dies ist ein eigenständiger FluidEntry (z.B. "Wasser" oder manueller Proteinshake).
-        // Er hat möglicherweise einen eigenen Koffein-Log.
         await db.transaction((txn) async {
+          // Lösche verknüpfte Supplement-Logs (Koffein-Logs)
           await txn.delete(
             'supplement_logs',
             where: 'source_fluid_entry_id = ?',
             whereArgs: [id],
           );
+          // Lösche den FluidEntry selbst
           await txn.delete('fluid_entries', where: 'id = ?', whereArgs: [id]);
         });
       }
@@ -698,6 +702,41 @@ class DatabaseHelper {
         "Fluid-Eintrag mit ID $id und alle verknüpften Daten erfolgreich gelöscht.",
       );
     }
+  }
+
+// lib/data/database_helper.dart - FÜGE DIESE METHODE HINZU (wurde zuvor im DiaryScreen verwendet)
+
+  Future<void> deleteFluidEntryByLinkedFoodId(int foodEntryId) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      // 1. Suche die ID des FluidEntry mit dieser Verknüpfung
+      final fluidEntryMaps = await txn.query(
+        'fluid_entries',
+        columns: ['id'],
+        where: 'linked_food_entry_id = ?',
+        whereArgs: [foodEntryId],
+        limit: 1,
+      );
+
+      if (fluidEntryMaps.isNotEmpty) {
+        final fluidEntryId = fluidEntryMaps.first['id'] as int;
+
+        // 2. Lösche zugehörige Supplement-Logs (Koffein-Log vom Getränk)
+        await txn.delete(
+          'supplement_logs',
+          where: 'source_fluid_entry_id = ?',
+          whereArgs: [fluidEntryId],
+        );
+
+        // 3. Lösche den FluidEntry selbst
+        await txn.delete(
+          'fluid_entries',
+          where: 'id = ?',
+          whereArgs: [fluidEntryId],
+        );
+        print("FluidEntry für FoodEntry ID $foodEntryId entfernt.");
+      }
+    });
   }
 
   Future<List<FluidEntry>> getFluidEntriesForDateRange(

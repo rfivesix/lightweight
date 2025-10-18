@@ -264,7 +264,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       appBar: AppBar(
         automaticallyImplyLeading: true,
         title: Text(
-          l10n.addFoodTitle,
+          l10n.nutritionExplorerTitle,
           style: Theme.of(
             context,
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
