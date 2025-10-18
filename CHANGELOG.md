@@ -3,6 +3,36 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+## [0.4.0-beta.1] - 2025-10-19
+
+### Added
+
+*   **New Feature: Onboarding Screen**
+    *   Implemented the full, interactive Onboarding process for new users (or when the app is reset).
+*   **New Feature: Initial Tab Navigation**
+    *   The Main Screen now supports starting on a specific tab, improving navigation flexibility (e.g., deep linking).
+*   **Fluid Log Editing**
+    *   The "Edit Fluid Entry" dialog now includes fields for the **Name**, **Sugar per 100ml**, and **Caffeine per 100ml**, allowing for precise editing of non-water drinks.
+
+### Fixed
+
+*   **Critical Data Consistency: Fluid/Liquid Food Deletion**
+    *   Fixed a critical bug where deleting a **liquid food entry** (e.g., a juice logged via the food tracker) did not correctly remove the linked Fluid Log and Caffeine Log entries, causing orphaned data (Fixes logic in `deleteFluidEntry`).
+*   **Modal Display Issue (UX)**
+    *   Fixed a bug where the Glass Bottom Menu (and other modals) sometimes failed to display correctly over the main navigation stack.
+*   **Live Workout View**
+    *   Corrected the padding in the Live Workout screen's exercise list, preventing the final exercise from being obscured by the bottom navigation/content spacer.
+
+### Changed
+
+*   **Major Branding Change: Renamed to "Lightweight"**
+    *   The application has been officially renamed from **"Vita" to "Lightweight"** across all screens, assets, bundle identifiers, and localization files.
+*   **UX Improvement: Modernized Edit Dialogs**
+    *   The "Edit Food Entry" and "Edit Fluid Entry" flows in the Diary screen were upgraded from the old `AlertDialog` to the new **Glass Bottom Menu (Bottom Sheet)**, improving mobile UX.
+*   **UI Consistency**
+    *   Visually updated the buttons and backgrounds in the Floating Action Button (FAB) menu to ensure consistency with the established "Glass FAB" design language.
+
 ## [0.4.0-alpha.12] - 2025-10-15
 
 ### Added
