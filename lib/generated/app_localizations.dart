@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Lightweight'**
+  /// **'Hypertrack'**
   String get appTitle;
 
   /// No description provided for @bannerText.
@@ -599,7 +599,7 @@ abstract class AppLocalizations {
   /// No description provided for @drawerMenuTitle.
   ///
   /// In en, this message translates to:
-  /// **'Lightweight Menu'**
+  /// **'Hypertrack Menu'**
   String get drawerMenuTitle;
 
   /// No description provided for @drawerDashboard.
@@ -1055,7 +1055,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupFileSubject.
   ///
   /// In en, this message translates to:
-  /// **'Lightweight App Backup - {timestamp}'**
+  /// **'Hypertrack App Backup - {timestamp}'**
   String backupFileSubject(String timestamp);
 
   /// No description provided for @foodItemSubtitle.
@@ -1751,7 +1751,7 @@ abstract class AppLocalizations {
   /// Onboarding slide 1 title
   ///
   /// In en, this message translates to:
-  /// **'Welcome to Lightweight'**
+  /// **'Welcome to Hypertrack'**
   String get onbWelcomeTitle;
 
   /// Onboarding slide 1 description

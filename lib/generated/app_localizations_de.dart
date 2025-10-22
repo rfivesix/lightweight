@@ -9,7 +9,7 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
-  String get appTitle => 'Lightweight';
+  String get appTitle => 'Hypertrack';
 
   @override
   String get bannerText => 'Empfehlung / Aktuelles Workout';
@@ -266,7 +266,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get measurementRightCalf => 'Rechte Wade';
 
   @override
-  String get drawerMenuTitle => 'Lightweight Menü';
+  String get drawerMenuTitle => 'Hypertrack Menü';
 
   @override
   String get drawerDashboard => 'Dashboard';
@@ -515,7 +515,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String backupFileSubject(String timestamp) {
-    return 'Lightweight App Backup - $timestamp';
+    return 'Hypertrack App Backup - $timestamp';
   }
 
   @override
@@ -897,7 +897,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get date_and_time_of_measurement => 'Datum & Uhrzeit der Messung';
 
   @override
-  String get onbWelcomeTitle => 'Willkommen bei Lightweight';
+  String get onbWelcomeTitle => 'Willkommen bei Hypertrack';
 
   @override
   String get onbWelcomeBody =>
@@ -1029,7 +1029,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get dialogEnterPasswordImport => 'Passwort für den Import eingeben';
 
   @override
-  String get dataManagementBackupTitle => 'Lightweight Datensicherung';
+  String get dataManagementBackupTitle => 'Hypertrack Datensicherung';
 
   @override
   String get dataManagementBackupDescription =>

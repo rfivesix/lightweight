@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Lightweight';
+  String get appTitle => 'Hypertrack';
 
   @override
   String get bannerText => 'Recommendation / Current Workout';
@@ -266,7 +266,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get measurementRightCalf => 'Right Calf';
 
   @override
-  String get drawerMenuTitle => 'Lightweight Menu';
+  String get drawerMenuTitle => 'Hypertrack Menu';
 
   @override
   String get drawerDashboard => 'Dashboard';
@@ -511,7 +511,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String backupFileSubject(String timestamp) {
-    return 'Lightweight App Backup - $timestamp';
+    return 'Hypertrack App Backup - $timestamp';
   }
 
   @override
@@ -892,7 +892,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get date_and_time_of_measurement => 'Date & time of measurement';
 
   @override
-  String get onbWelcomeTitle => 'Welcome to Lightweight';
+  String get onbWelcomeTitle => 'Welcome to Hypertrack';
 
   @override
   String get onbWelcomeBody =>

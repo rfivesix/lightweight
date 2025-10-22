@@ -70,7 +70,7 @@ class WorkoutDatabaseHelper {
     }
     // --- KORREKTUR ENDE ---
 
-    return await openDatabase(path, version: 9, onUpgrade: _upgradeDB);
+    return await openDatabase(path, version: 10, onUpgrade: _upgradeDB);
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
@@ -172,6 +172,19 @@ class WorkoutDatabaseHelper {
         print("Migration abgeschlossen.");
       }
     }
+    if (oldVersion < 10) {
+      print("Upgrade DB auf v10: Füge is_custom zu exercises hinzu...");
+      try {
+        // Füge die neue Spalte hinzu, Standardwert 0 (nicht custom)
+        await db.execute(
+          'ALTER TABLE exercises ADD COLUMN is_custom INTEGER NOT NULL DEFAULT 0',
+        );
+        print("Spalte 'is_custom' erfolgreich zu 'exercises' hinzugefügt.");
+      } catch (e) {
+        print(
+            "Fehler beim Hinzufügen der Spalte 'is_custom' (evtl. existiert sie schon): $e");
+      }
+    }
     print("DB-Upgrade auf v$newVersion erfolgreich abgeschlossen.");
   }
 
@@ -251,12 +264,6 @@ class WorkoutDatabaseHelper {
     ''';
     final List<Map<String, dynamic>> maps = await db.rawQuery(sql, whereArgs);
     return List.generate(maps.length, (i) => Exercise.fromMap(maps[i]));
-  }
-
-  Future<Exercise> insertExercise(Exercise exercise) async {
-    final db = await database;
-    final id = await db.insert('exercises', exercise.toMap());
-    return exercise.copyWith(id: id);
   }
 
   Future<Exercise?> getExerciseByName(String name) async {
@@ -776,17 +783,6 @@ class WorkoutDatabaseHelper {
     return logs;
   }
 
-  Future<void> clearAllWorkoutData() async {
-    final db = await database;
-    await db.transaction((txn) async {
-      await txn.delete('set_logs');
-      await txn.delete('workout_logs');
-      await txn.delete('routine_set_templates');
-      await txn.delete('routine_exercises');
-      await txn.delete('routines');
-    });
-  }
-
   Future<void> importWorkoutData({
     required List<Routine> routines,
     required List<WorkoutLog> workoutLogs,
@@ -962,5 +958,77 @@ class WorkoutDatabaseHelper {
     );
 
     return setMaps.map((map) => SetLog.fromMap(map)).toList();
+  }
+
+  Future<Exercise> insertExercise(Exercise exercise) async {
+    final db = await database;
+    // Setze is_custom auf 1 für alle hier eingefügten Übungen
+    final Map<String, Object?> exerciseMap = exercise.toMap();
+    exerciseMap['is_custom'] = 1; // Markiere als benutzerdefiniert
+
+    // Entferne die ID, falls sie versehentlich gesetzt wurde,
+    // damit die DB eine neue generiert.
+    exerciseMap.remove('id');
+
+    final id = await db.insert(
+      'exercises',
+      exerciseMap,
+      conflictAlgorithm: ConflictAlgorithm
+          .replace, // Falls Name schon existiert (sollte nicht)
+    );
+    print(
+        "Benutzerdefinierte Übung '${exercise.nameDe}' mit ID $id eingefügt.");
+    return exercise.copyWith(id: id);
+  }
+
+  // *** NEU: Methode zum Abrufen benutzerdefinierter Übungen für das Backup ***
+  Future<List<Exercise>> getCustomExercises() async {
+    final db = await database;
+    final maps = await db.query(
+      'exercises',
+      where: 'is_custom = ?',
+      whereArgs: [1], // Nur benutzerdefinierte
+    );
+    // Wichtig: 'is_custom' wird von fromMap nicht direkt gelesen, aber das ist ok.
+    return maps.map((map) => Exercise.fromMap(map)).toList();
+  }
+
+  // *** NEU: Methode zum Importieren benutzerdefinierter Übungen aus dem Backup ***
+  Future<void> importCustomExercises(List<Exercise> exercises) async {
+    if (exercises.isEmpty) return;
+    final db = await database;
+    await db.transaction((txn) async {
+      final batch = txn.batch();
+      for (final exercise in exercises) {
+        final exerciseMap = exercise.toMap();
+        exerciseMap['is_custom'] =
+            1; // Sicherstellen, dass sie als custom markiert sind
+        exerciseMap.remove('id'); // ID wird von der DB neu vergeben
+        batch.insert(
+          'exercises',
+          exerciseMap,
+          conflictAlgorithm:
+              ConflictAlgorithm.ignore, // Ignoriere, falls Name schon existiert
+        );
+      }
+      await batch.commit(noResult: true);
+      print(
+          "${exercises.length} benutzerdefinierte Übungen erfolgreich importiert.");
+    });
+  }
+
+  // *** WICHTIG: Methode 'clearAllWorkoutData' anpassen ***
+  Future<void> clearAllWorkoutData() async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete('set_logs');
+      await txn.delete('workout_logs');
+      await txn.delete('routine_set_templates');
+      await txn.delete('routine_exercises');
+      await txn.delete('routines');
+      // *** NEU: Lösche NUR benutzerdefinierte Übungen ***
+      await txn.delete('exercises', where: 'is_custom = ?', whereArgs: [1]);
+      print("Alle Trainingsdaten (Logs, Routinen, Custom Exercises) gelöscht.");
+    });
   }
 }

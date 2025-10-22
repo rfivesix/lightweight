@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appTitle": "Lightweight",
+  "appTitle": "Hypertrack",
   "bannerText": "Recommendation / Current Workout",
   "calories": "Calories",
   "water": "Water",
@@ -90,7 +90,7 @@
   "measurementRightThigh": "Right Thigh",
   "measurementLeftCalf": "Left Calf",
   "measurementRightCalf": "Right Calf",
-  "drawerMenuTitle": "Lightweight Menu",
+  "drawerMenuTitle": "Hypertrack Menu",
   "drawerDashboard": "Dashboard",
   "drawerFoodExplorer": "Food Explorer",
   "drawerDataManagement": "Data Backup",
@@ -188,7 +188,7 @@
   "baseFoodsEmptyState": "This section will soon be filled with a curated list of base foods like fruits, vegetables, and more.",
   "noBrand": "No Brand",
   "unknown": "Unknown",
-  "backupFileSubject": "Lightweight App Backup - {timestamp}",
+  "backupFileSubject": "Hypertrack App Backup - {timestamp}",
   "@backupFileSubject": {
     "placeholders": {
       "timestamp": {
@@ -389,7 +389,7 @@
   "app_version":"App version",
   "all_measurements":"ALL MEASUREMENTS",
   "date_and_time_of_measurement":"Date & time of measurement",
-  "onbWelcomeTitle": "Welcome to Lightweight",
+  "onbWelcomeTitle": "Welcome to Hypertrack",
   "@onbWelcomeTitle": { "description": "Onboarding slide 1 title" },
   "onbWelcomeBody": "Let’s start by setting personal goals to guide training and nutrition.",
   "@onbWelcomeBody": { "description": "Onboarding slide 1 description" },

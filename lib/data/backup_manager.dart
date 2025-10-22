@@ -53,6 +53,7 @@ class BackupManager {
       }
       final supplements = await _userDb.getAllSupplements();
       final supplementLogs = await _userDb.getAllSupplementLogs();
+      final customExercises = await _workoutDb.getCustomExercises();
       final backup = LightweightBackup(
         // KORREKTUR: Nutzt das neue Modell
         schemaVersion: currentSchemaVersion,
@@ -66,6 +67,7 @@ class BackupManager {
         userPreferences: userPrefs,
         supplements: supplements,
         supplementLogs: supplementLogs,
+        customExercises: customExercises,
       );
       final jsonString = jsonEncode(backup.toJson());
 
@@ -338,6 +340,7 @@ class BackupManager {
       }
       final supplements = await _userDb.getAllSupplements();
       final supplementLogs = await _userDb.getAllSupplementLogs();
+      final customExercises = await _workoutDb.getCustomExercises();
       final backup = LightweightBackup(
         schemaVersion: currentSchemaVersion,
         foodEntries: foodEntries,
@@ -350,6 +353,7 @@ class BackupManager {
         userPreferences: userPrefs,
         supplements: supplements,
         supplementLogs: supplementLogs,
+        customExercises: customExercises,
       );
       final jsonString = jsonEncode(backup.toJson());
 
@@ -429,6 +433,8 @@ class BackupManager {
         where: 'barcode LIKE ?',
         whereArgs: ['user_created_%'],
       );
+
+      await _workoutDb.importCustomExercises(backup.customExercises);
 
       for (final e in backup.userPreferences.entries) {
         final k = e.key;
@@ -523,19 +529,20 @@ class BackupManager {
       }
       final supplements = await _userDb.getAllSupplements();
       final supplementLogs = await _userDb.getAllSupplementLogs();
+      final customExercises = await _workoutDb.getCustomExercises();
       final backup = LightweightBackup(
-        schemaVersion: currentSchemaVersion,
-        foodEntries: foodEntries,
-        fluidEntries: fluidEntries,
-        favoriteBarcodes: favoriteBarcodes,
-        customFoodItems: customFoodItems,
-        measurementSessions: measurementSessions,
-        routines: routines,
-        workoutLogs: workoutLogs,
-        userPreferences: userPrefs,
-        supplements: supplements,
-        supplementLogs: supplementLogs,
-      );
+          schemaVersion: currentSchemaVersion,
+          foodEntries: foodEntries,
+          fluidEntries: fluidEntries,
+          favoriteBarcodes: favoriteBarcodes,
+          customFoodItems: customFoodItems,
+          measurementSessions: measurementSessions,
+          routines: routines,
+          workoutLogs: workoutLogs,
+          userPreferences: userPrefs,
+          supplements: supplements,
+          supplementLogs: supplementLogs,
+          customExercises: customExercises);
       final jsonString = jsonEncode(backup.toJson());
 
       // 2) Zielordner auflösen

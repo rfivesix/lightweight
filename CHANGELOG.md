@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## [0.4.0-beta.2] - 2025-10-22
+### Added
+* **App icon:** Now there is an App icon
+### Fixed
+* **Backup:** tried to fix the backup
+### Changed
+* **App Name:** Changed the name from "Lightweight" to "Hypertrack".
+
 
 ## [0.4.0-beta.1] - 2025-10-19
 

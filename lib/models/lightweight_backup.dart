@@ -27,6 +27,7 @@ class LightweightBackup {
   final Map<String, dynamic> userPreferences;
   final List<Supplement> supplements;
   final List<SupplementLog> supplementLogs;
+  final List<Exercise> customExercises;
 
   LightweightBackup({
     required this.schemaVersion,
@@ -40,6 +41,7 @@ class LightweightBackup {
     required this.userPreferences, // HINZUGEFÜGT
     required this.supplements, // NEU
     required this.supplementLogs, // NEU
+    required this.customExercises,
   });
 
   // KORRIGIERTE VERSION
@@ -135,6 +137,10 @@ class LightweightBackup {
               ?.map((e) => SupplementLog.fromMap(e as Map<String, dynamic>))
               .toList() ??
           [],
+      customExercises: (json['customExercises'] as List<dynamic>?)
+              ?.map((e) => Exercise.fromMap(e as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
   }
 
@@ -169,6 +175,7 @@ class LightweightBackup {
       'userPreferences': userPreferences,
       'supplements': supplements.map((e) => e.toMap()).toList(),
       'supplementLogs': supplementLogs.map((e) => e.toMap()).toList(),
+      'customExercises': customExercises.map((e) => e.toMap()).toList(),
     };
   }
 }

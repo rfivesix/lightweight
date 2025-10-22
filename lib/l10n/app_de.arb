@@ -1,6 +1,6 @@
 {
   "@@locale": "de",
-  "appTitle": "Lightweight",
+  "appTitle": "Hypertrack",
   "bannerText": "Empfehlung / Aktuelles Workout",
   "calories": "Kalorien",
   "water": "Wasser",
@@ -90,7 +90,7 @@
   "measurementRightThigh": "Rechter Oberschenkel",
   "measurementLeftCalf": "Linke Wade",
   "measurementRightCalf": "Rechte Wade",
-  "drawerMenuTitle": "Lightweight Menü",
+  "drawerMenuTitle": "Hypertrack Menü",
   "drawerDashboard": "Dashboard",
   "drawerFoodExplorer": "Lebensmittel-Explorer",
   "drawerDataManagement": "Datensicherung",
@@ -188,7 +188,7 @@
   "baseFoodsEmptyState": "Dieser Bereich wird bald mit einer kuratierten Liste von Grundnahrungsmitteln wie Obst, Gemüse und mehr gefüllt sein.",
   "noBrand": "Keine Marke",
   "unknown": "Unbekannt",
-  "backupFileSubject": "Lightweight App Backup - {timestamp}",
+  "backupFileSubject": "Hypertrack App Backup - {timestamp}",
   "@backupFileSubject": {
     "placeholders": {
       "timestamp": {
@@ -389,7 +389,7 @@
   "app_version":"App Version",
   "all_measurements":"ALLE MESSWERTE",
   "date_and_time_of_measurement":"Datum & Uhrzeit der Messung",
-  "onbWelcomeTitle": "Willkommen bei Lightweight",
+  "onbWelcomeTitle": "Willkommen bei Hypertrack",
   "@onbWelcomeTitle": { "description": "Onboarding Folie 1 Titel" },
   "onbWelcomeBody": "Starte mit deinen persönlichen Zielen für Training und Ernährung.",
   "@onbWelcomeBody": { "description": "Onboarding Folie 1 Beschreibung" },
@@ -476,7 +476,7 @@
   "categoryHint": "z.B. Brust, Rücken, Beine...",
   "validatorPleaseEnterCategory": "Bitte eine Kategorie angeben.",
   "dialogEnterPasswordImport": "Passwort für den Import eingeben",
-  "dataManagementBackupTitle": "Lightweight Datensicherung",
+  "dataManagementBackupTitle": "Hypertrack Datensicherung",
   "dataManagementBackupDescription": "Sichere oder wiederherstelle alle deine App-Daten. Ideal für einen Gerätewechsel.",
   "exportEncrypted": "Verschlüsselt exportieren",
   "dialogPasswordForExport": "Passwort für verschlüsselten Export",

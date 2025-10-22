@@ -1,7 +1,7 @@
 name: lightweight
 description: "A modern, privacy-first fitness and nutrition tracking app. Offline-first, no cloud dependency, built with Flutter."
 publish_to: 'none' 
-version: 0.4.0-beta.1
+version: 0.4.0-beta.2+40002
 
 environment:
   sdk: '>=3.0.0 <4.0.0' # Angepasst für moderne SDKs
@@ -40,10 +40,17 @@ dependencies:
 
   mime: any
   archive: any
+  rename_app: ^1.6.5
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true       # Icon für Android generieren
+  ios: true           # Icon für iOS generieren
+  image_path: "assets/icon/app_icon.png" # Pfad zu deinem Haupt-Icon
 
 flutter:
   # DOC: Dieser Schalter ist entscheidend. Er weist Flutter an, den Code
