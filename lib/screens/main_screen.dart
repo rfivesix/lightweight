@@ -26,6 +26,7 @@ import 'package:lightweight/screens/profile_screen.dart';
 import 'package:lightweight/screens/statistics_hub_screen.dart';
 import 'package:lightweight/screens/workout_hub_screen.dart';
 import 'package:lightweight/services/profile_service.dart';
+import 'package:lightweight/services/theme_service.dart';
 import 'package:lightweight/services/workout_session_manager.dart';
 import 'package:lightweight/theme/color_constants.dart';
 import 'package:lightweight/util/design_constants.dart';
@@ -33,6 +34,7 @@ import 'package:lightweight/widgets/glass_bottom_menu.dart';
 import 'package:lightweight/widgets/glass_bottom_nav_bar.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/keep_alive_page.dart';
+import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:provider/provider.dart';
 
 class MainScreen extends StatefulWidget {
@@ -131,16 +133,53 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     }
   }
 
+// in _MainScreenState
   Future<void> _showLogSupplementMenu() async {
     final l10n = AppLocalizations.of(context)!;
-    await showGlassBottomMenu(
+
+    // Schritt 1: Auswahlmenü anzeigen und auf ein Supplement-Objekt warten.
+    final Supplement? selectedSupplement =
+        await showGlassBottomMenu<Supplement>(
       context: context,
       title: l10n.logIntakeTitle,
       contentBuilder: (ctx, close) {
         return LogSupplementMenu(close: close);
       },
     );
-    _refreshHomeScreen();
+
+    // Wenn der Benutzer abbricht, ist selectedSupplement null.
+    if (selectedSupplement == null || !mounted) return;
+
+    // Schritt 2: Dosis-Eingabemenü für das ausgewählte Supplement anzeigen.
+    final result = await showGlassBottomMenu<(double, DateTime)?>(
+      context: context,
+      title: localizeSupplementName(selectedSupplement, l10n),
+      contentBuilder: (ctx, close) {
+        // Hier verwenden wir das korrekte, wiederverwendbare Widget.
+        return LogSupplementDoseBody(
+          supplement: selectedSupplement,
+          primaryLabel: l10n.add_button,
+          onCancel: close,
+          onSubmit: (dose, ts) {
+            // Die onSubmit-Funktion gibt die Daten zurück.
+            close();
+            Navigator.of(ctx).pop((dose, ts));
+          },
+        );
+      },
+    );
+
+    // Schritt 3: Ergebnis verarbeiten und speichern.
+    if (result != null) {
+      final newLog = SupplementLog(
+        supplementId: selectedSupplement.id!,
+        dose: result.$1,
+        unit: selectedSupplement.unit,
+        timestamp: result.$2,
+      );
+      await DatabaseHelper.instance.insertSupplementLog(newLog);
+      _refreshHomeScreen(); // UI aktualisieren
+    }
   }
 
   Future<void> _showStartWorkoutMenu() async {
@@ -867,6 +906,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
     // --- ENDE NEU: HIER DEFINIEREN ---
 
+    const double rLiquid = 99;
+
     return Stack(
       children: [
         Scaffold(
@@ -1004,6 +1045,18 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           animation: _menuController,
           builder: (context, _) {
             final v = _safe01(_menuController.value);
+            // --- Insert themeService and local tint colors for tiles ---
+            final themeService = context.watch<ThemeService>();
+            final bool isDarkLocal =
+                Theme.of(context).brightness == Brightness.dark;
+            final Color bgLocal =
+                isDarkLocal ? summary_card_dark_mode : summary_card_white_mode;
+            final Color neutralTintLocal =
+                (isDarkLocal ? Colors.white : Colors.black)
+                    .withOpacity(isDarkLocal ? 0.10 : 0.10);
+            final Color effectiveGlassLocal = Color.alphaBlend(neutralTintLocal,
+                bgLocal.withOpacity(isDarkLocal ? 0.22 : 0.16));
+            // ----------------------------------------------------------
             return Offstage(
               offstage: v == 0.0,
               child: IgnorePointer(
@@ -1090,54 +1143,100 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                             action['action'],
                                           );
                                         },
-                                        child: ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(20),
-                                          child: BackdropFilter(
-                                            filter: ImageFilter.blur(
-                                              sigmaX: 12,
-                                              sigmaY: 12,
-                                            ),
-                                            child: Container(
-                                              width: 76,
-                                              height: 76,
-                                              decoration: BoxDecoration(
-                                                // KORREKTUR: Hintergrundfarbe wie GlassFab
-                                                color: bg.withOpacity(0.80),
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                  20,
+                                        child: themeService.visualStyle == 1
+                                            ? LiquidGlass.withOwnLayer(
+                                                settings: LiquidGlassSettings(
+                                                  thickness: 25,
+                                                  blur: 5,
+                                                  glassColor:
+                                                      effectiveGlassLocal,
+                                                  lightIntensity: 1.35,
+                                                  saturation: 1.10,
                                                 ),
-                                                border: Border.all(
-                                                  // KORREKTUR: Rahmenfarbe wie GlassFab
-                                                  color: isDark
-                                                      ? Colors.white
-                                                          .withOpacity(0.30)
-                                                      : Colors.black
-                                                          .withOpacity(0.10),
-                                                  width: 1.5,
-                                                ),
-                                                // Schatten für Konsistenz mit GlassFab
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Colors.black
-                                                        .withOpacity(0.3),
-                                                    blurRadius: 12,
-                                                    offset: const Offset(0, 6),
+                                                shape:
+                                                    const LiquidRoundedSuperellipse(
+                                                        borderRadius: rLiquid),
+                                                child: Container(
+                                                  width: 76,
+                                                  height: 76,
+                                                  decoration: BoxDecoration(
+                                                    color: neutralTintLocal,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            rLiquid),
                                                   ),
-                                                ],
+                                                  foregroundDecoration:
+                                                      BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            rLiquid),
+                                                    border: Border.all(
+                                                      color: isDarkLocal
+                                                          ? Colors.white
+                                                              .withOpacity(0.20)
+                                                          : Colors.black
+                                                              .withOpacity(
+                                                                  0.08),
+                                                      width: 1.2,
+                                                    ),
+                                                  ),
+                                                  alignment: Alignment.center,
+                                                  child: Icon(
+                                                    action['icon'],
+                                                    size: 28,
+                                                    color: isDarkLocal
+                                                        ? Colors.white
+                                                        : Colors.black,
+                                                  ),
+                                                ),
+                                              )
+                                            : ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(18),
+                                                child: BackdropFilter(
+                                                  filter: ImageFilter.blur(
+                                                      sigmaX: 12, sigmaY: 12),
+                                                  child: Container(
+                                                    width: 76,
+                                                    height: 76,
+                                                    decoration: BoxDecoration(
+                                                      color:
+                                                          bg.withOpacity(0.80),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              18),
+                                                      border: Border.all(
+                                                        color: isDark
+                                                            ? Colors.white
+                                                                .withOpacity(
+                                                                    0.30)
+                                                            : Colors.black
+                                                                .withOpacity(
+                                                                    0.10),
+                                                        width: 1.5,
+                                                      ),
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: Colors.black
+                                                              .withOpacity(
+                                                                  0.25),
+                                                          blurRadius: 10,
+                                                          offset: const Offset(
+                                                              0, 4),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    alignment: Alignment.center,
+                                                    child: Icon(
+                                                      action['icon'],
+                                                      size: 28,
+                                                      color: isDark
+                                                          ? Colors.white
+                                                          : Colors.black,
+                                                    ),
+                                                  ),
+                                                ),
                                               ),
-                                              child: Icon(
-                                                action['icon'],
-                                                size: 34,
-                                                // KORREKTUR: Dynamische Icon-Farbe
-                                                color: isDark
-                                                    ? Colors.white
-                                                    : Colors.black,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
                                       ),
                                       // --- ENDE DES GLAS-BUTTON ERSATZES ---
                                     ],
@@ -1195,19 +1294,66 @@ class _FrostedBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
+    final themeService = context.watch<ThemeService>();
 
+    // neutrale Tönung + effektive Glasfarbe (wirkt auch bei leerem Hintergrund)
+    final Color neutralTint =
+        (isDark ? Colors.white : Colors.black).withOpacity(isDark ? 0.1 : 0.1);
+    final Color effectiveGlass =
+        Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.22 : 0.16));
+
+    if (themeService.visualStyle == 1) {
+      // LIQUID-STYLE
+      double radius = 99;
+      return LiquidGlass.withOwnLayer(
+        settings: LiquidGlassSettings(
+          thickness: 25,
+          blur: 5,
+          glassColor: effectiveGlass,
+          lightIntensity: 1.35,
+          saturation: 1.10,
+        ),
+        shape: LiquidRoundedSuperellipse(borderRadius: radius),
+        child: Stack(
+          children: [
+            // Basistönung IN der Pille – nur ein Hauch, hilft auf leerem Hintergrund
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(color: neutralTint),
+              ),
+            ),
+            Container(
+              // sanfter Innen-Padding wie vorher
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              // optional: dezenter Rand wie zuvor (falls du den Rim nicht willst: entfernen)
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(radius.toDouble()),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.20)
+                      : Colors.black.withOpacity(0.08),
+                  width: 1.2,
+                ),
+              ),
+              child: child,
+            ),
+          ],
+        ),
+      );
+    }
+    double radius = 20;
+    // STANDARD (Fallback wie zuvor mit BackdropFilter)
     return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(radius.toDouble()),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
             color: bg.withOpacity(0.80),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(radius.toDouble()),
             border: Border.all(
               color: isDark
                   ? Colors.white.withOpacity(0.30)
@@ -1218,7 +1364,6 @@ class _FrostedBar extends StatelessWidget {
               BoxShadow(
                 blurRadius: 12,
                 offset: const Offset(0, 6),
-                // ignore: deprecated_member_use
                 color: Colors.black.withOpacity(0.3),
               ),
             ],

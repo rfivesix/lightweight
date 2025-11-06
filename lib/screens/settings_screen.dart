@@ -76,6 +76,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   groupValue: themeService.themeMode,
                   onChanged: (value) => themeService.setThemeMode(value!),
                 ),
+                // Innerhalb der Column der ersten SummaryCard, nach den Theme-Radios
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Column(
+                    children: [
+                      RadioListTile<int>(
+                        title: const Text('Standard (Glas)'),
+                        value: 0,
+                        groupValue: themeService.visualStyle,
+                        onChanged: (value) =>
+                            themeService.setVisualStyle(value!),
+                      ),
+                      RadioListTile<int>(
+                        title: const Text('Flüssig (Liquid Glass)'),
+                        subtitle: const Text('Runde, schwebende UI-Elemente'),
+                        value: 1,
+                        groupValue: themeService.visualStyle,
+                        onChanged: (value) =>
+                            themeService.setVisualStyle(value!),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),

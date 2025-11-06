@@ -7,6 +7,7 @@ import 'package:lightweight/models/food_item.dart';
 import 'package:lightweight/models/supplement.dart';
 import 'package:lightweight/models/supplement_log.dart';
 import 'package:lightweight/screens/food_detail_screen.dart';
+import 'package:lightweight/widgets/glass_bottom_menu.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/widgets/swipe_action_background.dart';
@@ -393,9 +394,10 @@ class _MealScreenState extends State<MealScreen> {
     final searchCtrl = TextEditingController();
     final qtyCtrl = TextEditingController(text: '100');
 
-    final picked = await showDialog<(String, int)?>(
+    final picked = await showGlassBottomMenu<(String, int)?>(
       context: context,
-      builder: (ctx) {
+      title: l10n.mealAddIngredient,
+      contentBuilder: (ctx, close) {
         List<FoodItem> results = [];
         bool loading = false;
 
@@ -403,109 +405,88 @@ class _MealScreenState extends State<MealScreen> {
           builder: (context, setState) {
             Future<void> runSearch(String q) async {
               if (q.trim().isEmpty) {
-                setState(() {
-                  results = [];
-                });
+                setState(() => results = []);
                 return;
               }
               setState(() => loading = true);
-              results = await ProductDatabaseHelper.instance.searchProducts(
-                q.trim(),
-              );
+              results =
+                  await ProductDatabaseHelper.instance.searchProducts(q.trim());
               setState(() => loading = false);
             }
 
-            return AlertDialog(
-              title: Text(l10n.mealAddIngredient),
-              content: SizedBox(
-                width: 500,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: searchCtrl,
-                      decoration: InputDecoration(
-                        hintText: l10n.searchHintText,
-                        prefixIcon: const Icon(Icons.search),
-                      ),
-                      onChanged: runSearch,
-                    ),
-                    const SizedBox(height: 8),
-                    if (loading) const LinearProgressIndicator(minHeight: 2),
-                    Flexible(
-                      child: results.isEmpty
-                          ? Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              child: Text(l10n.searchInitialHint),
-                            )
-                          : ListView.builder(
-                              shrinkWrap: true,
-                              itemCount: results.length,
-                              itemBuilder: (_, i) {
-                                final fi = results[i];
-                                return ListTile(
-                                  dense: true,
-                                  title: Text(fi.name),
-                                  subtitle: Text(
-                                    fi.brand.isNotEmpty
-                                        ? fi.brand
-                                        : l10n.noBrand,
-                                  ),
-                                  trailing: IconButton(
-                                    icon: const Icon(Icons.add),
-                                    onPressed: () async {
-                                      final grams = await showDialog<int>(
-                                        context: context,
-                                        builder: (_) => AlertDialog(
-                                          title: Text(
-                                            l10n.mealIngredientAmountLabel,
-                                          ),
-                                          content: TextField(
-                                            controller: qtyCtrl,
-                                            keyboardType: const TextInputType
-                                                .numberWithOptions(
-                                              decimal: false,
-                                            ),
-                                            decoration: const InputDecoration(
-                                              suffixText: 'g/ml',
-                                            ),
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () =>
-                                                  Navigator.pop(context, null),
-                                              child: Text(l10n.cancel),
-                                            ),
-                                            TextButton(
-                                              onPressed: () {
-                                                final val = int.tryParse(
-                                                  qtyCtrl.text.trim(),
-                                                );
-                                                Navigator.pop(context, val);
-                                              },
-                                              child: Text(l10n.add_button),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                      if (grams != null && grams > 0) {
-                                        Navigator.of(
-                                          ctx,
-                                        ).pop((fi.barcode, grams));
-                                      }
-                                    },
-                                  ),
-                                );
-                              },
-                            ),
-                    ),
-                  ],
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: searchCtrl,
+                  decoration: InputDecoration(
+                    hintText: l10n.searchHintText,
+                    prefixIcon: const Icon(Icons.search),
+                  ),
+                  onChanged: runSearch,
                 ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, null),
-                  child: Text(l10n.cancel),
+                const SizedBox(height: 8),
+                if (loading) const LinearProgressIndicator(minHeight: 2),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 360),
+                  child: results.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Text(l10n.searchInitialHint),
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: results.length,
+                          itemBuilder: (_, i) {
+                            final fi = results[i];
+                            return ListTile(
+                              dense: true,
+                              title: Text(fi.name),
+                              subtitle: Text(fi.brand.isNotEmpty
+                                  ? fi.brand
+                                  : l10n.noBrand),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.add),
+                                onPressed: () async {
+                                  final grams = await showGlassBottomMenu<int?>(
+                                    context: context,
+                                    title: l10n.mealIngredientAmountLabel,
+                                    contentBuilder: (ctx2, close2) {
+                                      return Row(
+                                        children: [
+                                          Expanded(
+                                            child: TextField(
+                                              controller: qtyCtrl,
+                                              keyboardType: const TextInputType
+                                                  .numberWithOptions(
+                                                  decimal: false),
+                                              decoration: const InputDecoration(
+                                                  suffixText: 'g/ml'),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          FilledButton(
+                                            onPressed: () {
+                                              final val = int.tryParse(
+                                                  qtyCtrl.text.trim());
+                                              close2();
+                                              Navigator.of(ctx2).pop(val);
+                                            },
+                                            child: Text(l10n.add_button),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                  if (grams != null && grams > 0) {
+                                    close();
+                                    Navigator.of(ctx).pop((fi.barcode, grams));
+                                  }
+                                },
+                              ),
+                            );
+                          },
+                        ),
                 ),
               ],
             );
@@ -528,16 +509,15 @@ class _MealScreenState extends State<MealScreen> {
   Future<void> _addMealToDiaryFlow() async {
     final l10n = AppLocalizations.of(context)!;
 
-    // Produkte laden (Name, Liquid, Koffein)
+    // Load products
     final Map<String, FoodItem?> products = {};
     for (final it in _items) {
       final bc = it['barcode'] as String;
-      products[bc] = await ProductDatabaseHelper.instance.getProductByBarcode(
-        bc,
-      );
+      products[bc] =
+          await ProductDatabaseHelper.instance.getProductByBarcode(bc);
     }
 
-    // Editierbare Mengen
+    // Controllers for quantities
     final Map<String, TextEditingController> qtyCtrls = {
       for (final it in _items)
         (it['barcode'] as String): TextEditingController(
@@ -545,7 +525,6 @@ class _MealScreenState extends State<MealScreen> {
         ),
     };
 
-    // Meal-Typen (interne Keys müssen mit Diary übereinstimmen)
     const internalTypes = [
       'mealtypeBreakfast',
       'mealtypeLunch',
@@ -561,134 +540,106 @@ class _MealScreenState extends State<MealScreen> {
       'mealtypeSnack': l10n.mealtypeSnack,
     };
 
-    final ok = await showModalBottomSheet<bool>(
+    final ok = await showGlassBottomMenu<bool>(
           context: context,
-          isScrollControlled: true,
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          builder: (ctx) {
+          title: l10n.mealsAddToDiary,
+          contentBuilder: (ctx, close) {
             return StatefulBuilder(
               builder: (ctx, modalSetState) {
-                return Padding(
-                  padding: EdgeInsets.only(
-                    left: 16,
-                    right: 16,
-                    top: 12,
-                    bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade500,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(_nameCtrl.text,
+                        style: Theme.of(ctx).textTheme.titleMedium),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      initialValue: selectedMealType,
+                      decoration: InputDecoration(
+                        labelText: l10n.mealTypeLabel,
+                        border: const OutlineInputBorder(),
+                        isDense: true,
                       ),
-                      const SizedBox(height: 12),
-                      Text(
-                        l10n.mealsAddToDiary,
-                        style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _nameCtrl.text,
-                        style: Theme.of(ctx).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 12),
-
-                      DropdownButtonFormField<String>(
-                        initialValue: selectedMealType,
-                        decoration: InputDecoration(
-                          labelText: l10n.mealTypeLabel,
-                          border: const OutlineInputBorder(),
-                          isDense: true,
-                        ),
-                        items: internalTypes
-                            .map(
-                              (key) => DropdownMenuItem(
+                      items: internalTypes
+                          .map((key) => DropdownMenuItem(
                                 value: key,
                                 child: Text(mealTypeLabel[key] ?? key),
+                              ))
+                          .toList(),
+                      onChanged: (v) {
+                        if (v != null)
+                          modalSetState(() => selectedMealType = v);
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 360),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: _items.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (_, i) {
+                          final it = _items[i];
+                          final bc = it['barcode'] as String;
+                          final fi = products[bc];
+                          final displayName =
+                              (fi?.name.isNotEmpty ?? false) ? fi!.name : bc;
+                          final unit = (fi?.isLiquid == true) ? 'ml' : 'g';
+
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Padding(
+                                padding: EdgeInsets.only(top: 14),
+                                child: Icon(Icons.lunch_dining),
                               ),
-                            )
-                            .toList(),
-                        onChanged: (v) {
-                          if (v != null) {
-                            modalSetState(() => selectedMealType = v);
-                          }
-                        },
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // Mengen anpassen vor dem Buchen
-                      Flexible(
-                        child: ListView.separated(
-                          shrinkWrap: true,
-                          itemCount: _items.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 10),
-                          itemBuilder: (_, i) {
-                            final it = _items[i];
-                            final bc = it['barcode'] as String;
-                            final fi = products[bc];
-                            final displayName =
-                                (fi?.name.isNotEmpty ?? false) ? fi!.name : bc;
-                            final unit = (fi?.isLiquid == true) ? 'ml' : 'g';
-
-                            return Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Padding(
-                                  padding: EdgeInsets.only(top: 14),
-                                  child: Icon(Icons.lunch_dining),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: qtyCtrls[bc],
-                                    keyboardType:
-                                        const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
-                                    decoration: InputDecoration(
-                                      labelText: displayName,
-                                      helperText: l10n.amountLabel,
-                                      suffixText: unit,
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(14),
-                                      ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: qtyCtrls[bc],
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                                  decoration: InputDecoration(
+                                    labelText: displayName,
+                                    helperText: l10n.amountLabel,
+                                    suffixText: unit,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(14),
                                     ),
                                   ),
                                 ),
-                              ],
-                            );
-                          },
-                        ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
-
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          TextButton(
-                            onPressed: () => Navigator.of(ctx).pop(false),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              close();
+                              Navigator.of(ctx).pop(false);
+                            },
                             child: Text(l10n.cancel),
                           ),
-                          const Spacer(),
-                          FilledButton(
-                            onPressed: () => Navigator.of(ctx).pop(true),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () {
+                              close();
+                              Navigator.of(ctx).pop(true);
+                            },
                             child: Text(l10n.save),
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
+                        ),
+                      ],
+                    ),
+                  ],
                 );
               },
             );
@@ -698,7 +649,6 @@ class _MealScreenState extends State<MealScreen> {
 
     if (!ok) return;
 
-    // Buchen
     final ts = DateTime.now();
     for (final it in _items) {
       final bc = it['barcode'] as String;
@@ -718,7 +668,7 @@ class _MealScreenState extends State<MealScreen> {
       final fi = await ProductDatabaseHelper.instance.getProductByBarcode(bc);
       if (fi != null) {
         if (fi.isLiquid == true) {
-          // await DatabaseHelper.instance.insertWaterEntry(qty, ts);
+          // water logging if desired
         }
         final c100 = fi.caffeineMgPer100ml;
         if (fi.isLiquid == true && c100 != null && c100 > 0) {
@@ -728,9 +678,8 @@ class _MealScreenState extends State<MealScreen> {
     }
 
     if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.mealAddedToDiarySuccess)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.mealAddedToDiarySuccess)));
     }
   }
 

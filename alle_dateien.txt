@@ -6525,7 +6525,7 @@ class ExerciseRepository {
 ===== Datei: /Users/richard/Projects/Lightweight/lightweight/lib/models/exercise.dart =====
 
 // lib/models/exercise.dart
-import 'dart:convert' show jsonDecode;
+import 'dart:convert' show jsonDecode, jsonEncode;
 
 class Exercise {
   final int? id; // optional für neu angelegte Datensätze
@@ -6617,8 +6617,8 @@ class Exercise {
       'description_en': descriptionEn,
       'category_name': categoryName,
       'image_path': imagePath,
-      'primaryMuscles': primaryMuscles.join(','),
-      'secondaryMuscles': secondaryMuscles.join(','),
+      'primaryMuscles': jsonEncode(primaryMuscles),
+      'secondaryMuscles': jsonEncode(secondaryMuscles),
     };
   }
 
@@ -6685,6 +6685,7 @@ class LightweightBackup {
   final Map<String, dynamic> userPreferences;
   final List<Supplement> supplements;
   final List<SupplementLog> supplementLogs;
+  final List<Exercise> customExercises;
 
   LightweightBackup({
     required this.schemaVersion,
@@ -6698,6 +6699,7 @@ class LightweightBackup {
     required this.userPreferences, // HINZUGEFÜGT
     required this.supplements, // NEU
     required this.supplementLogs, // NEU
+    required this.customExercises,
   });
 
   // KORRIGIERTE VERSION
@@ -6793,6 +6795,10 @@ class LightweightBackup {
               ?.map((e) => SupplementLog.fromMap(e as Map<String, dynamic>))
               .toList() ??
           [],
+      customExercises: (json['customExercises'] as List<dynamic>?)
+              ?.map((e) => Exercise.fromMap(e as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
   }
 
@@ -6827,6 +6833,7 @@ class LightweightBackup {
       'userPreferences': userPreferences,
       'supplements': supplements.map((e) => e.toMap()).toList(),
       'supplementLogs': supplementLogs.map((e) => e.toMap()).toList(),
+      'customExercises': customExercises.map((e) => e.toMap()).toList(),
     };
   }
 }
@@ -15154,6 +15161,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   groupValue: themeService.themeMode,
                   onChanged: (value) => themeService.setThemeMode(value!),
                 ),
+                // Innerhalb der Column der ersten SummaryCard, nach den Theme-Radios
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Column(
+                    children: [
+                      RadioListTile<int>(
+                        title: const Text('Standard (Glas)'),
+                        value: 0,
+                        groupValue: themeService.visualStyle,
+                        onChanged: (value) =>
+                            themeService.setVisualStyle(value!),
+                      ),
+                      RadioListTile<int>(
+                        title: const Text('Flüssig (Liquid Glass)'),
+                        subtitle: const Text('Runde, schwebende UI-Elemente'),
+                        value: 1,
+                        groupValue: themeService.visualStyle,
+                        onChanged: (value) =>
+                            themeService.setVisualStyle(value!),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -16004,7 +16035,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
           );
         }
         setState(() {
-          _routineExercises.add(newRoutineExercise);
+          // KORREKTUR: Erstelle eine neue Liste, um den Rebuild des Widgets zu erzwingen.
+          _routineExercises = [..._routineExercises, newRoutineExercise];
         });
       }
     }
@@ -16075,15 +16107,28 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     }
     return true;
   }
-
-  void _addSet(RoutineExercise routineExercise) {
+void _addSet(RoutineExercise routineExercise) {
     setState(() {
       final newSet = SetTemplate(
         id: DateTime.now().millisecondsSinceEpoch,
         setType: 'normal',
         targetReps: '8-12',
       );
-      routineExercise.setTemplates.add(newSet);
+
+      // --- START FIX ---
+      final exerciseIndex = _routineExercises.indexOf(routineExercise);
+      if (exerciseIndex == -1) return; // Safety check
+
+      final updatedTemplates = [...routineExercise.setTemplates, newSet];
+      final updatedExercise = RoutineExercise(
+        id: routineExercise.id,
+        exercise: routineExercise.exercise,
+        setTemplates: updatedTemplates,
+        pauseSeconds: routineExercise.pauseSeconds,
+      );
+      _routineExercises[exerciseIndex] = updatedExercise;
+      // --- END FIX ---
+
       _repsControllers[newSet.id!] = TextEditingController(
         text: newSet.targetReps,
       );
@@ -16097,7 +16142,22 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     int index,
   ) {
     setState(() {
-      routineExercise.setTemplates.removeAt(index);
+      // --- START FIX ---
+      final exerciseIndex = _routineExercises.indexOf(routineExercise);
+      if (exerciseIndex == -1) return;
+
+      final updatedTemplates = [...routineExercise.setTemplates];
+      updatedTemplates.removeAt(index);
+
+      final updatedExercise = RoutineExercise(
+        id: routineExercise.id,
+        exercise: routineExercise.exercise,
+        setTemplates: updatedTemplates,
+        pauseSeconds: routineExercise.pauseSeconds,
+      );
+      _routineExercises[exerciseIndex] = updatedExercise;
+      // --- END FIX ---
+
       _repsControllers.remove(setTemplateId)?.dispose();
       _weightControllers.remove(setTemplateId)?.dispose();
     });
@@ -16105,11 +16165,26 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
 
   void _changeSetType(SetTemplate setTemplate, String newType) {
     setState(() {
-      final re = _routineExercises.firstWhere(
+      final reIndex = _routineExercises.indexWhere(
         (re) => re.setTemplates.contains(setTemplate),
       );
-      final setIndex = re.setTemplates.indexOf(setTemplate);
-      re.setTemplates[setIndex] = setTemplate.copyWith(setType: newType);
+      if (reIndex == -1) return;
+
+      final routineExercise = _routineExercises[reIndex];
+      final setIndex = routineExercise.setTemplates.indexOf(setTemplate);
+      if (setIndex == -1) return;
+
+      // --- START FIX ---
+      final updatedTemplates = [...routineExercise.setTemplates];
+      updatedTemplates[setIndex] = setTemplate.copyWith(setType: newType);
+
+      _routineExercises[reIndex] = RoutineExercise(
+        id: routineExercise.id,
+        exercise: routineExercise.exercise,
+        setTemplates: updatedTemplates,
+        pauseSeconds: routineExercise.pauseSeconds,
+      );
+      // --- END FIX ---
     });
     Navigator.pop(context);
   }
@@ -19206,7 +19281,7 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
     }
   }
 
-  @override
+@override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
@@ -19245,10 +19320,12 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
                 controller: _nameController,
                 label: l10n.formFieldName,
                 isRequired: true,
+                isNumeric: false, // KORREKTUR
               ),
               _buildFoodInputField(
                 controller: _brandController,
                 label: l10n.formFieldBrand,
+                isNumeric: false, // KORREKTUR
               ),
 
               const SizedBox(height: DesignConstants.spacingXL),
@@ -19257,18 +19334,22 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
               _buildFoodInputField(
                 controller: _caloriesController,
                 label: l10n.formFieldCalories,
+                isNumeric: true, // KORREKTUR
               ),
               _buildFoodInputField(
                 controller: _proteinController,
                 label: l10n.formFieldProtein,
+                isNumeric: true, // KORREKTUR
               ),
               _buildFoodInputField(
                 controller: _carbsController,
                 label: l10n.formFieldCarbs,
+                isNumeric: true, // KORREKTUR
               ),
               _buildFoodInputField(
                 controller: _fatController,
                 label: l10n.formFieldFat,
+                isNumeric: true, // KORREKTUR
               ),
 
               const SizedBox(height: DesignConstants.spacingXL),
@@ -19277,14 +19358,17 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
               _buildFoodInputField(
                 controller: _sugarController,
                 label: l10n.formFieldSugar,
+                isNumeric: true, // KORREKTUR
               ),
               _buildFoodInputField(
                 controller: _fiberController,
                 label: l10n.formFieldFiber,
+                isNumeric: true, // KORREKTUR
               ),
               _buildFoodInputField(
                 controller: _saltController,
                 label: l10n.formFieldSalt,
+                isNumeric: true, // KORREKTUR
               ),
 
               const SizedBox(height: 32),
@@ -19295,7 +19379,6 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
     );
   }
 
-  // ... (die restlichen _build-Methoden bleiben unverändert hier drin)
   Widget _buildSectionTitle(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
@@ -19313,6 +19396,7 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
     required TextEditingController controller,
     required String label,
     bool isRequired = false,
+    bool isNumeric = false, // KORREKTUR: Neuer Parameter
   }) {
     final l10n = AppLocalizations.of(context)!;
     return Padding(
@@ -19320,14 +19404,19 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
       child: TextFormField(
         controller: controller,
         decoration: InputDecoration(labelText: label),
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        // KORREKTUR: Tastaturtyp wird jetzt gesteuert
+        keyboardType: isNumeric
+            ? const TextInputType.numberWithOptions(decimal: true)
+            : TextInputType.text,
         validator: (value) {
           if (isRequired && (value == null || value.isEmpty)) {
             return l10n.validatorPleaseEnterName;
           }
-          if (value != null &&
+          // KORREKTUR: Validierung nur für numerische Felder
+          if (isNumeric &&
+              value != null &&
               value.isNotEmpty &&
-              double.tryParse(value) == null) {
+              double.tryParse(value.replaceAll(',', '.')) == null) {
             return l10n.validatorPleaseEnterNumber;
           }
           return null;
@@ -19336,7 +19425,6 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
     );
   }
 }
-
 
 ===== Datei: /Users/richard/Projects/Lightweight/lightweight/lib/screens/statistics_hub_screen.dart =====
 
@@ -24392,6 +24480,7 @@ import 'package:lightweight/screens/profile_screen.dart';
 import 'package:lightweight/screens/statistics_hub_screen.dart';
 import 'package:lightweight/screens/workout_hub_screen.dart';
 import 'package:lightweight/services/profile_service.dart';
+import 'package:lightweight/services/theme_service.dart';
 import 'package:lightweight/services/workout_session_manager.dart';
 import 'package:lightweight/theme/color_constants.dart';
 import 'package:lightweight/util/design_constants.dart';
@@ -24399,6 +24488,7 @@ import 'package:lightweight/widgets/glass_bottom_menu.dart';
 import 'package:lightweight/widgets/glass_bottom_nav_bar.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/keep_alive_page.dart';
+import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:provider/provider.dart';
 
 class MainScreen extends StatefulWidget {
@@ -25233,6 +25323,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
     // --- ENDE NEU: HIER DEFINIEREN ---
 
+    final double r_liquid = 99;
+
     return Stack(
       children: [
         Scaffold(
@@ -25370,6 +25462,15 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           animation: _menuController,
           builder: (context, _) {
             final v = _safe01(_menuController.value);
+            // --- Insert themeService and local tint colors for tiles ---
+            final themeService = context.watch<ThemeService>();
+            final bool isDarkLocal = Theme.of(context).brightness == Brightness.dark;
+            final Color bgLocal = isDarkLocal ? summary_card_dark_mode : summary_card_white_mode;
+            final Color neutralTintLocal =
+                (isDarkLocal ? Colors.white : Colors.black).withOpacity(isDarkLocal ? 0.10 : 0.10);
+            final Color effectiveGlassLocal =
+                Color.alphaBlend(neutralTintLocal, bgLocal.withOpacity(isDarkLocal ? 0.22 : 0.16));
+            // ----------------------------------------------------------
             return Offstage(
               offstage: v == 0.0,
               child: IgnorePointer(
@@ -25456,54 +25557,74 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                             action['action'],
                                           );
                                         },
-                                        child: ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(20),
-                                          child: BackdropFilter(
-                                            filter: ImageFilter.blur(
-                                              sigmaX: 12,
-                                              sigmaY: 12,
-                                            ),
-                                            child: Container(
-                                              width: 76,
-                                              height: 76,
-                                              decoration: BoxDecoration(
-                                                // KORREKTUR: Hintergrundfarbe wie GlassFab
-                                                color: bg.withOpacity(0.80),
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                  20,
+                                        child: themeService.visualStyle == 1
+                                            ? LiquidGlass.withOwnLayer(
+                                              
+                                                settings: LiquidGlassSettings(
+                                                  thickness: 25,
+                                                  blur: 5,
+                                                  glassColor: effectiveGlassLocal,
+                                                  lightIntensity: 1.35,
+                                                  saturation: 1.10,
                                                 ),
-                                                border: Border.all(
-                                                  // KORREKTUR: Rahmenfarbe wie GlassFab
-                                                  color: isDark
-                                                      ? Colors.white
-                                                          .withOpacity(0.30)
-                                                      : Colors.black
-                                                          .withOpacity(0.10),
-                                                  width: 1.5,
-                                                ),
-                                                // Schatten für Konsistenz mit GlassFab
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Colors.black
-                                                        .withOpacity(0.3),
-                                                    blurRadius: 12,
-                                                    offset: const Offset(0, 6),
+                                                shape: LiquidRoundedSuperellipse(borderRadius: r_liquid),
+                                                child: Container(
+                                                  width: 76,
+                                                  height: 76,
+                                                  decoration: BoxDecoration(
+                                                    color: neutralTintLocal,
+                                                    borderRadius: BorderRadius.circular(r_liquid),
                                                   ),
-                                                ],
+                                                  foregroundDecoration: BoxDecoration(
+                                                    borderRadius: BorderRadius.circular(r_liquid),
+                                                    border: Border.all(
+                                                      color: isDarkLocal
+                                                          ? Colors.white.withOpacity(0.20)
+                                                          : Colors.black.withOpacity(0.08),
+                                                      width: 1.2,
+                                                    ),
+                                                  ),
+                                                  alignment: Alignment.center,
+                                                  child: Icon(
+                                                    action['icon'],
+                                                    size: 28,
+                                                    color: isDarkLocal ? Colors.white : Colors.black,
+                                                  ),
+                                                ),
+                                              )
+                                            : ClipRRect(
+                                                borderRadius: BorderRadius.circular(18),
+                                                child: BackdropFilter(
+                                                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                                                  child: Container(
+                                                    width: 76,
+                                                    height: 76,
+                                                    decoration: BoxDecoration(
+                                                      color: bg.withOpacity(0.80),
+                                                      borderRadius: BorderRadius.circular(18),
+                                                      border: Border.all(
+                                                        color: isDark
+                                                            ? Colors.white.withOpacity(0.30)
+                                                            : Colors.black.withOpacity(0.10),
+                                                        width: 1.5,
+                                                      ),
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: Colors.black.withOpacity(0.25),
+                                                          blurRadius: 10,
+                                                          offset: const Offset(0, 4),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    alignment: Alignment.center,
+                                                    child: Icon(
+                                                      action['icon'],
+                                                      size: 28,
+                                                      color: isDark ? Colors.white : Colors.black,
+                                                    ),
+                                                  ),
+                                                ),
                                               ),
-                                              child: Icon(
-                                                action['icon'],
-                                                size: 34,
-                                                // KORREKTUR: Dynamische Icon-Farbe
-                                                color: isDark
-                                                    ? Colors.white
-                                                    : Colors.black,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
                                       ),
                                       // --- ENDE DES GLAS-BUTTON ERSATZES ---
                                     ],
@@ -25561,19 +25682,69 @@ class _FrostedBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
+    final themeService = context.watch<ThemeService>();
 
+    // neutrale Tönung + effektive Glasfarbe (wirkt auch bei leerem Hintergrund)
+    final Color neutralTint =
+        (isDark ? Colors.white : Colors.black).withOpacity(isDark ? 0.1 : 0.1);
+    final Color effectiveGlass =
+        Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.22 : 0.16));
+
+   
+
+    if (themeService.visualStyle == 1) {
+      // LIQUID-STYLE
+      double radius = 99;
+      return LiquidGlass.withOwnLayer(
+        settings: LiquidGlassSettings(
+          thickness: 25,
+          blur: 5,
+          glassColor: effectiveGlass,
+          lightIntensity: 1.35,
+          saturation: 1.10,
+        ),
+        shape: LiquidRoundedSuperellipse(borderRadius: radius),
+        child: Stack(
+          children: [
+            // Basistönung IN der Pille – nur ein Hauch, hilft auf leerem Hintergrund
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(color: neutralTint),
+                ),
+              ),
+          Container(
+            // sanfter Innen-Padding wie vorher
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            // optional: dezenter Rand wie zuvor (falls du den Rim nicht willst: entfernen)
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(radius.toDouble()),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withOpacity(0.20)
+                    : Colors.black.withOpacity(0.08),
+                width: 1.2,
+              ),
+            ),
+            child: child,
+            
+          ),
+          ],
+        ),
+      );
+    }
+    double radius = 20;
+    // STANDARD (Fallback wie zuvor mit BackdropFilter)
     return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(radius.toDouble()),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
             color: bg.withOpacity(0.80),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(radius.toDouble()),
             border: Border.all(
               color: isDark
                   ? Colors.white.withOpacity(0.30)
@@ -25584,7 +25755,6 @@ class _FrostedBar extends StatelessWidget {
               BoxShadow(
                 blurRadius: 12,
                 offset: const Offset(0, 6),
-                // ignore: deprecated_member_use
                 color: Colors.black.withOpacity(0.3),
               ),
             ],
@@ -26512,14 +26682,16 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _categoryController = TextEditingController();
+  final _categoryController =
+      TextEditingController(); // Controller für das Textfeld
 
-  // State-Variablen für die getrennten Logiken
-  List<String> _allCategories = []; // Für das Autocomplete-Feld
-  List<String> _allMuscleGroups = []; // Für die Chip-Auswahl
+  // State-Variablen
+  List<String> _allCategories = []; // Für Autocomplete-Vorschläge
+  List<String> _allMuscleGroups = []; // Für Chip-Auswahl
   final List<String> _selectedPrimaryMuscles = [];
   final List<String> _selectedSecondaryMuscles = [];
   bool _isLoading = true;
+  bool _saving = false;
 
   late final l10n = AppLocalizations.of(context)!;
 
@@ -26537,35 +26709,78 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
     super.dispose();
   }
 
-  // Lädt BEIDE Listen: Kategorien und alle einzelnen Muskeln
   Future<void> _loadData() async {
+    setState(() => _isLoading = true); // Ladeindikator starten
     final db = WorkoutDatabaseHelper.instance;
-    final categories = await db.getAllCategories();
-    final muscles = await db.getAllMuscleGroups();
-    if (mounted) {
-      setState(() {
-        _allCategories = categories;
-        _allMuscleGroups = muscles;
-        _isLoading = false;
-      });
+    try {
+      final categories = await db.getAllCategories();
+      final muscles = await db.getAllMuscleGroups();
+      if (mounted) {
+        setState(() {
+          _allCategories = categories;
+          _allMuscleGroups = muscles;
+          _isLoading = false; // Ladeindikator beenden
+        });
+      }
+    } catch (e) {
+      print("Fehler beim Laden der Daten für CreateExerciseScreen: $e");
+      if (mounted) {
+        setState(
+            () => _isLoading = false); // Ladeindikator auch bei Fehler beenden
+        // Optional: Fehlermeldung anzeigen
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fehler beim Laden der Daten: $e')),
+        );
+      }
     }
   }
 
-  void _saveExercise() async {
-    if (_formKey.currentState!.validate()) {
+  Future<void> _saveExercise() async {
+    // Verhindere Doppelklick und Speichern ohne Daten
+    if (_saving || !(_formKey.currentState?.validate() ?? false)) return;
+
+    setState(() => _saving = true); // Zeige Ladezustand im Button
+
+    try {
       final newExercise = Exercise(
-        nameDe: _nameController.text.trim(),
+        // ID wird von der DB vergeben
+        nameDe: _nameController.text
+            .trim(), // Annahme: Deutscher Name = Englischer Name für Custom
         nameEn: _nameController.text.trim(),
         descriptionDe: _descriptionController.text.trim(),
         descriptionEn: _descriptionController.text.trim(),
-        // Getrennte Zuweisung der Daten
-        categoryName: _categoryController.text.trim(),
-        primaryMuscles: _selectedPrimaryMuscles,
-        secondaryMuscles: _selectedSecondaryMuscles,
+        categoryName:
+            _categoryController.text.trim(), // Kategorie aus dem Textfeld
+        primaryMuscles: List.from(_selectedPrimaryMuscles), // Kopie erstellen
+        secondaryMuscles:
+            List.from(_selectedSecondaryMuscles), // Kopie erstellen
+        // imagePath bleibt null für Custom Exercises
       );
 
+      // Speichere über den WorkoutDatabaseHelper (der jetzt is_custom=1 setzt)
       await WorkoutDatabaseHelper.instance.insertExercise(newExercise);
-      if (mounted) Navigator.of(context).pop(true);
+
+      if (mounted) {
+        // Erfolgs-Snackbar
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.snackbarSaveSuccess(newExercise.nameDe))),
+        );
+        // Schließe den Screen und gib 'true' zurück, um anzuzeigen, dass gespeichert wurde
+        Navigator.of(context).pop(true);
+      }
+    } catch (e) {
+      print("Fehler beim Speichern der Übung: $e");
+      if (mounted) {
+        // Fehler-Snackbar
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${l10n.error}: $e')),
+        );
+      }
+    } finally {
+      // Ladezustand im Button beenden, auch bei Fehler
+      if (mounted) {
+        setState(() => _saving = false);
+      }
     }
   }
 
@@ -26573,104 +26788,175 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.create_exercise_screen_title),
+        title: Text(
+          l10n.create_exercise_screen_title,
+          style: Theme.of(context)
+              .textTheme
+              .titleLarge
+              ?.copyWith(fontWeight: FontWeight.w900),
+        ),
         actions: [
+          // Speicher-Button in der AppBar
           TextButton(
-            onPressed: _saveExercise,
-            child: Text(
-              l10n.save,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            onPressed: _saving
+                ? null
+                : _saveExercise, // Deaktivieren während Speichern
+            child: _saving
+                ? const SizedBox(
+                    // Ladeindikator im Button
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(
+                    l10n.save,
+                    style: TextStyle(
+                      color: _saving
+                          ? Theme.of(context).disabledColor
+                          : Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
           ),
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: CircularProgressIndicator()) // Zeige Ladeindikator
           : SingleChildScrollView(
-              padding: DesignConstants.cardPadding,
+              padding: DesignConstants.cardPadding, // Einheitlicher Padding
               child: Form(
                 key: _formKey,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  crossAxisAlignment: CrossAxisAlignment
+                      .stretch, // Formularelemente füllen Breite
                   children: [
+                    // --- Name ---
                     TextFormField(
                       controller: _nameController,
                       decoration: InputDecoration(
-                        labelText: l10n.exercise_name_label,
+                        labelText: l10n.exercise_name_label, // Benötigt
                       ),
-                      validator: (value) =>
-                          value == null || value.trim().isEmpty
-                              ? l10n.validatorPleaseEnterName
-                              : null,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return l10n
+                              .validatorPleaseEnterName; // Standard-Validierung
+                        }
+                        return null;
+                      },
+                      textInputAction:
+                          TextInputAction.next, // Fokus zum nächsten Feld
                     ),
                     const SizedBox(height: DesignConstants.spacingL),
 
-                    // Feld für die Kategorie (z.B. "Chest")
+                    // --- Kategorie (Autocomplete) ---
                     Autocomplete<String>(
+                      // Controller für das zugrundeliegende Textfeld
+                      initialValue:
+                          TextEditingValue(text: _categoryController.text),
                       optionsBuilder: (TextEditingValue textEditingValue) {
-                        if (textEditingValue.text == '') {
-                          return const Iterable<String>.empty();
+                        final query = textEditingValue.text.toLowerCase();
+                        if (query.isEmpty) {
+                          return const Iterable<
+                              String>.empty(); // Keine Vorschläge bei leerem Feld
                         }
-                        return _allCategories.where((String option) {
-                          return option.toLowerCase().contains(
-                                textEditingValue.text.toLowerCase(),
-                              );
-                        });
+                        // Filtere existierende Kategorien
+                        return _allCategories
+                            .where((cat) => cat.toLowerCase().contains(query));
                       },
                       onSelected: (String selection) {
+                        // Wenn ein Vorschlag ausgewählt wird, übernehme ihn
                         _categoryController.text = selection;
+                        // Schließe die Tastatur
+                        FocusScope.of(context).unfocus();
                       },
-                      fieldViewBuilder: (
-                        context,
-                        textEditingController,
-                        focusNode,
-                        onFieldSubmitted,
-                      ) {
-                        _categoryController.value = textEditingController.value;
+                      fieldViewBuilder: (context, fieldController, focusNode,
+                          onFieldSubmitted) {
+                        // Wichtig: Internen Controller mit unserem synchronisieren
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (_categoryController.text !=
+                              fieldController.text) {
+                            _categoryController.text = fieldController.text;
+                          }
+                        });
+
                         return TextFormField(
-                          controller: textEditingController,
+                          controller:
+                              fieldController, // Interner Controller des Autocomplete
                           focusNode: focusNode,
                           decoration: InputDecoration(
-                            labelText: l10n.category_label,
-                            hintText: l10n.categoryHint,
+                            labelText: l10n.category_label, // Benötigt
+                            hintText: l10n.categoryHint, // Beispiel anzeigen
                           ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return l10n.validatorPleaseEnterCategory;
+                              return l10n
+                                  .validatorPleaseEnterCategory; // Eigene Validierung
                             }
                             return null;
                           },
+                          textInputAction: TextInputAction.next, // Fokus weiter
+                        );
+                      },
+                      optionsViewBuilder: (context, onSelected, options) {
+                        // Style für die Vorschlagsliste
+                        return Align(
+                          alignment: Alignment.topLeft,
+                          child: Material(
+                            elevation: 4.0,
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                  maxHeight: 200), // Begrenzte Höhe
+                              child: ListView.builder(
+                                padding: EdgeInsets.zero,
+                                shrinkWrap: true,
+                                itemCount: options.length,
+                                itemBuilder: (BuildContext context, int index) {
+                                  final option = options.elementAt(index);
+                                  return InkWell(
+                                    onTap: () => onSelected(option),
+                                    child: ListTile(title: Text(option)),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
                         );
                       },
                     ),
-
                     const SizedBox(height: DesignConstants.spacingL),
+
+                    // --- Beschreibung ---
                     TextFormField(
                       controller: _descriptionController,
                       decoration: InputDecoration(
-                        labelText: l10n.description_optional_label,
+                        labelText: l10n.description_optional_label, // Optional
                       ),
-                      maxLines: 3,
+                      maxLines: 3, // Mehrzeilig
+                      textInputAction:
+                          TextInputAction.done, // Formular abschließen
                     ),
-                    const SizedBox(height: DesignConstants.spacingXL),
+                    const SizedBox(
+                        height: DesignConstants.spacingXL), // Größerer Abstand
 
-                    // Auswahl für primäre Muskeln (z.B. "Pectoralis Major")
+                    // --- Primäre Muskeln ---
+                    _buildSectionTitle(context, l10n.primary_muscles_label),
                     _buildMuscleSelection(
-                      title: l10n.primary_muscles_label,
                       allMuscles: _allMuscleGroups,
                       selectedMuscles: _selectedPrimaryMuscles,
                     ),
-                    const SizedBox(height: DesignConstants.spacingXL),
+                    const SizedBox(
+                        height: DesignConstants.spacingXL), // Größerer Abstand
 
-                    // Auswahl für sekundäre Muskeln
+                    // --- Sekundäre Muskeln ---
+                    _buildSectionTitle(context, l10n.secondary_muscles_label),
                     _buildMuscleSelection(
-                      title: l10n.secondary_muscles_label,
                       allMuscles: _allMuscleGroups,
                       selectedMuscles: _selectedSecondaryMuscles,
                     ),
+                    const SizedBox(
+                        height:
+                            DesignConstants.spacingXXL), // Extra Abstand unten
                   ],
                 ),
               ),
@@ -26678,37 +26964,56 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
     );
   }
 
+  // Helfer-Widget für Sektionstitel (kannst du behalten oder anpassen)
+  Widget _buildSectionTitle(BuildContext context, String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: Colors.grey[700], // Etwas dunkler für mehr Kontrast
+              fontWeight: FontWeight.bold,
+            ),
+      ),
+    );
+  }
+
+  // Helfer-Widget für die Muskelauswahl mit Chips
   Widget _buildMuscleSelection({
-    required String title,
     required List<String> allMuscles,
     required List<String> selectedMuscles,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: DesignConstants.spacingS),
-        Wrap(
-          spacing: 8.0,
-          runSpacing: 4.0,
-          children: allMuscles.map((muscle) {
-            final isSelected = selectedMuscles.contains(muscle);
-            return FilterChip(
-              label: Text(muscle),
-              selected: isSelected,
-              onSelected: (bool selected) {
-                setState(() {
-                  if (selected) {
-                    selectedMuscles.add(muscle);
-                  } else {
-                    selectedMuscles.remove(muscle);
-                  }
-                });
-              },
-            );
-          }).toList(),
-        ),
-      ],
+    // Falls keine Muskeln geladen wurden (Fehlerfall)
+    if (allMuscles.isEmpty && !_isLoading) {
+      return Text("Fehler: Muskelgruppen konnten nicht geladen werden.",
+          style: TextStyle(color: Theme.of(context).colorScheme.error));
+    }
+
+    return Wrap(
+      spacing: 8.0, // Horizontaler Abstand
+      runSpacing: 4.0, // Vertikaler Abstand
+      children: allMuscles.map((muscle) {
+        final isSelected = selectedMuscles.contains(muscle);
+        return FilterChip(
+          label: Text(muscle),
+          selected: isSelected,
+          onSelected: (bool selected) {
+            setState(() {
+              // Wichtig: UI muss neu gezeichnet werden
+              if (selected) {
+                selectedMuscles.add(muscle);
+              } else {
+                selectedMuscles.remove(muscle);
+              }
+            });
+          },
+          // Visuelle Anpassungen für besseres Aussehen
+          selectedColor: Theme.of(context).colorScheme.primaryContainer,
+          checkmarkColor: Theme.of(context).colorScheme.onPrimaryContainer,
+          showCheckmark: true,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap, // Kompakter
+        );
+      }).toList(),
     );
   }
 }
@@ -29211,7 +29516,7 @@ class WorkoutDatabaseHelper {
     }
     // --- KORREKTUR ENDE ---
 
-    return await openDatabase(path, version: 9, onUpgrade: _upgradeDB);
+    return await openDatabase(path, version: 10, onUpgrade: _upgradeDB);
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
@@ -29313,6 +29618,19 @@ class WorkoutDatabaseHelper {
         print("Migration abgeschlossen.");
       }
     }
+    if (oldVersion < 10) {
+      print("Upgrade DB auf v10: Füge is_custom zu exercises hinzu...");
+      try {
+        // Füge die neue Spalte hinzu, Standardwert 0 (nicht custom)
+        await db.execute(
+          'ALTER TABLE exercises ADD COLUMN is_custom INTEGER NOT NULL DEFAULT 0',
+        );
+        print("Spalte 'is_custom' erfolgreich zu 'exercises' hinzugefügt.");
+      } catch (e) {
+        print(
+            "Fehler beim Hinzufügen der Spalte 'is_custom' (evtl. existiert sie schon): $e");
+      }
+    }
     print("DB-Upgrade auf v$newVersion erfolgreich abgeschlossen.");
   }
 
@@ -29394,12 +29712,6 @@ class WorkoutDatabaseHelper {
     return List.generate(maps.length, (i) => Exercise.fromMap(maps[i]));
   }
 
-  Future<Exercise> insertExercise(Exercise exercise) async {
-    final db = await database;
-    final id = await db.insert('exercises', exercise.toMap());
-    return exercise.copyWith(id: id);
-  }
-
   Future<Exercise?> getExerciseByName(String name) async {
     final db = await database;
     // --- HIER IST DIE ÄNDERUNG ---
@@ -29443,11 +29755,16 @@ class WorkoutDatabaseHelper {
     int exerciseId,
   ) async {
     final db = await database;
+    // --- START FIX ---
+    // Query the VIEW 'exercises_flat' instead of the TABLE 'exercises'
+    // to ensure all necessary fields (like muscle groups) are correctly loaded.
     final exerciseMaps = await db.query(
-      'exercises',
+      'exercises_flat', // CORRECT: Use the view
       where: 'id = ?',
       whereArgs: [exerciseId],
     );
+    // --- END FIX ---
+
     if (exerciseMaps.isEmpty) return null;
     final result = await db.rawQuery(
       'SELECT MAX(exercise_order) as max_order FROM routine_exercises WHERE routine_id = ?',
@@ -29917,17 +30234,6 @@ class WorkoutDatabaseHelper {
     return logs;
   }
 
-  Future<void> clearAllWorkoutData() async {
-    final db = await database;
-    await db.transaction((txn) async {
-      await txn.delete('set_logs');
-      await txn.delete('workout_logs');
-      await txn.delete('routine_set_templates');
-      await txn.delete('routine_exercises');
-      await txn.delete('routines');
-    });
-  }
-
   Future<void> importWorkoutData({
     required List<Routine> routines,
     required List<WorkoutLog> workoutLogs,
@@ -30104,6 +30410,78 @@ class WorkoutDatabaseHelper {
 
     return setMaps.map((map) => SetLog.fromMap(map)).toList();
   }
+
+  Future<Exercise> insertExercise(Exercise exercise) async {
+    final db = await database;
+    // Setze is_custom auf 1 für alle hier eingefügten Übungen
+    final Map<String, Object?> exerciseMap = exercise.toMap();
+    exerciseMap['is_custom'] = 1; // Markiere als benutzerdefiniert
+
+    // Entferne die ID, falls sie versehentlich gesetzt wurde,
+    // damit die DB eine neue generiert.
+    exerciseMap.remove('id');
+
+    final id = await db.insert(
+      'exercises',
+      exerciseMap,
+      conflictAlgorithm: ConflictAlgorithm
+          .replace, // Falls Name schon existiert (sollte nicht)
+    );
+    print(
+        "Benutzerdefinierte Übung '${exercise.nameDe}' mit ID $id eingefügt.");
+    return exercise.copyWith(id: id);
+  }
+
+  // *** NEU: Methode zum Abrufen benutzerdefinierter Übungen für das Backup ***
+  Future<List<Exercise>> getCustomExercises() async {
+    final db = await database;
+    final maps = await db.query(
+      'exercises',
+      where: 'is_custom = ?',
+      whereArgs: [1], // Nur benutzerdefinierte
+    );
+    // Wichtig: 'is_custom' wird von fromMap nicht direkt gelesen, aber das ist ok.
+    return maps.map((map) => Exercise.fromMap(map)).toList();
+  }
+
+  // *** NEU: Methode zum Importieren benutzerdefinierter Übungen aus dem Backup ***
+  Future<void> importCustomExercises(List<Exercise> exercises) async {
+    if (exercises.isEmpty) return;
+    final db = await database;
+    await db.transaction((txn) async {
+      final batch = txn.batch();
+      for (final exercise in exercises) {
+        final exerciseMap = exercise.toMap();
+        exerciseMap['is_custom'] =
+            1; // Sicherstellen, dass sie als custom markiert sind
+        exerciseMap.remove('id'); // ID wird von der DB neu vergeben
+        batch.insert(
+          'exercises',
+          exerciseMap,
+          conflictAlgorithm:
+              ConflictAlgorithm.ignore, // Ignoriere, falls Name schon existiert
+        );
+      }
+      await batch.commit(noResult: true);
+      print(
+          "${exercises.length} benutzerdefinierte Übungen erfolgreich importiert.");
+    });
+  }
+
+  // *** WICHTIG: Methode 'clearAllWorkoutData' anpassen ***
+  Future<void> clearAllWorkoutData() async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete('set_logs');
+      await txn.delete('workout_logs');
+      await txn.delete('routine_set_templates');
+      await txn.delete('routine_exercises');
+      await txn.delete('routines');
+      // *** NEU: Lösche NUR benutzerdefinierte Übungen ***
+      await txn.delete('exercises', where: 'is_custom = ?', whereArgs: [1]);
+      print("Alle Trainingsdaten (Logs, Routinen, Custom Exercises) gelöscht.");
+    });
+  }
 }
 
 
@@ -30164,6 +30542,7 @@ class BackupManager {
       }
       final supplements = await _userDb.getAllSupplements();
       final supplementLogs = await _userDb.getAllSupplementLogs();
+      final customExercises = await _workoutDb.getCustomExercises();
       final backup = LightweightBackup(
         // KORREKTUR: Nutzt das neue Modell
         schemaVersion: currentSchemaVersion,
@@ -30177,6 +30556,7 @@ class BackupManager {
         userPreferences: userPrefs,
         supplements: supplements,
         supplementLogs: supplementLogs,
+        customExercises: customExercises,
       );
       final jsonString = jsonEncode(backup.toJson());
 
@@ -30197,8 +30577,7 @@ class BackupManager {
       return false;
     }
   }
-
-  Future<bool> importFullBackup(String filePath) async {
+Future<bool> importFullBackup(String filePath) async {
     try {
       final file = File(filePath);
       final jsonString = await file.readAsString();
@@ -30253,11 +30632,12 @@ class BackupManager {
         supplementLogs: backup.supplementLogs,
       );
       if (productDb != null) {
-        final cols = await _getTableColumns(productDb, 'products'); // <-- neu
+        // --- FIX START ---
+        final cols = await _getTableColumns(productDb, 'products');
         final batch = productDb.batch();
         for (final item in backup.customFoodItems) {
           final raw = item.toMap();
-          final filtered = _filterMapForColumns(raw, cols); // <-- neu
+          final filtered = _filterMapForColumns(raw, cols);
           batch.insert(
             'products',
             filtered,
@@ -30265,6 +30645,7 @@ class BackupManager {
           );
         }
         await batch.commit(noResult: true);
+        // --- FIX END ---
       }
       await _workoutDb.importWorkoutData(
         routines: backup.routines,
@@ -30277,6 +30658,23 @@ class BackupManager {
       print("Fehler beim Importieren der Daten: $e");
       return false;
     }
+  }
+  // ... (Rest der Datei, inklusive der neuen Helper am Ende)
+
+  Future<Set<String>> _getTableColumns(Database db, String table) async {
+    final rows = await db.rawQuery('PRAGMA table_info($table)');
+    return rows.map((r) => (r['name'] as String)).toSet();
+  }
+
+  Map<String, Object?> _filterMapForColumns(
+    Map<String, Object?> src,
+    Set<String> allowedCols,
+  ) {
+    final out = <String, Object?>{};
+    src.forEach((k, v) {
+      if (allowedCols.contains(k)) out[k] = v;
+    });
+    return out;
   }
   // --- NEUE METHODEN FÜR CSV-EXPORT ---
 
@@ -30449,6 +30847,7 @@ class BackupManager {
       }
       final supplements = await _userDb.getAllSupplements();
       final supplementLogs = await _userDb.getAllSupplementLogs();
+      final customExercises = await _workoutDb.getCustomExercises();
       final backup = LightweightBackup(
         schemaVersion: currentSchemaVersion,
         foodEntries: foodEntries,
@@ -30461,6 +30860,7 @@ class BackupManager {
         userPreferences: userPrefs,
         supplements: supplements,
         supplementLogs: supplementLogs,
+        customExercises: customExercises,
       );
       final jsonString = jsonEncode(backup.toJson());
 
@@ -30540,6 +30940,8 @@ class BackupManager {
         where: 'barcode LIKE ?',
         whereArgs: ['user_created_%'],
       );
+
+      await _workoutDb.importCustomExercises(backup.customExercises);
 
       for (final e in backup.userPreferences.entries) {
         final k = e.key;
@@ -30634,19 +31036,20 @@ class BackupManager {
       }
       final supplements = await _userDb.getAllSupplements();
       final supplementLogs = await _userDb.getAllSupplementLogs();
+      final customExercises = await _workoutDb.getCustomExercises();
       final backup = LightweightBackup(
-        schemaVersion: currentSchemaVersion,
-        foodEntries: foodEntries,
-        fluidEntries: fluidEntries,
-        favoriteBarcodes: favoriteBarcodes,
-        customFoodItems: customFoodItems,
-        measurementSessions: measurementSessions,
-        routines: routines,
-        workoutLogs: workoutLogs,
-        userPreferences: userPrefs,
-        supplements: supplements,
-        supplementLogs: supplementLogs,
-      );
+          schemaVersion: currentSchemaVersion,
+          foodEntries: foodEntries,
+          fluidEntries: fluidEntries,
+          favoriteBarcodes: favoriteBarcodes,
+          customFoodItems: customFoodItems,
+          measurementSessions: measurementSessions,
+          routines: routines,
+          workoutLogs: workoutLogs,
+          userPreferences: userPrefs,
+          supplements: supplements,
+          supplementLogs: supplementLogs,
+          customExercises: customExercises);
       final jsonString = jsonEncode(backup.toJson());
 
       // 2) Zielordner auflösen
@@ -30716,22 +31119,6 @@ class BackupManager {
       print('Auto-Backup fehlgeschlagen: $e');
       return false;
     }
-  }
-
-  Future<Set<String>> _getTableColumns(Database db, String table) async {
-    final rows = await db.rawQuery('PRAGMA table_info($table)');
-    return rows.map((r) => (r['name'] as String)).toSet();
-  }
-
-  Map<String, Object?> _filterMapForColumns(
-    Map<String, Object?> src,
-    Set<String> allowedCols,
-  ) {
-    final out = <String, Object?>{};
-    src.forEach((k, v) {
-      if (allowedCols.contains(k)) out[k] = v;
-    });
-    return out;
   }
 }
 
@@ -30861,7 +31248,7 @@ Future<void> _applyBackupPayload(Map<String, dynamic> payload) async {
 ===== Datei: /Users/richard/Projects/Lightweight/lightweight/lib/data/product_database_helper.dart =====
 
 // lib/data/product_database_helper.dart
-
+/*
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/services.dart';
@@ -31247,7 +31634,419 @@ class ProductDatabaseHelper {
     return join(dbPath, 'vita_base_foods.db');
   }
 }
+*/
+// lib/data/product_database_helper.dart
 
+import 'dart:async';
+import 'dart:io';
+import 'package:flutter/services.dart';
+import 'package:path/path.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
+import '../models/food_item.dart';
+import './database_helper.dart';
+
+class ProductDatabaseHelper {
+  static final ProductDatabaseHelper instance = ProductDatabaseHelper._init();
+  ProductDatabaseHelper._init();
+
+  static Database? _offDatabase;
+  static Database? _baseDatabase;
+
+  // Ein einfacher Sperrmechanismus, um doppelte Initialisierung zu verhindern.
+  static bool _isInitializing = false;
+  // --- NEU: kleine Helpers ganz oben in der Klasse ---
+  bool _isOpen(Database? db) => db != null && db.isOpen;
+
+  Future<void> _ensureDatabasesAlive() async {
+    if (_offDatabase != null && !_offDatabase!.isOpen) {
+      _offDatabase = await _initDB('vita_prep_de.db');
+    }
+    if (_baseDatabase != null && !_baseDatabase!.isOpen) {
+      _baseDatabase = await _initDB('vita_base_foods.db');
+    }
+  }
+
+  Future<void> reloadBaseDb() async {
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, 'vita_base_foods.db');
+    try {
+      await _baseDatabase?.close();
+    } catch (_) {}
+    _baseDatabase = await openDatabase(path);
+  }
+
+  // Stellt sicher, dass die Datenbanken geladen sind, bevor eine Abfrage erfolgt.
+  Future<void> _ensureDatabasesInitialized() async {
+    // Wenn die DBs schon da sind, ist alles gut.
+    if (_offDatabase != null) {
+      return;
+    }
+
+    // Wenn die Initialisierung bereits läuft, warte kurz.
+    // Dies ist eine einfache Absicherung, keine komplexe Sperre.
+    if (_isInitializing) {
+      await Future.delayed(const Duration(milliseconds: 50));
+      return _ensureDatabasesInitialized();
+    }
+
+    _isInitializing = true;
+
+    // EINFACHE, SEQUENZIELLE INITIALISIERUNG - KEIN Future.wait
+    try {
+      _offDatabase = await _initDB('vita_prep_de.db');
+    } catch (e) {
+      print(
+        "KRITISCHER FEHLER: Die Haupt-Produktdatenbank konnte nicht geladen werden: $e",
+      );
+    }
+
+    try {
+      _baseDatabase = await _initDB('vita_base_foods.db');
+    } catch (e) {
+      print(
+        "INFO: Die optionale Grundnahrungsmittel-DB wurde nicht gefunden. Das ist normal, wenn sie noch nicht hinzugefügt wurde. Fehler: $e",
+      );
+    }
+
+    _isInitializing = false;
+  }
+
+  Future<Database> _initDB(String fileName) async {
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, fileName);
+
+    // --- KORREKTUR START: Versionierungslogik für Asset-DBs ---
+    // Definiere hier die aktuellen Versionen deiner Asset-Datenbanken.
+    // **WICHTIG: Erhöhe die Version hier, wenn du die entsprechende Datei in /assets/db änderst!**
+    const assetVersions = {
+      'vita_base_foods.db': 1, // Start mit Version 1
+      'vita_prep_de.db': 1, // Start mit Version 1
+    };
+    const assetVersionKeys = {
+      'vita_base_foods.db': 'base_foods_db_asset_version',
+      'vita_prep_de.db': 'off_db_asset_version',
+    };
+
+    final currentAssetVersion = assetVersions[fileName];
+    final assetVersionKey = assetVersionKeys[fileName];
+    final exists = await databaseExists(path);
+
+    if (currentAssetVersion != null && assetVersionKey != null) {
+      final prefs = await SharedPreferences.getInstance();
+      final lastCopiedVersion = prefs.getInt(assetVersionKey) ?? 0;
+
+      if (!exists || lastCopiedVersion < currentAssetVersion) {
+        print(
+          "Datenbank '$fileName' ist veraltet (Lokal: v$lastCopiedVersion, Asset: v$currentAssetVersion) oder nicht vorhanden. Kopiere neu...",
+        );
+        try {
+          if (exists) {
+            await deleteDatabase(path);
+          }
+          await Directory(dirname(path)).create(recursive: true);
+          ByteData data = await rootBundle.load(join('assets/db', fileName));
+          List<int> bytes =
+              data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+          await File(path).writeAsBytes(bytes, flush: true);
+
+          await prefs.setInt(assetVersionKey, currentAssetVersion);
+          print(
+              "Datenbank '$fileName' erfolgreich auf v$currentAssetVersion kopiert.");
+        } catch (e) {
+          print("Fehler beim Kopieren der Datenbank '$fileName': $e");
+          if (await File(path).exists()) await File(path).delete();
+          throw Exception(
+              "Konnte Datenbank '$fileName' nicht aus den Assets laden.");
+        }
+      } else {
+        print(
+            "Bestehende und aktuelle Datenbank '$fileName' (v$lastCopiedVersion) gefunden.");
+      }
+    } else {
+      // Fallback für nicht-versionierte DBs (altes Verhalten)
+      if (!exists) {
+        try {
+          await Directory(dirname(path)).create(recursive: true);
+          ByteData data = await rootBundle.load(join('assets/db', fileName));
+          List<int> bytes =
+              data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+          await File(path).writeAsBytes(bytes, flush: true);
+        } catch (e) {
+          throw Exception(
+              "Konnte Datenbank '$fileName' nicht aus den Assets laden.");
+        }
+      }
+    }
+    // --- KORREKTUR ENDE ---
+
+    return await openDatabase(path);
+  }
+
+  // ÖFFENTLICHER GETTER FÜR DEN BACKUP-MANAGER
+  Future<Database?> get offDatabase async {
+    await _ensureDatabasesInitialized();
+    return _offDatabase;
+  }
+
+  Future<List<FoodItem>> searchProducts(String query) async {
+    await _ensureDatabasesInitialized();
+    await _ensureDatabasesAlive();
+    final List<FoodItem> combinedResults = [];
+
+    if (_baseDatabase != null) {
+      final List<Map<String, dynamic>> baseMaps = await _baseDatabase!.query(
+        'products',
+        where: 'name LIKE ? OR name_de LIKE ? OR name_en LIKE ?',
+        whereArgs: ['%$query%', '%$query%', '%$query%'],
+        limit: 25,
+      );
+      combinedResults.addAll(
+        baseMaps.map(
+          (map) => FoodItem.fromMap(map, source: FoodItemSource.base),
+        ),
+      );
+    }
+
+    // Die Haupt-DB muss existieren, sonst stürzt die App hier ab, was korrekt ist.
+    if (_offDatabase != null) {
+      final List<Map<String, dynamic>> offMaps = await _offDatabase!.query(
+        'products',
+        where: 'name LIKE ? OR brand LIKE ?',
+        whereArgs: ['%$query%', '%$query%'],
+        limit: 50,
+      );
+      combinedResults.addAll(
+        offMaps.map((map) => FoodItem.fromMap(map, source: FoodItemSource.off)),
+      );
+    }
+
+    final uniqueResults = <String, FoodItem>{};
+    for (var item in combinedResults) {
+      uniqueResults.putIfAbsent(item.barcode, () => item);
+    }
+    return uniqueResults.values.toList();
+  }
+
+  Future<FoodItem?> getProductByBarcode(String barcode) async {
+    await _ensureDatabasesInitialized();
+    await _ensureDatabasesAlive();
+
+    // Lokaler Helper mit anderem Namen als das Keyword "try"
+    Future<FoodItem?> attempt() async {
+      if (_baseDatabase != null) {
+        final baseMaps = await _baseDatabase!.query(
+          'products',
+          where: 'barcode = ?',
+          whereArgs: [barcode],
+          limit: 1,
+        );
+        if (baseMaps.isNotEmpty) {
+          return FoodItem.fromMap(baseMaps.first, source: FoodItemSource.base);
+        }
+      }
+
+      if (_offDatabase != null) {
+        final offMaps = await _offDatabase!.query(
+          'products',
+          where: 'barcode = ?',
+          whereArgs: [barcode],
+          limit: 1,
+        );
+        if (offMaps.isNotEmpty) {
+          return FoodItem.fromMap(offMaps.first, source: FoodItemSource.off);
+        }
+      }
+
+      return null;
+    }
+
+    try {
+      return await attempt();
+    } on DatabaseException catch (e) {
+      // Falls eine der DBs zwischenzeitlich geschlossen wurde → wiederbeleben & einmalig erneut versuchen
+      final msg = e.toString().toLowerCase();
+      if (msg.contains('database_closed') ||
+          msg.contains('attempt to reopen')) {
+        await _ensureDatabasesAlive();
+        return await attempt();
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> insertProduct(FoodItem item) async {
+    await _ensureDatabasesInitialized();
+    await _ensureDatabasesAlive();
+    if (_offDatabase == null) return;
+    // --- FIX START ---
+    final cols = await _getTableColumns(_offDatabase!, 'products');
+    final filteredMap = _filterMapForColumns(item.toMap(), cols);
+    await _offDatabase!.insert(
+      'products',
+      filteredMap,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    // --- FIX END ---
+  }
+
+  Future<List<FoodItem>> _getProductsByBarcodes(List<String> barcodes) async {
+    if (barcodes.isEmpty) return [];
+    final results = <FoodItem>[];
+    for (final barcode in barcodes) {
+      final product = await getProductByBarcode(barcode);
+      if (product != null) results.add(product);
+    }
+    return results;
+  }
+
+  Future<List<FoodItem>> getFavoriteProducts() async {
+    final favoriteBarcodes =
+        await DatabaseHelper.instance.getFavoriteBarcodes();
+    return await _getProductsByBarcodes(favoriteBarcodes);
+  }
+
+  Future<List<FoodItem>> getRecentProducts() async {
+    final recentBarcodes =
+        await DatabaseHelper.instance.getRecentlyUsedBarcodes();
+    return await _getProductsByBarcodes(recentBarcodes);
+  }
+
+  Future<List<FoodItem>> getProductsByBarcodes(List<String> barcodes) async {
+    if (barcodes.isEmpty) return [];
+    await _ensureDatabasesInitialized();
+    await _ensureDatabasesAlive();
+
+    final db = _offDatabase;
+    if (db == null) return [];
+
+    // Erstellt eine Kette von '?' für die IN-Klausel
+    final placeholders = List.filled(barcodes.length, '?').join(',');
+    final maps = await db.query(
+      'products',
+      where: 'barcode IN ($placeholders)',
+      whereArgs: barcodes,
+    );
+    return maps
+        .map((map) => FoodItem.fromMap(map, source: FoodItemSource.off))
+        .toList();
+  }
+
+  Future<void> updateProduct(FoodItem item) async {
+    await _ensureDatabasesInitialized();
+    await _ensureDatabasesAlive();
+    if (_offDatabase == null) return;
+    // --- FIX START ---
+    final cols = await _getTableColumns(_offDatabase!, 'products');
+    final filteredMap = _filterMapForColumns(item.toMap(), cols);
+    await _offDatabase!.update(
+      'products',
+      filteredMap,
+      where: 'barcode = ?',
+      whereArgs: [item.barcode],
+    );
+    // --- FIX END ---
+  }
+
+  // === NEU: Grundnahrungsmittel lesen (optional mit Kategorie) ===
+  Future<List<FoodItem>> getBaseFoods({
+    String? categoryKey,
+    int limit = 200,
+    int offset = 0,
+    String? search,
+  }) async {
+    await _ensureDatabasesInitialized();
+    await _ensureDatabasesAlive();
+    if (_baseDatabase == null) return [];
+
+    final whereParts = <String>[];
+    final whereArgs = <Object?>[];
+
+    if (categoryKey != null && categoryKey.isNotEmpty) {
+      whereParts.add('category_key = ?');
+      whereArgs.add(categoryKey);
+    }
+
+    if (search != null && search.trim().isNotEmpty) {
+      // Suche über name/name_de/name_en
+      whereParts.add('(name LIKE ? OR name_de LIKE ? OR name_en LIKE ?)');
+      final q = '%${search.trim()}%';
+      whereArgs.addAll([q, q, q]);
+    }
+
+    final rows = await _baseDatabase!.query(
+      'products',
+      where: whereParts.isEmpty ? null : whereParts.join(' AND '),
+      whereArgs: whereArgs.isEmpty ? null : whereArgs,
+      orderBy: 'name COLLATE NOCASE',
+      limit: limit,
+      offset: offset,
+    );
+
+    return rows
+        .map((m) => FoodItem.fromMap(m, source: FoodItemSource.base))
+        .toList();
+  }
+
+  // === NEU: Kategorien (für späteren Filter / Anzeige) ===
+  Future<List<Map<String, dynamic>>> getBaseCategories() async {
+    await _ensureDatabasesInitialized();
+    await _ensureDatabasesAlive();
+    if (_baseDatabase == null) return [];
+    return _baseDatabase!.query(
+      'categories',
+      columns: ['key', 'name_de', 'name_en', 'emoji'],
+      orderBy: 'name_de COLLATE NOCASE',
+    );
+  }
+
+  // === DEV: Felder eines Basis-Eintrags aktualisieren (barcode bleibt) ===
+  Future<void> updateBaseProductFields({
+    required String barcode,
+    required Map<String, Object?> fields, // nur Spalten, die du ändern willst
+  }) async {
+    await _ensureDatabasesInitialized();
+    await _ensureDatabasesAlive();
+    if (_baseDatabase == null) {
+      throw Exception('Basis-DB nicht geladen');
+    }
+    if (fields.isEmpty) return;
+
+    // Safety: Barcode niemals überschreiben
+    final safe = Map<String, Object?>.from(fields)..remove('barcode');
+
+    await _baseDatabase!.update(
+      'products',
+      safe,
+      where: 'barcode = ?',
+      whereArgs: [barcode],
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  // === DEV: Pfad der Basis-DB ermitteln (für Export/Share) ===
+  Future<String> getBaseDbPath() async {
+    final dbPath = await getDatabasesPath();
+    return join(dbPath, 'vita_base_foods.db');
+  }
+
+  // --- NEUE HELFER-METHODEN ---
+  Future<Set<String>> _getTableColumns(Database db, String table) async {
+    final rows = await db.rawQuery('PRAGMA table_info($table)');
+    return rows.map((r) => (r['name'] as String)).toSet();
+  }
+
+  Map<String, Object?> _filterMapForColumns(
+    Map<String, Object?> src,
+    Set<String> allowedCols,
+  ) {
+    final out = <String, Object?>{};
+    src.forEach((k, v) {
+      if (allowedCols.contains(k)) out[k] = v;
+    });
+    return out;
+  }
+}
 
 ===== Datei: /Users/richard/Projects/Lightweight/lightweight/lib/data/import_manager.dart =====
 
@@ -31534,21 +32333,41 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeService extends ChangeNotifier {
   static const _themeKey = 'theme_mode';
+  static const _styleKey = 'visual_style'; // NEU
   ThemeMode _themeMode = ThemeMode.system;
+  int _visualStyle = 0; // NEU: 0 = Standard, 1 = Liquid
 
   ThemeMode get themeMode => _themeMode;
+  int get visualStyle => _visualStyle; // NEU
 
   ThemeService() {
     _loadThemeMode();
+    _loadVisualStyle(); // NEU
   }
+  // Im Konstruktor aufrufen:
+  //_loadVisualStyle(); 
 
   Future<void> _loadThemeMode() async {
     final prefs = await SharedPreferences.getInstance();
-    // Default to system if no preference is saved
     final themeIndex = prefs.getInt(_themeKey) ?? ThemeMode.system.index;
     _themeMode = ThemeMode.values[themeIndex];
     notifyListeners();
   }
+
+  // --- NEUE METHODE ---
+Future<void> _loadVisualStyle() async {
+  final prefs = await SharedPreferences.getInstance();
+  _visualStyle = prefs.getInt(_styleKey) ?? 0;
+  notifyListeners();
+}
+
+Future<void> setVisualStyle(int style) async {
+  if (style == _visualStyle) return;
+  _visualStyle = style;
+  notifyListeners();
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setInt(_styleKey, style);
+}
 
   Future<void> setThemeMode(ThemeMode mode) async {
     if (mode == _themeMode) return;
@@ -31558,7 +32377,6 @@ class ThemeService extends ChangeNotifier {
     await prefs.setInt(_themeKey, mode.index);
   }
 }
-
 
 ===== Datei: /Users/richard/Projects/Lightweight/lightweight/lib/services/workout_session_manager.dart =====
 
@@ -32661,7 +33479,10 @@ class FrostedContainer extends StatelessWidget {
 
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:lightweight/services/theme_service.dart';
 import 'package:lightweight/theme/color_constants.dart';
+import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
+import 'package:provider/provider.dart';
 
 class GlassBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -32676,7 +33497,7 @@ class GlassBottomNavBar extends StatelessWidget {
     required this.onFabTap,
     required this.items,
   });
-  // Add inside class GlassBottomNavBar
+
   Widget _buildNavItem(
     BuildContext context,
     BottomNavigationBarItem item,
@@ -32688,43 +33509,55 @@ class GlassBottomNavBar extends StatelessWidget {
 
     return Expanded(
       child: Material(
-        color: Colors.transparent,
+        type: MaterialType.transparency,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconTheme(
-                      data: IconThemeData(color: color, size: 24),
-                      child: item.icon,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      item.label ?? '',
-                      maxLines: 1,
-                      //overflow: TextOverflow.,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: color,
-                        fontSize: 12,
-                        fontWeight:
-                            isSelected ? FontWeight.w400 : FontWeight.w400,
-                      ),
-                    ),
-                  ],
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+          focusColor: Colors.transparent,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconTheme(
+                  data: IconThemeData(color: color, size: 24),
+                  child: item.icon,
                 ),
-              ),
-            ],
+                const SizedBox(height: 4),
+                Text(
+                  item.label ?? '',
+                  maxLines: 1,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  /// Berechnet die Align-X-Position (-1..1) für den selektierten Bubble-Hintergrund.
+  double _alignmentXForIndex(int index, int count) {
+    if (count <= 0) return 0;
+    final centerFrac = (index + 0.5) / count; // 0..1
+    return centerFrac * 2 - 1; // -1..1
+  }
+
+  /// Mappt eine lokale X-Position (0..width) auf den Tab-Index.
+  int _indexFromDx(double dx, double width, int itemCount) {
+    if (width <= 0 || itemCount <= 0) return 0;
+    final frac = (dx / width).clamp(0.0, 0.9999);
+    final idx = (frac * itemCount).floor();
+    return idx.clamp(0, itemCount - 1);
   }
 
   @override
@@ -32732,181 +33565,147 @@ class GlassBottomNavBar extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
-    final backgroundColor =
-        isDark ? summary_card_dark_mode : summary_card_white_mode;
+    final themeService = context.watch<ThemeService>();
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Container(
-          height: 76,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            color: bg.withOpacity(0.80),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withOpacity(0.30)
-                  : Colors.black.withOpacity(0.10),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Only the 4 nav items now
-              ...List.generate(items.length, (index) {
-                final item = items[index];
-                final isSelected = index == currentIndex;
-                return _buildNavItem(
-                  context,
-                  item,
-                  isSelected,
-                  () => onTap(index),
-                );
-              }),
-            ],
-          ),
-        ),
-      ),
+    final navItemsRow = Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        ...List.generate(items.length, (index) {
+          final item = items[index];
+          final isSelected = index == currentIndex;
+          return _buildNavItem(
+            context,
+            item,
+            isSelected,
+            () => onTap(index),
+          );
+        }),
+      ],
     );
-  }
-}
 
-class _SquareFab extends StatelessWidget {
-  final VoidCallback onTap;
-  const _SquareFab({required this.onTap});
+    const barHeight = 76.0;
 
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    switch (themeService.visualStyle) {
+      case 1:
+  // neutrale Tönung ableiten (funktioniert auf Weiß & Schwarz)
+  final Color neutralTint =
+      (isDark ? Colors.white : Colors.black).withOpacity(isDark ? 0.1 : 0.1);
 
-    return Padding(
-      // tiny inset so it doesn’t kiss the bar’s edge
-      padding: const EdgeInsets.only(right: 4),
-      child: SizedBox(
-        width: 68, // a bit chunkier
-        height: 68,
-        child: Material(
-          color: cs.primary, // accent
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20), // closer to the bar’s 24
-            side: BorderSide(
-              color: isDark
-                  ? Colors.white.withOpacity(0.20)
-                  : Colors.black.withOpacity(0.10),
-              width: 1, // same outline weight as the glass card
+  // smarteres Glas: bg-Color + neutraler Tint "verheiraten"
+  final Color effectiveGlass =
+      Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.22 : 0.16));
+
+  // Drag-to-select + Release-to-activate: über GestureDetector
+  return LayoutBuilder(
+    builder: (context, constraints) {
+      double? lastDx; // hält die letzte lokale X-Position für onPanEnd
+      final barWidth = constraints.maxWidth;
+
+      return GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTapUp: (details) {
+          final idx = _indexFromDx(details.localPosition.dx, barWidth, items.length);
+          onTap(idx);
+        },
+        onPanStart: (details) {
+          lastDx = details.localPosition.dx;
+        },
+        onPanUpdate: (details) {
+          lastDx = details.localPosition.dx;
+        },
+        onPanEnd: (_) {
+          if (lastDx != null) {
+            final idx = _indexFromDx(lastDx!, barWidth, items.length);
+            onTap(idx);
+          }
+          lastDx = null;
+        },
+        child: LiquidStretch(
+          stretch: 0.55,
+          interactionScale: 1.04,
+          child: LiquidGlass.withOwnLayer(
+            settings: LiquidGlassSettings(
+              thickness: 25,
+              blur: 5,
+              glassColor: effectiveGlass,      // <- hier steckt jetzt der „Grundton“ drin
+              lightIntensity: 1.35,
+              // outlineIntensity optional, nur wenn deine Paketversion das Feld hat
+              //outlineIntensity: 0.10,
+              saturation: 1.10,
             ),
-          ),
-          elevation: 0, // we’ll use a soft drop shadow via DecoratedBox
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(20),
-            child: DecoratedBox(
-              decoration: const BoxDecoration(
-                // soft drop shadow so it feels detached
-                boxShadow: [
-                  BoxShadow(
-                    blurRadius: 24,
-                    offset: Offset(0, 8),
-                    color: Colors.black26,
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Icon(Icons.add, size: 30, color: cs.onPrimary),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  final BottomNavigationBarItem item;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _NavItem({
-    required this.item,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final Color color =
-        isSelected ? cs.primary : cs.onSurface.withOpacity(0.60);
-
-    return Expanded(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // content
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+            shape: LiquidRoundedSuperellipse(borderRadius: 99),
+            child: GlassGlow(
+              glowColor: Colors.white.withOpacity(isDark ? 0.24 : 0.18),
+              glowRadius: 1.0,
+              child: SizedBox(
+                height: 76,
+                child: Stack(
                   children: [
-                    IconTheme(
-                      data: IconThemeData(color: color, size: 24),
-                      child: item.icon,
+                    // Basistönung IN der Pille – nur ein Hauch, hilft auf leerem Hintergrund
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(color: neutralTint),
+                      ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      item.label ?? '',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: color,
-                        fontSize: 12,
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.w400,
+                    // Inhalt
+                    Positioned.fill(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: navItemsRow,
+                      ),
+                    ),
+                    // Border/Rim analog zum FAB
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(99),
+                            border: Border.all(
+                              color: isDark
+                                  ? Colors.white.withOpacity(0.20)
+                                  : Colors.black.withOpacity(0.08),
+                              width: 1.2,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-
-              // tiny top indicator (2px)
-              if (isSelected)
-                Positioned(
-                  top: 0,
-                  child: Container(
-                    width: 24,
-                    height: 2,
-                    decoration: BoxDecoration(
-                      color: cs.primary,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-            ],
+            ),
           ),
         ),
-      ),
-    );
+      );
+    },
+  );
+
+      default:
+        // Standard: bisheriger Backdrop-Filter
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              height: barHeight,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: bg.withOpacity(0.8),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.30)
+                      : Colors.black.withOpacity(0.10),
+                  width: 1.5,
+                ),
+              ),
+              child: navItemsRow,
+            ),
+          ),
+        );
+    }
   }
 }
-
 
 ===== Datei: /Users/richard/Projects/Lightweight/lightweight/lib/widgets/workout_card.dart =====
 
@@ -33528,6 +34327,7 @@ class SummaryCard extends StatelessWidget {
       padding: padding,
       decoration: BoxDecoration(
         color: background,
+        //borderRadius: BorderRadius.circular(10),
         borderRadius: BorderRadius.circular(20),
         /*
         boxShadow: [
@@ -33798,18 +34598,21 @@ class ShadowContainer extends StatelessWidget {
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lightweight/services/theme_service.dart';
 import 'package:lightweight/theme/color_constants.dart';
+import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
+import 'package:provider/provider.dart';
 
 class GlassFab extends StatefulWidget {
   final VoidCallback onPressed;
   final IconData icon;
-  final String? label; // KORREKTUR: Label ist jetzt optional (kann null sein)
+  final String? label;
 
   const GlassFab({
     super.key,
     required this.onPressed,
-    this.label, // KORREKTUR: Nicht mehr 'required'
     this.icon = Icons.add,
+    this.label,
   });
 
   @override
@@ -33840,15 +34643,158 @@ class _GlassFabState extends State<GlassFab>
   void _onTapDown(TapDownDetails details) => _controller.forward();
   void _onTapUp(TapUpDetails details) {
     _controller.reverse();
-    // leichtes, kurzes Haptik-Feedback
     HapticFeedback.selectionClick();
     widget.onPressed();
   }
 
   @override
   Widget build(BuildContext context) {
+    final themeService = context.watch<ThemeService>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
+    final hasLabel = widget.label != null;
+    final Color neutralTint =
+    (isDark ? Colors.white : Colors.black).withOpacity(isDark ? 0.1 : 0.1);
+    final Color effectiveGlass =
+        Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.22 : 0.16));
+
+    final iconAndText = Padding(
+      padding: hasLabel
+          ? const EdgeInsets.symmetric(horizontal: 24.0)
+          : EdgeInsets.zero,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            widget.icon,
+            size: 30,
+            color: isDark ? Colors.white : Colors.black,
+          ),
+          if (hasLabel) ...[
+            const SizedBox(width: 12),
+            Text(
+              widget.label!,
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+
+    Widget content;
+
+    switch (themeService.visualStyle) {
+case 1:
+  final hasLabel = widget.label != null;
+
+  content = LiquidStretch(
+    stretch: 0.55,
+    interactionScale: 1.04,
+    child: LiquidGlass.withOwnLayer(
+      settings: LiquidGlassSettings(
+        thickness: 25,
+        blur: 5,
+        glassColor: effectiveGlass,
+        lightIntensity: 1.35,
+        saturation: 1.10,
+      ),
+      shape: hasLabel
+          ? LiquidRoundedSuperellipse(borderRadius: 99)
+          : const LiquidOval(),
+      child: GlassGlow(
+  glowColor: Colors.white.withOpacity(isDark ? 0.24 : 0.18),
+  glowRadius: 1.0,
+  child: hasLabel
+      // PILLE: Breite aus Inhalt + Padding
+      ? Container(
+          height: 76,
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          decoration: BoxDecoration(
+            color: neutralTint,                           // << Grundtönung
+            borderRadius: BorderRadius.circular(99),
+          ),
+          foregroundDecoration: BoxDecoration(            // << Rim oben drauf
+            borderRadius: BorderRadius.circular(99),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withOpacity(0.20)
+                  : Colors.black.withOpacity(0.08),
+              width: 1.2,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(widget.icon,
+                  size: 30, color: isDark ? Colors.white : Colors.black),
+              const SizedBox(width: 12),
+              Text(
+                widget.label!,
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ],
+          ),
+        )
+      // KREIS: feste 76×76
+      : Container(
+          height: 76,
+          width: 76,
+          decoration: BoxDecoration(
+            color: neutralTint,
+            borderRadius: BorderRadius.circular(999),     // „Kreis“
+          ),
+          foregroundDecoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withOpacity(0.20)
+                  : Colors.black.withOpacity(0.08),
+              width: 1.2,
+            ),
+          ),
+          alignment: Alignment.center,
+          child: Icon(widget.icon,
+              size: 30, color: isDark ? Colors.white : Colors.black),
+        ),
+),
+    ),
+  );
+  break;
+
+      default:
+        content = ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              height: 76,
+              width: hasLabel ? null : 76,
+              decoration: BoxDecoration(
+                color: bg.withOpacity(0.8),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.3)
+                      : Colors.black.withOpacity(0.1),
+                  width: 1.5,
+                ),
+              ),
+              child: iconAndText,
+            ),
+          ),
+        );
+    }
+
     return GestureDetector(
       onTapDown: _onTapDown,
       onTapUp: _onTapUp,
@@ -33859,69 +34805,11 @@ class _GlassFabState extends State<GlassFab>
           final scale = 1 - _controller.value;
           return Transform.scale(scale: scale, child: child);
         },
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-            child: Container(
-              // KORREKTUR: Höhe und Breite sind jetzt dynamisch
-              height: 76,
-              width: widget.label != null
-                  ? null
-                  : 76, // Quadratisch, wenn kein Label
-              decoration: BoxDecoration(
-                color: bg.withOpacity(0.80),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withOpacity(0.30)
-                      : Colors.black.withOpacity(0.10),
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              // KORREKTUR: Inhalt hängt davon ab, ob ein Label existiert
-              child: Padding(
-                padding: widget.label != null
-                    ? const EdgeInsets.symmetric(horizontal: 24.0)
-                    : EdgeInsets.zero,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      widget.icon,
-                      size: 30,
-                      color: isDark ? Colors.white : Colors.black,
-                    ),
-                    if (widget.label != null) ...[
-                      const SizedBox(width: 12),
-                      Text(
-                        widget.label!,
-                        style: TextStyle(
-                          color: isDark ? Colors.white : Colors.black,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+        child: content,
       ),
     );
   }
 }
-
 
 ===== Datei: /Users/richard/Projects/Lightweight/lightweight/lib/widgets/nutrition_summary_widget.dart =====
 
@@ -34415,14 +35303,14 @@ class _InfoBox extends StatelessWidget {
 
 ===== Datei: /Users/richard/Projects/Lightweight/lightweight/lib/widgets/glass_bottom_menu.dart =====
 
-// lib/widgets/glass_bottom_menu.dart
-
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lightweight/generated/app_localizations.dart';
+import 'package:lightweight/services/theme_service.dart';
+import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
+import 'package:provider/provider.dart';
 
-/// One action row in the glass menu.
 class GlassMenuAction {
   final IconData icon;
   final String label;
@@ -34437,41 +35325,37 @@ class GlassMenuAction {
   });
 }
 
-/// Show the glass bottom menu with a static blurred scrim (like GlassFab).
-/// Drag-to-dismiss is handled by showModalBottomSheet.
 Future<T?> showGlassBottomMenu<T>({
   required BuildContext context,
   String? title,
-  List<GlassMenuAction>? actions, // ⬅️ jetzt optional
-  Widget Function(BuildContext, VoidCallback)? contentBuilder, // ⬅️ NEU
+  List<GlassMenuAction>? actions,
+  Widget Function(BuildContext, VoidCallback)? contentBuilder,
 }) {
   assert(
     (actions != null && contentBuilder == null) ||
         (actions == null && contentBuilder != null),
     'Either actions OR contentBuilder must be provided',
   );
+
   final isDark = Theme.of(context).brightness == Brightness.dark;
+
   return showModalBottomSheet<T>(
     context: context,
     isScrollControlled: true,
-    useRootNavigator:
-        true, // <--- FIX: Stellt sicher, dass das Menü über allen Navigatoren erscheint
-    useSafeArea: false,
+    useRootNavigator: true,
     backgroundColor: Colors.transparent,
-    // 👇 animiert automatisch mit dem Sheet (kein „an/aus“)
-    barrierColor: isDark
-        ? Colors.black.withOpacity(0.50)
-        : Colors.black.withOpacity(0.30),
+    barrierColor:
+        isDark ? Colors.black.withOpacity(0.5) : Colors.black.withOpacity(0.3),
     builder: (ctx) {
-      final kb = MediaQuery.of(ctx).viewInsets.bottom; // Tastaturhöhe
+      final kb = MediaQuery.of(ctx).viewInsets.bottom;
       return AnimatedPadding(
         duration: const Duration(milliseconds: 220),
         curve: Curves.easeOutCubic,
         padding: EdgeInsets.only(bottom: kb),
         child: _GlassBottomMenuSheet(
           title: title,
-          actions: actions ?? const <GlassMenuAction>[], // ⬅️ nie null
-          contentBuilder: contentBuilder, // ⬅️ sicher weitergeben
+          actions: actions ?? const <GlassMenuAction>[],
+          contentBuilder: contentBuilder,
         ),
       );
     },
@@ -34482,12 +35366,12 @@ class _GlassBottomMenuSheet extends StatelessWidget {
   const _GlassBottomMenuSheet({
     this.title,
     this.contentBuilder,
-    this.actions = const <GlassMenuAction>[], // ⬅️ Default: leere Liste
+    this.actions = const <GlassMenuAction>[],
   });
 
   final String? title;
   final Widget Function(BuildContext, VoidCallback)? contentBuilder;
-  final List<GlassMenuAction> actions; // ⬅️ non-null
+  final List<GlassMenuAction> actions;
 
   @override
   Widget build(BuildContext context) {
@@ -34495,87 +35379,88 @@ class _GlassBottomMenuSheet extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final bottomInset = media.viewPadding.bottom;
-    // final keyboard = media.viewInsets.bottom; // ⬅️ wird jetzt über den äußeren AnimatedPadding abgedeckt
 
     return SafeArea(
       top: false,
       bottom: false,
       child: Align(
         alignment: Alignment.bottomCenter,
-        child: _GlassSurface(
-          // straight top line color (like GlassFab), tuned for dark mode
-          topBorderColor: isDark
-              ? Colors.white.withOpacity(0.22)
-              : Colors.black.withOpacity(0.10),
-          child: Padding(
-            // WICHTIG: Hier nur den Bottom-Padding der Safe-Area berücksichtigen.
-            // Die Tastatur (kb) wird bereits im äußeren AnimatedPadding berücksichtigt.
-            padding: EdgeInsets.only(bottom: bottomInset),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 8),
-                // Drag handle
-                Container(
-                  width: 44,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.75),
-                    borderRadius: BorderRadius.circular(100),
-                  ),
-                ),
-                if (title != null) ...[
-                  const SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      title!,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface.withOpacity(isDark ? 0.8 : 0.92),
+              ),
+              child: Padding(
+                padding: EdgeInsets.only(bottom: bottomInset),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 8),
+                    Container(
+                      width: 44,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.75),
+                        borderRadius: BorderRadius.circular(100),
                       ),
                     ),
-                  ),
-                ],
-                if (contentBuilder != null) ...[
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: contentBuilder!(
-                      context,
-                      () => Navigator.of(context).maybePop(),
-                    ),
-                  ),
-                ] else if (actions.isNotEmpty) ...[
-                  Flexible(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxHeight: 420),
-                      child: ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(8, 12, 8, 8),
-                        shrinkWrap: true,
-                        itemCount: actions.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 8),
-                        itemBuilder: (context, i) {
-                          final a = actions[i];
-                          return _GlassTile(
-                            icon: a.icon,
-                            title: a.label,
-                            subtitle: a.subtitle,
-                            onTap: () {
-                              HapticFeedback.selectionClick();
-                              Navigator.of(context).maybePop();
-                              WidgetsBinding.instance.addPostFrameCallback(
-                                (_) => a.onTap(),
+                    if (title != null) ...[
+                      const SizedBox(height: 10),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          title!,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (contentBuilder != null) ...[
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: contentBuilder!(
+                          context,
+                          () => Navigator.of(context).maybePop(),
+                        ),
+                      ),
+                    ] else if (actions.isNotEmpty) ...[
+                      Flexible(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxHeight: 420),
+                          child: ListView.separated(
+                            padding: const EdgeInsets.fromLTRB(8, 12, 8, 8),
+                            shrinkWrap: true,
+                            itemCount: actions.length,
+                            separatorBuilder: (_, __) => const SizedBox(height: 8),
+                            itemBuilder: (context, i) {
+                              final a = actions[i];
+                              return _GlassTile(
+                                icon: a.icon,
+                                title: a.label,
+                                subtitle: a.subtitle,
+                                onTap: () {
+                                  HapticFeedback.selectionClick();
+                                  Navigator.of(context).maybePop();
+                                  WidgetsBinding.instance.addPostFrameCallback(
+                                    (_) => a.onTap(),
+                                  );
+                                },
                               );
                             },
-                          );
-                        },
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ],
-                // Die auskommentierten "InlinePrimaryButton" Blöcke wurden entfernt, da sie nicht vollständig waren.
-              ],
+                    ],
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -34584,63 +35469,6 @@ class _GlassBottomMenuSheet extends StatelessWidget {
   }
 }
 
-/// Frosted glass surface: full width, rounded only on top.
-/// IMPORTANT: Straight top line (not following the curve) is painted OUTSIDE the clip.
-class _GlassSurface extends StatelessWidget {
-  const _GlassSurface({required this.child, required this.topBorderColor});
-
-  final Widget child;
-  final Color topBorderColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    // Slightly different from summary-cards to stand out
-    final c0 = theme.colorScheme.surface.withOpacity(isDark ? 0.86 : 0.94);
-    final c1 = theme.colorScheme.surface.withOpacity(isDark ? 0.70 : 0.88);
-
-    return Stack(
-      clipBehavior: Clip.none, // allow the straight top line to draw freely
-      children: [
-        // Blurred glass body with rounded top corners
-        ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [c0, c1],
-                ),
-              ),
-              child: child,
-            ),
-          ),
-        ),
-        // Straight top divider line (not following the curve)
-        // Hard top edge that follows the rounded corners
-        Positioned.fill(
-          child: IgnorePointer(
-            child: CustomPaint(
-              painter: _TopEdgePainter(
-                color: topBorderColor,
-                radius: 24, // ⬅️ dein Top-Radius
-                strokeWidth: 1.5,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Individual action row with subtle glass button look.
 class _GlassTile extends StatelessWidget {
   const _GlassTile({
     required this.icon,
@@ -34659,131 +35487,118 @@ class _GlassTile extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final textTheme = theme.textTheme;
+    final themeService = context.watch<ThemeService>();
+    final Color neutralTint =
+    (isDark ? Colors.white : Colors.black).withOpacity(isDark ? 0.1 : 0.1);
+final Color effectiveGlass =
+    Color.alphaBlend(neutralTint, Colors.white.withOpacity(isDark ? 0.10 : 0.12));
 
-    return Material(
-      color: isDark
-          ? Colors.white.withOpacity(0.06)
-          : Colors.white.withOpacity(0.08),
-      borderRadius: BorderRadius.circular(18),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: isDark
-                      ? Colors.white.withOpacity(0.10)
-                      : Colors.white.withOpacity(0.12),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(isDark ? 0.14 : 0.18),
-                    width: 1,
+    final tileContent = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: isDark
+                  ? Colors.white.withOpacity(0.1)
+                  : Colors.white.withOpacity(0.12),
+              border: Border.all(
+                color: Colors.white.withOpacity(isDark ? 0.14 : 0.18),
+                width: 1,
+              ),
+            ),
+            child: Icon(icon, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                child: Icon(icon, size: 22),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: textTheme.bodySmall?.color?.withOpacity(0.8),
                     ),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle!,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: textTheme.bodySmall?.copyWith(
-                          color: textTheme.bodySmall?.color?.withOpacity(0.8),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Icon(
-                Icons.chevron_right_rounded,
-                size: 22,
-                color: Colors.white.withOpacity(0.8),
-              ),
-            ],
+                  ),
+                ],
+              ],
+            ),
           ),
-        ),
+          const SizedBox(width: 12),
+          Icon(
+            Icons.chevron_right_rounded,
+            size: 22,
+            color: Colors.white.withOpacity(0.8),
+          ),
+        ],
       ),
     );
+
+    switch (themeService.visualStyle) {
+      case 1:
+  return LiquidGlass.withOwnLayer(
+    settings: LiquidGlassSettings(
+      thickness: 25,
+      blur: 5,
+      glassColor: effectiveGlass,
+      lightIntensity: 1.35,
+      saturation: 1.10,
+    ),
+    shape: LiquidRoundedSuperellipse(borderRadius: 18),
+    child: Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+        focusColor: Colors.transparent,
+        child: Stack(
+          children: [
+            Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(color: neutralTint),
+                ),
+              ),
+            // Inhalt
+            Positioned.fill(child: tileContent),
+          ],
+        ),
+      ),
+    ),
+  );
+
+      default:
+        return Material(
+          color: isDark
+              ? Colors.white.withOpacity(0.06)
+              : Colors.white.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(18),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: tileContent,
+          ),
+        );
+    }
   }
 }
-
-class _TopEdgePainter extends CustomPainter {
-  final Color color;
-  final double radius;
-  final double strokeWidth;
-  _TopEdgePainter({
-    required this.color,
-    required this.radius,
-    this.strokeWidth = 1.5,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // RRect mit nur oben gerundeten Ecken
-    final rrect = RRect.fromRectAndCorners(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      topLeft: Radius.circular(radius),
-      topRight: Radius.circular(radius),
-    );
-
-    // Nur den oberen Bereich zeichnen (inkl. Rundungen)
-    final clipBand = Rect.fromLTWH(0, 0, size.width, radius + strokeWidth);
-    canvas.save();
-    canvas.clipRect(clipBand);
-
-    final p = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..color = color;
-
-    final path = Path()..addRRect(rrect);
-    canvas.drawPath(path, p);
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant _TopEdgePainter old) =>
-      old.color != color ||
-      old.radius != radius ||
-      old.strokeWidth != strokeWidth;
-}
-
-class _InlinePrimaryButton extends StatelessWidget {
-  const _InlinePrimaryButton(this.onPressed, this.label);
-  final VoidCallback? onPressed;
-  final String? label;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return FilledButton(
-      onPressed: onPressed,
-      child: Text(label ?? l10n.add_button),
-    );
-  }
-}
-
 
 ===== Datei: /Users/richard/Projects/Lightweight/lightweight/lib/widgets/keep_alive_page.dart =====
 

@@ -144,11 +144,12 @@ class BackupManager {
         supplementLogs: backup.supplementLogs,
       );
       if (productDb != null) {
-        final cols = await _getTableColumns(productDb, 'products'); // <-- neu
+        // --- FIX START ---
+        final cols = await _getTableColumns(productDb, 'products');
         final batch = productDb.batch();
         for (final item in backup.customFoodItems) {
           final raw = item.toMap();
-          final filtered = _filterMapForColumns(raw, cols); // <-- neu
+          final filtered = _filterMapForColumns(raw, cols);
           batch.insert(
             'products',
             filtered,
@@ -156,6 +157,7 @@ class BackupManager {
           );
         }
         await batch.commit(noResult: true);
+        // --- FIX END ---
       }
       await _workoutDb.importWorkoutData(
         routines: backup.routines,
@@ -168,6 +170,23 @@ class BackupManager {
       print("Fehler beim Importieren der Daten: $e");
       return false;
     }
+  }
+  // ... (Rest der Datei, inklusive der neuen Helper am Ende)
+
+  Future<Set<String>> _getTableColumns(Database db, String table) async {
+    final rows = await db.rawQuery('PRAGMA table_info($table)');
+    return rows.map((r) => (r['name'] as String)).toSet();
+  }
+
+  Map<String, Object?> _filterMapForColumns(
+    Map<String, Object?> src,
+    Set<String> allowedCols,
+  ) {
+    final out = <String, Object?>{};
+    src.forEach((k, v) {
+      if (allowedCols.contains(k)) out[k] = v;
+    });
+    return out;
   }
   // --- NEUE METHODEN FÜR CSV-EXPORT ---
 
@@ -612,22 +631,6 @@ class BackupManager {
       print('Auto-Backup fehlgeschlagen: $e');
       return false;
     }
-  }
-
-  Future<Set<String>> _getTableColumns(Database db, String table) async {
-    final rows = await db.rawQuery('PRAGMA table_info($table)');
-    return rows.map((r) => (r['name'] as String)).toSet();
-  }
-
-  Map<String, Object?> _filterMapForColumns(
-    Map<String, Object?> src,
-    Set<String> allowedCols,
-  ) {
-    final out = <String, Object?>{};
-    src.forEach((k, v) {
-      if (allowedCols.contains(k)) out[k] = v;
-    });
-    return out;
   }
 }
 

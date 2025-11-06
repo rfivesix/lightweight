@@ -1,6 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:lightweight/services/theme_service.dart';
 import 'package:lightweight/theme/color_constants.dart';
+import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
+import 'package:provider/provider.dart';
 
 class GlassBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -15,7 +18,7 @@ class GlassBottomNavBar extends StatelessWidget {
     required this.onFabTap,
     required this.items,
   });
-  // Add inside class GlassBottomNavBar
+
   Widget _buildNavItem(
     BuildContext context,
     BottomNavigationBarItem item,
@@ -27,43 +30,55 @@ class GlassBottomNavBar extends StatelessWidget {
 
     return Expanded(
       child: Material(
-        color: Colors.transparent,
+        type: MaterialType.transparency,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconTheme(
-                      data: IconThemeData(color: color, size: 24),
-                      child: item.icon,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      item.label ?? '',
-                      maxLines: 1,
-                      //overflow: TextOverflow.,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: color,
-                        fontSize: 12,
-                        fontWeight:
-                            isSelected ? FontWeight.w400 : FontWeight.w400,
-                      ),
-                    ),
-                  ],
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+          focusColor: Colors.transparent,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconTheme(
+                  data: IconThemeData(color: color, size: 24),
+                  child: item.icon,
                 ),
-              ),
-            ],
+                const SizedBox(height: 4),
+                Text(
+                  item.label ?? '',
+                  maxLines: 1,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  /// Berechnet die Align-X-Position (-1..1) für den selektierten Bubble-Hintergrund.
+  double _alignmentXForIndex(int index, int count) {
+    if (count <= 0) return 0;
+    final centerFrac = (index + 0.5) / count; // 0..1
+    return centerFrac * 2 - 1; // -1..1
+  }
+
+  /// Mappt eine lokale X-Position (0..width) auf den Tab-Index.
+  int _indexFromDx(double dx, double width, int itemCount) {
+    if (width <= 0 || itemCount <= 0) return 0;
+    final frac = (dx / width).clamp(0.0, 0.9999);
+    final idx = (frac * itemCount).floor();
+    return idx.clamp(0, itemCount - 1);
   }
 
   @override
@@ -71,177 +86,147 @@ class GlassBottomNavBar extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
-    final backgroundColor =
-        isDark ? summary_card_dark_mode : summary_card_white_mode;
+    final themeService = context.watch<ThemeService>();
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Container(
-          height: 76,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            color: bg.withOpacity(0.80),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withOpacity(0.30)
-                  : Colors.black.withOpacity(0.10),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Only the 4 nav items now
-              ...List.generate(items.length, (index) {
-                final item = items[index];
-                final isSelected = index == currentIndex;
-                return _buildNavItem(
-                  context,
-                  item,
-                  isSelected,
-                  () => onTap(index),
-                );
-              }),
-            ],
-          ),
-        ),
-      ),
+    final navItemsRow = Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        ...List.generate(items.length, (index) {
+          final item = items[index];
+          final isSelected = index == currentIndex;
+          return _buildNavItem(
+            context,
+            item,
+            isSelected,
+            () => onTap(index),
+          );
+        }),
+      ],
     );
-  }
-}
 
-class _SquareFab extends StatelessWidget {
-  final VoidCallback onTap;
-  const _SquareFab({required this.onTap});
+    const barHeight = 76.0;
 
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    switch (themeService.visualStyle) {
+      case 1:
+        // neutrale Tönung ableiten (funktioniert auf Weiß & Schwarz)
+        final Color neutralTint = (isDark ? Colors.white : Colors.black)
+            .withOpacity(isDark ? 0.1 : 0.1);
 
-    return Padding(
-      // tiny inset so it doesn’t kiss the bar’s edge
-      padding: const EdgeInsets.only(right: 4),
-      child: SizedBox(
-        width: 68, // a bit chunkier
-        height: 68,
-        child: Material(
-          color: cs.primary, // accent
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20), // closer to the bar’s 24
-            side: BorderSide(
-              color: isDark
-                  ? Colors.white.withOpacity(0.20)
-                  : Colors.black.withOpacity(0.10),
-              width: 1, // same outline weight as the glass card
-            ),
-          ),
-          elevation: 0, // we’ll use a soft drop shadow via DecoratedBox
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(20),
-            child: DecoratedBox(
-              decoration: const BoxDecoration(
-                // soft drop shadow so it feels detached
-                boxShadow: [
-                  BoxShadow(
-                    blurRadius: 24,
-                    offset: Offset(0, 8),
-                    color: Colors.black26,
+        // smarteres Glas: bg-Color + neutraler Tint "verheiraten"
+        final Color effectiveGlass =
+            Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.22 : 0.16));
+
+        // Drag-to-select + Release-to-activate: über GestureDetector
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            double? lastDx; // hält die letzte lokale X-Position für onPanEnd
+            final barWidth = constraints.maxWidth;
+
+            return GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTapUp: (details) {
+                final idx = _indexFromDx(
+                    details.localPosition.dx, barWidth, items.length);
+                onTap(idx);
+              },
+              onPanStart: (details) {
+                lastDx = details.localPosition.dx;
+              },
+              onPanUpdate: (details) {
+                lastDx = details.localPosition.dx;
+              },
+              onPanEnd: (_) {
+                if (lastDx != null) {
+                  final idx = _indexFromDx(lastDx!, barWidth, items.length);
+                  onTap(idx);
+                }
+                lastDx = null;
+              },
+              child: LiquidStretch(
+                stretch: 0.55,
+                interactionScale: 1.04,
+                child: LiquidGlass.withOwnLayer(
+                  settings: LiquidGlassSettings(
+                    thickness: 25,
+                    blur: 5,
+                    glassColor:
+                        effectiveGlass, // <- hier steckt jetzt der „Grundton“ drin
+                    lightIntensity: 1.35,
+                    // outlineIntensity optional, nur wenn deine Paketversion das Feld hat
+                    //outlineIntensity: 0.10,
+                    saturation: 1.10,
                   ),
-                ],
-              ),
-              child: Center(
-                child: Icon(Icons.add, size: 30, color: cs.onPrimary),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  final BottomNavigationBarItem item;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _NavItem({
-    required this.item,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final Color color =
-        isSelected ? cs.primary : cs.onSurface.withOpacity(0.60);
-
-    return Expanded(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // content
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconTheme(
-                      data: IconThemeData(color: color, size: 24),
-                      child: item.icon,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      item.label ?? '',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: color,
-                        fontSize: 12,
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.w400,
+                  shape: const LiquidRoundedSuperellipse(borderRadius: 99),
+                  child: GlassGlow(
+                    glowColor: Colors.white.withOpacity(isDark ? 0.24 : 0.18),
+                    glowRadius: 1.0,
+                    child: SizedBox(
+                      height: 76,
+                      child: Stack(
+                        children: [
+                          // Basistönung IN der Pille – nur ein Hauch, hilft auf leerem Hintergrund
+                          Positioned.fill(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(color: neutralTint),
+                            ),
+                          ),
+                          // Inhalt
+                          Positioned.fill(
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
+                              child: navItemsRow,
+                            ),
+                          ),
+                          // Border/Rim analog zum FAB
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(99),
+                                  border: Border.all(
+                                    color: isDark
+                                        ? Colors.white.withOpacity(0.20)
+                                        : Colors.black.withOpacity(0.08),
+                                    width: 1.2,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-
-              // tiny top indicator (2px)
-              if (isSelected)
-                Positioned(
-                  top: 0,
-                  child: Container(
-                    width: 24,
-                    height: 2,
-                    decoration: BoxDecoration(
-                      color: cs.primary,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
                   ),
                 ),
-            ],
+              ),
+            );
+          },
+        );
+
+      default:
+        // Standard: bisheriger Backdrop-Filter
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              height: barHeight,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: bg.withOpacity(0.8),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.30)
+                      : Colors.black.withOpacity(0.10),
+                  width: 1.5,
+                ),
+              ),
+              child: navItemsRow,
+            ),
           ),
-        ),
-      ),
-    );
+        );
+    }
   }
 }

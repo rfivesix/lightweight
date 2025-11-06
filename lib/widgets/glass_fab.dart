@@ -1,18 +1,21 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lightweight/services/theme_service.dart';
 import 'package:lightweight/theme/color_constants.dart';
+import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
+import 'package:provider/provider.dart';
 
 class GlassFab extends StatefulWidget {
   final VoidCallback onPressed;
   final IconData icon;
-  final String? label; // KORREKTUR: Label ist jetzt optional (kann null sein)
+  final String? label;
 
   const GlassFab({
     super.key,
     required this.onPressed,
-    this.label, // KORREKTUR: Nicht mehr 'required'
     this.icon = Icons.add,
+    this.label,
   });
 
   @override
@@ -43,15 +46,161 @@ class _GlassFabState extends State<GlassFab>
   void _onTapDown(TapDownDetails details) => _controller.forward();
   void _onTapUp(TapUpDetails details) {
     _controller.reverse();
-    // leichtes, kurzes Haptik-Feedback
     HapticFeedback.selectionClick();
     widget.onPressed();
   }
 
   @override
   Widget build(BuildContext context) {
+    final themeService = context.watch<ThemeService>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
+    final hasLabel = widget.label != null;
+    final Color neutralTint =
+        (isDark ? Colors.white : Colors.black).withOpacity(isDark ? 0.1 : 0.1);
+    final Color effectiveGlass =
+        Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.22 : 0.16));
+
+    final iconAndText = Padding(
+      padding: hasLabel
+          ? const EdgeInsets.symmetric(horizontal: 24.0)
+          : EdgeInsets.zero,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            widget.icon,
+            size: 30,
+            color: isDark ? Colors.white : Colors.black,
+          ),
+          if (hasLabel) ...[
+            const SizedBox(width: 12),
+            Text(
+              widget.label!,
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+
+    Widget content;
+
+    switch (themeService.visualStyle) {
+      case 1:
+        final hasLabel = widget.label != null;
+
+        content = LiquidStretch(
+          stretch: 0.55,
+          interactionScale: 1.04,
+          child: LiquidGlass.withOwnLayer(
+            settings: LiquidGlassSettings(
+              thickness: 25,
+              blur: 5,
+              glassColor: effectiveGlass,
+              lightIntensity: 1.35,
+              saturation: 1.10,
+            ),
+            shape: hasLabel
+                ? const LiquidRoundedSuperellipse(borderRadius: 99)
+                : const LiquidOval(),
+            child: GlassGlow(
+              glowColor: Colors.white.withOpacity(isDark ? 0.24 : 0.18),
+              glowRadius: 1.0,
+              child: hasLabel
+                  // PILLE: Breite aus Inhalt + Padding
+                  ? Container(
+                      height: 76,
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      decoration: BoxDecoration(
+                        color: neutralTint, // << Grundtönung
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                      foregroundDecoration: BoxDecoration(
+                        // << Rim oben drauf
+                        borderRadius: BorderRadius.circular(99),
+                        border: Border.all(
+                          color: isDark
+                              ? Colors.white.withOpacity(0.20)
+                              : Colors.black.withOpacity(0.08),
+                          width: 1.2,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(widget.icon,
+                              size: 30,
+                              color: isDark ? Colors.white : Colors.black),
+                          const SizedBox(width: 12),
+                          Text(
+                            widget.label!,
+                            style: TextStyle(
+                              color: isDark ? Colors.white : Colors.black,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  // KREIS: feste 76×76
+                  : Container(
+                      height: 76,
+                      width: 76,
+                      decoration: BoxDecoration(
+                        color: neutralTint,
+                        borderRadius: BorderRadius.circular(999), // „Kreis“
+                      ),
+                      foregroundDecoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: isDark
+                              ? Colors.white.withOpacity(0.20)
+                              : Colors.black.withOpacity(0.08),
+                          width: 1.2,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(widget.icon,
+                          size: 30,
+                          color: isDark ? Colors.white : Colors.black),
+                    ),
+            ),
+          ),
+        );
+        break;
+
+      default:
+        content = ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              height: 76,
+              width: hasLabel ? null : 76,
+              decoration: BoxDecoration(
+                color: bg.withOpacity(0.8),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.3)
+                      : Colors.black.withOpacity(0.1),
+                  width: 1.5,
+                ),
+              ),
+              child: iconAndText,
+            ),
+          ),
+        );
+    }
+
     return GestureDetector(
       onTapDown: _onTapDown,
       onTapUp: _onTapUp,
@@ -62,64 +211,7 @@ class _GlassFabState extends State<GlassFab>
           final scale = 1 - _controller.value;
           return Transform.scale(scale: scale, child: child);
         },
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-            child: Container(
-              // KORREKTUR: Höhe und Breite sind jetzt dynamisch
-              height: 76,
-              width: widget.label != null
-                  ? null
-                  : 76, // Quadratisch, wenn kein Label
-              decoration: BoxDecoration(
-                color: bg.withOpacity(0.80),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withOpacity(0.30)
-                      : Colors.black.withOpacity(0.10),
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              // KORREKTUR: Inhalt hängt davon ab, ob ein Label existiert
-              child: Padding(
-                padding: widget.label != null
-                    ? const EdgeInsets.symmetric(horizontal: 24.0)
-                    : EdgeInsets.zero,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      widget.icon,
-                      size: 30,
-                      color: isDark ? Colors.white : Colors.black,
-                    ),
-                    if (widget.label != null) ...[
-                      const SizedBox(width: 12),
-                      Text(
-                        widget.label!,
-                        style: TextStyle(
-                          color: isDark ? Colors.white : Colors.black,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+        child: content,
       ),
     );
   }

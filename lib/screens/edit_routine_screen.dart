@@ -117,7 +117,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
           );
         }
         setState(() {
-          _routineExercises.add(newRoutineExercise);
+          // KORREKTUR: Erstelle eine neue Liste, um den Rebuild des Widgets zu erzwingen.
+          _routineExercises = [..._routineExercises, newRoutineExercise];
         });
       }
     }
@@ -196,7 +197,21 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         setType: 'normal',
         targetReps: '8-12',
       );
-      routineExercise.setTemplates.add(newSet);
+
+      // --- START FIX ---
+      final exerciseIndex = _routineExercises.indexOf(routineExercise);
+      if (exerciseIndex == -1) return; // Safety check
+
+      final updatedTemplates = [...routineExercise.setTemplates, newSet];
+      final updatedExercise = RoutineExercise(
+        id: routineExercise.id,
+        exercise: routineExercise.exercise,
+        setTemplates: updatedTemplates,
+        pauseSeconds: routineExercise.pauseSeconds,
+      );
+      _routineExercises[exerciseIndex] = updatedExercise;
+      // --- END FIX ---
+
       _repsControllers[newSet.id!] = TextEditingController(
         text: newSet.targetReps,
       );
@@ -210,7 +225,22 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     int index,
   ) {
     setState(() {
-      routineExercise.setTemplates.removeAt(index);
+      // --- START FIX ---
+      final exerciseIndex = _routineExercises.indexOf(routineExercise);
+      if (exerciseIndex == -1) return;
+
+      final updatedTemplates = [...routineExercise.setTemplates];
+      updatedTemplates.removeAt(index);
+
+      final updatedExercise = RoutineExercise(
+        id: routineExercise.id,
+        exercise: routineExercise.exercise,
+        setTemplates: updatedTemplates,
+        pauseSeconds: routineExercise.pauseSeconds,
+      );
+      _routineExercises[exerciseIndex] = updatedExercise;
+      // --- END FIX ---
+
       _repsControllers.remove(setTemplateId)?.dispose();
       _weightControllers.remove(setTemplateId)?.dispose();
     });
@@ -218,11 +248,26 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
 
   void _changeSetType(SetTemplate setTemplate, String newType) {
     setState(() {
-      final re = _routineExercises.firstWhere(
+      final reIndex = _routineExercises.indexWhere(
         (re) => re.setTemplates.contains(setTemplate),
       );
-      final setIndex = re.setTemplates.indexOf(setTemplate);
-      re.setTemplates[setIndex] = setTemplate.copyWith(setType: newType);
+      if (reIndex == -1) return;
+
+      final routineExercise = _routineExercises[reIndex];
+      final setIndex = routineExercise.setTemplates.indexOf(setTemplate);
+      if (setIndex == -1) return;
+
+      // --- START FIX ---
+      final updatedTemplates = [...routineExercise.setTemplates];
+      updatedTemplates[setIndex] = setTemplate.copyWith(setType: newType);
+
+      _routineExercises[reIndex] = RoutineExercise(
+        id: routineExercise.id,
+        exercise: routineExercise.exercise,
+        setTemplates: updatedTemplates,
+        pauseSeconds: routineExercise.pauseSeconds,
+      );
+      // --- END FIX ---
     });
     Navigator.pop(context);
   }

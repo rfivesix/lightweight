@@ -309,11 +309,16 @@ class WorkoutDatabaseHelper {
     int exerciseId,
   ) async {
     final db = await database;
+    // --- START FIX ---
+    // Query the VIEW 'exercises_flat' instead of the TABLE 'exercises'
+    // to ensure all necessary fields (like muscle groups) are correctly loaded.
     final exerciseMaps = await db.query(
-      'exercises',
+      'exercises_flat', // CORRECT: Use the view
       where: 'id = ?',
       whereArgs: [exerciseId],
     );
+    // --- END FIX ---
+
     if (exerciseMaps.isEmpty) return null;
     final result = await db.rawQuery(
       'SELECT MAX(exercise_order) as max_order FROM routine_exercises WHERE routine_id = ?',

@@ -1,5 +1,5 @@
 // lib/models/exercise.dart
-import 'dart:convert' show jsonDecode;
+import 'dart:convert' show jsonDecode, jsonEncode;
 
 class Exercise {
   final int? id; // optional für neu angelegte Datensätze
@@ -91,8 +91,8 @@ class Exercise {
       'description_en': descriptionEn,
       'category_name': categoryName,
       'image_path': imagePath,
-      'primaryMuscles': primaryMuscles.join(','),
-      'secondaryMuscles': secondaryMuscles.join(','),
+      'primaryMuscles': jsonEncode(primaryMuscles),
+      'secondaryMuscles': jsonEncode(secondaryMuscles),
     };
   }
 

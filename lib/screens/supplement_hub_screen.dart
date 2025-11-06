@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/dialogs/log_supplement_dialog_content.dart';
+import 'package:lightweight/dialogs/log_supplement_menu.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/supplement.dart';
 import 'package:lightweight/models/supplement_log.dart';
@@ -9,6 +9,7 @@ import 'package:lightweight/models/tracked_supplement.dart';
 import 'package:lightweight/screens/create_supplement_screen.dart';
 import 'package:lightweight/util/date_util.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/glass_bottom_menu.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/widgets/swipe_action_background.dart';
@@ -39,25 +40,19 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
       case 'creatine_monohydrate':
         return l10n.supplement_creatine_monohydrate;
       default:
-        // Fallback: benutzerdefinierte Supplements behalten ihren Namen
         return s.name;
     }
   }
 
   Future<void> _loadData(DateTime date) async {
     setState(() => _isLoading = true);
-
     final db = DatabaseHelper.instance;
     final allSupplements = await db.getAllSupplements();
     final logsForDate = await db.getSupplementLogsForDate(date);
-
-    // Map: supplementId -> Supplement (für l10n-Lookup im Log)
     final Map<int, Supplement> byId = {
       for (final s in allSupplements)
         if (s.id != null) s.id!: s,
     };
-
-    // Tagesdosen akkumulieren
     final Map<int, double> todaysDoses = {};
     for (final log in logsForDate) {
       todaysDoses.update(
@@ -66,15 +61,12 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
         ifAbsent: () => log.dose,
       );
     }
-
-    // Progress-Karten Daten
     final tracked = allSupplements.map((s) {
       return TrackedSupplement(
         supplement: s,
         totalDosedToday: todaysDoses[s.id] ?? 0.0,
       );
     }).toList();
-
     if (!mounted) return;
     setState(() {
       _supplementsById
@@ -88,50 +80,67 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
 
   Future<void> _logSupplement(Supplement supplement) async {
     final l10n = AppLocalizations.of(context)!;
-    final GlobalKey<LogSupplementDialogContentState> dialogStateKey =
-        GlobalKey();
-
-    final result = await showDialog<(double, DateTime)?>(
+    final result = await showGlassBottomMenu<bool>(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(localizeSupplementName(supplement, l10n)),
-          content: LogSupplementDialogContent(
-            key: dialogStateKey,
-            supplement: supplement,
-          ),
-          actions: [
-            TextButton(
-              child: Text(l10n.cancel),
-              onPressed: () => Navigator.of(context).pop(null),
-            ),
-            FilledButton(
-              child: Text(l10n.add_button),
-              onPressed: () {
-                final state = dialogStateKey.currentState;
-                if (state != null) {
-                  final dose = double.tryParse(
-                    state.doseText.replaceAll(',', '.'),
-                  );
-                  if (dose != null && dose > 0) {
-                    Navigator.of(context).pop((dose, state.selectedDateTime));
-                  }
-                }
-              },
-            ),
-          ],
+      title: localizeSupplementName(supplement, l10n),
+      contentBuilder: (ctx, close) {
+        // HIER IST DIE ANPASSUNG
+        return LogSupplementDoseBody(
+          supplement: supplement,
+          primaryLabel: l10n.add_button,
+          onCancel: close,
+          onSubmit: (dose, ts) async {
+            await DatabaseHelper.instance.insertSupplementLog(
+              SupplementLog(
+                supplementId: supplement.id!,
+                dose: dose,
+                unit: supplement.unit,
+                timestamp: ts,
+              ),
+            );
+            close();
+            Navigator.of(ctx).pop(true);
+          },
+        );
+      },
+    );
+    if (result == true) {
+      _loadData(_selectedDate);
+    }
+  }
+
+  Future<void> _editLogEntry(SupplementLog log) async {
+    final l10n = AppLocalizations.of(context)!;
+    final supplement = _supplementsById[log.supplementId]!;
+
+    final result = await showGlassBottomMenu<(double, DateTime)?>(
+      context: context,
+      title: localizeSupplementName(supplement, l10n),
+      contentBuilder: (ctx, close) {
+        // HIER IST DIE ANPASSUNG
+        return LogSupplementDoseBody(
+          supplement: supplement,
+          initialDose: log.dose,
+          initialTimestamp: log.timestamp,
+          primaryLabel: l10n.save,
+          onCancel: close,
+          onSubmit: (dose, ts) {
+            close();
+            Navigator.of(ctx).pop((dose, ts));
+          },
         );
       },
     );
 
     if (result != null) {
-      final newLog = SupplementLog(
+      final updated = SupplementLog(
+        id: log.id,
         supplementId: supplement.id!,
         dose: result.$1,
         unit: supplement.unit,
         timestamp: result.$2,
       );
-      await DatabaseHelper.instance.insertSupplementLog(newLog);
+      await DatabaseHelper.instance.updateSupplementLog(updated);
       _loadData(_selectedDate);
     }
   }
@@ -144,7 +153,6 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
   void _navigateDay(bool forward) {
     final newDay = _selectedDate.add(Duration(days: forward ? 1 : -1));
     if (forward && newDay.isAfter(DateTime.now())) return;
-
     setState(() {
       _selectedDate = newDay;
     });
@@ -253,9 +261,7 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
 
   Widget _buildLogEntry(SupplementLog log, AppLocalizations l10n) {
     final s = _supplementsById[log.supplementId];
-    final titleText = (s != null)
-        ? localizeSupplementName(s, l10n) // l10n über code (z.B. 'caffeine')
-        : 'Unknown';
+    final titleText = (s != null) ? localizeSupplementName(s, l10n) : 'Unknown';
 
     return Dismissible(
       key: Key('log_${log.id}'),
@@ -273,28 +279,39 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
           _editLogEntry(log);
-          return false; // nicht aus der Liste entfernen
+          return false;
         } else {
-          return await showDialog<bool>(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: Text(l10n.deleteConfirmTitle),
-                    content: Text(l10n.deleteConfirmContent),
-                    actions: <Widget>[
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(false),
-                        child: Text(l10n.cancel),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(true),
-                        child: Text(l10n.delete),
-                      ),
-                    ],
-                  );
-                },
-              ) ??
-              false;
+          final l10n = AppLocalizations.of(context)!;
+          final confirmed = await showGlassBottomMenu<bool>(
+            context: context,
+            title: l10n.deleteConfirmTitle,
+            contentBuilder: (ctx, close) {
+              return Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        close();
+                        Navigator.of(ctx).pop(false);
+                      },
+                      child: Text(l10n.cancel),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () {
+                        close();
+                        Navigator.of(ctx).pop(true);
+                      },
+                      child: Text(l10n.delete),
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
+          return confirmed ?? false;
         }
       },
       onDismissed: (direction) {
@@ -327,25 +344,49 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
 
   Future<void> _deleteSupplement(Supplement supplement) async {
     final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showGlassBottomMenu<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.deleteConfirmTitle),
-        // TODO: This confirmation message should be localized
-        content: Text(
-          "Are you sure you want to permanently delete the supplement '${localizeSupplementName(supplement, l10n)}'? All of its log entries will also be removed.",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
+      title: l10n.deleteConfirmTitle,
+      contentBuilder: (ctx, close) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+              child: Text(
+                l10n.deleteSupplementConfirm,
+                style: Theme.of(ctx).textTheme.bodyMedium,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      close();
+                      Navigator.of(ctx).pop(false);
+                    },
+                    child: Text(l10n.cancel),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      close();
+                      Navigator.of(ctx).pop(true);
+                    },
+                    child: Text(l10n.delete),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
     );
 
     if (confirmed == true) {
@@ -356,10 +397,8 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
 
   Widget _buildLogActionCard(Supplement supplement) {
     final l10n = AppLocalizations.of(context)!;
-    // Check if the supplement is the non-editable "Caffeine"
     final isBuiltin = supplement.isBuiltin || supplement.code == 'caffeine';
 
-    // If it is Caffeine, return a simple, non-dismissible ListTile.
     if (isBuiltin) {
       return SummaryCard(
         child: ListTile(
@@ -370,7 +409,6 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
       );
     }
 
-    // Otherwise, return the original Dismissible widget for all other supplements.
     return Dismissible(
       key: Key('supplement_${supplement.id}'),
       direction: DismissDirection.horizontal,
@@ -387,10 +425,8 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
           _navigateToEditSupplement(supplement);
-          return false; // Don't dismiss, just navigate
+          return false;
         } else {
-          // We trigger the dialog and let it handle the deletion.
-          // We return false because the list is rebuilt anyway, avoiding a visual glitch.
           _deleteSupplement(supplement);
           return false;
         }
@@ -405,65 +441,9 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
     );
   }
 
-  Future<void> _editLogEntry(SupplementLog log) async {
-    final l10n = AppLocalizations.of(context)!;
-    // Find the full supplement object to pass its details (like unit) to the dialog.
-    final supplement = _trackedSupplements
-        .firstWhere((ts) => ts.supplement.id == log.supplementId)
-        .supplement;
-    final GlobalKey<LogSupplementDialogContentState> dialogStateKey =
-        GlobalKey();
-
-    final result = await showDialog<(double, DateTime)?>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(localizeSupplementName(supplement, l10n)),
-          content: LogSupplementDialogContent(
-            key: dialogStateKey,
-            supplement: supplement,
-            initialDose: log.dose,
-            initialTimestamp: log.timestamp,
-          ),
-          actions: [
-            TextButton(
-              child: Text(l10n.cancel),
-              onPressed: () => Navigator.of(context).pop(null),
-            ),
-            FilledButton(
-              child: Text(l10n.save), // Use 'Save' for editing
-              onPressed: () {
-                final state = dialogStateKey.currentState;
-                if (state != null) {
-                  final dose = double.tryParse(
-                    state.doseText.replaceAll(',', '.'),
-                  );
-                  if (dose != null && dose > 0) {
-                    Navigator.of(context).pop((dose, state.selectedDateTime));
-                  }
-                }
-              },
-            ),
-          ],
-        );
-      },
-    );
-
-    if (result != null) {
-      final updatedLog = SupplementLog(
-        id: log.id,
-        supplementId: supplement.id!,
-        dose: result.$1,
-        unit: supplement.unit,
-        timestamp: result.$2,
-      );
-      await DatabaseHelper.instance.updateSupplementLog(updatedLog);
-      _loadData(_selectedDate);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    // ... (build method remains the same)
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).toString();
     final textTheme = Theme.of(context).textTheme;

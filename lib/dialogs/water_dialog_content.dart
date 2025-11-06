@@ -1,9 +1,103 @@
 // lib/dialogs/water_dialog_content.dart
 
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/util/design_constants.dart';
+
+// ===== App-wide modal helpers (temporary location — can be moved to a shared file) =====
+
+enum AppSheetStyle { plain, glass }
+
+/// Unified show function for bottom sheets. Use this everywhere to keep styling consistent.
+Future<T?> showAppBottomSheet<T>(
+  BuildContext context, {
+  required Widget child,
+  AppSheetStyle style = AppSheetStyle.plain,
+  bool isDismissible = true,
+  bool enableDrag = true,
+}) {
+  return showModalBottomSheet<T>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    isDismissible: isDismissible,
+    enableDrag: enableDrag,
+    backgroundColor: Colors.transparent, // let our scaffold draw the background
+    builder: (ctx) => AppSheetScaffold(
+      style: style,
+      child: child,
+    ),
+  );
+}
+
+/// Provides a consistent modal surface with rounded corners, padding, and optional "liquid glass".
+class AppSheetScaffold extends StatelessWidget {
+  final Widget child;
+  final AppSheetStyle style;
+
+  const AppSheetScaffold({
+    super.key,
+    required this.child,
+    this.style = AppSheetStyle.plain,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    Widget surface = Container(
+      decoration: BoxDecoration(
+        color: style == AppSheetStyle.glass
+            ? Colors.white.withOpacity(0.20)
+            : theme.colorScheme.surface,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          )
+        ],
+        border: style == AppSheetStyle.glass
+            ? Border.all(
+                color: Colors.white.withOpacity(0.25),
+                width: 1,
+              )
+            : null,
+      ),
+      padding: const EdgeInsets.fromLTRB(
+        DesignConstants.spacingL,
+        DesignConstants.spacingL,
+        DesignConstants.spacingL,
+        DesignConstants.spacingXL, // extra bottom padding for buttons
+      ),
+      child: child,
+    );
+
+    if (style == AppSheetStyle.glass) {
+      surface = ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          child: surface,
+        ),
+      );
+    }
+
+    return SafeArea(
+      top: false,
+      child: surface,
+    );
+  }
+}
 
 class WaterDialogContent extends StatefulWidget {
   final int? initialQuantity;
@@ -83,51 +177,70 @@ class WaterDialogContentState extends State<WaterDialogContent> {
   Widget build(BuildContext context) {
     final formattedDate = DateFormat('dd.MM.yyyy').format(_selectedDateTime);
     final formattedTime = DateFormat.Hm().format(_selectedDateTime);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        TextField(
-          controller: _textController,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            labelText: l10n.amount_in_milliliters,
-            suffixText: 'ml',
+    return AppSheetScaffold(
+      // Toggle between plain and glass depending on your feature flag or setting.
+      style: AppSheetStyle.plain, // or AppSheetStyle.glass
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _textController,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              labelText: l10n.amount_in_milliliters,
+              suffixText: 'ml',
+            ),
+            autofocus: true,
           ),
-          autofocus: true,
-        ),
-        const SizedBox(height: DesignConstants.spacingL),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            InkWell(
-              onTap: _selectDate,
-              child: Padding(
-                padding: DesignConstants.cardMargin,
-                child: Row(
-                  children: [
-                    const Icon(Icons.calendar_today, size: 20),
-                    const SizedBox(width: 8),
-                    Text(formattedDate, style: const TextStyle(fontSize: 16)),
-                  ],
+          const SizedBox(height: DesignConstants.spacingL),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              InkWell(
+                onTap: _selectDate,
+                child: Padding(
+                  padding: DesignConstants.cardMargin,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.calendar_today, size: 20),
+                      const SizedBox(width: 8),
+                      Text(formattedDate, style: const TextStyle(fontSize: 16)),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            InkWell(
-              onTap: _selectTime,
-              child: Padding(
-                padding: DesignConstants.cardMargin,
-                child: Row(
-                  children: [
-                    const Icon(Icons.access_time, size: 20),
-                    const SizedBox(width: 8),
-                    Text(formattedTime, style: const TextStyle(fontSize: 16)),
-                  ],
+              InkWell(
+                onTap: _selectTime,
+                child: Padding(
+                  padding: DesignConstants.cardMargin,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.access_time, size: 20),
+                      const SizedBox(width: 8),
+                      Text(formattedTime, style: const TextStyle(fontSize: 16)),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ],
+            ],
+          ),
+        ],
+      ),
     );
   }
+}
+
+// Example launcher for this dialog using the unified sheet
+Future<void> openWaterDialog(BuildContext context,
+    {int? initialQuantity,
+    DateTime? initialTimestamp,
+    AppSheetStyle style = AppSheetStyle.plain}) {
+  return showAppBottomSheet(
+    context,
+    style: style,
+    child: WaterDialogContent(
+      initialQuantity: initialQuantity,
+      initialTimestamp: initialTimestamp,
+    ),
+  );
 }

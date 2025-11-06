@@ -1,10 +1,12 @@
+// lib/dialogs/log_supplement_menu.dart
 import 'package:flutter/material.dart';
 import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/dialogs/log_supplement_dialog_content.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/supplement.dart';
-import 'package:lightweight/models/supplement_log.dart';
+import 'package:lightweight/util/supplement_l10n.dart';
 
+/// Ein Menü, das eine Liste von Supplements zur Auswahl anzeigt.
 class LogSupplementMenu extends StatefulWidget {
   const LogSupplementMenu({super.key, required this.close});
 
@@ -15,9 +17,8 @@ class LogSupplementMenu extends StatefulWidget {
 }
 
 class _LogSupplementMenuState extends State<LogSupplementMenu> {
-  Supplement? _selected;
   List<Supplement> _supplements = [];
-  final _doseKey = GlobalKey<LogSupplementDialogContentState>();
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -30,32 +31,23 @@ class _LogSupplementMenuState extends State<LogSupplementMenu> {
     if (mounted) {
       setState(() {
         _supplements = supplements;
+        _isLoading = false;
       });
-    }
-  }
-
-  String localizeSupplementName(Supplement s, AppLocalizations l10n) {
-    switch (s.code) {
-      case 'caffeine':
-        return l10n.supplement_caffeine;
-      case 'creatine_monohydrate':
-        return l10n.supplement_creatine_monohydrate;
-      default:
-        return s.name;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    if (_selected == null) {
-      return _buildSupplementList(l10n);
-    } else {
-      return _buildDoseView(l10n);
-    }
-  }
 
-  Widget _buildSupplementList(AppLocalizations l10n) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_supplements.isEmpty) {
+      return Center(child: Text(l10n.emptySupplements));
+    }
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -69,7 +61,7 @@ class _LogSupplementMenuState extends State<LogSupplementMenu> {
               borderRadius: BorderRadius.circular(16),
               child: InkWell(
                 borderRadius: BorderRadius.circular(16),
-                onTap: () => setState(() => _selected = s),
+                onTap: () => Navigator.of(context).pop(s),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 14,
@@ -102,56 +94,67 @@ class _LogSupplementMenuState extends State<LogSupplementMenu> {
       ],
     );
   }
+}
 
-  Widget _buildDoseView(AppLocalizations l10n) {
+/// Ein wiederverwendbares Widget für die Eingabe von Dosis und Zeit eines Supplements.
+class LogSupplementDoseBody extends StatefulWidget {
+  final Supplement supplement;
+  final double? initialDose;
+  final DateTime? initialTimestamp;
+  final String primaryLabel;
+  final VoidCallback onCancel;
+  final void Function(double dose, DateTime timestamp) onSubmit;
+
+  const LogSupplementDoseBody({
+    super.key,
+    required this.supplement,
+    this.initialDose,
+    this.initialTimestamp,
+    required this.primaryLabel,
+    required this.onCancel,
+    required this.onSubmit,
+  });
+
+  @override
+  State<LogSupplementDoseBody> createState() => _LogSupplementDoseBodyState();
+}
+
+class _LogSupplementDoseBodyState extends State<LogSupplementDoseBody> {
+  final _key = GlobalKey<LogSupplementDialogContentState>();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Text(
-            localizeSupplementName(_selected!, l10n),
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-          ),
+        LogSupplementDialogContent(
+          key: _key,
+          supplement: widget.supplement,
+          initialDose: widget.initialDose,
+          initialTimestamp: widget.initialTimestamp,
         ),
-        const SizedBox(height: 8),
-        LogSupplementDialogContent(key: _doseKey, supplement: _selected!),
         const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
               child: OutlinedButton(
-                onPressed: () => setState(() => _selected = null),
-                child: Text(l10n.onbBack),
+                onPressed: widget.onCancel,
+                child: Text(l10n.cancel),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: FilledButton(
-                onPressed: () async {
-                  final st = _doseKey.currentState;
+                onPressed: () {
+                  final st = _key.currentState;
                   if (st == null) return;
-                  final dose = double.tryParse(
-                    st.doseText.replaceAll(',', '.'),
-                  );
+                  final dose =
+                      double.tryParse(st.doseText.replaceAll(',', '.'));
                   if (dose == null || dose <= 0) return;
-
-                  final log = SupplementLog(
-                    supplementId: _selected!.id!,
-                    dose: dose,
-                    unit: _selected!.unit,
-                    timestamp: st.selectedDateTime,
-                  );
-                  await DatabaseHelper.instance.insertSupplementLog(log);
-                  widget.close();
-                  // This is a bit of a hack, but it's the easiest way to refresh the home screen
-                  // without a more complex state management solution.
-                  // Consider using a provider or riverpod to manage the state of the home screen.
-                  // _refreshHomeScreen();
+                  widget.onSubmit(dose, st.selectedDateTime);
                 },
-                child: Text(l10n.add_button),
+                child: Text(widget.primaryLabel),
               ),
             ),
           ],

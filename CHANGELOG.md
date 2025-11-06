@@ -3,6 +3,31 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+## [0.4.0-beta.3] - 2025-11-06
+
+### Added
+*   **New Feature: Optional "Liquid Glass" UI Style**
+    *   A new, optional visual style can be enabled in `Settings > Appearance` to switch to a rounded, fluid, and translucent UI.
+    *   This feature is powered by the `liquid_glass_renderer` package, providing a high-fidelity, cross-platform frosted glass effect on both iOS and Android.
+    *   The standard "Glass" UI remains the default.
+
+### Fixed
+*   **Critical: Create Food Screen Unusable**
+    *   Fixed a critical bug where the "Create Food" screen incorrectly displayed a numeric keyboard for text fields (name, brand), making it impossible to enter non-numeric characters. (Fixes #56)
+*   **Critical: Create/Edit Routine Bugs**
+    *   Resolved an issue where adding a new exercise to a routine did not visually update the list on the screen until the app was restarted. (Fixes #58)
+    *   Fixed a bug where exercises added to a routine were missing their details (name, muscle groups) due to an inconsistent database query.
+    *   Addressed a UI state bug where adding, removing, or changing set types in the routine editor would not update the UI in real-time.
+*   **Database Stability:**
+    *   Prevented crashes when saving custom food items by making the database insertion logic resilient to schema differences between the app model and the asset database.
+
+### Changed
+*   **UI/UX Consistency:**
+    *   Replaced all standard `AlertDialog` pop-ups in the Supplement tracking feature with the modern `GlassBottomMenu` to provide a consistent and fluid user experience.
+*   **Code Refactoring:**
+    *   Simplified and stabilized the supplement logging flow by refactoring the UI logic into distinct, reusable widgets, resolving a crash when attempting to log a supplement.
+    
 ## [0.4.0-beta.2] - 2025-10-22
 ### Added
 * **App icon:** Now there is an App icon

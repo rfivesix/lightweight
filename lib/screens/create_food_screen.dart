@@ -134,10 +134,12 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
                 controller: _nameController,
                 label: l10n.formFieldName,
                 isRequired: true,
+                isNumeric: false, // KORREKTUR
               ),
               _buildFoodInputField(
                 controller: _brandController,
                 label: l10n.formFieldBrand,
+                isNumeric: false, // KORREKTUR
               ),
 
               const SizedBox(height: DesignConstants.spacingXL),
@@ -146,18 +148,22 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
               _buildFoodInputField(
                 controller: _caloriesController,
                 label: l10n.formFieldCalories,
+                isNumeric: true, // KORREKTUR
               ),
               _buildFoodInputField(
                 controller: _proteinController,
                 label: l10n.formFieldProtein,
+                isNumeric: true, // KORREKTUR
               ),
               _buildFoodInputField(
                 controller: _carbsController,
                 label: l10n.formFieldCarbs,
+                isNumeric: true, // KORREKTUR
               ),
               _buildFoodInputField(
                 controller: _fatController,
                 label: l10n.formFieldFat,
+                isNumeric: true, // KORREKTUR
               ),
 
               const SizedBox(height: DesignConstants.spacingXL),
@@ -166,14 +172,17 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
               _buildFoodInputField(
                 controller: _sugarController,
                 label: l10n.formFieldSugar,
+                isNumeric: true, // KORREKTUR
               ),
               _buildFoodInputField(
                 controller: _fiberController,
                 label: l10n.formFieldFiber,
+                isNumeric: true, // KORREKTUR
               ),
               _buildFoodInputField(
                 controller: _saltController,
                 label: l10n.formFieldSalt,
+                isNumeric: true, // KORREKTUR
               ),
 
               const SizedBox(height: 32),
@@ -184,7 +193,6 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
     );
   }
 
-  // ... (die restlichen _build-Methoden bleiben unverändert hier drin)
   Widget _buildSectionTitle(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
@@ -202,6 +210,7 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
     required TextEditingController controller,
     required String label,
     bool isRequired = false,
+    bool isNumeric = false, // KORREKTUR: Neuer Parameter
   }) {
     final l10n = AppLocalizations.of(context)!;
     return Padding(
@@ -209,14 +218,19 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
       child: TextFormField(
         controller: controller,
         decoration: InputDecoration(labelText: label),
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        // KORREKTUR: Tastaturtyp wird jetzt gesteuert
+        keyboardType: isNumeric
+            ? const TextInputType.numberWithOptions(decimal: true)
+            : TextInputType.text,
         validator: (value) {
           if (isRequired && (value == null || value.isEmpty)) {
             return l10n.validatorPleaseEnterName;
           }
-          if (value != null &&
+          // KORREKTUR: Validierung nur für numerische Felder
+          if (isNumeric &&
+              value != null &&
               value.isNotEmpty &&
-              double.tryParse(value) == null) {
+              double.tryParse(value.replaceAll(',', '.')) == null) {
             return l10n.validatorPleaseEnterNumber;
           }
           return null;
