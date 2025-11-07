@@ -151,7 +151,7 @@ class GlassBottomNavBar extends StatelessWidget {
                     blur: 5,
                     glassColor:
                         effectiveGlass, // <- hier steckt jetzt der „Grundton“ drin
-                    lightIntensity: 1.35,
+                    lightIntensity: 0.35,
                     // outlineIntensity optional, nur wenn deine Paketversion das Feld hat
                     //outlineIntensity: 0.10,
                     saturation: 1.10,

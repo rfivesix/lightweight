@@ -103,7 +103,7 @@ class _GlassFabState extends State<GlassFab>
               thickness: 25,
               blur: 5,
               glassColor: effectiveGlass,
-              lightIntensity: 1.35,
+              lightIntensity: 0.35,
               saturation: 1.10,
             ),
             shape: hasLabel

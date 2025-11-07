@@ -566,8 +566,9 @@ class _MealScreenState extends State<MealScreen> {
                               ))
                           .toList(),
                       onChanged: (v) {
-                        if (v != null)
+                        if (v != null) {
                           modalSetState(() => selectedMealType = v);
+                        }
                       },
                     ),
                     const SizedBox(height: 12),

@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## [0.4.0-beta.4] - 2025-11-07
+
+### Changed
+* **UI/UX: Liquid glass**
+    * adjusted border intensity
+    * adjusted design of the glass bottom menu
+
 
 ## [0.4.0-beta.3] - 2025-11-06
 

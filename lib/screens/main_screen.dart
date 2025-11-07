@@ -1150,7 +1150,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                   blur: 5,
                                                   glassColor:
                                                       effectiveGlassLocal,
-                                                  lightIntensity: 1.35,
+                                                  lightIntensity: 0.35,
                                                   saturation: 1.10,
                                                 ),
                                                 shape:
@@ -1312,7 +1312,7 @@ class _FrostedBar extends StatelessWidget {
           thickness: 25,
           blur: 5,
           glassColor: effectiveGlass,
-          lightIntensity: 1.35,
+          lightIntensity: 0.35,
           saturation: 1.10,
         ),
         shape: LiquidRoundedSuperellipse(borderRadius: radius),

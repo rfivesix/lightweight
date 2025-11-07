@@ -80,11 +80,11 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
 
   Future<void> _logSupplement(Supplement supplement) async {
     final l10n = AppLocalizations.of(context)!;
+
     final result = await showGlassBottomMenu<bool>(
       context: context,
       title: localizeSupplementName(supplement, l10n),
       contentBuilder: (ctx, close) {
-        // HIER IST DIE ANPASSUNG
         return LogSupplementDoseBody(
           supplement: supplement,
           primaryLabel: l10n.add_button,
@@ -104,6 +104,7 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
         );
       },
     );
+
     if (result == true) {
       _loadData(_selectedDate);
     }
@@ -117,7 +118,6 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
       context: context,
       title: localizeSupplementName(supplement, l10n),
       contentBuilder: (ctx, close) {
-        // HIER IST DIE ANPASSUNG
         return LogSupplementDoseBody(
           supplement: supplement,
           initialDose: log.dose,

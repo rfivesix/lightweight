@@ -32,14 +32,21 @@ Future<T?> showGlassBottomMenu<T>({
   );
 
   final isDark = Theme.of(context).brightness == Brightness.dark;
+  final themeService = Provider.of<ThemeService>(context, listen: false);
+  final bool isLiquid = themeService.visualStyle == 1;
+
+  final Color barrierColor = isDark
+      ? (!isLiquid
+          ? Colors.grey.withOpacity(0.187) // old dark barrier for liquid glass
+          : Colors.black.withOpacity(0.5)) // new dark barrier
+      : Colors.black.withOpacity(0.3); // unchanged light barrier
 
   return showModalBottomSheet<T>(
     context: context,
     isScrollControlled: true,
     useRootNavigator: true,
     backgroundColor: Colors.transparent,
-    barrierColor:
-        isDark ? Colors.black.withOpacity(0.5) : Colors.black.withOpacity(0.3),
+    barrierColor: barrierColor,
     builder: (ctx) {
       final kb = MediaQuery.of(ctx).viewInsets.bottom;
       return AnimatedPadding(
@@ -76,11 +83,12 @@ class _GlassBottomMenuSheet extends StatelessWidget {
     final themeService = context.watch<ThemeService>();
 
     // neutral tint + effective glass color (works on dark/light + empty background)
-    final Color neutralTint =
-        (isDark ? Colors.white : Colors.black).withOpacity(0.10);
+    final Color neutralTint = (isDark
+        ? Colors.white.withOpacity(0.05)
+        : Colors.white.withOpacity(0.22));
     final Color effectiveGlass = Color.alphaBlend(
       neutralTint,
-      theme.colorScheme.surface.withOpacity(isDark ? 0.22 : 0.16),
+      theme.colorScheme.surface.withOpacity(isDark ? 0.22 : 0.22),
     );
 
     const double r = 24; // corner radius of the floating card
@@ -184,7 +192,7 @@ class _GlassBottomMenuSheet extends StatelessWidget {
               thickness: 25,
               blur: 8,
               glassColor: effectiveGlass,
-              lightIntensity: 1.35,
+              lightIntensity: 0.35,
               saturation: 1.10,
             ),
             shape: const LiquidRoundedSuperellipse(borderRadius: r),
@@ -292,6 +300,7 @@ class _GlassTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    //theme.color
     final isDark = theme.brightness == Brightness.dark;
     final textTheme = theme.textTheme;
     final themeService = context.watch<ThemeService>();
@@ -311,7 +320,7 @@ class _GlassTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               color: isDark
                   ? Colors.white.withOpacity(0.1)
-                  : Colors.white.withOpacity(0.12),
+                  : Colors.white.withOpacity(0.2),
               border: Border.all(
                 color: Colors.white.withOpacity(isDark ? 0.14 : 0.18),
                 width: 1,
@@ -363,7 +372,7 @@ class _GlassTile extends StatelessWidget {
             thickness: 25,
             blur: 5,
             glassColor: effectiveGlass,
-            lightIntensity: 1.35,
+            lightIntensity: 0.35,
             saturation: 1.10,
           ),
           shape: const LiquidRoundedSuperellipse(borderRadius: 18),
