@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/dialogs/log_supplement_dialog_content.dart';
+import 'package:lightweight/dialogs/log_supplement_menu.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/supplement.dart';
 import 'package:lightweight/models/supplement_log.dart';
@@ -11,6 +12,7 @@ import 'package:lightweight/screens/manage_supplements_screen.dart';
 import 'package:lightweight/util/date_util.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/util/supplement_l10n.dart';
+import 'package:lightweight/widgets/glass_bottom_menu.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/widgets/swipe_action_background.dart';
 
@@ -96,45 +98,35 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
   }
 
   Future<void> _logSupplement(Supplement supplement) async {
-    final l10n = AppLocalizations.of(context)!;
-    final key = GlobalKey<LogSupplementDialogContentState>();
+  final l10n = AppLocalizations.of(context)!;
 
-    final result = await showDialog<(double, DateTime)?>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(localizeSupplementName(supplement, l10n)),
-        content: LogSupplementDialogContent(key: key, supplement: supplement),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, null),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () {
-              final st = key.currentState;
-              if (st == null) return;
-              final dose = double.tryParse(st.doseText.replaceAll(',', '.'));
-              if (dose != null && dose > 0) {
-                Navigator.pop(context, (dose, st.selectedDateTime));
-              }
-            },
-            child: Text(l10n.add_button),
-          ),
-        ],
-      ),
-    );
+  final result = await showGlassBottomMenu<(double, DateTime)?>(
+    context: context,
+    title: localizeSupplementName(supplement, l10n),
+    contentBuilder: (ctx, close) {
+      return LogSupplementDoseBody(
+        supplement: supplement,
+        primaryLabel: l10n.add_button,
+        onCancel: close,
+        onSubmit: (dose, ts) {
+          close();
+          Navigator.of(ctx).pop((dose, ts));
+        },
+      );
+    },
+  );
 
-    if (result == null) return;
+  if (result == null) return;
 
-    final log = SupplementLog(
-      supplementId: supplement.id!,
-      dose: result.$1,
-      unit: supplement.unit,
-      timestamp: result.$2,
-    );
-    await DatabaseHelper.instance.insertSupplementLog(log);
-    _loadData(_selectedDate);
-  }
+  final log = SupplementLog(
+    supplementId: supplement.id!,
+    dose: result.$1,
+    unit: supplement.unit,
+    timestamp: result.$2,
+  );
+  await DatabaseHelper.instance.insertSupplementLog(log);
+  _loadData(_selectedDate);
+}
 
   Future<void> _editLogEntry(SupplementLog log) async {
     final l10n = AppLocalizations.of(context)!;

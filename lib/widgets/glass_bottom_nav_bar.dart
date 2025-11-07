@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lightweight/services/theme_service.dart';
 import 'package:lightweight/theme/color_constants.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
@@ -54,8 +55,8 @@ class GlassBottomNavBar extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: color,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
+                    fontSize: 10,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
                   ),
                 ),
               ],
@@ -119,28 +120,40 @@ class GlassBottomNavBar extends StatelessWidget {
         // Drag-to-select + Release-to-activate: über GestureDetector
         return LayoutBuilder(
           builder: (context, constraints) {
-            double? lastDx; // hält die letzte lokale X-Position für onPanEnd
+            double? lastDx;
+            int? lastHoverIndex;
             final barWidth = constraints.maxWidth;
-
             return GestureDetector(
               behavior: HitTestBehavior.translucent,
               onTapUp: (details) {
                 final idx = _indexFromDx(
-                    details.localPosition.dx, barWidth, items.length);
+                  details.localPosition.dx,
+                  barWidth,
+                  items.length,
+                );
                 onTap(idx);
+                HapticFeedback.lightImpact(); // Feedback bei einfachem Tap
               },
               onPanStart: (details) {
                 lastDx = details.localPosition.dx;
+                final idx = _indexFromDx(lastDx!, barWidth, items.length);
+                lastHoverIndex = idx;
+                HapticFeedback.selectionClick(); // leichtes Feedback beim ersten Kontakt
               },
               onPanUpdate: (details) {
                 lastDx = details.localPosition.dx;
+                final idx = _indexFromDx(lastDx!, barWidth, items.length);
+                if (idx != lastHoverIndex) {
+                  lastHoverIndex = idx;
+                  HapticFeedback.lightImpact(); // leichtes Feedback beim Wechseln der Zone
+                }
               },
               onPanEnd: (_) {
-                if (lastDx != null) {
-                  final idx = _indexFromDx(lastDx!, barWidth, items.length);
-                  onTap(idx);
+                if (lastHoverIndex != null) {
+                  onTap(lastHoverIndex!);
                 }
                 lastDx = null;
+                lastHoverIndex = null;
               },
               child: LiquidStretch(
                 stretch: 0.55,
@@ -149,11 +162,8 @@ class GlassBottomNavBar extends StatelessWidget {
                   settings: LiquidGlassSettings(
                     thickness: 25,
                     blur: 5,
-                    glassColor:
-                        effectiveGlass, // <- hier steckt jetzt der „Grundton“ drin
+                    glassColor: effectiveGlass,
                     lightIntensity: 0.35,
-                    // outlineIntensity optional, nur wenn deine Paketversion das Feld hat
-                    //outlineIntensity: 0.10,
                     saturation: 1.10,
                   ),
                   shape: const LiquidRoundedSuperellipse(borderRadius: 99),
@@ -161,16 +171,14 @@ class GlassBottomNavBar extends StatelessWidget {
                     glowColor: Colors.white.withOpacity(isDark ? 0.24 : 0.18),
                     glowRadius: 1.0,
                     child: SizedBox(
-                      height: 76,
+                      height: barHeight,
                       child: Stack(
                         children: [
-                          // Basistönung IN der Pille – nur ein Hauch, hilft auf leerem Hintergrund
                           Positioned.fill(
                             child: DecoratedBox(
                               decoration: BoxDecoration(color: neutralTint),
                             ),
                           ),
-                          // Inhalt
                           Positioned.fill(
                             child: Padding(
                               padding:
@@ -178,7 +186,6 @@ class GlassBottomNavBar extends StatelessWidget {
                               child: navItemsRow,
                             ),
                           ),
-                          // Border/Rim analog zum FAB
                           Positioned.fill(
                             child: IgnorePointer(
                               child: Container(

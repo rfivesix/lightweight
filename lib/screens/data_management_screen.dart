@@ -11,6 +11,7 @@ import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // NEU
 import 'package:flutter/services.dart'; // NEU (Clipboard)
+import 'package:lightweight/widgets/glass_bottom_menu.dart';
 
 class DataManagementScreen extends StatefulWidget {
   const DataManagementScreen({super.key});
@@ -594,35 +595,61 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     final controller = TextEditingController();
     bool obscure = true;
     final l10n = AppLocalizations.of(context)!;
-    return showDialog<String>(
+
+    return showGlassBottomMenu<String?>(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(title),
-          content: TextField(
-            controller: controller,
-            obscureText: obscure,
-            decoration: InputDecoration(
-              labelText: l10n.passwordLabel,
-              suffixIcon: IconButton(
-                icon: Icon(obscure ? Icons.visibility_off : Icons.visibility),
-                onPressed: () => setState(() => obscure = !obscure),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(null),
-              child: Text(l10n.dialogButtonCancel),
-            ),
-            FilledButton(
-              onPressed: () =>
-                  Navigator.of(context).pop(controller.text.trim()),
-              child: Text(l10n.snackbarButtonOK),
-            ),
-          ],
-        ),
-      ),
+      title: title,
+      contentBuilder: (ctx, close) {
+        return StatefulBuilder(
+          builder: (ctx, setState) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextField(
+                  controller: controller,
+                  obscureText: obscure,
+                  decoration: InputDecoration(
+                    labelText: l10n.passwordLabel,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscure ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () =>
+                          setState(() => obscure = !obscure),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          close();
+                          Navigator.of(ctx).pop(null);
+                        },
+                        child: Text(l10n.dialogButtonCancel),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () {
+                          final value = controller.text.trim();
+                          close();
+                          Navigator.of(ctx).pop(value);
+                        },
+                        child: Text(l10n.snackbarButtonOK),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }

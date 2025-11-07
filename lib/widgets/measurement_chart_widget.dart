@@ -64,7 +64,7 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
     if (newIndex == _touchedIndex) return; // nur bei echter Änderung vibrieren
     _touchedIndex = newIndex;
     if (newIndex != null) {
-      HapticFeedback.selectionClick(); // dezentes Tock beim Punkt-Wechsel
+      HapticFeedback.mediumImpact();
     }
     if (mounted) setState(() {});
   }
