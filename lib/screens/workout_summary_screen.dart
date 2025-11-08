@@ -5,6 +5,7 @@ import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/workout_log.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/widgets/workout_summary_bar.dart';
 
@@ -65,16 +66,13 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
     final l10n = AppLocalizations.of(context)!;
     final textTheme = Theme.of(context).textTheme;
 
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        automaticallyImplyLeading: false, // Verhindert den Zurück-Pfeil
-        title: Text(
-          l10n.workoutSummaryTitle,
-          style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-        ),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
+      appBar: GlobalAppBar(
+        title: l10n.workoutSummaryTitle,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

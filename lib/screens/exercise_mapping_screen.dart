@@ -5,6 +5,7 @@ import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/exercise.dart';
 import 'package:lightweight/screens/exercise_catalog_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 
 class ExerciseMappingScreen extends StatefulWidget {
   final List<String> unknownNames;
@@ -49,53 +50,65 @@ class _ExerciseMappingScreenState extends State<ExerciseMappingScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.mapExercisesTitle)),
-      body: Column(
-        children: [
-          const SizedBox(height: DesignConstants.spacingS),
-          Expanded(
-            child: ListView.builder(
-              itemCount: widget.unknownNames.length,
-              itemBuilder: (context, index) {
-                final src = widget.unknownNames[index];
-                final picked = _selection[src];
-                return ListTile(
-                  title: Text(src),
-                  subtitle: picked == null
-                      ? Text(l10n.noSelection)
-                      : Text('→ ${picked.nameDe} / ${picked.nameEn}'),
-                  trailing: TextButton.icon(
-                    icon: const Icon(Icons.search),
-                    label: Text(l10n.selectButton),
-                    onPressed: () => _pickTarget(src),
-                  ),
-                );
-              },
+      extendBodyBehindAppBar: true,
+      appBar: GlobalAppBar(
+        title: l10n.mapExercisesTitle,
+      ),
+      body: Padding(
+        padding: DesignConstants.cardPadding.copyWith(
+          top: DesignConstants.cardPadding.top + topPadding,
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: DesignConstants.spacingS),
+            Expanded(
+              child: ListView.builder(
+                itemCount: widget.unknownNames.length,
+                itemBuilder: (context, index) {
+                  final src = widget.unknownNames[index];
+                  final picked = _selection[src];
+                  return ListTile(
+                    title: Text(src),
+                    subtitle: picked == null
+                        ? Text(l10n.noSelection)
+                        : Text('→ ${picked.nameDe} / ${picked.nameEn}'),
+                    trailing: TextButton.icon(
+                      icon: const Icon(Icons.search),
+                      label: Text(l10n.selectButton),
+                      onPressed: () => _pickTarget(src),
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _applying ? null : _apply,
-                  icon: _applying
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.check),
-                  label: Text(
-                    _applying ? l10n.applyingChanges : l10n.applyMapping,
+            SafeArea(
+              child: Padding(
+                padding:
+                    const EdgeInsets.only(bottom: DesignConstants.spacingM),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _applying ? null : _apply,
+                    icon: _applying
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.check),
+                    label: Text(
+                      _applying ? l10n.applyingChanges : l10n.applyMapping,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

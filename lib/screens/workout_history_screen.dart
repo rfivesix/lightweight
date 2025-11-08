@@ -8,6 +8,7 @@ import 'package:lightweight/models/workout_log.dart';
 import 'package:lightweight/screens/workout_log_detail_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/util/time_util.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/widgets/swipe_action_background.dart';
 
@@ -50,19 +51,13 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
     final locale = Localizations.localeOf(context).toString();
     final colorScheme = Theme.of(context).colorScheme;
 
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: true,
-        elevation: 0,
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        title: Text(
-          l10n.workoutHistoryTitle,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-        ),
+      extendBodyBehindAppBar: true,
+      appBar: GlobalAppBar(
+        title: l10n.workoutHistoryTitle,
       ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: _isLoading
@@ -71,7 +66,9 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
               // KORREKTUR: Aufgewerteter "Empty State"
               ? Center(
                   child: Padding(
-                    padding: const EdgeInsets.all(24.0),
+                    padding: DesignConstants.cardPadding.copyWith(
+                      top: DesignConstants.cardPadding.top + topPadding,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -100,7 +97,9 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                   ),
                 )
               : ListView.builder(
-                  padding: DesignConstants.cardPadding,
+                  padding: DesignConstants.cardPadding.copyWith(
+                    top: DesignConstants.cardPadding.top + topPadding,
+                  ),
                   itemCount: _logs.length,
                   itemBuilder: (context, index) {
                     final log = _logs[index];

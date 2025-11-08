@@ -7,6 +7,7 @@ import 'package:lightweight/data/import_manager.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/screens/exercise_mapping_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // NEU
@@ -202,44 +203,43 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
       );
     }
   }
+// lib/screens/data_management_screen.dart
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
+    // Diese Berechnung ist korrekt.
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: true, // <- zeigt den Zurück-Pfeil
-        elevation: 0,
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        title: Text(
-          "Data Hub",
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-        ),
+      extendBodyBehindAppBar: true,
+      appBar: const GlobalAppBar(
+        // l10n.dataHubTitle wäre hier ideal, aber "Data Hub" ist auch ok
+        title: "Data Hub",
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: DesignConstants.cardPadding,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // --- bestehender Inhalt bleibt unverändert ---
-              _buildFullBackupCard(context, l10n, theme),
-              const SizedBox(height: DesignConstants.spacingL),
-              _buildAutoBackupCard(context, l10n, theme),
-              const SizedBox(height: DesignConstants.spacingL),
-              _buildCsvExportCard(context, l10n, theme),
-              const SizedBox(height: DesignConstants.spacingL),
-              _buildMigrationCard(context, l10n, theme),
-              const SizedBox(height: DesignConstants.spacingL),
-              _buildExerciseMappingCard(context, l10n, theme),
-            ],
-          ),
+      // Das SafeArea-Widget wurde hier entfernt. Der Body ist jetzt direkt der SingleChildScrollView.
+      body: SingleChildScrollView(
+        // Ihre Padding-Logik ist korrekt und wird beibehalten.
+        padding: DesignConstants.cardPadding.copyWith(
+          top: DesignConstants.cardPadding.top + topPadding,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // --- Ihr gesamter Inhalt bleibt hier unverändert ---
+            _buildFullBackupCard(context, l10n, theme),
+            const SizedBox(height: DesignConstants.spacingL),
+            _buildAutoBackupCard(context, l10n, theme),
+            const SizedBox(height: DesignConstants.spacingL),
+            _buildCsvExportCard(context, l10n, theme),
+            const SizedBox(height: DesignConstants.spacingL),
+            _buildMigrationCard(context, l10n, theme),
+            const SizedBox(height: DesignConstants.spacingL),
+            _buildExerciseMappingCard(context, l10n, theme),
+          ],
         ),
       ),
     );
@@ -615,8 +615,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                       icon: Icon(
                         obscure ? Icons.visibility_off : Icons.visibility,
                       ),
-                      onPressed: () =>
-                          setState(() => obscure = !obscure),
+                      onPressed: () => setState(() => obscure = !obscure),
                     ),
                   ),
                 ),

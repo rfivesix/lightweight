@@ -46,7 +46,7 @@ class _GlassFabState extends State<GlassFab>
   void _onTapDown(TapDownDetails details) => _controller.forward();
   void _onTapUp(TapUpDetails details) {
     _controller.reverse();
-    HapticFeedback.selectionClick();
+    HapticFeedback.lightImpact();
     widget.onPressed();
   }
 
@@ -96,12 +96,12 @@ class _GlassFabState extends State<GlassFab>
         final hasLabel = widget.label != null;
 
         content = LiquidStretch(
-          stretch: 0.55,
+          stretch: 0.2,
           interactionScale: 1.04,
           child: LiquidGlass.withOwnLayer(
             settings: LiquidGlassSettings(
-              thickness: 25,
-              blur: 5,
+              thickness: 30,
+              blur: 0.75,
               glassColor: effectiveGlass,
               lightIntensity: 0.35,
               saturation: 1.10,
@@ -115,7 +115,7 @@ class _GlassFabState extends State<GlassFab>
               child: hasLabel
                   // PILLE: Breite aus Inhalt + Padding
                   ? Container(
-                      height: 76,
+                      height: 65.0,
                       padding: const EdgeInsets.symmetric(horizontal: 24.0),
                       decoration: BoxDecoration(
                         color: neutralTint, // << Grundtönung
@@ -152,8 +152,8 @@ class _GlassFabState extends State<GlassFab>
                     )
                   // KREIS: feste 76×76
                   : Container(
-                      height: 76,
-                      width: 76,
+                      height: 65.0,
+                      width: 65.0,
                       decoration: BoxDecoration(
                         color: neutralTint,
                         borderRadius: BorderRadius.circular(999), // „Kreis“

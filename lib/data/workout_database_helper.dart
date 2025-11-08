@@ -405,11 +405,13 @@ class WorkoutDatabaseHelper {
     for (final reMap in routineExerciseMaps) {
       final routineExerciseId = reMap['id'] as int;
       final exerciseId = reMap['exercise_id'] as int;
+      // --- FIX IS HERE ---
       final exerciseMaps = await db.query(
-        'exercises',
+        'exercises_flat', // Use the view that has all the data
         where: 'id = ?',
         whereArgs: [exerciseId],
       );
+      // --- END FIX ---
       if (exerciseMaps.isEmpty) continue;
       final setTemplateMaps = await db.query(
         'routine_set_templates',

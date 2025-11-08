@@ -9,6 +9,7 @@ import 'package:lightweight/screens/add_measurement_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/bottom_content_spacer.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/measurement_chart_widget.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/util/l10n_ext.dart';
@@ -112,19 +113,13 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
 
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: true,
-        elevation: 0,
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        title: Text(
-          l10n.measurementsScreenTitle,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-        ),
+      extendBodyBehindAppBar: true,
+      appBar: GlobalAppBar(
+        title: l10n.measurementsScreenTitle,
       ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: _isLoading
@@ -132,7 +127,9 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
           : _sessions.isEmpty
               ? _buildEmptyState(l10n, context)
               : ListView(
-                  padding: DesignConstants.cardPadding,
+                  padding: DesignConstants.cardPadding.copyWith(
+                    top: DesignConstants.cardPadding.top + topPadding,
+                  ),
                   children: [
                     if (_availableMeasurementTypes.isNotEmpty) ...[
                       _buildChartSection(

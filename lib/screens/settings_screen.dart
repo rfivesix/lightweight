@@ -7,6 +7,7 @@ import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -38,21 +39,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final themeService = Provider.of<ThemeService>(context);
     final profileService = Provider.of<ProfileService>(context);
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        title: Text(
-          l10n.settingsTitle,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-        ),
+      extendBodyBehindAppBar: true,
+      appBar: GlobalAppBar(
+        title: l10n.settingsTitle,
       ),
       body: ListView(
-        padding: DesignConstants.cardPadding,
+        padding: DesignConstants.cardPadding.copyWith(
+          top: DesignConstants.cardPadding.top + topPadding,
+        ),
         children: [
           _buildSectionTitle(context, l10n.settingsAppearance),
           SummaryCard(

@@ -11,6 +11,7 @@ import 'package:lightweight/util/date_util.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/glass_bottom_menu.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/widgets/swipe_action_background.dart';
 
@@ -448,24 +449,19 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
     final locale = Localizations.localeOf(context).toString();
     final textTheme = Theme.of(context).textTheme;
 
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        title: Text(
-          l10n.supplementTrackerTitle,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-        ),
+      extendBodyBehindAppBar: true,
+      appBar: GlobalAppBar(
+        title: l10n.supplementTrackerTitle,
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 8.0,
+            padding: DesignConstants.cardPadding.copyWith(
+              top: DesignConstants.cardPadding.top + topPadding,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

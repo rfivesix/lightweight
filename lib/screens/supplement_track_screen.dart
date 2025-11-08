@@ -13,6 +13,7 @@ import 'package:lightweight/util/date_util.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/util/supplement_l10n.dart';
 import 'package:lightweight/widgets/glass_bottom_menu.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/widgets/swipe_action_background.dart';
 
@@ -98,35 +99,35 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
   }
 
   Future<void> _logSupplement(Supplement supplement) async {
-  final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context)!;
 
-  final result = await showGlassBottomMenu<(double, DateTime)?>(
-    context: context,
-    title: localizeSupplementName(supplement, l10n),
-    contentBuilder: (ctx, close) {
-      return LogSupplementDoseBody(
-        supplement: supplement,
-        primaryLabel: l10n.add_button,
-        onCancel: close,
-        onSubmit: (dose, ts) {
-          close();
-          Navigator.of(ctx).pop((dose, ts));
-        },
-      );
-    },
-  );
+    final result = await showGlassBottomMenu<(double, DateTime)?>(
+      context: context,
+      title: localizeSupplementName(supplement, l10n),
+      contentBuilder: (ctx, close) {
+        return LogSupplementDoseBody(
+          supplement: supplement,
+          primaryLabel: l10n.add_button,
+          onCancel: close,
+          onSubmit: (dose, ts) {
+            close();
+            Navigator.of(ctx).pop((dose, ts));
+          },
+        );
+      },
+    );
 
-  if (result == null) return;
+    if (result == null) return;
 
-  final log = SupplementLog(
-    supplementId: supplement.id!,
-    dose: result.$1,
-    unit: supplement.unit,
-    timestamp: result.$2,
-  );
-  await DatabaseHelper.instance.insertSupplementLog(log);
-  _loadData(_selectedDate);
-}
+    final log = SupplementLog(
+      supplementId: supplement.id!,
+      dose: result.$1,
+      unit: supplement.unit,
+      timestamp: result.$2,
+    );
+    await DatabaseHelper.instance.insertSupplementLog(log);
+    _loadData(_selectedDate);
+  }
 
   Future<void> _editLogEntry(SupplementLog log) async {
     final l10n = AppLocalizations.of(context)!;
@@ -361,17 +362,13 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).toString();
 
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        title: Text(
-          l10n.supplementTrackerTitle,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-        ),
+      extendBodyBehindAppBar: true,
+      appBar: GlobalAppBar(
+        title: l10n.supplementTrackerTitle,
         actions: [
           IconButton(
             tooltip: l10n.manageSupplementsTitle,
@@ -392,11 +389,8 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
           : RefreshIndicator(
               onRefresh: () => _loadData(_selectedDate),
               child: ListView(
-                padding: EdgeInsets.only(
-                  left: DesignConstants.cardPadding.left,
-                  right: DesignConstants.cardPadding.right,
-                  bottom: DesignConstants.cardPadding.bottom + 24,
-                  top: 8,
+                padding: DesignConstants.cardPadding.copyWith(
+                  top: DesignConstants.cardPadding.top + topPadding,
                 ),
                 children: [
                   // Date header

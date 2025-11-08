@@ -8,6 +8,7 @@ import 'package:lightweight/models/food_item.dart';
 import 'package:lightweight/models/tracked_food_item.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/off_attribution_widget.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:sqflite/sqflite.dart';
@@ -250,7 +251,11 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
     final displayQuantity =
         _showPer100g || !_hasPortionInfo ? 100 : _trackedQuantity!;
 
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: GlassFab(
         onPressed: () {
@@ -258,36 +263,9 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
         },
         label: l10n.mealsAddToDiary,
       ),
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        title: GestureDetector(
-          onLongPress: () async {
-            if (!kDevEditEnabled) return;
-            setState(() => _devEditing = !_devEditing);
-            if (_devEditing) {
-              final raw = await _loadRawRow(_displayItem.barcode);
-              _fillControllers(_displayItem, rawRow: raw);
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('DEV-Edit-Modus aktiv')),
-                );
-              }
-            }
-          },
-          child: Text(
-            _displayItem.getLocalizedName(context),
-            style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-          ),
-        ),
+      appBar: GlobalAppBar(
+        title: _displayItem.getLocalizedName(context),
         actions: [
-          if (kDevEditEnabled && _devEditing)
-            IconButton(
-              tooltip: 'Basis-DB exportieren',
-              onPressed: _exportBaseDb,
-              icon: const Icon(Icons.ios_share),
-            ),
           IconButton(
             icon: Icon(
               _isFavorite ? Icons.favorite : Icons.favorite_border,

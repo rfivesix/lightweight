@@ -4,6 +4,7 @@ import 'package:lightweight/models/exercise.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/widgets/wger_attribution_widget.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 
 class ExerciseDetailScreen extends StatelessWidget {
   final Exercise exercise;
@@ -14,17 +15,14 @@ class ExerciseDetailScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        automaticallyImplyLeading: true,
-        elevation: 0,
-        backgroundColor: theme.scaffoldBackgroundColor,
-        title: Text(
-          exercise.getLocalizedName(context),
-          style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-        ),
+      extendBodyBehindAppBar: true,
+      appBar: GlobalAppBar(
+        title: exercise.getLocalizedName(context),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
@@ -33,7 +31,9 @@ class ExerciseDetailScreen extends StatelessWidget {
         ],
       ),
       body: SingleChildScrollView(
-        padding: DesignConstants.cardPadding,
+        padding: DesignConstants.cardPadding.copyWith(
+          top: DesignConstants.cardPadding.top + topPadding,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

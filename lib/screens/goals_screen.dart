@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lightweight/generated/app_localizations.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 
 class GoalsScreen extends StatefulWidget {
   const GoalsScreen({super.key});
@@ -184,22 +185,24 @@ class _GoalsScreenState extends State<GoalsScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          l10n.my_goals,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-        ),
-        // KORREKTUR: Save-Button in die AppBar verschoben
+      extendBodyBehindAppBar: true,
+
+      // NEU: Unsere GlobalAppBar
+      appBar: GlobalAppBar(
+        title: l10n.my_goals,
         actions: [
-          TextButton(
-            onPressed: _saveSettings,
-            child: Text(
-              l10n.buttonSave,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.bold,
+          // Der Save-Button bleibt, nur etwas anders verpackt
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: TextButton(
+              onPressed: _saveSettings,
+              child: Text(
+                l10n.buttonSave,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
             ),
           ),
@@ -208,7 +211,12 @@ class _GoalsScreenState extends State<GoalsScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: DesignConstants.cardPadding,
+              // Die neue Padding-Logik
+              padding: DesignConstants.cardPadding.copyWith(
+                top: DesignConstants.cardPadding.top +
+                    MediaQuery.of(context).padding.top +
+                    kToolbarHeight,
+              ),
               child: Form(
                 key: _formKey,
                 child: Column(

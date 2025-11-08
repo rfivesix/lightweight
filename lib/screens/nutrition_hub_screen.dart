@@ -126,6 +126,18 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final double appBarHeight =
+        MediaQuery.of(context).padding.top; // + kToolbarHeight;
+
+    // 2. Get your base padding from your design constants
+    const EdgeInsets basePadding =
+        DesignConstants.cardPadding; // This is EdgeInsets.all(16.0)
+
+    // 3. Create the final combined padding
+    final EdgeInsets finalPadding = basePadding.copyWith(
+      // Take the original top value (16.0) and add the app bar height
+      top: basePadding.top + appBarHeight,
+    );
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -148,7 +160,7 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
           return RefreshIndicator(
             onRefresh: _refreshData,
             child: ListView(
-              padding: DesignConstants.cardPadding,
+              padding: finalPadding,
               children: [
                 _buildSectionTitle(context, l10n.today_overview_text),
                 _buildGoalsAndRecommendationCard(

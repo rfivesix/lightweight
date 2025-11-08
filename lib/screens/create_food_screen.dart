@@ -5,6 +5,7 @@ import 'package:lightweight/data/product_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/food_item.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 
 class CreateFoodScreen extends StatefulWidget {
   final FoodItem? foodItemToEdit;
@@ -98,13 +99,15 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-
+      extendBodyBehindAppBar: true,
       // KORREKTUR: Eine AppBar hinzugefügt, die den Titel und den Speicher-Button enthält
-      appBar: AppBar(
-        title: Text(l10n.createFoodScreenTitle),
+      appBar: GlobalAppBar(
+        title: l10n.createFoodScreenTitle,
         actions: [
           TextButton(
             onPressed: _saveFoodItem,
@@ -121,7 +124,9 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
         ],
       ),
       body: SingleChildScrollView(
-        padding: DesignConstants.cardPadding,
+        padding: DesignConstants.cardPadding.copyWith(
+          top: DesignConstants.cardPadding.top + topPadding,
+        ),
         child: Form(
           key: _formKey,
           child: Column(

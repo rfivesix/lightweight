@@ -762,67 +762,77 @@ class DiaryScreenState extends State<DiaryScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final hasEntries = _entriesByMeal.values.any((list) => list.isNotEmpty);
+    final double appBarHeight =
+        MediaQuery.of(context).padding.top; // + kToolbarHeight;
 
-    return Scaffold(
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: () => loadDataForDate(_selectedDate),
-              child: ListView(
-                padding: DesignConstants.cardPadding,
-                children: [
-                  const SizedBox(height: DesignConstants.spacingL),
-                  _buildSectionTitle(context, l10n.today_overview_text),
-                  if (_dailyNutrition != null)
-                    NutritionSummaryWidget(
-                      nutritionData: _dailyNutrition!,
-                      l10n: l10n,
-                      isExpandedView: false,
-                    ),
+    // 2. Get your base padding from your design constants
+    const EdgeInsets basePadding =
+        DesignConstants.cardPadding; // This is EdgeInsets.all(16.0)
 
-                  const SizedBox(height: DesignConstants.spacingXS),
-                  SupplementSummaryWidget(
-                    trackedSupplements: _trackedSupplements,
-                    onTap: () => Navigator.of(context)
-                        .push(
-                          MaterialPageRoute(
-                            builder: (context) => const SupplementTrackScreen(),
-                          ),
-                        )
-                        .then((_) => loadDataForDate(_selectedDate)),
-                  ),
-                  // NEUER TEIL: Workout-Zusammenfassung hier einfügen
-                  if (_workoutSummary != null) ...[
-                    //const SizedBox(height: DesignConstants.spacingXS),
-                    TodaysWorkoutSummaryCard(
-                      duration: _workoutSummary!['duration'] as Duration,
-                      volume: _workoutSummary!['volume'] as double,
-                      sets: _workoutSummary!['sets'] as int,
-                      workoutCount: _workoutSummary!['count'] as int,
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const WorkoutHistoryScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                  const SizedBox(height: DesignConstants.spacingXL),
-                  _buildSectionTitle(context, l10n.protocol_today_capslock),
-                  _buildTodaysLog(l10n),
-                  const SizedBox(height: DesignConstants.spacingXL),
-                  _buildSectionTitle(context, l10n.measurementWeightCapslock),
-                  _buildWeightChartCard(
-                    context,
-                    Theme.of(context).colorScheme,
-                    l10n,
-                  ),
-                  const BottomContentSpacer(),
-                ],
-              ),
-            ),
+    // 3. Create the final combined padding
+    final EdgeInsets finalPadding = basePadding.copyWith(
+      // Take the original top value (16.0) and add the app bar height
+      top: basePadding.top + appBarHeight,
     );
+
+    return _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : RefreshIndicator(
+            onRefresh: () => loadDataForDate(_selectedDate),
+            child: ListView(
+              padding: finalPadding,
+              children: [
+                const SizedBox(height: DesignConstants.spacingL),
+                _buildSectionTitle(context, l10n.today_overview_text),
+                if (_dailyNutrition != null)
+                  NutritionSummaryWidget(
+                    nutritionData: _dailyNutrition!,
+                    l10n: l10n,
+                    isExpandedView: false,
+                  ),
+
+                const SizedBox(height: DesignConstants.spacingXS),
+                SupplementSummaryWidget(
+                  trackedSupplements: _trackedSupplements,
+                  onTap: () => Navigator.of(context)
+                      .push(
+                        MaterialPageRoute(
+                          builder: (context) => const SupplementTrackScreen(),
+                        ),
+                      )
+                      .then((_) => loadDataForDate(_selectedDate)),
+                ),
+                // NEUER TEIL: Workout-Zusammenfassung hier einfügen
+                if (_workoutSummary != null) ...[
+                  //const SizedBox(height: DesignConstants.spacingXS),
+                  TodaysWorkoutSummaryCard(
+                    duration: _workoutSummary!['duration'] as Duration,
+                    volume: _workoutSummary!['volume'] as double,
+                    sets: _workoutSummary!['sets'] as int,
+                    workoutCount: _workoutSummary!['count'] as int,
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const WorkoutHistoryScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+                const SizedBox(height: DesignConstants.spacingXL),
+                _buildSectionTitle(context, l10n.protocol_today_capslock),
+                _buildTodaysLog(l10n),
+                const SizedBox(height: DesignConstants.spacingXL),
+                _buildSectionTitle(context, l10n.measurementWeightCapslock),
+                _buildWeightChartCard(
+                  context,
+                  Theme.of(context).colorScheme,
+                  l10n,
+                ),
+                const BottomContentSpacer(),
+              ],
+            ),
+          );
   }
 
   Widget _buildSectionTitle(BuildContext context, String title) {

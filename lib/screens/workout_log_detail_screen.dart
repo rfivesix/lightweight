@@ -10,6 +10,7 @@ import 'package:lightweight/models/workout_log.dart';
 import 'package:lightweight/screens/exercise_catalog_screen.dart';
 import 'package:lightweight/screens/exercise_detail_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/widgets/wger_attribution_widget.dart';
 import 'package:lightweight/widgets/workout_summary_bar.dart';
@@ -262,19 +263,13 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     final Duration duration =
         _log?.endTime?.difference(_log!.startTime) ?? Duration.zero;
 
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        automaticallyImplyLeading: true,
-        elevation: 0,
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        scrolledUnderElevation: 0,
-        title: Text(
-          l10n.workoutDetailsTitle,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-        ),
+      appBar: GlobalAppBar(
+        title: l10n.workoutDetailsTitle,
         actions: [
           if (!_isLoading && _log != null)
             _isEditMode

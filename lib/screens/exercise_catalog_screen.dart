@@ -6,6 +6,7 @@ import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/exercise.dart';
 import 'package:lightweight/screens/exercise_detail_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/widgets/wger_attribution_widget.dart';
 import 'package:lightweight/screens/create_exercise_screen.dart';
@@ -129,18 +130,8 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: true,
-        elevation: 0,
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        title: Text(
-          l10n.exerciseCatalogTitle,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-        ),
+      appBar: GlobalAppBar(
+        title: l10n.exerciseCatalogTitle,
         actions: [
           if (widget.isSelectionMode)
             TextButton(

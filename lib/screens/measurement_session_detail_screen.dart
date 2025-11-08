@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/measurement_session.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 
 class MeasurementSessionDetailScreen extends StatelessWidget {
   final MeasurementSession session;
@@ -31,23 +32,18 @@ class MeasurementSessionDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: true, // zeigt den Zurück-Pfeil
-        elevation: 0,
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        title: Text(
-          DateFormat.yMMMMd('de_DE').format(session.timestamp),
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-        ),
+      extendBodyBehindAppBar: true,
+      appBar: GlobalAppBar(
+        title: DateFormat.yMMMMd('de_DE').format(session.timestamp),
       ),
       body: ListView(
-        padding: DesignConstants.cardPadding,
+        padding: DesignConstants.cardPadding.copyWith(
+          top: DesignConstants.cardPadding.top + topPadding,
+        ),
         children: [
           ...session.measurements.map((measurement) {
             return Card(

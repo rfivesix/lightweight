@@ -7,6 +7,7 @@ import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/measurement.dart';
 import 'package:lightweight/models/measurement_session.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/summary_card.dart'; // HINZUGEFÜGT
 
 class AddMeasurementScreen extends StatefulWidget {
@@ -170,15 +171,14 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
 
     final formattedDate = DateFormat('dd.MM.yyyy').format(_selectedDateTime);
     final formattedTime = DateFormat.Hm().format(_selectedDateTime);
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          l10n.addMeasurementDialogTitle, // or whatever your l10n key is
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-        ),
+      extendBodyBehindAppBar: true,
+      appBar: GlobalAppBar(
+        title: l10n.addMeasurementDialogTitle, // or whatever your l10n key is
+
         actions: [
           TextButton(
             onPressed: _saveSession,
@@ -191,7 +191,9 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
       ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SingleChildScrollView(
-        padding: DesignConstants.cardPadding,
+        padding: DesignConstants.cardPadding.copyWith(
+          top: DesignConstants.cardPadding.top + topPadding,
+        ),
         child: Form(
           key: _formKey,
           child: Column(

@@ -12,6 +12,7 @@ import 'package:lightweight/screens/exercise_detail_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
 // Zum Starten der Routine
 import 'package:lightweight/widgets/glass_fab.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/set_type_chip.dart';
 // HINZUGEFÜGT
 import 'package:lightweight/widgets/wger_attribution_widget.dart'; // HINZUGEFÜGT
@@ -394,20 +395,14 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        automaticallyImplyLeading: true,
-        elevation: 0,
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        title: Text(
-          _isNewRoutine ? l10n.titleNewRoutine : l10n.titleEditRoutine,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-        ),
+      appBar: GlobalAppBar(
+        title: _isNewRoutine ? l10n.titleNewRoutine : l10n.titleEditRoutine,
         actions: [
           TextButton(
             onPressed: () => _saveRoutine(),
@@ -424,7 +419,9 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
       body: Column(
         children: [
           Padding(
-            padding: DesignConstants.screenPadding,
+            padding: DesignConstants.cardPadding.copyWith(
+              top: DesignConstants.cardPadding.top + topPadding,
+            ),
             child: TextFormField(
               controller: _nameController,
               decoration: InputDecoration(labelText: l10n.formFieldRoutineName),

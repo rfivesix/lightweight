@@ -7,6 +7,7 @@ import 'package:lightweight/screens/create_supplement_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/util/supplement_l10n.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/widgets/swipe_action_background.dart';
 
@@ -144,21 +145,22 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          l10n.manageSupplementsTitle,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-        ),
+      extendBodyBehindAppBar: true,
+      appBar: GlobalAppBar(
+        title: l10n.manageSupplementsTitle,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView(
-                padding: DesignConstants.cardPadding,
+                padding: DesignConstants.cardPadding.copyWith(
+                  top: DesignConstants.cardPadding.top + topPadding,
+                ),
                 children: [
                   if (_supplements.isEmpty)
                     Padding(

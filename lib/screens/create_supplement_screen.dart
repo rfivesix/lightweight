@@ -5,6 +5,7 @@ import 'package:lightweight/models/supplement.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/util/util_convert.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 
 class CreateSupplementScreen extends StatefulWidget {
   final Supplement? supplementToEdit;
@@ -92,15 +93,13 @@ class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
     final s = widget.supplementToEdit;
     final bool isBuiltinCaffeine =
         (s?.isBuiltin == true) && (s?.code == 'caffeine');
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _isEditing ? l10n.edit : l10n.createSupplementTitle,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-        ),
+      extendBodyBehindAppBar: true,
+      appBar: GlobalAppBar(
+        title: _isEditing ? l10n.edit : l10n.createSupplementTitle,
         actions: [
           TextButton(
             onPressed: _saveSupplement,
@@ -115,7 +114,9 @@ class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
         ],
       ),
       body: SingleChildScrollView(
-        padding: DesignConstants.cardPadding,
+        padding: DesignConstants.cardPadding.copyWith(
+          top: DesignConstants.cardPadding.top + topPadding,
+        ),
         child: Form(
           key: _formKey,
           child: Column(

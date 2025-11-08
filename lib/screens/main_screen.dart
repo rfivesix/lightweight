@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/dialogs/log_supplement_dialog_content.dart';
@@ -33,13 +34,14 @@ import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/glass_bottom_menu.dart';
 import 'package:lightweight/widgets/glass_bottom_nav_bar.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/keep_alive_page.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:provider/provider.dart';
 
 class MainScreen extends StatefulWidget {
-  final int? initialTabIndex; // <-- NEU
-  const MainScreen({super.key, this.initialTabIndex}); // <-- NEU
+  final int? initialTabIndex;
+  const MainScreen({super.key, this.initialTabIndex});
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
@@ -51,17 +53,16 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       GlobalKey<DiaryScreenState>();
   bool _isAddMenuOpen = false;
   late final AnimationController _menuController;
-  double kNavBarHeight = 76.0; // aktuelle Höhe deiner GlassBottomNavBar
-  double kBarFabGap = 12.0; // Abstand zwischen BottomBar und + Button
+  double kNavBarHeight = 65.0;
+  double kBarFabGap = 12.0;
 
   double _safe01(double v) => v.isNaN ? 0.0 : v.clamp(0.0, 1.0).toDouble();
 
   @override
   void initState() {
     super.initState();
-    _currentIndex = widget.initialTabIndex ?? 0; // <-- NEU: Initialer Tab
-    _pageController =
-        PageController(initialPage: _currentIndex); // <-- NEU: Initial Page
+    _currentIndex = widget.initialTabIndex ?? 0;
+    _pageController = PageController(initialPage: _currentIndex);
     _menuController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
@@ -77,15 +78,14 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
   void _onPageChanged(int index) {
     if (_isWarping) {
-      return; // während Snapshot-Overlay nicht den Index zurückspringen lassen
+      return;
     }
     setState(() => _currentIndex = index);
   }
 
-  final _pvBoundaryKey = GlobalKey(); // RepaintBoundary um die PageView
-  final bool _navAnimating = false;
+  final _pvBoundaryKey = GlobalKey();
   final bool _isWarping = false;
-  ui.Image? _pvSnapshot; // aktueller Snapshot
+  ui.Image? _pvSnapshot;
 
   void _onNavigationTapped(int index) {
     if (!_pageController.hasClients) return;
@@ -133,11 +133,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     }
   }
 
-// in _MainScreenState
   Future<void> _showLogSupplementMenu() async {
     final l10n = AppLocalizations.of(context)!;
 
-    // Schritt 1: Auswahlmenü anzeigen und auf ein Supplement-Objekt warten.
     final Supplement? selectedSupplement =
         await showGlassBottomMenu<Supplement>(
       context: context,
@@ -147,21 +145,17 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       },
     );
 
-    // Wenn der Benutzer abbricht, ist selectedSupplement null.
     if (selectedSupplement == null || !mounted) return;
 
-    // Schritt 2: Dosis-Eingabemenü für das ausgewählte Supplement anzeigen.
     final result = await showGlassBottomMenu<(double, DateTime)?>(
       context: context,
       title: localizeSupplementName(selectedSupplement, l10n),
       contentBuilder: (ctx, close) {
-        // Hier verwenden wir das korrekte, wiederverwendbare Widget.
         return LogSupplementDoseBody(
           supplement: selectedSupplement,
           primaryLabel: l10n.add_button,
           onCancel: close,
           onSubmit: (dose, ts) {
-            // Die onSubmit-Funktion gibt die Daten zurück.
             close();
             Navigator.of(ctx).pop((dose, ts));
           },
@@ -169,7 +163,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       },
     );
 
-    // Schritt 3: Ergebnis verarbeiten und speichern.
     if (result != null) {
       final newLog = SupplementLog(
         supplementId: selectedSupplement.id!,
@@ -178,7 +171,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         timestamp: result.$2,
       );
       await DatabaseHelper.instance.insertSupplementLog(newLog);
-      _refreshHomeScreen(); // UI aktualisieren
+      _refreshHomeScreen();
     }
   }
 
@@ -360,7 +353,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     final bool isLiquid = result.isLiquid;
     final double? caffeinePer100 = result.caffeinePer100ml;
 
-    // 1. Immer den FoodEntry mit allen Nährwerten speichern
     final newFoodEntry = FoodEntry(
       barcode: selectedFoodItem.barcode,
       timestamp: timestamp,
@@ -371,23 +363,20 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       newFoodEntry,
     );
 
-    // 2. Wenn es eine Flüssigkeit ist, ZUSÄTZLICH einen FluidEntry NUR FÜR WASSER erstellen
     if (isLiquid) {
       final newFluidEntry = FluidEntry(
         timestamp: timestamp,
         quantityInMl: quantity,
         name: selectedFoodItem.name,
-        // WICHTIG: Keine Nährwerte hier, um Doppelzählung zu vermeiden!
         kcal: null,
         sugarPer100ml: null,
         carbsPer100ml: null,
         caffeinePer100ml: null,
-        linked_food_entry_id: newFoodEntryId, // Die neue Verknüpfung
+        linked_food_entry_id: newFoodEntryId,
       );
       await DatabaseHelper.instance.insertFluidEntry(newFluidEntry);
     }
 
-    // 3. Koffein nur loggen, wenn als Flüssigkeit deklariert, und mit FoodEntry verknüpfen
     if (isLiquid && caffeinePer100 != null && caffeinePer100 > 0) {
       final totalCaffeine = (caffeinePer100 / 100.0) * quantity;
       await _logCaffeineDose(
@@ -446,7 +435,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                         name: name,
                         kcal: kcal,
                         sugarPer100ml: sugarPer100ml,
-                        carbsPer100ml: sugarPer100ml, // Spiegeln
+                        carbsPer100ml: sugarPer100ml,
                         caffeinePer100ml: caffeinePer100ml,
                       );
 
@@ -501,7 +490,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         dose: doseMg,
         unit: 'mg',
         timestamp: timestamp,
-        // EINEN der beiden Fremdschlüssel setzen
         source_food_entry_id: foodEntryId,
         source_fluid_entry_id: fluidEntryId,
       ),
@@ -635,7 +623,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       case 'creatine_monohydrate':
         return l10n.supplement_creatine_monohydrate;
       default:
-        // Fallback: benutzerdefinierte Supplements behalten ihren Namen
         return s.name;
     }
   }
@@ -763,7 +750,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       );
       setState(() => _pvSnapshot = img);
     } catch (_) {
-      // fail silently – wir fallen dann einfach auf den bisherigen Warp zurück
+      // fail silently
     }
   }
 
@@ -771,56 +758,45 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     setState(() => _pvSnapshot = null);
   }
 
-  AppBar _buildAppBar(BuildContext context, int index, AppLocalizations l10n) {
-    String title = '';
-    // Handle titles for Train, Stats, and Profile screens
+  // Top-Inset für Content, damit er direkt unterhalb der GlobalAppBar startet.
+  double _topContentInset(BuildContext context) {
+    // Content soll unterhalb der Toolbar starten; der Fade-Bereich darf darüberliegen.
+    final paddingTop = MediaQuery.of(context).padding.top;
+    return paddingTop + kToolbarHeight;
+  }
+
+  Widget _withTopSpacer(BuildContext context, Widget child) {
+    return Padding(
+      padding: EdgeInsets.only(top: _topContentInset(context)),
+      child: child,
+    );
+  }
+
+  // ERSETZE DIESE METHODE
+  GlobalAppBar _buildAppBar(
+      BuildContext context, int index, AppLocalizations l10n) {
     switch (index) {
-      case 1:
-        title = 'Workout'; // TODO: l10n
-        return AppBar(
-          title: Text(
-            title,
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-          ),
-          actions: [
-            _profileAppBarButton(context), // ⬅️ NEU
-          ],
+      case 1: // Workout
+        return GlobalAppBar(
+          title: 'Workout', // TODO: l10n
+          actions: [_profileAppBarButton(context)],
         );
-      case 2:
-        return AppBar(
-          title: Text(
-            l10n.statistics, // ← NEW (or l10n.stats)
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-          ),
-          actions: [
-            _profileAppBarButton(context), // ⬅️ NEU
-          ],
+      case 2: // Stats
+        return GlobalAppBar(
+          title: l10n.statistics,
+          actions: [_profileAppBarButton(context)],
         );
-      case 3:
-        // The profile screen's AppBar is now managed here.
-        return AppBar(
-          title: Text(
-            l10n.nutritionHubTitle,
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-          ),
-          actions: [
-            _profileAppBarButton(context), // ⬅️ NEU
-          ],
+      case 3: // Nutrition Hub
+        return GlobalAppBar(
+          title: l10n.nutritionHubTitle,
+          actions: [_profileAppBarButton(context)],
         );
-      case 0:
+      case 0: // Diary
       default:
-        // The Diary Screen has a special, dynamic AppBar
-        return AppBar(
+        return GlobalAppBar(
           automaticallyImplyLeading: false,
           titleSpacing: 0,
-          title: DiaryAppBar(
-            // Pass the state's notifier directly IF the state exists
+          titleWidget: DiaryAppBar(
             selectedDateNotifier:
                 _tagebuchKey.currentState?.selectedDateNotifier,
           ),
@@ -843,7 +819,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 _tagebuchKey.currentState?.navigateDay(true);
               },
             ),
-            _profileAppBarButton(context), // ⬅️ NEU
+            _profileAppBarButton(context),
           ],
         );
     }
@@ -889,28 +865,47 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
+  Widget _pillIcon({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      customBorder: const CircleBorder(),
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Icon(
+          icon,
+          size: 18,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final profileService = Provider.of<ProfileService>(context);
 
-    // Workout-Status (nur UI, Logik bleibt)
     final manager = context.watch<WorkoutSessionManager>();
-    final bool isWorkoutRunning = manager.isActive; // ✅
-    final String elapsed = _formatDuration(manager.elapsedDuration); // ✅
-    const basePad = 120.0; // nav bar + FAB visual height
+    final bool isWorkoutRunning = manager.isActive;
+    final String elapsed = _formatDuration(manager.elapsedDuration);
+    const basePad = 120.0;
     final runningPad = manager.isActive ? 68.0 : 0.0;
 
-    // --- NEU: HIER DEFINIEREN ---
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
-    // --- ENDE NEU: HIER DEFINIEREN ---
 
     const double rLiquid = 99;
 
     return Stack(
       children: [
         Scaffold(
+          extendBodyBehindAppBar: true, // <-- WICHTIGE ÄNDERUNG
           extendBody: true,
           appBar: _buildAppBar(context, _currentIndex, l10n),
           body: PageView(
@@ -919,29 +914,29 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             children: <Widget>[
               KeepAlivePage(
                 storageKey: const PageStorageKey('tab_tagebuch'),
-                child: DiaryScreen(key: _tagebuchKey),
+                child: DiaryScreen(key: _tagebuchKey), // Bereits korrekt
               ),
               const KeepAlivePage(
                 storageKey: PageStorageKey('tab_workout'),
+                // Wrapper entfernt
                 child: WorkoutHubScreen(),
               ),
               const KeepAlivePage(
                 storageKey: PageStorageKey('tab_stats'),
+                // Wrapper entfernt
                 child: StatisticsHubScreen(),
               ),
               const KeepAlivePage(
                 storageKey: PageStorageKey('tab_nutrition'),
+                // Wrapper entfernt
                 child: NutritionHubScreen(),
               ),
             ],
           ),
         ),
-
-        // RUNNING WORKOUT BAR (oberhalb der BottomBar)
         if (isWorkoutRunning)
           Positioned(
-            bottom: 24 + kNavBarHeight + kBarFabGap,
-            // Abstand: BottomBar-Höhe + 8
+            bottom: 36 + kNavBarHeight,
             left: 16,
             right: 16,
             child: _FrostedBar(
@@ -994,8 +989,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
               ),
             ),
           ),
-
-        // GLASS BOTTOM NAV BAR (deine kombinierte Leiste)
         Positioned(
           bottom: 24,
           left: 16,
@@ -1003,12 +996,11 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Bottom bar takes the remaining width
               Expanded(
                 child: GlassBottomNavBar(
                   currentIndex: _currentIndex,
                   onTap: _onNavigationTapped,
-                  onFabTap: _toggleAddMenu, // now ignored by the bar
+                  onFabTap: _toggleAddMenu,
                   items: [
                     BottomNavigationBarItem(
                       icon: const Icon(Icons.book_outlined),
@@ -1020,32 +1012,27 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                     ),
                     const BottomNavigationBarItem(
                       icon: Icon(Icons.bar_chart_outlined),
-                      label: 'Stats', //l10n.statistics,
+                      label: 'Stats',
                     ),
                     BottomNavigationBarItem(
                       icon: const Icon(Icons.restaurant_menu_rounded),
-                      label: l10n.nutrition, // oder einfach "Nutrition"
+                      label: l10n.nutrition,
                     ),
                   ],
                 ),
               ),
               SizedBox(width: kBarFabGap),
-              // Detached GlassFab (+)
               GlassFab(
                 onPressed: _toggleAddMenu,
                 icon: Icons.add,
-                // label: null, // keep it square; add a label if you want a pill
               ),
             ],
           ),
         ),
-
-        // SPEED-DIAL (unverändert)
         AnimatedBuilder(
           animation: _menuController,
           builder: (context, _) {
             final v = _safe01(_menuController.value);
-            // --- Insert themeService and local tint colors for tiles ---
             final themeService = context.watch<ThemeService>();
             final bool isDarkLocal =
                 Theme.of(context).brightness == Brightness.dark;
@@ -1056,7 +1043,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                     .withOpacity(isDarkLocal ? 0.10 : 0.10);
             final Color effectiveGlassLocal = Color.alphaBlend(neutralTintLocal,
                 bgLocal.withOpacity(isDarkLocal ? 0.22 : 0.16));
-            // ----------------------------------------------------------
             return Offstage(
               offstage: v == 0.0,
               child: IgnorePointer(
@@ -1131,7 +1117,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                         ),
                                       ),
                                       const SizedBox(width: 16),
-                                      // --- HIER WIRD DER GLAS-BUTTON ERSETZT ---
                                       GestureDetector(
                                         behavior: HitTestBehavior.opaque,
                                         onTap: () {
@@ -1157,8 +1142,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                     const LiquidRoundedSuperellipse(
                                                         borderRadius: rLiquid),
                                                 child: Container(
-                                                  width: 76,
-                                                  height: 76,
+                                                  width: 65.0,
+                                                  height: 65.0,
                                                   decoration: BoxDecoration(
                                                     color: neutralTintLocal,
                                                     borderRadius:
@@ -1238,7 +1223,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                 ),
                                               ),
                                       ),
-                                      // --- ENDE DES GLAS-BUTTON ERSATZES ---
                                     ],
                                   ),
                                 ),
@@ -1260,18 +1244,16 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
   Widget _profileAppBarButton(BuildContext context) {
     final profileService = Provider.of<ProfileService>(context, listen: false);
-
     return Padding(
-      // ⬇️ Abstand analog zu SummaryCard
       padding: const EdgeInsets.only(
         right: DesignConstants.screenPaddingHorizontal,
       ),
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: () {
-          Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => const ProfileScreen()));
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ProfileScreen()),
+          );
         },
         child: CircleAvatar(
           radius: 18,
@@ -1298,53 +1280,55 @@ class _FrostedBar extends StatelessWidget {
     final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
     final themeService = context.watch<ThemeService>();
 
-    // neutrale Tönung + effektive Glasfarbe (wirkt auch bei leerem Hintergrund)
     final Color neutralTint =
         (isDark ? Colors.white : Colors.black).withOpacity(isDark ? 0.1 : 0.1);
     final Color effectiveGlass =
         Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.22 : 0.16));
 
     if (themeService.visualStyle == 1) {
-      // LIQUID-STYLE
       double radius = 99;
-      return LiquidGlass.withOwnLayer(
-        settings: LiquidGlassSettings(
-          thickness: 25,
-          blur: 5,
-          glassColor: effectiveGlass,
-          lightIntensity: 0.35,
-          saturation: 1.10,
-        ),
-        shape: LiquidRoundedSuperellipse(borderRadius: radius),
-        child: Stack(
-          children: [
-            // Basistönung IN der Pille – nur ein Hauch, hilft auf leerem Hintergrund
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(color: neutralTint),
-              ),
+      return SizedBox(
+        height: 65.0,
+        child: LiquidStretch(
+          stretch: 0.2,
+          interactionScale: 1.04,
+          child: LiquidGlass.withOwnLayer(
+            settings: LiquidGlassSettings(
+              thickness: 30,
+              blur: 0.75,
+              glassColor: effectiveGlass,
+              lightIntensity: 0.35,
+              saturation: 1.10,
             ),
-            Container(
-              // sanfter Innen-Padding wie vorher
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              // optional: dezenter Rand wie zuvor (falls du den Rim nicht willst: entfernen)
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(radius.toDouble()),
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withOpacity(0.20)
-                      : Colors.black.withOpacity(0.08),
-                  width: 1.2,
+            shape: LiquidRoundedSuperellipse(borderRadius: radius),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(color: neutralTint),
+                  ),
                 ),
-              ),
-              child: child,
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(radius.toDouble()),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white.withOpacity(0.20)
+                          : Colors.black.withOpacity(0.08),
+                      width: 1.2,
+                    ),
+                  ),
+                  child: child,
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       );
     }
     double radius = 20;
-    // STANDARD (Fallback wie zuvor mit BackdropFilter)
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius.toDouble()),
       child: BackdropFilter(
@@ -1406,7 +1390,7 @@ class _RunningWorkoutRow extends StatelessWidget {
                   color: Theme.of(
                     context,
                   ).colorScheme.onSurface.withOpacity(0.9),
-                  decoration: TextDecoration.none, // ← remove underline
+                  decoration: TextDecoration.none,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
@@ -1418,7 +1402,7 @@ class _RunningWorkoutRow extends StatelessWidget {
           style: FilledButton.styleFrom(
             backgroundColor: cs.primary,
             foregroundColor: cs.onPrimary,
-            minimumSize: const Size(0, 36),
+            minimumSize: const Size(0, 28),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),
@@ -1431,7 +1415,7 @@ class _RunningWorkoutRow extends StatelessWidget {
           style: FilledButton.styleFrom(
             backgroundColor: cs.error,
             foregroundColor: cs.onError,
-            minimumSize: const Size(0, 36),
+            minimumSize: const Size(0, 28),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),

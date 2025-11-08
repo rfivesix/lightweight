@@ -4,6 +4,7 @@ import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/models/exercise.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 
 class CreateExerciseScreen extends StatefulWidget {
   const CreateExerciseScreen({super.key});
@@ -119,15 +120,12 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          l10n.create_exercise_screen_title,
-          style: Theme.of(context)
-              .textTheme
-              .titleLarge
-              ?.copyWith(fontWeight: FontWeight.w900),
-        ),
+      extendBodyBehindAppBar: true,
+      appBar: GlobalAppBar(
+        title: l10n.create_exercise_screen_title,
         actions: [
           // Speicher-Button in der AppBar
           TextButton(
@@ -157,7 +155,9 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
           ? const Center(
               child: CircularProgressIndicator()) // Zeige Ladeindikator
           : SingleChildScrollView(
-              padding: DesignConstants.cardPadding, // Einheitlicher Padding
+              padding: DesignConstants.cardPadding.copyWith(
+                top: DesignConstants.cardPadding.top + topPadding,
+              ),
               child: Form(
                 key: _formKey,
                 child: Column(

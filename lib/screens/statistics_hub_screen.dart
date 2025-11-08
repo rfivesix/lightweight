@@ -122,134 +122,145 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadAllData,
-              child: ListView(
-                padding: DesignConstants.cardPadding,
-                children: [
-                  _buildSectionTitle(context, l10n.my_consistency),
-                  SummaryCard(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: TableCalendar(
-                        locale: Localizations.localeOf(context).toString(),
-                        firstDay: DateTime.utc(2020, 1, 1),
-                        lastDay: DateTime.now().add(const Duration(days: 365)),
-                        focusedDay: _focusedDay,
-                        selectedDayPredicate: (day) =>
-                            isSameDay(_selectedDay, day),
-                        calendarFormat: CalendarFormat.month,
-                        headerStyle: HeaderStyle(
-                          formatButtonVisible: false,
-                          titleCentered: true,
-                          titleTextStyle: Theme.of(
-                            context,
-                          ).textTheme.titleMedium!,
-                        ),
-                        onDaySelected: (selectedDay, focusedDay) {
-                          setState(() {
-                            _selectedDay = selectedDay;
-                            _focusedDay = focusedDay;
-                          });
-                        },
-                        onPageChanged: (focusedDay) {
-                          setState(() {
-                            _focusedDay = focusedDay;
-                          });
-                          _loadMonthData(focusedDay);
-                        },
-                        calendarBuilders: CalendarBuilders(
-                          markerBuilder: (context, day, events) {
-                            final isNutritionDay = _nutritionLogDays.contains(
-                              day.day,
-                            );
-                            final isSupplementDay = _supplementDays.contains(
-                              day.day,
-                            );
+    final double appBarHeight =
+        MediaQuery.of(context).padding.top; // + kToolbarHeight;
 
-                            return Positioned(
-                              bottom: 4,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (isNutritionDay)
-                                    Container(
-                                      width: 6,
-                                      height: 6,
-                                      decoration: const BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.blueAccent,
-                                      ),
+    // 2. Get your base padding from your design constants
+    const EdgeInsets basePadding =
+        DesignConstants.cardPadding; // This is EdgeInsets.all(16.0)
+
+    // 3. Create the final combined padding
+    final EdgeInsets finalPadding = basePadding.copyWith(
+      // Take the original top value (16.0) and add the app bar height
+      top: basePadding.top + appBarHeight,
+    );
+    return _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : RefreshIndicator(
+            onRefresh: _loadAllData,
+            child: ListView(
+              padding: finalPadding,
+              children: [
+                _buildSectionTitle(context, l10n.my_consistency),
+                SummaryCard(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TableCalendar(
+                      locale: Localizations.localeOf(context).toString(),
+                      firstDay: DateTime.utc(2020, 1, 1),
+                      lastDay: DateTime.now().add(const Duration(days: 365)),
+                      focusedDay: _focusedDay,
+                      selectedDayPredicate: (day) =>
+                          isSameDay(_selectedDay, day),
+                      calendarFormat: CalendarFormat.month,
+                      headerStyle: HeaderStyle(
+                        formatButtonVisible: false,
+                        titleCentered: true,
+                        titleTextStyle: Theme.of(
+                          context,
+                        ).textTheme.titleMedium!,
+                      ),
+                      onDaySelected: (selectedDay, focusedDay) {
+                        setState(() {
+                          _selectedDay = selectedDay;
+                          _focusedDay = focusedDay;
+                        });
+                      },
+                      onPageChanged: (focusedDay) {
+                        setState(() {
+                          _focusedDay = focusedDay;
+                        });
+                        _loadMonthData(focusedDay);
+                      },
+                      calendarBuilders: CalendarBuilders(
+                        markerBuilder: (context, day, events) {
+                          final isNutritionDay = _nutritionLogDays.contains(
+                            day.day,
+                          );
+                          final isSupplementDay = _supplementDays.contains(
+                            day.day,
+                          );
+
+                          return Positioned(
+                            bottom: 4,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (isNutritionDay)
+                                  Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.blueAccent,
                                     ),
-                                  if (isNutritionDay && isSupplementDay)
-                                    const SizedBox(width: 2),
-                                  if (isSupplementDay)
-                                    Container(
-                                      width: 6,
-                                      height: 6,
-                                      decoration: const BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.amber,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            );
-                          },
-                          defaultBuilder: (context, day, focusedDay) {
-                            final isWorkoutDay = _workoutDays.contains(day.day);
-                            if (isWorkoutDay) {
-                              return Center(
-                                child: Container(
-                                  width: 32,
-                                  height: 32,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
                                   ),
-                                  child: Center(
-                                    child: Text(
-                                      '${day.day}',
-                                      style: TextStyle(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onPrimary,
-                                      ),
+                                if (isNutritionDay && isSupplementDay)
+                                  const SizedBox(width: 2),
+                                if (isSupplementDay)
+                                  Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.amber,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
+                        defaultBuilder: (context, day, focusedDay) {
+                          final isWorkoutDay = _workoutDays.contains(day.day);
+                          if (isWorkoutDay) {
+                            return Center(
+                              child: Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '${day.day}',
+                                    style: TextStyle(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onPrimary,
                                     ),
                                   ),
                                 ),
-                              );
-                            }
-                            return null;
-                          },
-                        ),
+                              ),
+                            );
+                          }
+                          return null;
+                        },
                       ),
                     ),
                   ),
-                  //const SizedBox(height: DesignConstants.spacingS),
-                  //_buildBannerCard(l10n),
-                  const SizedBox(height: DesignConstants.spacingXL),
-                  _buildSectionTitle(context, l10n.in_depth_analysis),
-                  _buildAnalysisGateway(
-                    context: context,
-                    icon: Icons.monitor_weight_outlined,
-                    title: l10n.body_measurements,
-                    subtitle: l10n.measurements_description,
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const MeasurementsScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  //const SizedBox(height: DesignConstants.spacingM),
-                  /*
+                ),
+                //const SizedBox(height: DesignConstants.spacingS),
+                //_buildBannerCard(l10n),
+                const SizedBox(height: DesignConstants.spacingXL),
+                _buildSectionTitle(context, l10n.in_depth_analysis),
+                _buildAnalysisGateway(
+                  context: context,
+                  icon: Icons.monitor_weight_outlined,
+                  title: l10n.body_measurements,
+                  subtitle: l10n.measurements_description,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const MeasurementsScreen(),
+                      ),
+                    );
+                  },
+                ),
+                //const SizedBox(height: DesignConstants.spacingM),
+                /*
                   _buildAnalysisGateway(
                     context: context,
                     icon: Icons.pie_chart_outline_rounded,
@@ -276,11 +287,10 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                     },
                   ),
                   */
-                  const BottomContentSpacer(),
-                ],
-              ),
+                const BottomContentSpacer(),
+              ],
             ),
-    );
+          );
   }
 
   Widget _buildBannerCard(AppLocalizations l10n) {

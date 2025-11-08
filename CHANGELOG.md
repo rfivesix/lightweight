@@ -11,9 +11,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     * Added bottom spacer in the food explorer
     * added glass bottom menu in supplement screen
     * added glass bottom menu in data management screen
+* **haptic:**
+    * added haptic feedback on the glass navigationbar
 ### Changed
 * haptic
     * increased haptic feedback when hovering on the weight graph
+    * increased feedback on glassFAB
+* **UI/UX**
+    * changed the Appbar to blur
+### Fixed
+* Fixed an issue where a routine did not loaded.
+    
 
 ## [0.4.0-beta.4] - 2025-11-07
 

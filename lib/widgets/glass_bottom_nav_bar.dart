@@ -27,13 +27,17 @@ class GlassBottomNavBar extends StatelessWidget {
     VoidCallback onTap,
   ) {
     final cs = Theme.of(context).colorScheme;
-    final color = isSelected ? cs.primary : cs.onSurface.withOpacity(0.60);
-
+    final isDarkLocal = Theme.of(context).brightness == Brightness.dark;
+    final color =
+        isSelected ? cs.primary : (isDarkLocal ? Colors.white : Colors.black);
     return Expanded(
       child: Material(
         type: MaterialType.transparency,
         child: InkWell(
-          onTap: onTap,
+          onTap: () {
+            HapticFeedback.lightImpact();
+            onTap();
+          },
           borderRadius: BorderRadius.circular(16),
           splashColor: Colors.transparent,
           highlightColor: Colors.transparent,
@@ -45,7 +49,7 @@ class GlassBottomNavBar extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 IconTheme(
-                  data: IconThemeData(color: color, size: 24),
+                  data: IconThemeData(color: color, size: 18),
                   child: item.icon,
                 ),
                 const SizedBox(height: 4),
@@ -105,7 +109,7 @@ class GlassBottomNavBar extends StatelessWidget {
       ],
     );
 
-    const barHeight = 76.0;
+    const barHeight = 65.0;
 
     switch (themeService.visualStyle) {
       case 1:
@@ -138,14 +142,16 @@ class GlassBottomNavBar extends StatelessWidget {
                 lastDx = details.localPosition.dx;
                 final idx = _indexFromDx(lastDx!, barWidth, items.length);
                 lastHoverIndex = idx;
-                HapticFeedback.selectionClick(); // leichtes Feedback beim ersten Kontakt
+                HapticFeedback
+                    .selectionClick(); // leichtes Feedback beim ersten Kontakt
               },
               onPanUpdate: (details) {
                 lastDx = details.localPosition.dx;
                 final idx = _indexFromDx(lastDx!, barWidth, items.length);
                 if (idx != lastHoverIndex) {
                   lastHoverIndex = idx;
-                  HapticFeedback.lightImpact(); // leichtes Feedback beim Wechseln der Zone
+                  HapticFeedback
+                      .lightImpact(); // leichtes Feedback beim Wechseln der Zone
                 }
               },
               onPanEnd: (_) {
@@ -156,12 +162,12 @@ class GlassBottomNavBar extends StatelessWidget {
                 lastHoverIndex = null;
               },
               child: LiquidStretch(
-                stretch: 0.55,
+                stretch: 0.2,
                 interactionScale: 1.04,
                 child: LiquidGlass.withOwnLayer(
                   settings: LiquidGlassSettings(
-                    thickness: 25,
-                    blur: 5,
+                    thickness: 30,
+                    blur: 0.75,
                     glassColor: effectiveGlass,
                     lightIntensity: 0.35,
                     saturation: 1.10,

@@ -8,6 +8,7 @@ import 'package:lightweight/screens/edit_routine_screen.dart';
 import 'package:lightweight/screens/live_workout_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/widgets/swipe_action_background.dart';
 
@@ -157,27 +158,23 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
     final l10n = AppLocalizations.of(context)!;
     final textTheme = Theme.of(context).textTheme; // Hier definiert
 
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        automaticallyImplyLeading: true,
-        elevation: 0,
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        title: Text(
-          l10n.workoutRoutinesTitle,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-        ),
+      appBar: GlobalAppBar(
+        title: l10n.workoutRoutinesTitle,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _routines.isEmpty
               ? _buildEmptyState(context, l10n, textTheme)
               : ListView.builder(
-                  padding: DesignConstants.cardPadding,
+                  padding: DesignConstants.cardPadding.copyWith(
+                    top: DesignConstants.cardPadding.top + topPadding,
+                  ),
                   itemCount: _routines.length + 1, // statt +2
                   itemBuilder: (context, index) {
                     if (index == 0) {
