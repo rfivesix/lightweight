@@ -53,10 +53,21 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       GlobalKey<DiaryScreenState>();
   bool _isAddMenuOpen = false;
   late final AnimationController _menuController;
-  double kNavBarHeight = 65.0;
+
+  ThemeService get themeService =>
+      Provider.of<ThemeService>(context, listen: false);
+  bool get isLiquid => themeService.visualStyle == 1;
+
+  double get kNavBarHeight => isLiquid ? 65 : 72;
   double kBarFabGap = 12.0;
 
   double _safe01(double v) => v.isNaN ? 0.0 : v.clamp(0.0, 1.0).toDouble();
+  DateTime get _currentActiveDate {
+    if (_currentIndex == 0 && _tagebuchKey.currentState != null) {
+      return _tagebuchKey.currentState!.selectedDateNotifier.value;
+    }
+    return DateTime.now();
+  }
 
   @override
   void initState() {
@@ -66,7 +77,70 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     _menuController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
-    );
+    ); // In lib/screens/main_screen.dart
+
+    Future<void> handleAddFood() async {
+      final FoodItem? selectedFoodItem =
+          await Navigator.of(context).push<FoodItem>(
+        MaterialPageRoute(builder: (context) => const AddFoodScreen()),
+      );
+
+      if (selectedFoodItem == null || !mounted) return;
+
+      // FIX: Datum holen
+      final targetDate = _currentActiveDate;
+
+      // FIX: Datum übergeben (Signatur unten anpassen!)
+      final result =
+          await _showQuantityMenu(selectedFoodItem, initialDate: targetDate);
+
+      if (result == null || !mounted) return;
+
+      final int quantity = result.quantity;
+      final DateTime timestamp =
+          result.timestamp; // Das kommt jetzt korrekt aus dem Dialog
+      final String mealType = result.mealType;
+      final bool isLiquid = result.isLiquid;
+      final double? caffeinePer100 = result.caffeinePer100ml;
+
+      // ... (Restliche Logik: insertFoodEntry, insertFluidEntry etc. bleibt gleich) ...
+      // Der timestamp hier ist bereits korrekt, weil er aus dem Dialog kommt,
+      // der mit targetDate initialisiert wurde.
+
+      final newFoodEntry = FoodEntry(
+        barcode: selectedFoodItem.barcode,
+        timestamp: timestamp,
+        quantityInGrams: quantity,
+        mealType: mealType,
+      );
+
+      final newFoodEntryId =
+          await DatabaseHelper.instance.insertFoodEntry(newFoodEntry);
+
+      if (isLiquid) {
+        // ... insertFluidEntry mit timestamp ...
+        final newFluidEntry = FluidEntry(
+          timestamp: timestamp,
+          quantityInMl: quantity,
+          name: selectedFoodItem.name,
+          kcal: null,
+          sugarPer100ml: null,
+          carbsPer100ml: null,
+          caffeinePer100ml: null,
+          linked_food_entry_id: newFoodEntryId,
+        );
+        await DatabaseHelper.instance.insertFluidEntry(newFluidEntry);
+      }
+
+      if (isLiquid && caffeinePer100 != null && caffeinePer100 > 0) {
+        // ... logCaffeineDose ...
+        final totalCaffeine = (caffeinePer100 / 100.0) * quantity;
+        await _logCaffeineDose(totalCaffeine, timestamp,
+            foodEntryId: newFoodEntryId);
+      }
+
+      _refreshHomeScreen();
+    }
   }
 
   @override
@@ -134,18 +208,19 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _showLogSupplementMenu() async {
+    // ... (Supplement Auswahl bleibt gleich) ...
     final l10n = AppLocalizations.of(context)!;
-
     final Supplement? selectedSupplement =
         await showGlassBottomMenu<Supplement>(
       context: context,
       title: l10n.logIntakeTitle,
-      contentBuilder: (ctx, close) {
-        return LogSupplementMenu(close: close);
-      },
+      contentBuilder: (ctx, close) => LogSupplementMenu(close: close),
     );
 
     if (selectedSupplement == null || !mounted) return;
+
+    // FIX: Datum holen
+    final targetDate = _currentActiveDate;
 
     final result = await showGlassBottomMenu<(double, DateTime)?>(
       context: context,
@@ -153,6 +228,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       contentBuilder: (ctx, close) {
         return LogSupplementDoseBody(
           supplement: selectedSupplement,
+          initialTimestamp: targetDate, // <--- FIX: Datum übergeben
           primaryLabel: l10n.add_button,
           onCancel: close,
           onSubmit: (dose, ts) {
@@ -336,6 +412,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     );
   }
 
+  // In lib/screens/main_screen.dart
+
   Future<void> _handleAddFood() async {
     final FoodItem? selectedFoodItem =
         await Navigator.of(context).push<FoodItem>(
@@ -344,14 +422,25 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
     if (selectedFoodItem == null || !mounted) return;
 
-    final result = await _showQuantityMenu(selectedFoodItem);
+    // FIX: Datum holen
+    final targetDate = _currentActiveDate;
+
+    // FIX: Datum übergeben (Signatur unten anpassen!)
+    final result =
+        await _showQuantityMenu(selectedFoodItem, initialDate: targetDate);
+
     if (result == null || !mounted) return;
 
     final int quantity = result.quantity;
-    final DateTime timestamp = result.timestamp;
+    final DateTime timestamp =
+        result.timestamp; // Das kommt jetzt korrekt aus dem Dialog
     final String mealType = result.mealType;
     final bool isLiquid = result.isLiquid;
     final double? caffeinePer100 = result.caffeinePer100ml;
+
+    // ... (Restliche Logik: insertFoodEntry, insertFluidEntry etc. bleibt gleich) ...
+    // Der timestamp hier ist bereits korrekt, weil er aus dem Dialog kommt,
+    // der mit targetDate initialisiert wurde.
 
     final newFoodEntry = FoodEntry(
       barcode: selectedFoodItem.barcode,
@@ -359,11 +448,12 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       quantityInGrams: quantity,
       mealType: mealType,
     );
-    final newFoodEntryId = await DatabaseHelper.instance.insertFoodEntry(
-      newFoodEntry,
-    );
+
+    final newFoodEntryId =
+        await DatabaseHelper.instance.insertFoodEntry(newFoodEntry);
 
     if (isLiquid) {
+      // ... insertFluidEntry mit timestamp ...
       final newFluidEntry = FluidEntry(
         timestamp: timestamp,
         quantityInMl: quantity,
@@ -378,12 +468,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     }
 
     if (isLiquid && caffeinePer100 != null && caffeinePer100 > 0) {
+      // ... logCaffeineDose ...
       final totalCaffeine = (caffeinePer100 / 100.0) * quantity;
-      await _logCaffeineDose(
-        totalCaffeine,
-        timestamp,
-        foodEntryId: newFoodEntryId,
-      );
+      await _logCaffeineDose(totalCaffeine, timestamp,
+          foodEntryId: newFoodEntryId);
     }
 
     _refreshHomeScreen();
@@ -392,6 +480,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   Future<void> _showAddFluidMenu() async {
     final l10n = AppLocalizations.of(context)!;
     final key = GlobalKey<FluidDialogContentState>();
+    final targetDate = _currentActiveDate; // <--- FIX
+
     await showGlassBottomMenu(
       context: context,
       title: l10n.add_liquid_title,
@@ -399,7 +489,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            FluidDialogContent(key: key),
+            FluidDialogContent(
+              key: key,
+              initialTimestamp: targetDate, // <--- FIX: Datum übergeben
+            ),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -497,33 +590,33 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   }
 
   Future<
-      ({
-        int quantity,
-        DateTime timestamp,
-        String mealType,
-        bool isLiquid,
-        double? sugarPer100ml,
-        double? caffeinePer100ml,
-      })?> _showQuantityMenu(FoodItem item) async {
+          ({
+            int quantity,
+            DateTime timestamp,
+            String mealType,
+            bool isLiquid,
+            double? sugarPer100ml,
+            double? caffeinePer100ml,
+          })?>
+      _showQuantityMenu(FoodItem item,
+          {DateTime? initialDate} // <--- NEUER PARAMETER
+          ) async {
     final l10n = AppLocalizations.of(context)!;
     final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
 
-    return showGlassBottomMenu<
-        ({
-          int quantity,
-          DateTime timestamp,
-          String mealType,
-          bool isLiquid,
-          double? sugarPer100ml,
-          double? caffeinePer100ml,
-        })>(
+    return showGlassBottomMenu(
       context: context,
       title: item.name,
       contentBuilder: (ctx, close) {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            QuantityDialogContent(key: dialogStateKey, item: item),
+            QuantityDialogContent(
+              key: dialogStateKey,
+              item: item,
+              initialTimestamp:
+                  initialDate ?? DateTime.now(), // <--- FIX: Nutzen
+            ),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -1283,7 +1376,7 @@ class _FrostedBar extends StatelessWidget {
     final Color neutralTint =
         (isDark ? Colors.white : Colors.black).withOpacity(isDark ? 0.1 : 0.1);
     final Color effectiveGlass =
-        Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.22 : 0.16));
+        Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.8 : 0.5));
 
     if (themeService.visualStyle == 1) {
       double radius = 99;

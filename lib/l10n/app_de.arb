@@ -618,5 +618,6 @@
   "startCapsLock": "START",
   "nutritionHubSubtitle": "Entdecke Einblicke, verfolge Mahlzeiten und erstelle hier bald deinen Ernährungsplan.",
   "nutritionHubTitle": "Ernährung",
-  "nutrition": "Ernährung"
+  "nutrition": "Ernährung",
+  "changeSetTypTitle":"Satztyp ändern"
 }

@@ -1441,4 +1441,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get nutrition => 'Ernährung';
+
+  @override
+  String get changeSetTypTitle => 'Satztyp ändern';
 }

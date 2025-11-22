@@ -16,7 +16,7 @@ import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
 
 // Dev-Flag: später einfach auf false setzen oder die Dev-Blöcke entfernen.
-const bool kDevEditEnabled = true;
+const bool kDevEditEnabled = false;
 
 class FoodDetailScreen extends StatefulWidget {
   final TrackedFoodItem? trackedItem;

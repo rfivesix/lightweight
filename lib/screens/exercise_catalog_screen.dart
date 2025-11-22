@@ -6,6 +6,7 @@ import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/exercise.dart';
 import 'package:lightweight/screens/exercise_detail_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/glass_bottom_menu.dart';
 import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/widgets/wger_attribution_widget.dart';
@@ -61,59 +62,74 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
     }
   }
 
+  // In lib/screens/exercise_catalog_screen.dart
+
   void _showFilterDialog(BuildContext context, AppLocalizations l10n) {
-    showDialog(
+    showGlassBottomMenu(
       context: context,
-      builder: (context) {
-        // Lokaler State für die Auswahl im Dialog
-        List<String> tempSelectedCategories = List.from(_selectedCategories);
+      title: l10n.filterByCategory,
+      contentBuilder: (ctx, close) {
+        // Lokaler State für das Bottom Sheet
+        List<String> tempSelected = List.from(_selectedCategories);
+
         return StatefulBuilder(
           builder: (context, setStateSB) {
-            return AlertDialog(
-              // Nutzt globales DialogTheme
-              title: Text(l10n.filterByCategory),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: _allCategories.map((category) {
-                    final isSelected = tempSelectedCategories.contains(
-                      category,
-                    );
-                    return ListTile(
-                      title: Text(category),
-                      leading: Checkbox(
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Scrollbare Liste der Kategorien
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 400),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _allCategories.length,
+                    itemBuilder: (context, index) {
+                      final category = _allCategories[index];
+                      final isSelected = tempSelected.contains(category);
+                      return CheckboxListTile(
+                        title: Text(category),
                         value: isSelected,
+                        activeColor: Theme.of(context).colorScheme.primary,
                         onChanged: (bool? value) {
                           setStateSB(() {
-                            // State des Dialogs aktualisieren
                             if (value == true) {
-                              tempSelectedCategories.add(category);
+                              tempSelected.add(category);
                             } else {
-                              tempSelectedCategories.remove(category);
+                              tempSelected.remove(category);
                             }
                           });
                         },
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          close(); // Schließen ohne Speichern
+                        },
+                        child: Text(l10n.cancel),
                       ),
-                    );
-                  }).toList(),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(l10n.cancel),
-                ),
-                ElevatedButton(
-                  // Nutzt globales Theme
-                  onPressed: () {
-                    setState(() {
-                      // State des Haupt-Screens aktualisieren
-                      _selectedCategories = tempSelectedCategories;
-                    });
-                    _runFilter(_searchController.text);
-                    Navigator.of(context).pop();
-                  },
-                  child: Text(l10n.doneButtonLabel),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () {
+                          // State des Haupt-Screens aktualisieren
+                          setState(() {
+                            _selectedCategories = tempSelected;
+                          });
+                          _runFilter(_searchController.text);
+                          close();
+                        },
+                        child: Text(l10n.doneButtonLabel),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             );

@@ -17,6 +17,7 @@ import 'package:lightweight/screens/scanner_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/bottom_content_spacer.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/off_attribution_widget.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 
@@ -57,6 +58,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
   bool _isLoadingMeals = true;
   int _currentTab = 0; // 0=Katalog, 1=Zuletzt, 2=Favoriten, 3=Mahlzeiten
   bool _suspendFab = false;
+  static const double _bottomPadding = 100.0;
 
   Future<void> _loadMeals() async {
     setState(() => _isLoadingMeals = true);
@@ -244,35 +246,38 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     final l10n = AppLocalizations.of(context)!;
     final isLightMode = Theme.of(context).brightness == Brightness.light;
 
-    // FAB-Konfiguration je Tab
+    // NEU: Top Padding berechnen, da wir extendBodyBehindAppBar nutzen
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
+
+    // FAB Logik (unverändert lassen, nur hier der Vollständigkeit halber angedeutet)
     VoidCallback? fabOnPressed;
     String fabLabel;
     if (_suspendFab) {
       fabOnPressed = null;
       fabLabel = '';
     } else if (_currentTab == 3) {
-      // Mahlzeiten-Tab
       fabLabel = l10n.mealsCreate;
       fabOnPressed = () => _createMealAndOpenEditor(l10n);
     } else {
-      // Alle anderen Tabs
       fabLabel = l10n.fabCreateOwnFood;
       fabOnPressed = _navigateAndCreateFood;
     }
 
     return Scaffold(
+      extendBodyBehindAppBar: true, // WICHTIG: Damit das Glas der AppBar wirkt
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        automaticallyImplyLeading: true,
-        title: Text(
-          l10n.nutritionExplorerTitle,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-        ),
+
+      // WICHTIG: GlobalAppBar statt normaler AppBar
+      appBar: GlobalAppBar(
+        title: l10n.nutritionExplorerTitle,
       ),
+
       body: Column(
         children: [
+          // WICHTIG: Platzhalter oben, damit der Inhalt nicht hinter der AppBar verschwindet
+          SizedBox(height: topPadding),
+
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: 16.0,
@@ -325,7 +330,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
           ? null
           : GlassFab(
               label: fabLabel,
-              onPressed: fabOnPressed ?? () {}, // ✅ Fallback: immer non-null
+              onPressed: fabOnPressed ?? () {},
             ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
@@ -472,9 +477,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
               padding: const EdgeInsets.only(bottom: 24),
               itemCount: _baseCategories.length + 1,
               itemBuilder: (context, idx) {
-                if (idx == _baseCategories.length) {
-                  return const BottomContentSpacer();
-                }
+                //if (idx == _baseCategories.length) {
+                //return const BottomContentSpacer();
+                //}
 
                 final cat = _baseCategories[idx];
                 final key = cat['key'] as String;
@@ -570,13 +575,14 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       children: [
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            padding:
+                DesignConstants.cardPadding.copyWith(bottom: _bottomPadding),
             itemCount: _favoriteFoodItems.length,
             itemBuilder: (context, index) =>
                 _buildFoodListItem(_favoriteFoodItems[index]),
           ),
         ),
-        const BottomContentSpacer(),
+        // const BottomContentSpacer(),
         if (_favoriteFoodItems.any((item) => item.source == FoodItemSource.off))
           const OffAttributionWidget(),
       ],
@@ -619,7 +625,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       children: [
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            padding:
+                DesignConstants.cardPadding.copyWith(bottom: _bottomPadding),
             itemCount: _recentFoodItems.length,
             itemBuilder: (context, index) =>
                 _buildFoodListItem(_recentFoodItems[index]),
@@ -627,7 +634,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         ),
         if (_recentFoodItems.any((item) => item.source == FoodItemSource.off))
           const OffAttributionWidget(),
-        const BottomContentSpacer(),
+        //const BottomContentSpacer(),
       ],
     );
   }
@@ -771,6 +778,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     );
 
     // FALL A: Kein Query → Kategorien/Accordion aus Base-DB (deine vorhandene Logik)
+
     final String q = _searchController.text.trim();
     if (q.isEmpty) {
       return Column(
@@ -787,7 +795,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                 await _loadBaseCategories();
               },
               child: ListView.builder(
-                padding: const EdgeInsets.only(bottom: 24),
+                padding: const EdgeInsets.only(bottom: _bottomPadding),
                 itemCount: _baseCategories.length + 1,
                 itemBuilder: (context, idx) {
                   if (idx == _baseCategories.length) {
@@ -884,7 +892,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                       ),
                     )
                   : ListView(
-                      padding: DesignConstants.cardPadding,
+                      padding: DesignConstants.cardPadding
+                          .copyWith(bottom: _bottomPadding),
                       children: [
                         if (baseHits.isNotEmpty) ...[
                           Text(
@@ -958,12 +967,12 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     return RefreshIndicator(
       onRefresh: _loadMeals,
       child: ListView.builder(
-        padding: DesignConstants.cardPadding,
+        padding: DesignConstants.cardPadding.copyWith(bottom: _bottomPadding),
         itemCount: _meals.length + 1, // +1 für Spacer
         itemBuilder: (_, i) {
-          if (i == _meals.length) {
-            return const BottomContentSpacer();
-          }
+          //if (i == _meals.length) {
+          //  return const BottomContentSpacer();
+          //}
           final meal = _meals[i];
           return _buildMealCard(meal, l10n);
         },

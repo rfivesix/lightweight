@@ -70,7 +70,7 @@ class WorkoutDatabaseHelper {
     }
     // --- KORREKTUR ENDE ---
 
-    return await openDatabase(path, version: 10, onUpgrade: _upgradeDB);
+    return await openDatabase(path, version: 11, onUpgrade: _upgradeDB);
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
@@ -185,6 +185,29 @@ class WorkoutDatabaseHelper {
             "Fehler beim Hinzufügen der Spalte 'is_custom' (evtl. existiert sie schon): $e");
       }
     }
+    if (oldVersion < 11) {
+      print(
+          "Upgrade DB auf v11: Fehlende Spalten für Custom Exercises hinzufügen...");
+
+      final columnsToAdd = [
+        "name_de TEXT",
+        "name_en TEXT",
+        "description_de TEXT",
+        "description_en TEXT",
+        "category_name TEXT",
+        "primaryMuscles TEXT",
+        "secondaryMuscles TEXT",
+        "image_path TEXT"
+      ];
+
+      for (var col in columnsToAdd) {
+        try {
+          await db.execute("ALTER TABLE exercises ADD COLUMN $col");
+        } catch (e) {
+          // Spalte existiert evtl. schon, Fehler ignorieren
+        }
+      }
+    }
     print("DB-Upgrade auf v$newVersion erfolgreich abgeschlossen.");
   }
 
@@ -220,65 +243,131 @@ class WorkoutDatabaseHelper {
   // --- EXERCISE MANAGEMENT ---
   Future<List<String>> getAllCategories() async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'exercises_flat', // WAR: 'exercises'
+
+    // 1. Kategorien aus den Standard-Daten (View)
+    final List<Map<String, dynamic>> standardMaps = await db.query(
+      'exercises_flat',
       columns: ['category_name'],
       distinct: true,
-      orderBy: 'category_name ASC',
     );
-    return maps
-        .map((map) => map['category_name'] as String?)
-        .where((category) => category != null && category.isNotEmpty)
-        .cast<String>()
-        .toList();
+
+    // 2. Kategorien aus den eigenen Übungen (Tabelle)
+    final List<Map<String, dynamic>> customMaps = await db.query(
+      'exercises',
+      columns: ['category_name'],
+      where: 'is_custom = 1',
+      distinct: true,
+    );
+
+    final Set<String> categories = {};
+
+    for (var map in standardMaps) {
+      if (map['category_name'] != null) {
+        categories.add(map['category_name'] as String);
+      }
+    }
+    for (var map in customMaps) {
+      if (map['category_name'] != null) {
+        categories.add(map['category_name'] as String);
+      }
+    }
+
+    final sortedList = categories.toList()..sort();
+    return sortedList;
   }
 
-  Future<List<Exercise>> searchExercises({
-    String query = '',
-    List<String> selectedCategories = const [],
-  }) async {
+  Future<List<Exercise>> searchExercises(
+      {String query = '', List<String> selectedCategories = const []}) async {
     final db = await database;
-    List<String> whereClauses = [];
-    List<dynamic> whereArgs = [];
+
+    // --- TEIL A: Standard-Daten aus der View laden ---
+    List<String> whereClausesFlat = [];
+    List<dynamic> whereArgsFlat = [];
+
     if (query.isNotEmpty) {
-      whereClauses.add('(name_de LIKE ? OR name_en LIKE ?)');
-      whereArgs.addAll(['%$query%', '%$query%']);
+      // Hinweis: In der View heißen die Spalten evtl. noch alt, aber dein Model erwartet name_de/name_en.
+      // Die View exercises_flat mappt das oft schon. Wir suchen hier im Standard.
+      whereClausesFlat.add('(name_de LIKE ? OR name_en LIKE ?)');
+      whereArgsFlat.addAll(['%$query%', '%$query%']);
     }
     if (selectedCategories.isNotEmpty) {
-      String placeholders = List.filled(
-        selectedCategories.length,
-        '?',
-      ).join(', ');
-      whereClauses.add('category_name IN ($placeholders)');
-      whereArgs.addAll(selectedCategories);
+      String placeholders =
+          List.filled(selectedCategories.length, '?').join(', ');
+      whereClausesFlat.add('category_name IN ($placeholders)');
+      whereArgsFlat.addAll(selectedCategories);
     }
-    String finalWhere =
-        whereClauses.isNotEmpty ? whereClauses.join(' AND ') : '';
-    final String sql = '''
-      SELECT e.*, CASE WHEN sl.id IS NOT NULL THEN 0 ELSE 1 END as sort_priority
-      FROM exercises_flat e -- WAR: 'exercises e'
-      LEFT JOIN (SELECT exercise_name, MAX(id) as id FROM set_logs GROUP BY exercise_name) sl
-      ON e.name_de = sl.exercise_name OR e.name_en = sl.exercise_name
-      ${finalWhere.isNotEmpty ? 'WHERE $finalWhere' : ''}
-      ORDER BY sort_priority ASC, e.name_de ASC
-    ''';
-    final List<Map<String, dynamic>> maps = await db.rawQuery(sql, whereArgs);
-    return List.generate(maps.length, (i) => Exercise.fromMap(maps[i]));
+    String whereStringFlat =
+        whereClausesFlat.isNotEmpty ? whereClausesFlat.join(' AND ') : '';
+
+    final List<Map<String, dynamic>> standardMaps = await db.query(
+      'exercises_flat',
+      where: whereStringFlat.isEmpty ? null : whereStringFlat,
+      whereArgs: whereArgsFlat.isEmpty ? null : whereArgsFlat,
+    );
+
+    // --- TEIL B: Eigene Daten aus der Tabelle laden ---
+    List<String> whereClausesCustom = ['is_custom = 1']; // Nur Custom
+    List<dynamic> whereArgsCustom = [];
+
+    if (query.isNotEmpty) {
+      whereClausesCustom.add('(name_de LIKE ? OR name_en LIKE ?)');
+      whereArgsCustom.addAll(['%$query%', '%$query%']);
+    }
+    if (selectedCategories.isNotEmpty) {
+      String placeholders =
+          List.filled(selectedCategories.length, '?').join(', ');
+      whereClausesCustom.add('category_name IN ($placeholders)');
+      whereArgsCustom.addAll(selectedCategories);
+    }
+
+    final List<Map<String, dynamic>> customMaps = await db.query(
+      'exercises',
+      where: whereClausesCustom.join(' AND '),
+      whereArgs: whereArgsCustom,
+    );
+
+    // --- TEIL C: Zusammenfügen ---
+    List<Exercise> allExercises = [];
+
+    // Custom zuerst (optional)
+    for (var map in customMaps) {
+      allExercises.add(Exercise.fromMap(map));
+    }
+    for (var map in standardMaps) {
+      allExercises.add(Exercise.fromMap(map));
+    }
+
+    // Sortieren: Custom zuerst, dann alphabetisch
+    allExercises.sort((a, b) {
+      // Sortiere nach Name DE
+      return a.nameDe.toLowerCase().compareTo(b.nameDe.toLowerCase());
+    });
+
+    return allExercises;
   }
 
   Future<Exercise?> getExerciseByName(String name) async {
     final db = await database;
-    // --- HIER IST DIE ÄNDERUNG ---
-    final maps = await db.query(
-      'exercises_flat', // WAR: 'exercises'
-      where: 'name_de = ? OR name_en = ?',
+
+    // 1. Zuerst in den Custom Exercises suchen (Priorität)
+    final customMaps = await db.query(
+      'exercises',
+      where: 'is_custom = 1 AND (name_de = ? OR name_en = ?)',
       whereArgs: [name, name],
       limit: 1,
     );
-    // --- ENDE DER ÄNDERUNG ---
-    if (maps.isNotEmpty) {
-      return Exercise.fromMap(maps.first);
+    if (customMaps.isNotEmpty) {
+      return Exercise.fromMap(customMaps.first);
     }
+
+    // 2. Fallback auf Standard View
+    final standardMaps = await db.query('exercises_flat',
+        where: 'name_de = ? OR name_en = ?', whereArgs: [name, name], limit: 1);
+
+    if (standardMaps.isNotEmpty) {
+      return Exercise.fromMap(standardMaps.first);
+    }
+
     return null;
   }
 
@@ -387,54 +476,68 @@ class WorkoutDatabaseHelper {
     );
   }
 
+// In lib/data/workout_database_helper.dart
+
   Future<Routine?> getRoutineById(int id) async {
     final db = await database;
-    final routineMaps = await db.query(
-      'routines',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    final routineMaps =
+        await db.query('routines', where: 'id = ?', whereArgs: [id]);
     if (routineMaps.isEmpty) return null;
-    final routineExerciseMaps = await db.query(
-      'routine_exercises',
-      where: 'routine_id = ?',
-      whereArgs: [id],
-      orderBy: 'exercise_order ASC',
-    );
+
+    final routineExerciseMaps = await db.query('routine_exercises',
+        where: 'routine_id = ?',
+        whereArgs: [id],
+        orderBy: 'exercise_order ASC');
+
     final List<RoutineExercise> routineExercises = [];
     for (final reMap in routineExerciseMaps) {
       final routineExerciseId = reMap['id'] as int;
       final exerciseId = reMap['exercise_id'] as int;
-      // --- FIX IS HERE ---
-      final exerciseMaps = await db.query(
-        'exercises_flat', // Use the view that has all the data
-        where: 'id = ?',
-        whereArgs: [exerciseId],
-      );
-      // --- END FIX ---
+
+      // --- FIX START: Intelligentes Laden der Übungsdetails ---
+
+      // 1. Versuch: Direkt aus der Tabelle laden (für Custom Exercises essentiell)
+      List<Map<String, dynamic>> exerciseMaps =
+          await db.query('exercises', where: 'id = ?', whereArgs: [exerciseId]);
+
+      bool usableDataFound = false;
+      if (exerciseMaps.isNotEmpty) {
+        final row = exerciseMaps.first;
+        // Wir prüfen, ob wir hier Namen finden (Indikator für Custom Exercise mit unseren neuen Spalten)
+        if ((row['name_de'] != null && row['name_de'].toString().isNotEmpty) ||
+            (row['name_en'] != null && row['name_en'].toString().isNotEmpty)) {
+          usableDataFound = true;
+        }
+      }
+
+      // 2. Versuch: Wenn Tabelle keine Namen lieferte (Standard-Übung), fallback auf die View
+      if (!usableDataFound) {
+        exerciseMaps = await db
+            .query('exercises_flat', where: 'id = ?', whereArgs: [exerciseId]);
+      }
+      // --- FIX ENDE ---
+
       if (exerciseMaps.isEmpty) continue;
-      final setTemplateMaps = await db.query(
-        'routine_set_templates',
-        where: 'routine_exercise_id = ?',
-        whereArgs: [routineExerciseId],
-        orderBy: 'set_index ASC',
-      );
+
+      final setTemplateMaps = await db.query('routine_set_templates',
+          where: 'routine_exercise_id = ?',
+          whereArgs: [routineExerciseId],
+          orderBy: 'set_index ASC');
       final setTemplates =
           setTemplateMaps.map((stMap) => SetTemplate.fromMap(stMap)).toList();
-      routineExercises.add(
-        RoutineExercise(
-          id: routineExerciseId,
-          exercise: Exercise.fromMap(exerciseMaps.first),
-          setTemplates: setTemplates,
-          pauseSeconds: reMap['pause_seconds'] as int?,
-        ),
-      );
+
+      routineExercises.add(RoutineExercise(
+        id: routineExerciseId,
+        exercise: Exercise.fromMap(exerciseMaps.first),
+        setTemplates: setTemplates,
+        pauseSeconds: reMap['pause_seconds'] as int?,
+      ));
     }
+
     return Routine(
-      id: id,
-      name: routineMaps.first['name'] as String,
-      exercises: routineExercises,
-    );
+        id: id,
+        name: routineMaps.first['name'] as String,
+        exercises: routineExercises);
   }
 
   Future<void> updateSetTemplate(SetTemplate setTemplate) async {
@@ -790,27 +893,53 @@ class WorkoutDatabaseHelper {
     return logs;
   }
 
-  Future<void> importWorkoutData({
-    required List<Routine> routines,
-    required List<WorkoutLog> workoutLogs,
-  }) async {
+  Future<void> importWorkoutData(
+      {required List<Routine> routines,
+      required List<WorkoutLog> workoutLogs}) async {
     final db = await database;
     await db.transaction((txn) async {
-      // Routinen importieren
+      // A. Routinen importieren
       for (final routine in routines) {
-        final newRoutineId = await txn.insert('routines', {
-          'name': routine.name,
-        });
+        // Wir nutzen die ID aus dem Backup, falls vorhanden
+        int routineId;
+        if (routine.id != null) {
+          await txn.insert(
+              'routines',
+              {
+                'id': routine.id, // ID erzwingen
+                'name': routine.name
+              },
+              conflictAlgorithm: ConflictAlgorithm.replace);
+          routineId = routine.id!;
+        } else {
+          routineId = await txn.insert('routines', {'name': routine.name});
+        }
+
         for (final re in routine.exercises) {
-          final newReId = await txn.insert('routine_exercises', {
-            'routine_id': newRoutineId,
-            'exercise_id': re.exercise.id,
+          // Auch hier: routine_exercise ID erzwingen, falls vorhanden (für perfekte Kopie)
+          // Wichtig ist aber vor allem 'exercise_id', die auf die Custom Exercise zeigt
+          await txn.insert('routine_exercises', {
+            // 'id': re.id, // Optional, können wir auch neu generieren lassen, aber sicherer ist mit.
+            'routine_id': routineId,
+            'exercise_id':
+                re.exercise.id, // Das muss matchen mit importCustomExercises!
             'exercise_order': routine.exercises.indexOf(re),
             'pause_seconds': re.pauseSeconds,
           });
+
+          // Da wir die ID von routine_exercises oben nicht zwingend holen (da auto-increment im Backup evtl fehlt),
+          // müssen wir die letzte ID abfragen oder Logik anpassen.
+          // Einfacherer Weg für Import: Wir verlassen uns darauf, dass die Reihenfolge stimmt.
+          // BESSERER WEG: Wir holen uns die ID des gerade eingefügten 'routine_exercises'.
+
+          final lastReRow =
+              await txn.rawQuery('SELECT last_insert_rowid() as id');
+          final newReId = lastReRow.first['id'] as int;
+
           for (final st in re.setTemplates) {
             final stMap = st.toMap();
-            stMap.remove('id');
+            stMap.remove(
+                'id'); // Set Template IDs sind nicht so wichtig für Verknüpfungen
             stMap['routine_exercise_id'] = newReId;
             stMap['set_index'] = re.setTemplates.indexOf(st);
             await txn.insert('routine_set_templates', stMap);
@@ -818,16 +947,20 @@ class WorkoutDatabaseHelper {
         }
       }
 
-      // Workout Logs importieren
+      // B. Workout Logs importieren
       for (final log in workoutLogs) {
         final logMap = log.toMap();
-        logMap.remove('id');
+        // Hier behalten wir die ID, falls wir später mal Logs editieren und die ID referenzieren
+        // logMap.remove('id');
         logMap['status'] = 'completed';
-        final newLogId = await txn.insert('workout_logs', logMap);
+
+        final newLogId = await txn.insert('workout_logs', logMap,
+            conflictAlgorithm: ConflictAlgorithm.replace);
 
         for (final setLog in log.sets) {
           final setMap = setLog.toMap();
-          setMap.remove('id');
+          setMap.remove(
+              'id'); // SetLog IDs sind egal, solange sie dem Workout gehören
           setMap['workout_log_id'] = newLogId;
           await txn.insert('set_logs', setMap);
         }
@@ -891,9 +1024,16 @@ class WorkoutDatabaseHelper {
     List<String> parseMuscles(String? jsonString) {
       if (jsonString == null || jsonString.isEmpty) return [];
       try {
-        return (jsonDecode(jsonString) as List)
-            .map((item) => item.toString())
-            .toList();
+        // Versuche JSON zu decodieren
+        final decoded = jsonDecode(jsonString);
+        if (decoded is List) {
+          return decoded.map((item) => item.toString()).toList();
+        }
+        // Fallback: Falls es als CSV gespeichert wurde (legacy data)
+        if (jsonString.contains(',')) {
+          return jsonString.split(',').map((e) => e.trim()).toList();
+        }
+        return [];
       } catch (e) {
         return [];
       }
@@ -967,22 +1107,26 @@ class WorkoutDatabaseHelper {
     return setMaps.map((map) => SetLog.fromMap(map)).toList();
   }
 
+// In lib/data/workout_database_helper.dart
+
   Future<Exercise> insertExercise(Exercise exercise) async {
     final db = await database;
-    // Setze is_custom auf 1 für alle hier eingefügten Übungen
-    final Map<String, Object?> exerciseMap = exercise.toMap();
-    exerciseMap['is_custom'] = 1; // Markiere als benutzerdefiniert
 
-    // Entferne die ID, falls sie versehentlich gesetzt wurde,
-    // damit die DB eine neue generiert.
+    // Dein Model nutzt toMap(), was JSON-Listen korrekt in Strings umwandelt
+    final Map<String, Object?> exerciseMap = exercise.toMap();
+
+    // WICHTIG: ID entfernen, damit die DB eine neue generiert
     exerciseMap.remove('id');
+
+    // WICHTIG: Als eigene Übung markieren
+    exerciseMap['is_custom'] = 1;
 
     final id = await db.insert(
       'exercises',
       exerciseMap,
-      conflictAlgorithm: ConflictAlgorithm
-          .replace, // Falls Name schon existiert (sollte nicht)
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
+
     print(
         "Benutzerdefinierte Übung '${exercise.nameDe}' mit ID $id eingefügt.");
     return exercise.copyWith(id: id);
@@ -1000,7 +1144,6 @@ class WorkoutDatabaseHelper {
     return maps.map((map) => Exercise.fromMap(map)).toList();
   }
 
-  // *** NEU: Methode zum Importieren benutzerdefinierter Übungen aus dem Backup ***
   Future<void> importCustomExercises(List<Exercise> exercises) async {
     if (exercises.isEmpty) return;
     final db = await database;
@@ -1008,19 +1151,22 @@ class WorkoutDatabaseHelper {
       final batch = txn.batch();
       for (final exercise in exercises) {
         final exerciseMap = exercise.toMap();
-        exerciseMap['is_custom'] =
-            1; // Sicherstellen, dass sie als custom markiert sind
-        exerciseMap.remove('id'); // ID wird von der DB neu vergeben
+        exerciseMap['is_custom'] = 1;
+
+        // WICHTIG: Wir entfernen die ID NICHT.
+        // Wir wollen exakt dieselbe ID wiederherstellen, damit Routinen funktionieren.
+        // exerciseMap.remove('id'); <--- DAS WAR DER FEHLERQUELLE
+
         batch.insert(
           'exercises',
           exerciseMap,
           conflictAlgorithm:
-              ConflictAlgorithm.ignore, // Ignoriere, falls Name schon existiert
+              ConflictAlgorithm.replace, // Überschreiben, falls da
         );
       }
       await batch.commit(noResult: true);
       print(
-          "${exercises.length} benutzerdefinierte Übungen erfolgreich importiert.");
+          "${exercises.length} benutzerdefinierte Übungen erfolgreich importiert (IDs erhalten).");
     });
   }
 

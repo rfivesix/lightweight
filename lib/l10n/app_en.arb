@@ -613,5 +613,6 @@
   "startCapsLock": "START",
   "nutritionHubSubtitle": "Discover insights, track meals, and plan your nutrition here soon.",
   "nutritionHubTitle": "Nutrition",
-  "nutrition": "nutrition"
+  "nutrition": "nutrition",
+  "changeSetTypTitle":"Change set type"
 }

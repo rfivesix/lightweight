@@ -109,7 +109,7 @@ class GlassBottomNavBar extends StatelessWidget {
       ],
     );
 
-    const barHeight = 65.0;
+    final double barHeight = themeService.visualStyle == 1 ? 65 : 76.0;
 
     switch (themeService.visualStyle) {
       case 1:
@@ -119,7 +119,7 @@ class GlassBottomNavBar extends StatelessWidget {
 
         // smarteres Glas: bg-Color + neutraler Tint "verheiraten"
         final Color effectiveGlass =
-            Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.22 : 0.16));
+            Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.8 : 0.5));
 
         // Drag-to-select + Release-to-activate: über GestureDetector
         return LayoutBuilder(

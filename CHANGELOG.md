@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.4.0-beta.6] - 2025-11-22
+
+### Fixed
+*   **Critical: Custom Exercises**
+    *   Fixed a database error that prevented users from saving new custom exercises (Issue #58).
+    *   Resolved an issue where custom exercises appeared with empty titles when added to a routine.
+*   **Critical: Data Restoration**
+    *   Improved the backup import logic to strictly preserve original IDs for custom exercises. This prevents routines from breaking or losing exercises after restoring a backup.
+*   **Profile Picture**
+    *   Fixed a bug where deleting the profile picture did not visually update the app until a restart (Issue #31).
+*   **Live Workout Stability**
+    *   Fixed a layout crash that occurred when opening the "Change Set Type" menu.
+    *   Fixed the "Finish Workout" dialog being inconsistent with the rest of the UI.
+*   **Diary & Logging**
+    *   Fixed the "Add Ingredient" flow in the Meal Editor which previously closed the menu without adding the item.
+    *   Ensured that adding food, fluids, or supplements via the FAB always logs to the **currently selected date** in the diary, rather than defaulting to "now".
+
+### Changed
+*   **UI/UX Polish:**
+    *   **Bottom Navigation:** Fixed the height of the Glass Bottom Navigation Bar to perfectly align with the Floating Action Button (Issue #61).
+    *   **Scroll Padding:** Adjusted bottom spacing across all list screens (Routines, History, Explorer) so the last items are no longer hidden behind the navigation bar (Issue #60).
+    *   **Liquid Glass Theme:** Reduced the background opacity and distortion thickness of the "Liquid" visual style to improve content readability.
+*   **Modernized Menus:**
+    *   Replaced remaining system dialogs (Edit Pause Time, Delete Confirmations, Set Type Picker) with the unified **Glass Bottom Menu**.
+    *   Added visual symbols (N, W, F, D) to the Set Type selector for better recognition.
+
 ## [0.4.0-beta.5] - 2025-11-07
 
 ### Added

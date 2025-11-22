@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/data/product_database_helper.dart';
@@ -387,31 +389,39 @@ class _MealScreenState extends State<MealScreen> {
       if (mounted) setState(() => _saving = false);
     }
   }
+// In lib/screens/meal_screen.dart
 
-  /// Food auswählen & Menge setzen
   Future<void> _addIngredientFlow() async {
     final l10n = AppLocalizations.of(context)!;
     final searchCtrl = TextEditingController();
+    // Menge standardmäßig auf 100
     final qtyCtrl = TextEditingController(text: '100');
 
+    // 1. Schritt: Produkt auswählen
+    // Wir öffnen das Such-Menu. Es gibt ein Tuple (Barcode, Menge) zurück.
     final picked = await showGlassBottomMenu<(String, int)?>(
       context: context,
       title: l10n.mealAddIngredient,
-      contentBuilder: (ctx, close) {
+      contentBuilder: (searchCtx, closeSearch) {
+        // Lokaler State für Suchergebnisse
         List<FoodItem> results = [];
         bool loading = false;
+        Timer? debounce;
 
         return StatefulBuilder(
-          builder: (context, setState) {
+          builder: (context, setStateSB) {
             Future<void> runSearch(String q) async {
               if (q.trim().isEmpty) {
-                setState(() => results = []);
+                setStateSB(() => results = []);
                 return;
               }
-              setState(() => loading = true);
-              results =
+              setStateSB(() => loading = true);
+              final res =
                   await ProductDatabaseHelper.instance.searchProducts(q.trim());
-              setState(() => loading = false);
+              setStateSB(() {
+                results = res;
+                loading = false;
+              });
             }
 
             return Column(
@@ -419,69 +429,61 @@ class _MealScreenState extends State<MealScreen> {
               children: [
                 TextField(
                   controller: searchCtrl,
+                  autofocus: true,
                   decoration: InputDecoration(
                     hintText: l10n.searchHintText,
                     prefixIcon: const Icon(Icons.search),
+                    filled: true,
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none),
                   ),
-                  onChanged: runSearch,
+                  onChanged: (val) {
+                    debounce?.cancel();
+                    debounce = Timer(const Duration(milliseconds: 300),
+                        () => runSearch(val));
+                  },
                 ),
                 const SizedBox(height: 8),
                 if (loading) const LinearProgressIndicator(minHeight: 2),
                 ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 360),
+                  constraints: const BoxConstraints(maxHeight: 300),
                   child: results.isEmpty
                       ? Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          child: Text(l10n.searchInitialHint),
+                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          child: Text(searchCtrl.text.isEmpty
+                              ? l10n.searchInitialHint
+                              : l10n.searchNoResults),
                         )
-                      : ListView.builder(
+                      : ListView.separated(
                           shrinkWrap: true,
                           itemCount: results.length,
+                          separatorBuilder: (_, __) => const Divider(height: 1),
                           itemBuilder: (_, i) {
                             final fi = results[i];
                             return ListTile(
                               dense: true,
                               title: Text(fi.name),
-                              subtitle: Text(fi.brand.isNotEmpty
-                                  ? fi.brand
-                                  : l10n.noBrand),
+                              subtitle: Text(fi.brand),
                               trailing: IconButton(
-                                icon: const Icon(Icons.add),
+                                icon: const Icon(Icons.add_circle_outline),
                                 onPressed: () async {
-                                  final grams = await showGlassBottomMenu<int?>(
-                                    context: context,
-                                    title: l10n.mealIngredientAmountLabel,
-                                    contentBuilder: (ctx2, close2) {
-                                      return Row(
-                                        children: [
-                                          Expanded(
-                                            child: TextField(
-                                              controller: qtyCtrl,
-                                              keyboardType: const TextInputType
-                                                  .numberWithOptions(
-                                                  decimal: false),
-                                              decoration: const InputDecoration(
-                                                  suffixText: 'g/ml'),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          FilledButton(
-                                            onPressed: () {
-                                              final val = int.tryParse(
-                                                  qtyCtrl.text.trim());
-                                              close2();
-                                              Navigator.of(ctx2).pop(val);
-                                            },
-                                            child: Text(l10n.add_button),
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  );
-                                  if (grams != null && grams > 0) {
-                                    close();
-                                    Navigator.of(ctx).pop((fi.barcode, grams));
-                                  }
+                                  // HIER IST DER FIX:
+                                  // Wir schließen das Such-Menü NICHT sofort.
+                                  // Wir öffnen den Mengen-Dialog DARÜBER (nested) oder ersetzen den Content.
+                                  // Am sichersten: Wir fragen die Menge in einem separaten Schritt ab.
+
+                                  // Menge abfragen
+                                  // HINWEIS: Wir nutzen hier den searchCtx für den Navigator, um im selben Overlay-Kontext zu bleiben
+                                  // oder wir schließen und öffnen neu.
+
+                                  // Strategie: Schließen und Ergebnis (Barcode) zurückgeben,
+                                  // dann im Parent die Menge abfragen. Das ist am stabilsten.
+                                  closeSearch();
+                                  Navigator.of(searchCtx).pop((
+                                    fi.barcode,
+                                    -1
+                                  )); // -1 signalisiert: "Barcode gewählt, Menge fragen"
                                 },
                               ),
                             );
@@ -495,10 +497,78 @@ class _MealScreenState extends State<MealScreen> {
       },
     );
 
-    if (picked != null) {
-      final (barcode, grams) = picked;
+    // Wenn nichts gewählt wurde, abbrechen
+    if (picked == null) return;
+
+    final String barcode = picked.$1;
+    int quantity = picked.$2;
+
+    // Wenn Menge noch nicht festgelegt (-1), dann jetzt abfragen
+    if (quantity == -1) {
+      // Produktnamen laden für den Titel
+      final fi =
+          await ProductDatabaseHelper.instance.getProductByBarcode(barcode);
+      final displayName = fi?.name ?? barcode;
+
+      if (!mounted) return;
+
+      final qtyResult = await showGlassBottomMenu<int?>(
+        context: context,
+        title: displayName,
+        contentBuilder: (qtyCtx, closeQty) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(l10n.mealIngredientAmountLabel),
+              const SizedBox(height: 12),
+              TextField(
+                controller: qtyCtrl,
+                keyboardType: TextInputType.number,
+                autofocus: true,
+                decoration: const InputDecoration(suffixText: 'g/ml'),
+                onSubmitted: (val) {
+                  final q = int.tryParse(val);
+                  closeQty();
+                  Navigator.of(qtyCtx).pop(q);
+                },
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                      child: OutlinedButton(
+                          onPressed: () {
+                            closeQty();
+                            Navigator.of(qtyCtx).pop(null);
+                          },
+                          child: Text(l10n.cancel))),
+                  const SizedBox(width: 12),
+                  Expanded(
+                      child: FilledButton(
+                          onPressed: () {
+                            final val = int.tryParse(qtyCtrl.text);
+                            closeQty();
+                            Navigator.of(qtyCtx).pop(val);
+                          },
+                          child: Text(l10n.add_button))),
+                ],
+              )
+            ],
+          );
+        },
+      );
+
+      if (qtyResult != null && qtyResult > 0) {
+        quantity = qtyResult;
+      } else {
+        return; // Abgebrochen bei Menge
+      }
+    }
+
+    // Hinzufügen zur Liste
+    if (quantity > 0) {
       setState(() {
-        _items.add({'barcode': barcode, 'quantity_in_grams': grams});
+        _items.add({'barcode': barcode, 'quantity_in_grams': quantity});
       });
       await _recomputeTotals();
       if (mounted) setState(() {});

@@ -59,7 +59,7 @@ class _GlassFabState extends State<GlassFab>
     final Color neutralTint =
         (isDark ? Colors.white : Colors.black).withOpacity(isDark ? 0.1 : 0.1);
     final Color effectiveGlass =
-        Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.22 : 0.16));
+        Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.8 : 0.5));
 
     final iconAndText = Padding(
       padding: hasLabel

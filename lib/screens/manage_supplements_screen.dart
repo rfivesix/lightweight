@@ -6,6 +6,7 @@ import 'package:lightweight/models/supplement.dart';
 import 'package:lightweight/screens/create_supplement_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/util/supplement_l10n.dart';
+import 'package:lightweight/widgets/glass_bottom_menu.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/summary_card.dart';
@@ -48,45 +49,67 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
     if (changed == true) _load();
   }
 
+// In lib/screens/manage_supplements_screen.dart
+
   Future<void> _delete(Supplement s) async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      final ok = await showDialog<bool>(
+      final ok = await showGlassBottomMenu<bool>(
             context: context,
-            builder: (_) => AlertDialog(
-              title: Text(l10n.deleteConfirmTitle),
-              content: Text(
-                l10n.deleteConfirmContent, // du kannst hier einen spezifischen Text ergänzen
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: Text(l10n.cancel),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: Text(l10n.delete),
-                ),
-              ],
-            ),
+            title: l10n.deleteConfirmTitle,
+            contentBuilder: (ctx, close) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text(
+                      l10n.deleteConfirmContent, // oder spezieller Text für Supplements
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            close();
+                            Navigator.of(ctx).pop(false);
+                          },
+                          child: Text(l10n.cancel),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton(
+                          style: FilledButton.styleFrom(
+                              backgroundColor: Colors.red),
+                          onPressed: () {
+                            close();
+                            Navigator.of(ctx).pop(true);
+                          },
+                          child: Text(l10n.delete),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
           ) ??
           false;
+
       if (!ok) return;
 
       await DatabaseHelper.instance.deleteSupplement(s.id!);
       if (!mounted) return;
       _load();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.deleted)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.deleted)));
     } catch (e) {
-      // builtin blockiert -> freundlich erklären
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n.operationNotAllowed /* ergänze passenden l10n-Text */,
-          ),
-        ),
+        SnackBar(content: Text(l10n.operationNotAllowed)),
       );
     }
   }

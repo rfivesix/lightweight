@@ -1,8 +1,7 @@
 // lib/services/profile_service.dart
-// VEREINFACHTE UND KORRIGIERTE VERSION
-
 import 'dart:io';
 import 'package:flutter/material.dart';
+// Wichtig für ImageCache
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,6 +13,8 @@ class ProfileService extends ChangeNotifier {
 
   String? _profileImagePath;
   String? get profileImagePath => _profileImagePath;
+
+  // CacheBuster hilft dem Widget, aber wir brauchen auch evict() für den ImageProvider
   int cacheBuster = 0;
 
   bool _isPickerActive = false;
@@ -22,6 +23,15 @@ class ProfileService extends ChangeNotifier {
   Future<void> initialize() async {
     final prefs = await SharedPreferences.getInstance();
     _profileImagePath = prefs.getString(_profileImageKey);
+
+    // Validierung: Existiert die Datei wirklich noch?
+    if (_profileImagePath != null) {
+      final file = File(_profileImagePath!);
+      if (!await file.exists()) {
+        _profileImagePath = null;
+        await prefs.remove(_profileImageKey);
+      }
+    }
     notifyListeners();
   }
 
@@ -37,16 +47,29 @@ class ProfileService extends ChangeNotifier {
         final appDir = await getApplicationDocumentsDirectory();
         const fileName = 'profile_image.jpg';
         final localPath = '${appDir.path}/$fileName';
+        final targetFile = File(localPath);
 
-        final newImage = await File(pickedFile.path).copy(localPath);
+        // 1. WICHTIG: Das alte Bild aus dem Flutter-Cache werfen,
+        // bevor wir das neue schreiben.
+        try {
+          await FileImage(targetFile).evict();
+        } catch (e) {
+          // Ignorieren, falls es nicht im Cache war
+        }
+
+        // 2. Datei kopieren/überschreiben
+        await File(pickedFile.path).copy(localPath);
+
+        // 3. Pfad speichern
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(_profileImageKey, newImage.path);
-        _profileImagePath = newImage.path;
+        await prefs.setString(_profileImageKey, localPath);
 
-        // Erhöhe den Cache-Buster, um einen Rebuild zu erzwingen
-        cacheBuster++;
+        _profileImagePath = localPath;
+        cacheBuster++; // Zwingt das Widget zum Neu-Zeichnen
         notifyListeners();
       }
+    } catch (e) {
+      debugPrint('Fehler beim Bild-Upload: $e');
     } finally {
       _isPickerActive = false;
     }
@@ -57,23 +80,27 @@ class ProfileService extends ChangeNotifier {
     final currentPath = prefs.getString(_profileImageKey);
 
     if (currentPath != null) {
-      // 1. Immediately remove the reference from persistent storage.
-      await prefs.remove(_profileImageKey);
+      // 1. Aus Cache entfernen (WICHTIG!)
+      try {
+        await FileImage(File(currentPath)).evict();
+      } catch (e) {
+        // Egal, wenn es nicht im Cache war
+      }
 
-      // 2. Immediately update the internal state and notify the UI.
+      // 2. UI sofort aktualisieren (Optimistic UI update)
       _profileImagePath = null;
+      await prefs.remove(_profileImageKey);
       cacheBuster++;
       notifyListeners();
 
-      // 3. Try to delete the actual file from disk in the background.
+      // 3. Datei physisch löschen
       try {
         final imageFile = File(currentPath);
         if (await imageFile.exists()) {
           await imageFile.delete();
         }
       } catch (e) {
-        // Log the error, but the app's state is already corrected.
-        debugPrint('Failed to delete profile image file: $e');
+        debugPrint('Fehler beim Löschen der Datei: $e');
       }
     }
   }

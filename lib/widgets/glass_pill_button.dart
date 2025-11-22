@@ -78,7 +78,7 @@ class _GlassPillButtonState extends State<GlassPillButton>
     final Color neutralTint =
         (isDark ? Colors.white : Colors.black).withOpacity(0.10);
     final Color effectiveGlass =
-        Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.22 : 0.16));
+        Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.8 : 0.5));
 
     // Adaptive border radius: round if not Row, pill if Row
     final bool isCircle = widget.child is! Row;

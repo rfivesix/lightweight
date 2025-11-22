@@ -2773,6 +2773,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'nutrition'**
   String get nutrition;
+
+  /// No description provided for @changeSetTypTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change set type'**
+  String get changeSetTypTitle;
 }
 
 class _AppLocalizationsDelegate

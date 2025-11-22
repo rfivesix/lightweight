@@ -452,6 +452,8 @@ class DiaryScreenState extends State<DiaryScreen> {
     }
   }
 
+// In lib/screens/diary_screen.dart
+
   Future<void> _addFoodToMeal(String mealType) async {
     final FoodItem? selectedFoodItem =
         await Navigator.of(context).push<FoodItem>(
@@ -460,27 +462,29 @@ class DiaryScreenState extends State<DiaryScreen> {
 
     if (selectedFoodItem == null || !mounted) return;
 
-    final result = await _showQuantityMenu(selectedFoodItem, mealType);
+    // FIX: Datum an das Hilfs-Menü übergeben
+    final result = await _showQuantityMenu(selectedFoodItem, mealType,
+        initialDate: _selectedDate // <--- Parameter hinzufügen (siehe Punkt C)
+        );
+
     if (result == null || !mounted) return;
 
+    // ... (Rest der Logik bleibt gleich, nutzt result.timestamp) ...
     final int quantity = result.quantity;
     final DateTime timestamp = result.timestamp;
     final String resultMealType = result.mealType;
     final bool isLiquid = result.isLiquid;
     final double? caffeinePer100 = result.caffeinePer100ml;
 
-    // 1. Immer den FoodEntry mit allen Nährwerten speichern
     final newFoodEntry = FoodEntry(
       barcode: selectedFoodItem.barcode,
       timestamp: timestamp,
       quantityInGrams: quantity,
       mealType: resultMealType,
     );
-    final newFoodEntryId = await DatabaseHelper.instance.insertFoodEntry(
-      newFoodEntry,
-    );
+    final newFoodEntryId =
+        await DatabaseHelper.instance.insertFoodEntry(newFoodEntry);
 
-    // 2. Wenn es eine Flüssigkeit ist, ZUSÄTZLICH einen FluidEntry NUR FÜR WASSER erstellen
     if (isLiquid) {
       final newFluidEntry = FluidEntry(
         timestamp: timestamp,
@@ -495,41 +499,34 @@ class DiaryScreenState extends State<DiaryScreen> {
       await DatabaseHelper.instance.insertFluidEntry(newFluidEntry);
     }
 
-    // 3. Koffein nur loggen, wenn als Flüssigkeit deklariert
     if (isLiquid && caffeinePer100 != null && caffeinePer100 > 0) {
       final totalCaffeine = (caffeinePer100 / 100.0) * quantity;
-      await _logCaffeineDose(
-        totalCaffeine,
-        timestamp,
-        foodEntryId: newFoodEntryId,
-      );
+      await _logCaffeineDose(totalCaffeine, timestamp,
+          foodEntryId: newFoodEntryId);
     }
 
     loadDataForDate(_selectedDate);
   }
 
   // FÜGEN SIE DIESE ZWEI NEUEN METHODEN ZUR KLASSE HINZU
+  // In lib/screens/diary_screen.dart
+
   Future<
-      ({
-        int quantity,
-        DateTime timestamp,
-        String mealType,
-        bool isLiquid,
-        double? sugarPer100ml,
-        double? caffeinePer100ml,
-      })?> _showQuantityMenu(FoodItem item, String mealType) async {
+          ({
+            int quantity,
+            DateTime timestamp,
+            String mealType,
+            bool isLiquid,
+            double? sugarPer100ml,
+            double? caffeinePer100ml,
+          })?>
+      _showQuantityMenu(FoodItem item, String mealType,
+          {DateTime? initialDate} // <--- NEUER PARAMETER
+          ) async {
     final l10n = AppLocalizations.of(context)!;
     final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
 
-    return showGlassBottomMenu<
-        ({
-          int quantity,
-          DateTime timestamp,
-          String mealType,
-          bool isLiquid,
-          double? sugarPer100ml,
-          double? caffeinePer100ml,
-        })>(
+    return showGlassBottomMenu(
       context: context,
       title: item.name,
       contentBuilder: (ctx, close) {
@@ -539,9 +536,11 @@ class DiaryScreenState extends State<DiaryScreen> {
             QuantityDialogContent(
               key: dialogStateKey,
               item: item,
-              initialMealType: mealType, // WICHTIG: Mahlzeit vorauswählen
-              initialTimestamp: _selectedDate,
+              initialMealType: mealType,
+              initialTimestamp: initialDate ??
+                  _selectedDate, // <--- FIX: Nutze Parameter oder Fallback
             ),
+            // ... (Rest der Methode: Buttons etc. bleibt gleich) ...
             const SizedBox(height: 12),
             Row(
               children: [
@@ -561,12 +560,11 @@ class DiaryScreenState extends State<DiaryScreen> {
                       final state = dialogStateKey.currentState;
                       if (state != null) {
                         final quantity = int.tryParse(state.quantityText);
+                        // ... parsing ...
                         final sugar = double.tryParse(
-                          state.sugarText.replaceAll(',', '.'),
-                        );
+                            state.sugarText.replaceAll(',', '.'));
                         final caffeine = double.tryParse(
-                          state.caffeineText.replaceAll(',', '.'),
-                        );
+                            state.caffeineText.replaceAll(',', '.'));
 
                         if (quantity != null && quantity > 0) {
                           close();
@@ -920,10 +918,12 @@ class DiaryScreenState extends State<DiaryScreen> {
     );
   }
 // lib/screens/diary_screen.dart
+// In lib/screens/diary_screen.dart
 
   Future<void> _showAddFluidMenu() async {
     final l10n = AppLocalizations.of(context)!;
     final key = GlobalKey<FluidDialogContentState>();
+
     await showGlassBottomMenu(
       context: context,
       title: l10n.add_liquid_title,
@@ -931,8 +931,12 @@ class DiaryScreenState extends State<DiaryScreen> {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            FluidDialogContent(key: key),
+            FluidDialogContent(
+              key: key,
+              initialTimestamp: _selectedDate, // <--- FIX: Datum übergeben
+            ),
             const SizedBox(height: 12),
+            // ... (Rest der Methode bleibt gleich: Buttons Row etc.)
             Row(
               children: [
                 Expanded(
@@ -951,18 +955,17 @@ class DiaryScreenState extends State<DiaryScreen> {
                       if (quantity == null || quantity <= 0) return;
 
                       final name = state.nameText;
-                      final sugarPer100ml = double.tryParse(
-                        state.sugarText.replaceAll(',', '.'),
-                      );
+                      final sugarPer100ml =
+                          double.tryParse(state.sugarText.replaceAll(',', '.'));
                       final caffeinePer100ml = double.tryParse(
-                        state.caffeineText.replaceAll(',', '.'),
-                      );
+                          state.caffeineText.replaceAll(',', '.'));
                       final kcal = (sugarPer100ml != null)
                           ? ((sugarPer100ml / 100) * quantity * 4).round()
                           : null;
 
                       final newEntry = FluidEntry(
-                        timestamp: state.selectedDateTime,
+                        timestamp: state
+                            .selectedDateTime, // Das ist jetzt korrekt initialisiert
                         quantityInMl: quantity,
                         name: name,
                         kcal: kcal,

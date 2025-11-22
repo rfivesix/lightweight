@@ -1433,4 +1433,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nutrition => 'nutrition';
+
+  @override
+  String get changeSetTypTitle => 'Change set type';
 }

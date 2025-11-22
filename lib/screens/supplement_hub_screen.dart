@@ -147,8 +147,48 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
   }
 
   Future<void> _deleteLogEntry(int logId) async {
-    await DatabaseHelper.instance.deleteSupplementLog(logId);
-    _loadData(_selectedDate);
+    // WICHTIG: Bestätigungs-Dialog hinzufügen
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showGlassBottomMenu<bool>(
+        context: context,
+        title: l10n.deleteConfirmTitle,
+        contentBuilder: (ctx, close) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                l10n.deleteConfirmContent,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                      child: OutlinedButton(
+                          onPressed: () {
+                            close();
+                            Navigator.of(ctx).pop(false);
+                          },
+                          child: Text(l10n.cancel))),
+                  const SizedBox(width: 12),
+                  Expanded(
+                      child: FilledButton(
+                          style: FilledButton.styleFrom(
+                              backgroundColor: Colors.red),
+                          onPressed: () {
+                            close();
+                            Navigator.of(ctx).pop(true);
+                          },
+                          child: Text(l10n.delete))),
+                ],
+              )
+            ],
+          );
+        });
+    if (confirmed == true) {
+      await DatabaseHelper.instance.deleteSupplementLog(logId);
+      _loadData(_selectedDate);
+    }
   }
 
   void _navigateDay(bool forward) {
@@ -280,8 +320,16 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
           _editLogEntry(log);
-          return false;
+          return false; // Nicht dismissen, da Edit-Dialog aufging
         } else {
+          // Für Delete (EndToStart): Wir geben true zurück, damit die Animation läuft,
+          // ABER wir rufen die Lösch-Logik erst in onDismissed auf.
+          // ODER wir zeigen hier den Dialog. Da Dismissible sofort entfernt, ist Dialog hier besser:
+
+          // Wir rufen unsere _deleteLogEntry Methode auf, die den Dialog zeigt.
+          // Aber Dismissible erwartet ein Future<bool>.
+          // Einfacherer Weg für Dismissible mit Dialog:
+
           final l10n = AppLocalizations.of(context)!;
           final confirmed = await showGlassBottomMenu<bool>(
             context: context,
