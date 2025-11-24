@@ -7,6 +7,7 @@ import 'package:lightweight/models/fluid_entry.dart';
 import 'package:lightweight/models/supplement.dart';
 import 'package:lightweight/models/supplement_log.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/glass_bottom_menu.dart';
 import 'package:lightweight/widgets/swipe_action_background.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lightweight/data/database_helper.dart';
@@ -687,6 +688,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
                               );
                             }
 
+                            // In lib/screens/nutrition_screen.dart (innerhalb von ListView.separated -> itemBuilder)
+
                             if (item is FoodTimelineEntry) {
                               final trackedItem = item.trackedItem;
                               return Dismissible(
@@ -709,34 +712,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                     _editFoodEntry(trackedItem);
                                     return false;
                                   } else {
-                                    return await showDialog(
-                                          context: context,
-                                          builder: (BuildContext context) {
-                                            return AlertDialog(
-                                              title: Text(
-                                                l10n.deleteConfirmTitle,
-                                              ),
-                                              content: Text(
-                                                l10n.deleteConfirmContent,
-                                              ),
-                                              actions: <Widget>[
-                                                TextButton(
-                                                  onPressed: () => Navigator.of(
-                                                    context,
-                                                  ).pop(false),
-                                                  child: Text(l10n.cancel),
-                                                ),
-                                                TextButton(
-                                                  onPressed: () => Navigator.of(
-                                                    context,
-                                                  ).pop(true),
-                                                  child: Text(l10n.delete),
-                                                ),
-                                              ],
-                                            );
-                                          },
-                                        ) ??
-                                        false;
+                                    // NEU: Verwendung der Helper-Funktion
+                                    return await showDeleteConfirmation(
+                                        context);
                                   }
                                 },
                                 onDismissed: (direction) {
@@ -746,7 +724,6 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                   }
                                 },
                                 child: SummaryCard(
-                                  //externalMargin: EdgeInsets.zero,
                                   child: ListTile(
                                     leading: const Icon(Icons.restaurant),
                                     title: Text(trackedItem.item.name),
@@ -777,6 +754,64 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                             _selectedDateRange,
                                           ),
                                         ),
+                                  ),
+                                ),
+                              );
+                            }
+
+                            if (item is FluidTimelineEntry) {
+                              final fluidEntry = item.fluidEntry;
+                              return Dismissible(
+                                key: Key('fluid_${fluidEntry.id}'),
+                                direction: DismissDirection.horizontal,
+                                background: const SwipeActionBackground(
+                                  color: Colors.blueAccent,
+                                  icon: Icons.edit,
+                                  alignment: Alignment.centerLeft,
+                                ),
+                                secondaryBackground:
+                                    const SwipeActionBackground(
+                                  color: Colors.redAccent,
+                                  icon: Icons.delete,
+                                  alignment: Alignment.centerRight,
+                                ),
+                                confirmDismiss: (direction) async {
+                                  if (direction ==
+                                      DismissDirection.startToEnd) {
+                                    _editFluidEntry(fluidEntry);
+                                    return false;
+                                  } else {
+                                    // NEU: Verwendung der Helper-Funktion
+                                    return await showDeleteConfirmation(
+                                        context);
+                                  }
+                                },
+                                onDismissed: (direction) {
+                                  if (direction ==
+                                      DismissDirection.endToStart) {
+                                    _deleteFluidEntry(fluidEntry.id!);
+                                  }
+                                },
+                                child: SummaryCard(
+                                  child: ListTile(
+                                    leading: Icon(
+                                      Icons.local_drink,
+                                      color: colorScheme.primary,
+                                    ),
+                                    title: Text(fluidEntry.name),
+                                    subtitle: Text(
+                                      DateFormat.Hm(
+                                        locale,
+                                      ).format(fluidEntry.timestamp),
+                                    ),
+                                    trailing: Text(
+                                      l10n.waterListTrailingMl(
+                                        fluidEntry.quantityInMl,
+                                      ),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               );

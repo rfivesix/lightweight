@@ -8,6 +8,7 @@ import 'package:lightweight/models/measurement_session.dart';
 import 'package:lightweight/screens/add_measurement_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/bottom_content_spacer.dart';
+import 'package:lightweight/widgets/glass_bottom_menu.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/measurement_chart_widget.dart';
@@ -103,7 +104,13 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
   void _navigateToCreateMeasurement() {
     Navigator.of(context)
         .push(
-          MaterialPageRoute(builder: (context) => const AddMeasurementScreen()),
+          MaterialPageRoute(
+            // Optional: Hier könnte man DateTime.now() übergeben,
+            // oder es leer lassen (Fallback im Screen ist ja now()).
+            // Wir lassen es leer, da dieser Screen keine Datums-Auswahl hat.
+            builder: (context) =>
+                AddMeasurementScreen(initialDate: DateTime.now()),
+          ),
         )
         .then((_) => _loadMeasurements());
   }
@@ -312,25 +319,8 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
         alignment: Alignment.centerRight,
       ),
       confirmDismiss: (direction) async {
-        final confirmed = await showDialog<bool>(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                title: Text(l10n.deleteConfirmTitle),
-                content: Text(l10n.deleteConfirmContent),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(ctx).pop(false),
-                    child: Text(l10n.cancel),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(ctx).pop(true),
-                    child: Text(l10n.delete),
-                  ),
-                ],
-              ),
-            ) ??
-            false;
-        return confirmed;
+        // NEU: Helper
+        return await showDeleteConfirmation(context);
       },
       child: SummaryCard(
         child: Column(

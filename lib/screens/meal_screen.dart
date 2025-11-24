@@ -315,26 +315,15 @@ class _MealScreenState extends State<MealScreen> {
                           if (mounted) setState(() {});
                         },
                         onDelete: () async {
-                          final ok = await showDialog<bool>(
-                                context: context,
-                                builder: (ctx) => AlertDialog(
-                                  title: Text(l10n.deleteConfirmTitle),
-                                  content: Text(l10n.deleteConfirmContent),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(ctx).pop(false),
-                                      child: Text(l10n.cancel),
-                                    ),
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(ctx).pop(true),
-                                      child: Text(l10n.delete),
-                                    ),
-                                  ],
-                                ),
-                              ) ??
-                              false;
+                          // --- KORREKTUR START ---
+                          // Statt showDialog nutzen wir jetzt den Glas-Helper
+                          final ok = await showDeleteConfirmation(
+                            context,
+                            title: l10n.deleteConfirmTitle,
+                            content: l10n.deleteConfirmContent,
+                          );
+                          // --- KORREKTUR ENDE ---
+
                           if (ok) {
                             setState(() => _items.removeAt(i));
                             await _recomputeTotals();

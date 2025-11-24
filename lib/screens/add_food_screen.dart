@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/data/product_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
@@ -16,6 +17,7 @@ import 'package:lightweight/screens/meal_screen.dart';
 import 'package:lightweight/screens/scanner_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/bottom_content_spacer.dart';
+import 'package:lightweight/widgets/glass_bottom_menu.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/off_attribution_widget.dart';
@@ -25,7 +27,14 @@ import 'package:lightweight/widgets/summary_card.dart';
 
 class AddFoodScreen extends StatefulWidget {
   final int initialTab;
-  const AddFoodScreen({super.key, this.initialTab = 0});
+  final DateTime? initialDate; // <--- NEU
+  final String? initialMealType; // <--- NEU
+  const AddFoodScreen({
+    super.key,
+    this.initialTab = 0,
+    this.initialDate, // <--- NEU
+    this.initialMealType, // <--- NEU
+  });
 
   @override
   State<AddFoodScreen> createState() => _AddFoodScreenState();
@@ -968,11 +977,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       onRefresh: _loadMeals,
       child: ListView.builder(
         padding: DesignConstants.cardPadding.copyWith(bottom: _bottomPadding),
-        itemCount: _meals.length + 1, // +1 für Spacer
+        itemCount: _meals.length, // FIX: +1 entfernt, da Padding genutzt wird
         itemBuilder: (_, i) {
-          //if (i == _meals.length) {
-          //  return const BottomContentSpacer();
-          //}
           final meal = _meals[i];
           return _buildMealCard(meal, l10n);
         },
@@ -1323,24 +1329,13 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     Map<String, dynamic> meal,
     AppLocalizations l10n,
   ) async {
-    final ok = await showDialog<bool>(
-          context: context,
-          builder: (_) => AlertDialog(
-            title: Text(l10n.mealDeleteConfirmTitle),
-            content: Text(l10n.mealDeleteConfirmBody(meal['name'] as String)),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text(l10n.cancel),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: Text(l10n.delete),
-              ),
-            ],
-          ),
-        ) ??
-        false;
+    // NEU: Helper
+    final ok = await showDeleteConfirmation(
+      context,
+      title: l10n.mealDeleteConfirmTitle,
+      content: l10n.mealDeleteConfirmBody(meal['name'] as String),
+    );
+
     if (!ok) return;
     await DatabaseHelper.instance.deleteMeal(meal['id'] as int);
     _mealItemsCache.remove(meal['id'] as int);
@@ -1352,83 +1347,116 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     }
   }
 
+  // In lib/screens/add_food_screen.dart
+
   Future<(String, int)?> _pickIngredient(AppLocalizations l10n) async {
     final searchCtrl = TextEditingController();
-    List<FoodItem> results = [];
-    bool loading = false;
-
-    return showDialog<(String, int)?>(
+    // KORREKTUR: showGlassBottomMenu statt showDialog
+    return showGlassBottomMenu<(String, int)?>(
       context: context,
-      builder: (ctx) {
-        final qtyCtrl = TextEditingController(text: '100'); // default
-        Future<void> runSearch(String q) async {
-          if (q.trim().isEmpty) {
-            results = [];
-            (ctx as Element).markNeedsBuild();
-            return;
-          }
-          loading = true;
-          (ctx as Element).markNeedsBuild();
-          results = await ProductDatabaseHelper.instance.searchProducts(
-            q.trim(),
-          );
-          loading = false;
-          (ctx).markNeedsBuild();
-        }
+      title: l10n.mealAddIngredient,
+      contentBuilder: (ctx, close) {
+        // Lokaler State für Suchergebnisse
+        List<FoodItem> results = [];
+        bool loading = false;
+        Timer? debounce; // Timer für Debounce importieren oder lokal definieren
 
-        return AlertDialog(
-          title: Text(l10n.mealAddIngredient),
-          content: SizedBox(
-            width: 500,
-            child: Column(
+        return StatefulBuilder(
+          builder: (context, setStateSB) {
+            Future<void> runSearch(String q) async {
+              if (q.trim().isEmpty) {
+                setStateSB(() => results = []);
+                return;
+              }
+              setStateSB(() => loading = true);
+              final res = await ProductDatabaseHelper.instance.searchProducts(
+                q.trim(),
+              );
+              setStateSB(() {
+                results = res;
+                loading = false;
+              });
+            }
+
+            return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: searchCtrl,
+                  autofocus: true,
                   decoration: InputDecoration(
                     hintText: l10n.searchHintText,
                     prefixIcon: const Icon(Icons.search),
+                    filled: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
-                  onChanged: runSearch,
+                  onChanged: (val) {
+                    // Einfacher Debounce
+                    debounce?.cancel();
+                    debounce = Timer(const Duration(milliseconds: 300), () {
+                      runSearch(val);
+                    });
+                  },
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 if (loading) const LinearProgressIndicator(minHeight: 2),
-                Flexible(
+
+                // Begrenzte Höhe für die Ergebnisliste
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 300),
                   child: results.isEmpty
                       ? Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          child: Text(l10n.searchInitialHint),
+                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          child: Text(searchCtrl.text.isEmpty
+                              ? l10n.searchInitialHint
+                              : l10n.searchNoResults),
                         )
-                      : ListView.builder(
+                      : ListView.separated(
                           shrinkWrap: true,
                           itemCount: results.length,
+                          separatorBuilder: (_, __) => const Divider(height: 1),
                           itemBuilder: (_, i) {
                             final fi = results[i];
                             return ListTile(
                               dense: true,
                               title: Text(fi.name),
-                              subtitle: Text(
-                                fi.brand.isNotEmpty ? fi.brand : l10n.noBrand,
-                              ),
+                              subtitle: Text(fi.brand.isNotEmpty
+                                  ? fi.brand
+                                  : l10n.noBrand),
                               trailing: IconButton(
-                                icon: const Icon(Icons.add),
+                                icon: const Icon(Icons.add_circle_outline),
                                 onPressed: () async {
-                                  // Nach Menge fragen
+                                  // Menge abfragen (Nested Sheet/Dialog)
+                                  // Wir schließen das Such-Sheet und geben den Barcode zurück,
+                                  // die Menge wird idealerweise danach im Parent gefragt
+                                  // (so wie wir es im MealScreen gefixt hatten).
+                                  // Hier vereinfachen wir: Standard 100g, oder wir müssten
+                                  // den Quantity-Dialog hier inline öffnen.
+
+                                  // Lösung: Wir geben hier (Barcode, -1) zurück, um dem Caller zu sagen:
+                                  // "Bitte frag noch nach der Menge".
+                                  // Das erfordert Anpassung in _openMealEditor.
+
+                                  // ABER: Um minimal-invasiv zu bleiben und die Logik von
+                                  // _pickIngredient zu behalten:
+                                  // Wir zeigen hier einen simplen Dialog für die Menge.
+
+                                  final qtyCtrl =
+                                      TextEditingController(text: '100');
                                   final grams = await showDialog<int>(
-                                    context: context,
+                                    context: ctx,
                                     builder: (_) => AlertDialog(
-                                      title: Text(
-                                        l10n.mealIngredientAmountLabel,
-                                      ),
+                                      title:
+                                          Text(l10n.mealIngredientAmountLabel),
                                       content: TextField(
                                         controller: qtyCtrl,
-                                        keyboardType: const TextInputType
-                                            .numberWithOptions(
-                                          decimal: false,
-                                        ),
+                                        keyboardType: TextInputType.number,
+                                        autofocus: true,
                                         decoration: const InputDecoration(
-                                          suffixText: 'g/ml',
-                                        ),
+                                            suffixText: 'g/ml'),
                                       ),
                                       actions: [
                                         TextButton(
@@ -1437,18 +1465,17 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                                           child: Text(l10n.cancel),
                                         ),
                                         TextButton(
-                                          onPressed: () {
-                                            final val = int.tryParse(
-                                              qtyCtrl.text.trim(),
-                                            );
-                                            Navigator.pop(context, val);
-                                          },
+                                          onPressed: () => Navigator.pop(
+                                              context,
+                                              int.tryParse(qtyCtrl.text)),
                                           child: Text(l10n.add_button),
                                         ),
                                       ],
                                     ),
                                   );
-                                  if (grams != null && grams > 0 && mounted) {
+
+                                  if (grams != null && grams > 0) {
+                                    close();
                                     Navigator.of(ctx).pop((fi.barcode, grams));
                                   }
                                 },
@@ -1457,15 +1484,23 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                           },
                         ),
                 ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          close();
+                          Navigator.of(ctx).pop(null);
+                        },
+                        child: Text(l10n.cancel),
+                      ),
+                    ),
+                  ],
+                ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, null),
-              child: Text(l10n.cancel),
-            ),
-          ],
+            );
+          },
         );
       },
     );
@@ -1481,7 +1516,6 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     );
     if (rawItems.isEmpty) return;
 
-    // Produkte vorab laden (für Namen, isLiquid, Koffein)
     final Map<String, FoodItem?> products = {};
     for (final it in rawItems) {
       final bc = it['barcode'] as String;
@@ -1490,7 +1524,6 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       );
     }
 
-    // Editierbare Mengen pro Zutat
     final Map<String, TextEditingController> qtyCtrls = {
       for (final it in rawItems)
         (it['barcode'] as String): TextEditingController(
@@ -1498,14 +1531,20 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         ),
     };
 
-    // Interne Keys wie im Diary/Nutrition (WICHTIG: exakt diese Strings)
     const internalTypes = [
       'mealtypeBreakfast',
       'mealtypeLunch',
       'mealtypeDinner',
       'mealtypeSnack',
     ];
-    String selectedMealType = internalTypes.first;
+
+    // Initialwerte aus Widget-Parametern oder Defaults
+    String selectedMealType = widget.initialMealType ?? internalTypes.first;
+    if (!internalTypes.contains(selectedMealType)) {
+      selectedMealType = internalTypes.first;
+    }
+
+    DateTime selectedDate = widget.initialDate ?? DateTime.now();
 
     final Map<String, String> mealTypeLabel = {
       'mealtypeBreakfast': l10n.mealtypeBreakfast,
@@ -1514,137 +1553,187 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       'mealtypeSnack': l10n.mealtypeSnack,
     };
 
-    final ok = await showModalBottomSheet<bool>(
+    final ok = await showGlassBottomMenu<bool>(
           context: context,
-          isScrollControlled: true,
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          builder: (ctx) {
+          title: l10n.mealsAddToDiary,
+          contentBuilder: (ctx, close) {
             return StatefulBuilder(
               builder: (ctx, modalSetState) {
-                return Padding(
-                  padding: EdgeInsets.only(
-                    left: 16,
-                    right: 16,
-                    top: 12,
-                    bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade500,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        l10n.mealsAddToDiary,
-                        style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        meal['name'] as String,
-                        style: Theme.of(ctx).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 12),
+                final locale = Localizations.localeOf(ctx).toString();
+                final formattedDate =
+                    DateFormat.yMd(locale).format(selectedDate);
+                final formattedTime =
+                    DateFormat.Hm(locale).format(selectedDate);
 
-                      // Meal-Type Auswahl
-                      DropdownButtonFormField<String>(
-                        initialValue: selectedMealType,
-                        decoration: InputDecoration(
-                          labelText: l10n.mealTypeLabel,
-                          border: const OutlineInputBorder(),
-                          isDense: true,
-                        ),
-                        items: internalTypes
-                            .map(
-                              (key) => DropdownMenuItem(
-                                value: key,
-                                child: Text(mealTypeLabel[key] ?? key),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (v) {
-                          if (v != null) {
-                            modalSetState(() => selectedMealType = v);
-                          }
-                        },
-                      ),
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      meal['name'] as String,
+                      style: Theme.of(ctx).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 12),
 
-                      const SizedBox(height: 12),
-
-                      // Zutatenliste mit editierbaren Mengen
-                      Flexible(
-                        child: ListView.separated(
-                          shrinkWrap: true,
-                          itemCount: rawItems.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 10),
-                          itemBuilder: (_, i) {
-                            final it = rawItems[i];
-                            final bc = it['barcode'] as String;
-                            final fi = products[bc];
-                            final displayName = (fi?.name.isNotEmpty ?? false)
-                                ? fi!.name
-                                : bc; // Fallback Barcode, falls Name fehlt
-                            final unit = (fi?.isLiquid == true) ? 'ml' : 'g';
-
-                            return Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Padding(
-                                  padding: EdgeInsets.only(top: 14),
-                                  child: Icon(Icons.lunch_dining),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: qtyCtrls[bc],
-                                    keyboardType:
-                                        const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
-                                    decoration: InputDecoration(
-                                      labelText:
-                                          displayName, // Name statt Barcode
-                                      helperText: l10n.amountLabel,
-                                      suffixText: unit,
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(14),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                    // Datum & Zeit Auswahl
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton.icon(
+                          icon: const Icon(Icons.calendar_today, size: 18),
+                          label: Text(formattedDate),
+                          onPressed: () async {
+                            final picked = await showDatePicker(
+                              context: ctx,
+                              initialDate: selectedDate,
+                              firstDate: DateTime(2020),
+                              lastDate:
+                                  DateTime.now().add(const Duration(days: 365)),
                             );
+                            if (picked != null) {
+                              modalSetState(() {
+                                selectedDate = DateTime(
+                                  picked.year,
+                                  picked.month,
+                                  picked.day,
+                                  selectedDate.hour,
+                                  selectedDate.minute,
+                                );
+                              });
+                            }
                           },
                         ),
-                      ),
+                        TextButton.icon(
+                          icon: const Icon(Icons.access_time, size: 18),
+                          label: Text(formattedTime),
+                          onPressed: () async {
+                            final picked = await showTimePicker(
+                              context: ctx,
+                              initialTime: TimeOfDay.fromDateTime(selectedDate),
+                            );
+                            if (picked != null) {
+                              modalSetState(() {
+                                selectedDate = DateTime(
+                                  selectedDate.year,
+                                  selectedDate.month,
+                                  selectedDate.day,
+                                  picked.hour,
+                                  picked.minute,
+                                );
+                              });
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
 
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          TextButton(
-                            onPressed: () => Navigator.of(ctx).pop(false),
+                    DropdownButtonFormField<String>(
+                      initialValue: selectedMealType,
+                      decoration: InputDecoration(
+                        labelText: l10n.mealTypeLabel,
+                        border: const OutlineInputBorder(),
+                        isDense: true,
+                        filled: true,
+                        fillColor:
+                            Theme.of(context).brightness == Brightness.dark
+                                ? Colors.white.withOpacity(0.05)
+                                : Colors.black.withOpacity(0.05),
+                      ),
+                      items: internalTypes
+                          .map(
+                            (key) => DropdownMenuItem(
+                              value: key,
+                              child: Text(mealTypeLabel[key] ?? key),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (v) {
+                        if (v != null) {
+                          modalSetState(() => selectedMealType = v);
+                        }
+                      },
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 300),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: rawItems.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (_, i) {
+                          final it = rawItems[i];
+                          final bc = it['barcode'] as String;
+                          final fi = products[bc];
+                          final displayName =
+                              (fi?.name.isNotEmpty ?? false) ? fi!.name : bc;
+                          final unit = (fi?.isLiquid == true) ? 'ml' : 'g';
+
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Padding(
+                                padding: EdgeInsets.only(top: 18),
+                                child: Icon(Icons.lunch_dining, size: 20),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: qtyCtrls[bc],
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                                  decoration: InputDecoration(
+                                    labelText: displayName,
+                                    suffixText: unit,
+                                    filled: true,
+                                    fillColor: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.white.withOpacity(0.05)
+                                        : Colors.black.withOpacity(0.05),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 14),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              close();
+                              Navigator.of(ctx).pop(false);
+                            },
                             child: Text(l10n.cancel),
                           ),
-                          const Spacer(),
-                          FilledButton(
-                            onPressed: () => Navigator.of(ctx).pop(true),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () {
+                              close();
+                              Navigator.of(ctx).pop(true);
+                            },
                             child: Text(l10n.save),
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
+                        ),
+                      ],
+                    ),
+                  ],
                 );
               },
             );
@@ -1654,33 +1743,28 @@ class _AddFoodScreenState extends State<AddFoodScreen>
 
     if (!ok) return;
 
-    // Speichern → pro Zutat ein FoodEntry (inkl. Wasser/Koffein falls zutreffend)
-    final ts = DateTime.now();
+    // Nutze das ausgewählte Datum (selectedDate) statt DateTime.now()
     for (final it in rawItems) {
       final bc = it['barcode'] as String;
       final ctrl = qtyCtrls[bc]!;
       final qty =
           int.tryParse(ctrl.text.trim()) ?? (it['quantity_in_grams'] as int);
 
-      // 1) FoodEntry (mit korrekt gesetztem Meal-Typ)
       await DatabaseHelper.instance.insertFoodEntry(
         FoodEntry(
           barcode: bc,
-          timestamp: ts,
+          timestamp: selectedDate, // <--- VERWENDUNG
           quantityInGrams: qty,
-          mealType: selectedMealType, // <- EXACT dieselben Keys wie im Diary
+          mealType: selectedMealType,
         ),
       );
 
-      // 2) Wasser/Koffein automatisch buchen (bei Flüssigkeiten)
       final fi = products[bc];
       if (fi != null) {
-        if (fi.isLiquid == true) {
-          // await DatabaseHelper.instance.insertWaterEntry(qty, ts);
-        }
         final c100 = fi.caffeineMgPer100ml;
         if (fi.isLiquid == true && c100 != null && c100 > 0) {
-          await _logCaffeineDose(c100 * (qty / 100.0), ts);
+          await _logCaffeineDose(
+              c100 * (qty / 100.0), selectedDate); // <--- VERWENDUNG
         }
       }
     }

@@ -2,30 +2,34 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/dialogs/log_supplement_dialog_content.dart';
 import 'package:lightweight/dialogs/log_supplement_menu.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/supplement.dart';
 import 'package:lightweight/models/supplement_log.dart';
 import 'package:lightweight/models/tracked_supplement.dart';
+import 'package:lightweight/screens/create_supplement_screen.dart';
 import 'package:lightweight/screens/manage_supplements_screen.dart';
 import 'package:lightweight/util/date_util.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/util/supplement_l10n.dart';
 import 'package:lightweight/widgets/glass_bottom_menu.dart';
+import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/widgets/swipe_action_background.dart';
 
 class SupplementTrackScreen extends StatefulWidget {
-  const SupplementTrackScreen({super.key});
+  final DateTime? initialDate; // NEU: Optionales Startdatum
+
+  const SupplementTrackScreen({super.key, this.initialDate});
+
   @override
   State<SupplementTrackScreen> createState() => _SupplementTrackScreenState();
 }
 
 class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
   bool _isLoading = true;
-  DateTime _selectedDate = DateTime.now();
+  late DateTime _selectedDate; // Spät initialisiert
 
   final Map<int, Supplement> _supplementsById = {};
   List<TrackedSupplement> _tracked = const [];
@@ -34,6 +38,8 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
   @override
   void initState() {
     super.initState();
+    // Fix #65: Starte mit dem übergebenen Datum oder Heute
+    _selectedDate = widget.initialDate ?? DateTime.now();
     _loadData(_selectedDate);
   }
 
@@ -108,6 +114,7 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
         return LogSupplementDoseBody(
           supplement: supplement,
           primaryLabel: l10n.add_button,
+          initialTimestamp: _selectedDate, // Fix #66: Datum übergeben
           onCancel: close,
           onSubmit: (dose, ts) {
             close();
@@ -129,39 +136,30 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
     _loadData(_selectedDate);
   }
 
+  // In lib/screens/supplement_track_screen.dart
+
   Future<void> _editLogEntry(SupplementLog log) async {
     final l10n = AppLocalizations.of(context)!;
     final supplement = _supplementsById[log.supplementId]!;
-    final key = GlobalKey<LogSupplementDialogContentState>();
 
-    final result = await showDialog<(double, DateTime)?>(
+    // KORREKTUR: showGlassBottomMenu statt showDialog
+    // Wir nutzen den wiederverwendbaren LogSupplementDoseBody
+    final result = await showGlassBottomMenu<(double, DateTime)?>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(localizeSupplementName(supplement, l10n)),
-        content: LogSupplementDialogContent(
-          key: key,
+      title: localizeSupplementName(supplement, l10n),
+      contentBuilder: (ctx, close) {
+        return LogSupplementDoseBody(
           supplement: supplement,
           initialDose: log.dose,
           initialTimestamp: log.timestamp,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, null),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () {
-              final st = key.currentState;
-              if (st == null) return;
-              final dose = double.tryParse(st.doseText.replaceAll(',', '.'));
-              if (dose != null && dose > 0) {
-                Navigator.pop(context, (dose, st.selectedDateTime));
-              }
-            },
-            child: Text(l10n.save),
-          ),
-        ],
-      ),
+          primaryLabel: l10n.save,
+          onCancel: close,
+          onSubmit: (dose, ts) {
+            close();
+            Navigator.of(ctx).pop((dose, ts));
+          },
+        );
+      },
     );
 
     if (result == null) return;
@@ -178,20 +176,20 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
   }
 
   Future<void> _deleteLogEntry(int id) async {
-    // Log sichern
     final deleted = _todaysLogs.firstWhere((l) => l.id == id);
 
     await DatabaseHelper.instance.deleteSupplementLog(id);
     await _loadData(_selectedDate);
 
     final l10n = AppLocalizations.of(context)!;
+    if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(l10n.deleted),
         action: SnackBarAction(
           label: l10n.undo,
           onPressed: () async {
-            // Gleiche Daten, aber ohne ID (damit es ein neuer Datensatz wird)
             final restored = SupplementLog(
               supplementId: deleted.supplementId,
               dose: deleted.dose,
@@ -323,25 +321,8 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
           _editLogEntry(log);
           return false;
         }
-        final ok = await showDialog<bool>(
-              context: context,
-              builder: (_) => AlertDialog(
-                title: Text(l10n.deleteConfirmTitle),
-                content: Text(l10n.deleteConfirmContent),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: Text(l10n.cancel),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: Text(l10n.delete),
-                  ),
-                ],
-              ),
-            ) ??
-            false;
-        return ok;
+        // KORREKTUR: Neuer Glas-Dialog statt AlertDialog
+        return await showDeleteConfirmation(context);
       },
       onDismissed: (direction) {
         if (direction == DismissDirection.endToStart) _deleteLogEntry(log.id!);
@@ -485,6 +466,20 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
                 ],
               ),
             ),
+      floatingActionButton: GlassFab(
+        label: l10n.createSupplementTitle,
+        onPressed: () async {
+          final created = await Navigator.of(context).push<bool>(
+            MaterialPageRoute(
+              builder: (context) => const CreateSupplementScreen(),
+            ),
+          );
+          if (created == true) {
+            _loadData(_selectedDate);
+          }
+        },
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }

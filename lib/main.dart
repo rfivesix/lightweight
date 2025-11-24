@@ -1,5 +1,5 @@
 // lib/main.dart
-// VOLLSTÄNDIGER CODE (KORRIGIERT)
+// VOLLSTÄNDIGER CODE (MIT PREDICTIVE BACK)
 
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
@@ -113,7 +113,8 @@ class MyApp extends StatelessWidget {
 
           pageTransitionsTheme: const PageTransitionsTheme(
             builders: {
-              TargetPlatform.android: ZoomPageTransitionsBuilder(),
+              // ÄNDERUNG: Predictive Back für Android aktiviert
+              TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
               TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
               TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
               TargetPlatform.windows: ZoomPageTransitionsBuilder(),
@@ -230,7 +231,8 @@ class MyApp extends StatelessWidget {
 
           pageTransitionsTheme: const PageTransitionsTheme(
             builders: {
-              TargetPlatform.android: ZoomPageTransitionsBuilder(),
+              // ÄNDERUNG: Predictive Back für Android aktiviert
+              TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
               TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
               TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
               TargetPlatform.windows: ZoomPageTransitionsBuilder(),

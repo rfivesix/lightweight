@@ -457,7 +457,12 @@ class DiaryScreenState extends State<DiaryScreen> {
   Future<void> _addFoodToMeal(String mealType) async {
     final FoodItem? selectedFoodItem =
         await Navigator.of(context).push<FoodItem>(
-      MaterialPageRoute(builder: (context) => const AddFoodScreen()),
+      MaterialPageRoute(
+        builder: (context) => AddFoodScreen(
+          initialDate: _selectedDate, // <--- ÜBERGABE
+          initialMealType: mealType, // <--- ÜBERGABE
+        ),
+      ),
     );
 
     if (selectedFoodItem == null || !mounted) return;
@@ -795,7 +800,10 @@ class DiaryScreenState extends State<DiaryScreen> {
                   onTap: () => Navigator.of(context)
                       .push(
                         MaterialPageRoute(
-                          builder: (context) => const SupplementTrackScreen(),
+                          // FIX #65: Datum weiterreichen
+                          builder: (context) => SupplementTrackScreen(
+                            initialDate: _selectedDate,
+                          ),
                         ),
                       )
                       .then((_) => loadDataForDate(_selectedDate)),
@@ -1108,26 +1116,8 @@ class DiaryScreenState extends State<DiaryScreen> {
       ),
       direction: DismissDirection.endToStart,
       confirmDismiss: (direction) async {
-        return await showDialog<bool>(
-              context: context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  title: Text(l10n.deleteConfirmTitle),
-                  content: Text(l10n.deleteConfirmContent),
-                  actions: <Widget>[
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(false),
-                      child: Text(l10n.cancel),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(true),
-                      child: Text(l10n.delete),
-                    ),
-                  ],
-                );
-              },
-            ) ??
-            false;
+        // NEU: Helper
+        return await showDeleteConfirmation(context);
       },
       onDismissed: (direction) {
         _deleteFluidEntry(entry.id!);
@@ -1140,17 +1130,6 @@ class DiaryScreenState extends State<DiaryScreen> {
           ),
           trailing: Text("${entry.kcal ?? 0} kcal"),
         ),
-      ),
-    );
-  }
-
-  Widget _buildMacroText(String text) {
-    return Text(
-      text,
-      style: TextStyle(
-        color: Colors.grey[600],
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
       ),
     );
   }
@@ -1176,26 +1155,8 @@ class DiaryScreenState extends State<DiaryScreen> {
           _editFoodEntry(trackedItem);
           return false;
         } else {
-          return await showDialog<bool>(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: Text(l10n.deleteConfirmTitle),
-                    content: Text(l10n.deleteConfirmContent),
-                    actions: <Widget>[
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(false),
-                        child: Text(l10n.cancel),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(true),
-                        child: Text(l10n.delete),
-                      ),
-                    ],
-                  );
-                },
-              ) ??
-              false;
+          // NEU: Helper
+          return await showDeleteConfirmation(context);
         }
       },
       onDismissed: (direction) {
@@ -1219,6 +1180,17 @@ class DiaryScreenState extends State<DiaryScreen> {
                 .then((_) => loadDataForDate(_selectedDate));
           },
         ),
+      ),
+    );
+  }
+
+  Widget _buildMacroText(String text) {
+    return Text(
+      text,
+      style: TextStyle(
+        color: Colors.grey[600],
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
       ),
     );
   }

@@ -15,8 +15,10 @@ import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/food_entry.dart';
 import 'package:lightweight/models/fluid_entry.dart';
 import 'package:lightweight/models/food_item.dart';
+import 'package:lightweight/models/routine.dart';
 import 'package:lightweight/models/supplement.dart';
 import 'package:lightweight/models/supplement_log.dart';
+import 'package:lightweight/models/workout_log.dart';
 import 'package:lightweight/screens/add_food_screen.dart';
 import 'package:lightweight/screens/add_measurement_screen.dart';
 import 'package:lightweight/screens/diary_screen.dart';
@@ -184,8 +186,15 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         _showStartWorkoutMenu();
         break;
       case 'add_measurement':
+        // NEU: Datum holen
+        final targetDate = _currentActiveDate;
+
         final success = await Navigator.of(context).push<bool>(
-          MaterialPageRoute(builder: (context) => const AddMeasurementScreen()),
+          MaterialPageRoute(
+            builder: (context) => AddMeasurementScreen(
+              initialDate: targetDate, // <--- ÜBERGABE
+            ),
+          ),
         );
         if (success == true) _refreshHomeScreen();
         break;
@@ -256,7 +265,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     final routines = await WorkoutDatabaseHelper.instance.getAllRoutines();
     if (!mounted) return;
 
-    await showGlassBottomMenu(
+    // Wir warten auf das Ergebnis des Menüs.
+    // Das Menü schließt sich selbst und gibt die Daten zurück.
+    final result =
+        await showGlassBottomMenu<({WorkoutLog log, Routine? routine})>(
       context: context,
       title: l10n.startWorkout,
       contentBuilder: (ctx, close) {
@@ -277,18 +289,15 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           child: InkWell(
             borderRadius: BorderRadius.circular(16),
             onTap: () async {
+              // 1. Workout erstellen
               final newWorkoutLog = await WorkoutDatabaseHelper.instance
                   .startWorkout(routineName: l10n.freeWorkoutTitle);
-              if (!context.mounted) return;
-              close();
-              Navigator.of(context)
-                  .push(
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          LiveWorkoutScreen(workoutLog: newWorkoutLog),
-                    ),
-                  )
-                  .then((_) => _refreshHomeScreen());
+
+              if (!ctx.mounted) return;
+
+              // 2. Menü schließen und Daten zurückgeben
+              // Wir nutzen Navigator.of(ctx).pop(...), nicht 'close()', um Daten zu senden.
+              Navigator.of(ctx).pop((log: newWorkoutLog, routine: null));
             },
             child: Row(
               children: [
@@ -320,31 +329,27 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                   children: [
                     FilledButton(
                       onPressed: () async {
+                        // Ladeindikator AUF dem Menü anzeigen
                         showDialog(
                           context: context,
                           barrierDismissible: false,
                           builder: (_) =>
                               const Center(child: CircularProgressIndicator()),
                         );
+
                         final fullRoutine = await WorkoutDatabaseHelper.instance
                             .getRoutineById(r.id!);
                         final newWorkoutLog = await WorkoutDatabaseHelper
                             .instance
                             .startWorkout(routineName: r.name);
+
                         if (!context.mounted) return;
-                        Navigator.of(context).pop();
-                        if (fullRoutine != null) {
-                          close();
-                          Navigator.of(context)
-                              .push(
-                                MaterialPageRoute(
-                                  builder: (_) => LiveWorkoutScreen(
-                                    routine: fullRoutine,
-                                    workoutLog: newWorkoutLog,
-                                  ),
-                                ),
-                              )
-                              .then((_) => _refreshHomeScreen());
+                        Navigator.of(context).pop(); // Ladeindikator schließen
+
+                        if (fullRoutine != null && ctx.mounted) {
+                          // Menü schließen und Daten zurückgeben
+                          Navigator.of(ctx)
+                              .pop((log: newWorkoutLog, routine: fullRoutine));
                         }
                       },
                       child: Text(l10n.startButton),
@@ -354,6 +359,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                       child: InkWell(
                         borderRadius: BorderRadius.circular(12),
                         onTap: () {
+                          // Editieren navigiert direkt (das ist ok, da neuer Screen)
+                          // Aber besser wäre auch hier pop+push, wir lassen es für Edit so,
+                          // da der User zurück zum Menü will beim Editieren.
+                          // Hier schließen wir nur das Menü ohne Result.
                           close();
                           Navigator.of(context)
                               .push(
@@ -410,20 +419,38 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         );
       },
     );
+
+    // HIER passiert die eigentliche Navigation zum Workout,
+    // NACHDEM das Menü geschlossen ist.
+    if (result != null && mounted) {
+      Navigator.of(context)
+          .push(
+            MaterialPageRoute(
+              builder: (_) => LiveWorkoutScreen(
+                routine: result.routine,
+                workoutLog: result.log,
+              ),
+            ),
+          )
+          .then((_) => _refreshHomeScreen());
+    }
   }
 
-  // In lib/screens/main_screen.dart
-
   Future<void> _handleAddFood() async {
+    // FIX: Datum holen
+    final targetDate = _currentActiveDate;
+
     final FoodItem? selectedFoodItem =
         await Navigator.of(context).push<FoodItem>(
-      MaterialPageRoute(builder: (context) => const AddFoodScreen()),
+      MaterialPageRoute(
+        builder: (context) => AddFoodScreen(
+          initialDate: targetDate, // <--- ÜBERGABE
+          // initialMealType: null, // Default ist ok
+        ),
+      ),
     );
 
     if (selectedFoodItem == null || !mounted) return;
-
-    // FIX: Datum holen
-    final targetDate = _currentActiveDate;
 
     // FIX: Datum übergeben (Signatur unten anpassen!)
     final result =

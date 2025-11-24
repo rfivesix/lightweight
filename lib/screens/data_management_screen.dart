@@ -71,26 +71,12 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
 
     final filePath = result.files.single.path!;
     final l10n = AppLocalizations.of(context)!;
-
-    final bool? confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.dialogConfirmTitle),
-        content: Text(l10n.dialogConfirmImportContent),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.dialogButtonCancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.dialogButtonOverwrite),
-          ),
-        ],
-      ),
+    final confirmed = await showDeleteConfirmation(
+      context,
+      title: l10n.dialogConfirmTitle,
+      content: l10n.dialogConfirmImportContent,
+      confirmLabel:
+          l10n.dialogButtonOverwrite, // Roter Button passt hier gut (Warnung)
     );
 
     if (confirmed == true) {

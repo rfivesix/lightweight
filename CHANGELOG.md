@@ -3,7 +3,21 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## [0.4.0-beta.7] - 2025-11-24
 
+### Features
+- **Android:** Enabled **Predictive Back Gesture** support for Android 14+ devices.
+
+### UI/UX Improvements
+- **Unified Design:** Replaced almost all native `AlertDialog`s and standard BottomSheets with the custom **Glass Bottom Menu** for a consistent look and feel.
+  - Applied to: Delete confirmations, Supplement logging/editing, Meal ingredient picker, Routine pause/set type editing.
+- **Edit Routine:** Aligned the pause timer display style with the Live Workout screen.
+- **Food Details:** Fixed layout issue where content overlapped with the transparent app bar.
+
+### Bug Fixes
+- **Supplements:** The Supplement Hub and "Log Intake" dialog now correctly respect the date selected in the Diary (instead of always defaulting to "today").
+- **Navigation:** Fixed back navigation stack when starting a workout from the Main Screen (back button now correctly returns to the dashboard).
+- **Add Food:** Fixed a `RangeError` crash when scrolling to the bottom of the Meals tab.
 ## [0.4.0-beta.6] - 2025-11-22
 
 ### Fixed

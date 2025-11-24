@@ -7,6 +7,7 @@ import 'package:lightweight/models/routine.dart';
 import 'package:lightweight/screens/edit_routine_screen.dart';
 import 'package:lightweight/screens/live_workout_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/glass_bottom_menu.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/summary_card.dart';
@@ -127,29 +128,18 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
     _loadRoutines(l10n); // l10n hier übergeben
   }
 
+  // 1. Die Methode für das Menü
   void _deleteRoutine(BuildContext context, Routine routine) async {
     final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.deleteConfirmTitle),
-        content: Text(l10n.deleteRoutineConfirmContent(routine.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
+    // NEU: Helper
+    final confirmed = await showDeleteConfirmation(
+      context,
+      content: l10n.deleteRoutineConfirmContent(routine.name),
     );
 
-    if (confirmed == true) {
+    if (confirmed) {
       await WorkoutDatabaseHelper.instance.deleteRoutine(routine.id!);
-      _loadRoutines(l10n); // l10n hier übergeben
+      _loadRoutines(l10n);
     }
   }
 
@@ -196,27 +186,8 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
                       // links→rechts = Edit (nicht wirklich dismissen),
                       // rechts→links = Delete (mit Bestätigung)
                       confirmDismiss: (direction) async {
-                        final confirmed = await showDialog<bool>(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: Text(l10n.deleteConfirmTitle),
-                                content: Text(l10n.deleteConfirmContent),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(ctx).pop(false),
-                                    child: Text(l10n.cancel),
-                                  ),
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(ctx).pop(true),
-                                    child: Text(l10n.delete),
-                                  ),
-                                ],
-                              ),
-                            ) ??
-                            false;
-                        return confirmed;
+                        // NEU: Helper
+                        return await showDeleteConfirmation(context);
                       },
 
                       onDismissed: (direction) {

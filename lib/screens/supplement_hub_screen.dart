@@ -147,46 +147,26 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
   }
 
   Future<void> _deleteLogEntry(int logId) async {
-    // WICHTIG: Bestätigungs-Dialog hinzufügen
-    final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showGlassBottomMenu<bool>(
-        context: context,
-        title: l10n.deleteConfirmTitle,
-        contentBuilder: (ctx, close) {
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                l10n.deleteConfirmContent,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                      child: OutlinedButton(
-                          onPressed: () {
-                            close();
-                            Navigator.of(ctx).pop(false);
-                          },
-                          child: Text(l10n.cancel))),
-                  const SizedBox(width: 12),
-                  Expanded(
-                      child: FilledButton(
-                          style: FilledButton.styleFrom(
-                              backgroundColor: Colors.red),
-                          onPressed: () {
-                            close();
-                            Navigator.of(ctx).pop(true);
-                          },
-                          child: Text(l10n.delete))),
-                ],
-              )
-            ],
-          );
-        });
-    if (confirmed == true) {
+    // NEU: Verwendung des standardisierten Helpers
+    final confirmed = await showDeleteConfirmation(context);
+
+    if (confirmed) {
       await DatabaseHelper.instance.deleteSupplementLog(logId);
+      _loadData(_selectedDate);
+    }
+  }
+
+  Future<void> _deleteSupplement(Supplement supplement) async {
+    final l10n = AppLocalizations.of(context)!;
+
+    // NEU: Verwendung des Helpers mit spezifischem Text
+    final confirmed = await showDeleteConfirmation(
+      context,
+      content: l10n.deleteSupplementConfirm,
+    );
+
+    if (confirmed) {
+      await DatabaseHelper.instance.deleteSupplement(supplement.id!);
       _loadData(_selectedDate);
     }
   }
@@ -387,59 +367,6 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
       ),
     );
     if (reloaded == true) {
-      _loadData(_selectedDate);
-    }
-  }
-
-  Future<void> _deleteSupplement(Supplement supplement) async {
-    final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showGlassBottomMenu<bool>(
-      context: context,
-      title: l10n.deleteConfirmTitle,
-      contentBuilder: (ctx, close) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
-              child: Text(
-                l10n.deleteSupplementConfirm,
-                style: Theme.of(ctx).textTheme.bodyMedium,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      close();
-                      Navigator.of(ctx).pop(false);
-                    },
-                    child: Text(l10n.cancel),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () {
-                      close();
-                      Navigator.of(ctx).pop(true);
-                    },
-                    child: Text(l10n.delete),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmed == true) {
-      await DatabaseHelper.instance.deleteSupplement(supplement.id!);
       _loadData(_selectedDate);
     }
   }

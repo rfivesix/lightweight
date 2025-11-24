@@ -8,6 +8,7 @@ import 'package:lightweight/models/workout_log.dart';
 import 'package:lightweight/screens/workout_log_detail_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/util/time_util.dart';
+import 'package:lightweight/widgets/glass_bottom_menu.dart';
 import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/widgets/swipe_action_background.dart';
@@ -123,26 +124,11 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                         alignment: Alignment.centerRight,
                       ),
                       confirmDismiss: (direction) async {
-                        return await showDialog<bool>(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: Text(l10n.deleteConfirmTitle),
-                                content: Text(l10n.deleteWorkoutConfirmContent),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(ctx).pop(false),
-                                    child: Text(l10n.cancel),
-                                  ),
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(ctx).pop(true),
-                                    child: Text(l10n.delete),
-                                  ),
-                                ],
-                              ),
-                            ) ??
-                            false;
+                        // NEU: Helper (Textspezifizierung hier nötig)
+                        return await showDeleteConfirmation(
+                          context,
+                          content: l10n.deleteWorkoutConfirmContent,
+                        );
                       },
                       onDismissed: (direction) {
                         _deleteLog(log.id!);

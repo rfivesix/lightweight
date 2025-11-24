@@ -11,7 +11,8 @@ import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/summary_card.dart'; // HINZUGEFÜGT
 
 class AddMeasurementScreen extends StatefulWidget {
-  const AddMeasurementScreen({super.key});
+  final DateTime? initialDate;
+  const AddMeasurementScreen({super.key, this.initialDate});
 
   @override
   State<AddMeasurementScreen> createState() => _AddMeasurementScreenState();
@@ -20,7 +21,7 @@ class AddMeasurementScreen extends StatefulWidget {
 class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
   final _formKey = GlobalKey<FormState>();
   final Map<String, TextEditingController> _controllers = {};
-  DateTime _selectedDateTime = DateTime.now();
+  late DateTime _selectedDateTime;
 
   final Map<String, String> _measurementTypes = {
     'weight': 'kg',
@@ -44,6 +45,7 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedDateTime = widget.initialDate ?? DateTime.now();
     for (var key in _measurementTypes.keys) {
       _controllers[key] = TextEditingController();
     }

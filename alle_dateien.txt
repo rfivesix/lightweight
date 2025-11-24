@@ -3200,6 +3200,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'nutrition'**
   String get nutrition;
+
+  /// No description provided for @changeSetTypTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change set type'**
+  String get changeSetTypTitle;
 }
 
 class _AppLocalizationsDelegate
@@ -4681,6 +4687,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get nutrition => 'Ernährung';
+
+  @override
+  String get changeSetTypTitle => 'Satztyp ändern';
 }
 
 
@@ -6121,6 +6130,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nutrition => 'nutrition';
+
+  @override
+  String get changeSetTypTitle => 'Change set type';
 }
 
 
@@ -10210,8 +10222,48 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
   }
 
   Future<void> _deleteLogEntry(int logId) async {
-    await DatabaseHelper.instance.deleteSupplementLog(logId);
-    _loadData(_selectedDate);
+    // WICHTIG: Bestätigungs-Dialog hinzufügen
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showGlassBottomMenu<bool>(
+        context: context,
+        title: l10n.deleteConfirmTitle,
+        contentBuilder: (ctx, close) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                l10n.deleteConfirmContent,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                      child: OutlinedButton(
+                          onPressed: () {
+                            close();
+                            Navigator.of(ctx).pop(false);
+                          },
+                          child: Text(l10n.cancel))),
+                  const SizedBox(width: 12),
+                  Expanded(
+                      child: FilledButton(
+                          style: FilledButton.styleFrom(
+                              backgroundColor: Colors.red),
+                          onPressed: () {
+                            close();
+                            Navigator.of(ctx).pop(true);
+                          },
+                          child: Text(l10n.delete))),
+                ],
+              )
+            ],
+          );
+        });
+    if (confirmed == true) {
+      await DatabaseHelper.instance.deleteSupplementLog(logId);
+      _loadData(_selectedDate);
+    }
   }
 
   void _navigateDay(bool forward) {
@@ -10343,8 +10395,16 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
           _editLogEntry(log);
-          return false;
+          return false; // Nicht dismissen, da Edit-Dialog aufging
         } else {
+          // Für Delete (EndToStart): Wir geben true zurück, damit die Animation läuft,
+          // ABER wir rufen die Lösch-Logik erst in onDismissed auf.
+          // ODER wir zeigen hier den Dialog. Da Dismissible sofort entfernt, ist Dialog hier besser:
+
+          // Wir rufen unsere _deleteLogEntry Methode auf, die den Dialog zeigt.
+          // Aber Dismissible erwartet ein Future<bool>.
+          // Einfacherer Weg für Dismissible mit Dialog:
+
           final l10n = AppLocalizations.of(context)!;
           final confirmed = await showGlassBottomMenu<bool>(
             context: context,
@@ -10656,7 +10716,7 @@ import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
 
 // Dev-Flag: später einfach auf false setzen oder die Dev-Blöcke entfernen.
-const bool kDevEditEnabled = true;
+const bool kDevEditEnabled = false;
 
 class FoodDetailScreen extends StatefulWidget {
   final TrackedFoodItem? trackedItem;
@@ -11193,6 +11253,7 @@ import 'package:lightweight/screens/scanner_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/bottom_content_spacer.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/off_attribution_widget.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 
@@ -11233,6 +11294,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
   bool _isLoadingMeals = true;
   int _currentTab = 0; // 0=Katalog, 1=Zuletzt, 2=Favoriten, 3=Mahlzeiten
   bool _suspendFab = false;
+  static const double _bottomPadding = 100.0;
 
   Future<void> _loadMeals() async {
     setState(() => _isLoadingMeals = true);
@@ -11420,35 +11482,38 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     final l10n = AppLocalizations.of(context)!;
     final isLightMode = Theme.of(context).brightness == Brightness.light;
 
-    // FAB-Konfiguration je Tab
+    // NEU: Top Padding berechnen, da wir extendBodyBehindAppBar nutzen
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
+
+    // FAB Logik (unverändert lassen, nur hier der Vollständigkeit halber angedeutet)
     VoidCallback? fabOnPressed;
     String fabLabel;
     if (_suspendFab) {
       fabOnPressed = null;
       fabLabel = '';
     } else if (_currentTab == 3) {
-      // Mahlzeiten-Tab
       fabLabel = l10n.mealsCreate;
       fabOnPressed = () => _createMealAndOpenEditor(l10n);
     } else {
-      // Alle anderen Tabs
       fabLabel = l10n.fabCreateOwnFood;
       fabOnPressed = _navigateAndCreateFood;
     }
 
     return Scaffold(
+      extendBodyBehindAppBar: true, // WICHTIG: Damit das Glas der AppBar wirkt
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        automaticallyImplyLeading: true,
-        title: Text(
-          l10n.nutritionExplorerTitle,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-        ),
+
+      // WICHTIG: GlobalAppBar statt normaler AppBar
+      appBar: GlobalAppBar(
+        title: l10n.nutritionExplorerTitle,
       ),
+
       body: Column(
         children: [
+          // WICHTIG: Platzhalter oben, damit der Inhalt nicht hinter der AppBar verschwindet
+          SizedBox(height: topPadding),
+
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: 16.0,
@@ -11501,7 +11566,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
           ? null
           : GlassFab(
               label: fabLabel,
-              onPressed: fabOnPressed ?? () {}, // ✅ Fallback: immer non-null
+              onPressed: fabOnPressed ?? () {},
             ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
@@ -11648,9 +11713,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
               padding: const EdgeInsets.only(bottom: 24),
               itemCount: _baseCategories.length + 1,
               itemBuilder: (context, idx) {
-                if (idx == _baseCategories.length) {
-                  return const BottomContentSpacer();
-                }
+                //if (idx == _baseCategories.length) {
+                //return const BottomContentSpacer();
+                //}
 
                 final cat = _baseCategories[idx];
                 final key = cat['key'] as String;
@@ -11746,13 +11811,14 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       children: [
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            padding:
+                DesignConstants.cardPadding.copyWith(bottom: _bottomPadding),
             itemCount: _favoriteFoodItems.length,
             itemBuilder: (context, index) =>
                 _buildFoodListItem(_favoriteFoodItems[index]),
           ),
         ),
-        const BottomContentSpacer(),
+        // const BottomContentSpacer(),
         if (_favoriteFoodItems.any((item) => item.source == FoodItemSource.off))
           const OffAttributionWidget(),
       ],
@@ -11795,7 +11861,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       children: [
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            padding:
+                DesignConstants.cardPadding.copyWith(bottom: _bottomPadding),
             itemCount: _recentFoodItems.length,
             itemBuilder: (context, index) =>
                 _buildFoodListItem(_recentFoodItems[index]),
@@ -11803,7 +11870,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         ),
         if (_recentFoodItems.any((item) => item.source == FoodItemSource.off))
           const OffAttributionWidget(),
-        const BottomContentSpacer(),
+        //const BottomContentSpacer(),
       ],
     );
   }
@@ -11947,6 +12014,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     );
 
     // FALL A: Kein Query → Kategorien/Accordion aus Base-DB (deine vorhandene Logik)
+
     final String q = _searchController.text.trim();
     if (q.isEmpty) {
       return Column(
@@ -11963,7 +12031,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                 await _loadBaseCategories();
               },
               child: ListView.builder(
-                padding: const EdgeInsets.only(bottom: 24),
+                padding: const EdgeInsets.only(bottom: _bottomPadding),
                 itemCount: _baseCategories.length + 1,
                 itemBuilder: (context, idx) {
                   if (idx == _baseCategories.length) {
@@ -12060,7 +12128,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                       ),
                     )
                   : ListView(
-                      padding: DesignConstants.cardPadding,
+                      padding: DesignConstants.cardPadding
+                          .copyWith(bottom: _bottomPadding),
                       children: [
                         if (baseHits.isNotEmpty) ...[
                           Text(
@@ -12134,12 +12203,12 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     return RefreshIndicator(
       onRefresh: _loadMeals,
       child: ListView.builder(
-        padding: DesignConstants.cardPadding,
+        padding: DesignConstants.cardPadding.copyWith(bottom: _bottomPadding),
         itemCount: _meals.length + 1, // +1 für Spacer
         itemBuilder: (_, i) {
-          if (i == _meals.length) {
-            return const BottomContentSpacer();
-          }
+          //if (i == _meals.length) {
+          //  return const BottomContentSpacer();
+          //}
           final meal = _meals[i];
           return _buildMealCard(meal, l10n);
         },
@@ -13753,6 +13822,8 @@ class DiaryScreenState extends State<DiaryScreen> {
     }
   }
 
+// In lib/screens/diary_screen.dart
+
   Future<void> _addFoodToMeal(String mealType) async {
     final FoodItem? selectedFoodItem =
         await Navigator.of(context).push<FoodItem>(
@@ -13761,27 +13832,29 @@ class DiaryScreenState extends State<DiaryScreen> {
 
     if (selectedFoodItem == null || !mounted) return;
 
-    final result = await _showQuantityMenu(selectedFoodItem, mealType);
+    // FIX: Datum an das Hilfs-Menü übergeben
+    final result = await _showQuantityMenu(selectedFoodItem, mealType,
+        initialDate: _selectedDate // <--- Parameter hinzufügen (siehe Punkt C)
+        );
+
     if (result == null || !mounted) return;
 
+    // ... (Rest der Logik bleibt gleich, nutzt result.timestamp) ...
     final int quantity = result.quantity;
     final DateTime timestamp = result.timestamp;
     final String resultMealType = result.mealType;
     final bool isLiquid = result.isLiquid;
     final double? caffeinePer100 = result.caffeinePer100ml;
 
-    // 1. Immer den FoodEntry mit allen Nährwerten speichern
     final newFoodEntry = FoodEntry(
       barcode: selectedFoodItem.barcode,
       timestamp: timestamp,
       quantityInGrams: quantity,
       mealType: resultMealType,
     );
-    final newFoodEntryId = await DatabaseHelper.instance.insertFoodEntry(
-      newFoodEntry,
-    );
+    final newFoodEntryId =
+        await DatabaseHelper.instance.insertFoodEntry(newFoodEntry);
 
-    // 2. Wenn es eine Flüssigkeit ist, ZUSÄTZLICH einen FluidEntry NUR FÜR WASSER erstellen
     if (isLiquid) {
       final newFluidEntry = FluidEntry(
         timestamp: timestamp,
@@ -13796,41 +13869,34 @@ class DiaryScreenState extends State<DiaryScreen> {
       await DatabaseHelper.instance.insertFluidEntry(newFluidEntry);
     }
 
-    // 3. Koffein nur loggen, wenn als Flüssigkeit deklariert
     if (isLiquid && caffeinePer100 != null && caffeinePer100 > 0) {
       final totalCaffeine = (caffeinePer100 / 100.0) * quantity;
-      await _logCaffeineDose(
-        totalCaffeine,
-        timestamp,
-        foodEntryId: newFoodEntryId,
-      );
+      await _logCaffeineDose(totalCaffeine, timestamp,
+          foodEntryId: newFoodEntryId);
     }
 
     loadDataForDate(_selectedDate);
   }
 
   // FÜGEN SIE DIESE ZWEI NEUEN METHODEN ZUR KLASSE HINZU
+  // In lib/screens/diary_screen.dart
+
   Future<
-      ({
-        int quantity,
-        DateTime timestamp,
-        String mealType,
-        bool isLiquid,
-        double? sugarPer100ml,
-        double? caffeinePer100ml,
-      })?> _showQuantityMenu(FoodItem item, String mealType) async {
+          ({
+            int quantity,
+            DateTime timestamp,
+            String mealType,
+            bool isLiquid,
+            double? sugarPer100ml,
+            double? caffeinePer100ml,
+          })?>
+      _showQuantityMenu(FoodItem item, String mealType,
+          {DateTime? initialDate} // <--- NEUER PARAMETER
+          ) async {
     final l10n = AppLocalizations.of(context)!;
     final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
 
-    return showGlassBottomMenu<
-        ({
-          int quantity,
-          DateTime timestamp,
-          String mealType,
-          bool isLiquid,
-          double? sugarPer100ml,
-          double? caffeinePer100ml,
-        })>(
+    return showGlassBottomMenu(
       context: context,
       title: item.name,
       contentBuilder: (ctx, close) {
@@ -13840,9 +13906,11 @@ class DiaryScreenState extends State<DiaryScreen> {
             QuantityDialogContent(
               key: dialogStateKey,
               item: item,
-              initialMealType: mealType, // WICHTIG: Mahlzeit vorauswählen
-              initialTimestamp: _selectedDate,
+              initialMealType: mealType,
+              initialTimestamp: initialDate ??
+                  _selectedDate, // <--- FIX: Nutze Parameter oder Fallback
             ),
+            // ... (Rest der Methode: Buttons etc. bleibt gleich) ...
             const SizedBox(height: 12),
             Row(
               children: [
@@ -13862,12 +13930,11 @@ class DiaryScreenState extends State<DiaryScreen> {
                       final state = dialogStateKey.currentState;
                       if (state != null) {
                         final quantity = int.tryParse(state.quantityText);
+                        // ... parsing ...
                         final sugar = double.tryParse(
-                          state.sugarText.replaceAll(',', '.'),
-                        );
+                            state.sugarText.replaceAll(',', '.'));
                         final caffeine = double.tryParse(
-                          state.caffeineText.replaceAll(',', '.'),
-                        );
+                            state.caffeineText.replaceAll(',', '.'));
 
                         if (quantity != null && quantity > 0) {
                           close();
@@ -14221,10 +14288,12 @@ class DiaryScreenState extends State<DiaryScreen> {
     );
   }
 // lib/screens/diary_screen.dart
+// In lib/screens/diary_screen.dart
 
   Future<void> _showAddFluidMenu() async {
     final l10n = AppLocalizations.of(context)!;
     final key = GlobalKey<FluidDialogContentState>();
+
     await showGlassBottomMenu(
       context: context,
       title: l10n.add_liquid_title,
@@ -14232,8 +14301,12 @@ class DiaryScreenState extends State<DiaryScreen> {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            FluidDialogContent(key: key),
+            FluidDialogContent(
+              key: key,
+              initialTimestamp: _selectedDate, // <--- FIX: Datum übergeben
+            ),
             const SizedBox(height: 12),
+            // ... (Rest der Methode bleibt gleich: Buttons Row etc.)
             Row(
               children: [
                 Expanded(
@@ -14252,18 +14325,17 @@ class DiaryScreenState extends State<DiaryScreen> {
                       if (quantity == null || quantity <= 0) return;
 
                       final name = state.nameText;
-                      final sugarPer100ml = double.tryParse(
-                        state.sugarText.replaceAll(',', '.'),
-                      );
+                      final sugarPer100ml =
+                          double.tryParse(state.sugarText.replaceAll(',', '.'));
                       final caffeinePer100ml = double.tryParse(
-                        state.caffeineText.replaceAll(',', '.'),
-                      );
+                          state.caffeineText.replaceAll(',', '.'));
                       final kcal = (sugarPer100ml != null)
                           ? ((sugarPer100ml / 100) * quantity * 4).round()
                           : null;
 
                       final newEntry = FluidEntry(
-                        timestamp: state.selectedDateTime,
+                        timestamp: state
+                            .selectedDateTime, // Das ist jetzt korrekt initialisiert
                         quantityInMl: quantity,
                         name: name,
                         kcal: kcal,
@@ -20193,6 +20265,7 @@ import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/exercise.dart';
 import 'package:lightweight/screens/exercise_detail_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/glass_bottom_menu.dart';
 import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/widgets/wger_attribution_widget.dart';
@@ -20248,59 +20321,74 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
     }
   }
 
+  // In lib/screens/exercise_catalog_screen.dart
+
   void _showFilterDialog(BuildContext context, AppLocalizations l10n) {
-    showDialog(
+    showGlassBottomMenu(
       context: context,
-      builder: (context) {
-        // Lokaler State für die Auswahl im Dialog
-        List<String> tempSelectedCategories = List.from(_selectedCategories);
+      title: l10n.filterByCategory,
+      contentBuilder: (ctx, close) {
+        // Lokaler State für das Bottom Sheet
+        List<String> tempSelected = List.from(_selectedCategories);
+
         return StatefulBuilder(
           builder: (context, setStateSB) {
-            return AlertDialog(
-              // Nutzt globales DialogTheme
-              title: Text(l10n.filterByCategory),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: _allCategories.map((category) {
-                    final isSelected = tempSelectedCategories.contains(
-                      category,
-                    );
-                    return ListTile(
-                      title: Text(category),
-                      leading: Checkbox(
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Scrollbare Liste der Kategorien
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 400),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _allCategories.length,
+                    itemBuilder: (context, index) {
+                      final category = _allCategories[index];
+                      final isSelected = tempSelected.contains(category);
+                      return CheckboxListTile(
+                        title: Text(category),
                         value: isSelected,
+                        activeColor: Theme.of(context).colorScheme.primary,
                         onChanged: (bool? value) {
                           setStateSB(() {
-                            // State des Dialogs aktualisieren
                             if (value == true) {
-                              tempSelectedCategories.add(category);
+                              tempSelected.add(category);
                             } else {
-                              tempSelectedCategories.remove(category);
+                              tempSelected.remove(category);
                             }
                           });
                         },
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          close(); // Schließen ohne Speichern
+                        },
+                        child: Text(l10n.cancel),
                       ),
-                    );
-                  }).toList(),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(l10n.cancel),
-                ),
-                ElevatedButton(
-                  // Nutzt globales Theme
-                  onPressed: () {
-                    setState(() {
-                      // State des Haupt-Screens aktualisieren
-                      _selectedCategories = tempSelectedCategories;
-                    });
-                    _runFilter(_searchController.text);
-                    Navigator.of(context).pop();
-                  },
-                  child: Text(l10n.doneButtonLabel),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () {
+                          // State des Haupt-Screens aktualisieren
+                          setState(() {
+                            _selectedCategories = tempSelected;
+                          });
+                          _runFilter(_searchController.text);
+                          close();
+                        },
+                        child: Text(l10n.doneButtonLabel),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             );
@@ -20897,814 +20985,10 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
 
 ===== Datei: /Users/richard/Projects/Lightweight/lightweight/lib/screens/live_workout_screen.dart =====
 
-/*// lib/screens/live_workout_screen.dart (Final & De-Materialisiert - Endgültig)
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/glass_fab.dart';
-import 'package:lightweight/data/workout_database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/exercise.dart';
-import 'package:lightweight/models/routine.dart';
-import 'package:lightweight/models/routine_exercise.dart';
-import 'package:lightweight/models/set_log.dart';
-import 'package:lightweight/models/set_template.dart';
-import 'package:lightweight/models/workout_log.dart';
-import 'package:lightweight/services/workout_session_manager.dart';
-import 'package:lightweight/widgets/workout_summary_bar.dart';
-import 'exercise_catalog_screen.dart';
-import 'exercise_detail_screen.dart';
-import 'package:provider/provider.dart';
-import 'package:lightweight/screens/workout_summary_screen.dart';
-import 'package:lightweight/widgets/workout_card.dart';
-
-class LiveWorkoutScreen extends StatefulWidget {
-  final Routine? routine;
-  final WorkoutLog workoutLog;
-
-  const LiveWorkoutScreen({super.key, this.routine, required this.workoutLog});
-
-  @override
-  State<LiveWorkoutScreen> createState() => _LiveWorkoutScreenState();
-}
-
-class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
-  late List<RoutineExercise> _liveExercises;
-  final Map<int, Map<String, dynamic>> _setUIData = {};
-  final Map<int, TextEditingController> _weightControllers = {};
-  final Map<int, TextEditingController> _repsControllers = {};
-  final Map<String, SetLog?> _lastPerformances = {};
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    final manager = Provider.of<WorkoutSessionManager>(context, listen: false);
-    final isContinuing =
-        manager.isActive && manager.workoutLog?.id == widget.workoutLog.id;
-
-    if (isContinuing) {
-      _liveExercises = manager.exercises;
-    } else {
-      if (widget.routine != null) {
-        _liveExercises = widget.routine!.exercises.map((re) {
-          return RoutineExercise(
-            id: re.id,
-            exercise: re.exercise,
-            setTemplates: re.setTemplates
-                .map((st) => SetTemplate.fromMap(st.toMap()))
-                .toList(),
-            pauseSeconds: re.pauseSeconds,
-          );
-        }).toList();
-      } else {
-        _liveExercises = [];
-      }
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        manager.startWorkout(widget.workoutLog, _liveExercises);
-      });
-    }
-    _initializeScreen();
-  }
-
-  @override
-  void dispose() {
-    for (var c in _weightControllers.values) {
-      c.dispose();
-    }
-    for (var c in _repsControllers.values) {
-      c.dispose();
-    }
-    super.dispose();
-  }
-
-  Future<void> _initializeScreen() async {
-    for (var routineExercise in _liveExercises) {
-      final lastPerf = await WorkoutDatabaseHelper.instance
-          .getLastPerformance(routineExercise.exercise.nameEn);
-      if (mounted) {
-        setState(() =>
-            _lastPerformances[routineExercise.exercise.nameEn] = lastPerf);
-      }
-      for (final template in routineExercise.setTemplates) {
-        final templateId = template.id!;
-        String initialReps =
-            template.targetReps ?? (lastPerf?.reps?.toString() ?? '');
-        String initialWeight = (template.targetWeight ?? lastPerf?.weightKg)
-                ?.toStringAsFixed(1)
-                .replaceAll('.0', '') ??
-            '';
-        _setUIData[templateId] = {'setType': template.setType};
-        _weightControllers[templateId] =
-            TextEditingController(text: initialWeight);
-        _repsControllers[templateId] = TextEditingController(text: initialReps);
-      }
-    }
-    if (mounted) setState(() => _isLoading = false);
-  }
-
-  void _logSet(int setTemplateId, RoutineExercise re) async {
-    final weight = double.tryParse(
-            _weightControllers[setTemplateId]!.text.replaceAll(',', '.')) ??
-        0.0;
-    final reps = int.tryParse(_repsControllers[setTemplateId]!.text) ?? 0;
-    final setType = _setUIData[setTemplateId]!['setType'] as String;
-
-    await WorkoutSessionManager()
-        .logSet(setTemplateId, re, weight, reps, setType);
-
-    setState(() {}); // UI refresh
-  }
-
-  void _unlogSet(int setTemplateId) async {
-    await WorkoutSessionManager().unlogSet(setTemplateId);
-    setState(() {});
-  }
-
-  Future<void> _finishWorkout() async {
-    final l10n = AppLocalizations.of(context)!;
-    // Frage den Nutzer zuerst, ob er wirklich beenden will.
-    final bool? confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.finishWorkoutButton), // Titel: "Beenden"
-        content: Text(l10n.dialogFinishWorkoutBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.finishWorkoutButton),
-          ),
-        ],
-      ),
-    );
-
-    // Nur wenn der Nutzer bestätigt hat (confirmed == true)...
-    if (confirmed == true && mounted) {
-      final logId = widget.workoutLog.id;
-      await WorkoutSessionManager().finishWorkout();
-
-      if (mounted && logId != null) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => WorkoutSummaryScreen(logId: logId),
-          ),
-        );
-      }
-    }
-  }
-
-  void _addSet(RoutineExercise routineExercise) {
-    setState(() {
-      final newTemplate = SetTemplate(
-          id: DateTime.now().millisecondsSinceEpoch, setType: 'normal');
-      routineExercise.setTemplates.add(newTemplate);
-      final templateId = newTemplate.id!;
-      _setUIData[templateId] = {'setType': 'normal'};
-      _weightControllers[templateId] = TextEditingController();
-      _repsControllers[templateId] = TextEditingController();
-    });
-  }
-
-  void _removeSet(RoutineExercise routineExercise, int setTemplateId) {
-    setState(() {
-      routineExercise.setTemplates.removeWhere((st) => st.id == setTemplateId);
-      _setUIData.remove(setTemplateId);
-      WorkoutSessionManager().completedSets.remove(setTemplateId);
-      _weightControllers.remove(setTemplateId)?.dispose();
-      _repsControllers.remove(setTemplateId)?.dispose();
-    });
-  }
-
-  void _addExercise() async {
-    final selectedExercise = await Navigator.of(context).push<Exercise>(
-      MaterialPageRoute(
-          builder: (context) =>
-              const ExerciseCatalogScreen(isSelectionMode: true)),
-    );
-
-    if (selectedExercise != null) {
-      setState(() {
-        final newTemplate = SetTemplate(
-          id: DateTime.now().millisecondsSinceEpoch + 1,
-          setType: 'normal',
-        );
-
-        final newRoutineExercise = RoutineExercise(
-          id: DateTime.now().millisecondsSinceEpoch,
-          exercise: selectedExercise,
-          setTemplates: [newTemplate],
-        );
-
-        _liveExercises.add(newRoutineExercise);
-        WorkoutSessionManager().pauseTimes[newRoutineExercise.id!] = null;
-
-        final templateId = newTemplate.id!;
-        _setUIData[templateId] = {'setType': 'normal'};
-        _weightControllers[templateId] = TextEditingController();
-        _repsControllers[templateId] = TextEditingController();
-      });
-    }
-  }
-
- void _changeSetType(int setTemplateId, String newType) {
-    setState(() {
-      _setUIData[setTemplateId]!['setType'] = newType;
-    });
-    Navigator.pop(context);
-  }
-
-  void _showSetTypePicker(int setTemplateId) { // Akzeptiert jetzt wieder int
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return Wrap(
-          children: <Widget>[
-            ListTile(
-                title: const Text('Normal'),
-                onTap: () => _changeSetType(setTemplateId, 'normal')), // Übergibt ID
-            ListTile(
-                title: const Text('Warmup'),
-                onTap: () => _changeSetType(setTemplateId, 'warmup')), // Übergibt ID
-            ListTile(
-                title: const Text('Failure'),
-                onTap: () => _changeSetType(setTemplateId, 'failure')), // Übergibt ID
-            ListTile(
-                title: const Text('Dropset'),
-                onTap: () => _changeSetType(setTemplateId, 'dropset')), // Übergibt ID
-          ],
-        );
-      },
-    );
-  }
-
-
-  void _editPauseTime(RoutineExercise routineExercise) async {
-    final l10n = AppLocalizations.of(context)!;
-    final currentPause = WorkoutSessionManager()
-        .exercises
-        .firstWhere((ex) => ex.id == routineExercise.id)
-        .pauseSeconds;
-
-    final controller =
-        TextEditingController(text: currentPause?.toString() ?? '');
-    final result = await showDialog<int?>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.editPauseTimeTitle),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(labelText: l10n.pauseInSeconds),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(l10n.cancel)),
-          FilledButton(
-              onPressed: () =>
-                  Navigator.of(ctx).pop(int.tryParse(controller.text)),
-              child: Text(l10n.save)),
-        ],
-      ),
-    );
-    if (result != null) {
-      WorkoutSessionManager().updatePauseTime(routineExercise, result);
-      setState(() {});
-    }
-  }
-
-  void _removeExercise(RoutineExercise exerciseToRemove) {
-    setState(() {
-      for (var template in exerciseToRemove.setTemplates) {
-        _setUIData.remove(template.id!);
-        WorkoutSessionManager().completedSets.remove(template.id!);
-        _weightControllers.remove(template.id!)?.dispose();
-        _repsControllers.remove(template.id!)?.dispose();
-      }
-      WorkoutSessionManager().pauseTimes.remove(exerciseToRemove.id!);
-      _liveExercises.remove(exerciseToRemove);
-    });
-  }
-
-  void _onReorder(int oldIndex, int newIndex) {
-    setState(() {
-      if (newIndex > oldIndex) {
-        newIndex -= 1;
-      }
-      final RoutineExercise item = _liveExercises.removeAt(oldIndex);
-      _liveExercises.insert(newIndex, item);
-    });
-  }
-
-  Widget _buildHeader(String text) => Expanded(
-      child: Text(text,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontWeight: FontWeight.bold)));
-
-  /// Gibt den anzuzeigenden Text für den Set zurück
-  String _getSetDisplayText(String setType, int setIndex) {
-    switch (setType) {
-      case 'warmup':
-        return 'W';
-      case 'failure':
-        return 'F';
-      case 'dropset':
-        return 'D';
-      default:
-        return '$setIndex';
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    final manager = WorkoutSessionManager();
-
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        automaticallyImplyLeading: true,
-        elevation: 0,
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        title: Text(
-          widget.workoutLog.routineName ?? l10n.freeWorkoutTitle,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: _finishWorkout,
-            child: Text(
-              l10n.finishWorkoutButton,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                AnimatedBuilder(
-                  animation: manager,
-                  builder: (context, _) {
-                    return WorkoutSummaryBar(
-                      duration: manager.elapsedDuration,
-                      volume: manager.totalVolume,
-                      sets: manager.totalSets,
-                    );
-                  },
-                ),
-                Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: colorScheme.onSurfaceVariant.withOpacity(0.1)),
-                Expanded(
-                  child: ReorderableListView.builder(
-                    padding: EdgeInsets.zero,
-                    proxyDecorator:
-                        (Widget child, int index, Animation<double> animation) {
-                      return Material(
-                        elevation: 4.0,
-                        color: Theme.of(context).scaffoldBackgroundColor,
-                        child: child,
-                      );
-                    },
-                    onReorder: _onReorder,
-                    itemCount: _liveExercises.length,
-                    itemBuilder: (context, index) {
-                      final routineExercise = _liveExercises[index];
-                      return WorkoutCard(
-                        key: ValueKey(routineExercise.id),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ListTile(
-                              contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16.0, vertical: 8.0),
-                              title: InkWell(
-                                onTap: () => Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            ExerciseDetailScreen(
-                                                exercise:
-                                                    routineExercise.exercise))),
-                                child: Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 4.0),
-                                  child: Text(
-                                    routineExercise.exercise
-                                        .getLocalizedName(context),
-                                    style: textTheme.titleLarge
-                                        ?.copyWith(fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ),
-                              leading: ReorderableDragStartListener(
-                                index: index,
-                                child: const Icon(Icons.drag_handle),
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (manager.pauseTimes[routineExercise.id!] !=
-                                          null &&
-                                      manager.pauseTimes[routineExercise.id!]! >
-                                          0)
-                                    Padding(
-                                      padding:
-                                          const EdgeInsets.only(right: 4.0),
-                                      child: Text(
-                                        "${manager.pauseTimes[routineExercise.id!]}s",
-                                        style: textTheme.bodyMedium?.copyWith(
-                                            color: colorScheme.primary,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ),
-                                  IconButton(
-                                    icon: const Icon(Icons.timer_outlined),
-                                    tooltip: l10n.editPauseTime,
-                                    onPressed: () =>
-                                        _editPauseTime(routineExercise),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete_outline,
-                                        color: Colors.redAccent),
-                                    tooltip: l10n.removeExercise,
-                                    onPressed: () =>
-                                        _removeExercise(routineExercise),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 0.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      Expanded(
-                                        flex: 2,
-                                        child: Center(
-                                            child: Text(
-                                          l10n.setLabel,
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            color: Colors.grey[600],
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        )),
-                                      ),
-                                      Expanded(
-                                        flex: 3,
-                                        child: Center(
-                                            child: Text(
-                                          l10n.lastTimeLabel,
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            color: Colors.grey[600],
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        )),
-                                      ),
-                                      Expanded(
-                                        flex: 2,
-                                        child: Center(
-                                            child: Text(
-                                          l10n.kgLabel,
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            color: Colors.grey[600],
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        )),
-                                      ),
-                                      Expanded(
-                                        flex: 2,
-                                        child: Center(
-                                            child: Text(
-                                          l10n.repsLabel,
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            color: Colors.grey[600],
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        )),
-                                      ),
-                                      const SizedBox(width: 48),
-                                    ],
-                                  ),
-                                  ...routineExercise.setTemplates
-                                      .asMap()
-                                      .entries
-                                      .map((setEntry) {
-                                    final setTemplate = setEntry.value;
-                                    int workingSetIndex = 0;
-                                    for (int i = 0; i <= setEntry.key; i++) {
-                                      final currentTemplate =
-                                          routineExercise.setTemplates[i];
-                                      final currentSetType = _setUIData[
-                                          currentTemplate.id!]!['setType'];
-                                      if (currentSetType != 'warmup') {
-                                        workingSetIndex++;
-                                      }
-                                    }
-
-                                    return _buildSetRow(
-                                      workingSetIndex,
-                                      setEntry.key, // HIER WIRD DER INDEX ÜBERGEBEN
-                                      routineExercise,
-                                      setTemplate,
-                                      manager.completedSets
-                                          .contains(setTemplate.id!),
-                                      colorScheme,
-                                      _lastPerformances[
-                                          routineExercise.exercise.nameEn],
-                                    );
-                                  }),
-                                  const SizedBox(height: DesignConstants.spacingS),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                                    child: TextButton.icon(
-                                      onPressed: () => _addSet(routineExercise),
-                                      icon: const Icon(Icons.add),
-                                      label: Text(l10n.addSetButton),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-      floatingActionButton: GlassFab(
-        onPressed: _addExercise,
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      bottomNavigationBar: AnimatedBuilder(
-        animation: manager,
-        builder: (context, _) {
-          final bar = _buildRestBottomBar(l10n, colorScheme, manager);
-          return bar ?? const SizedBox.shrink();
-        },
-      ),
-    );
-  }
-
-  Widget _buildSetRow(
-    int setIndex,
-    int rowIndex,
-    RoutineExercise re,
-    SetTemplate template,
-    bool isCompleted,
-    ColorScheme colorScheme,
-    SetLog? lastPerf,
-  ) {
-    final setType = _setUIData[template.id!]!['setType'];
-    final isLightMode = Theme.of(context).brightness == Brightness.light;
-    
-    final bool isColoredRow = rowIndex > 0 && rowIndex.isOdd;
-    final Color rowColor;
-    if (isColoredRow) {
-      rowColor = isLightMode
-          ? Colors.grey.withOpacity(0.08)
-          : Colors.white.withOpacity(0.05);
-    } else {
-      rowColor = Colors.transparent;
-    }
-
-    // Der Inhalt der Zeile, der immer gleich aussieht
-    final rowContent = Row(
-      children: [
-        Expanded(
-          flex: 2,
-          child: Center(
-            child: Builder(
-              builder: (_) {
-                Color textColor;
-                switch (setType) {
-                  case 'warmup':
-                    textColor = Colors.orange;
-                    break;
-                  case 'dropset':
-                    textColor = Colors.blue;
-                    break;
-                  case 'failure':
-                    textColor = Colors.red;
-                    break;
-                  default:
-                    textColor = Colors.grey;
-                }
-                return GestureDetector(
-                  onTap: () {
-                    if (!isCompleted) _showSetTypePicker(template.id!);
-                  },
-                  child: Text(
-                    _getSetDisplayText(setType, setIndex),
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-        Expanded(
-          flex: 3,
-          child: Text(
-            lastPerf != null
-                ? "${lastPerf.weightKg?.toStringAsFixed(1).replaceAll('.0', '')}kg × ${lastPerf.reps}"
-                : "-",
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey[500], fontSize: 12),
-          ),
-        ),
-        Expanded(
-          flex: 2,
-          child: TextFormField(
-            controller: _weightControllers[template.id!],
-            textAlign: TextAlign.center,
-            keyboardType:
-                const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-                border: InputBorder.none,
-                isDense: true,
-                fillColor: Colors.transparent),
-            enabled: !isCompleted,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          flex: 2,
-          child: TextFormField(
-            controller: _repsControllers[template.id!],
-            textAlign: TextAlign.center,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-                border: InputBorder.none,
-                isDense: true,
-                fillColor: Colors.transparent),
-            enabled: !isCompleted,
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(right: 8.0),
-          child: SizedBox(
-            width: 48,
-            child: IconButton(
-              icon: Icon(
-                isCompleted
-                    ? Icons.check_circle
-                    : Icons.check_circle_outline,
-                color: isCompleted ? Colors.green : Colors.grey,
-              ),
-              onPressed: () {
-                if (isCompleted) {
-                  _unlogSet(template.id!);
-                } else {
-                  _logSet(template.id!, re);
-                }
-              },
-            ),
-          ),
-        ),
-      ],
-    );
-
-    return Dismissible(
-      key: ValueKey(template.id),
-      direction:
-          isCompleted ? DismissDirection.none : DismissDirection.endToStart,
-      onDismissed: (_) => _removeSet(re, template.id!),
-      background: Container(
-        color: Colors.redAccent,
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: const Icon(Icons.delete, color: Colors.white),
-      ),
-      // HIER IST DIE ÄNDERUNG: Stack statt direktem Container
-      child: Stack(
-        children: [
-          // Ebene 1: Hintergrundfarbe
-          Positioned.fill(
-            child: Container(
-              color: isCompleted ? Colors.green.withOpacity(0.2) : rowColor,
-            ),
-          ),
-          // Ebene 2: Der eigentliche Inhalt
-          rowContent,
-        ],
-      ),
-    );
-  }
-
-  Widget? _buildRestBottomBar(AppLocalizations l10n, ColorScheme colorScheme, WorkoutSessionManager manager) {
-    final isRunning = manager.remainingRestSeconds > 0;
-    final isDoneBanner = !isRunning && manager.showRestDone;
-    if (!isRunning && !isDoneBanner) return null;
-
-    final theme = Theme.of(context);
-
-    if (isRunning) {
-      return BottomAppBar(
-        color: colorScheme.surface,
-        elevation: 0,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "${l10n.restTimerLabel}: ${manager.remainingRestSeconds}s",
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: colorScheme.primary,
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  manager.cancelRest();
-                },
-                child: Text(l10n.skipButton),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-    return BottomAppBar(
-      color: Colors.green.shade600,
-      elevation: 0,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.white),
-                SizedBox(width: 8),
-                Text(
-                  "Pause vorbei!",
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 18),
-                ),
-              ],
-            ),
-            TextButton(
-              onPressed: () {
-                manager.cancelRest();
-              },
-              child: Text(l10n.snackbar_button_ok, style: const TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-*/
-// lib/screens/live_workout_screen.dart
-// VOLLSTÄNDIGER, FINALER CODE
-
-import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/glass_bottom_menu.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
@@ -21878,22 +21162,48 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
   Future<void> _finishWorkout() async {
     final l10n = AppLocalizations.of(context)!;
     final manager = Provider.of<WorkoutSessionManager>(context, listen: false);
-    final bool? confirmed = await showDialog<bool>(
+
+    final bool? confirmed = await showGlassBottomMenu<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.finishWorkoutButton),
-        content: Text(l10n.dialogFinishWorkoutBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.finishWorkoutButton),
-          ),
-        ],
-      ),
+      title: l10n.finishWorkoutButton, // "Beenden"
+      contentBuilder: (ctx, close) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Text(
+                l10n.dialogFinishWorkoutBody,
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      close();
+                      Navigator.of(ctx).pop(false);
+                    },
+                    child: Text(l10n.cancel),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      close();
+                      Navigator.of(ctx).pop(true);
+                    },
+                    child: Text(l10n.finishWorkoutButton),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
     );
 
     if (confirmed == true && mounted) {
@@ -21916,6 +21226,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     ).reorderExercise(oldIndex, newIndex);
   }
 
+/*
   void _editPauseTime(RoutineExercise routineExercise) async {
     final l10n = AppLocalizations.of(context)!;
     final manager = Provider.of<WorkoutSessionManager>(context, listen: false);
@@ -21950,7 +21261,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       manager.updatePauseTime(routineExercise.id!, result);
     }
   }
-
+*/
   void _removeExercise(RoutineExercise exerciseToRemove) {
     Provider.of<WorkoutSessionManager>(
       context,
@@ -21999,35 +21310,119 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       context,
       listen: false,
     ).updateSet(templateId, setType: newType);
-    Navigator.pop(context);
   }
 
   void _showSetTypePicker(int templateId) {
-    showModalBottomSheet(
+    final l10n = AppLocalizations.of(context)!;
+
+    // Helfer zum Erstellen des Buchstaben-Widgets
+    Widget buildSymbol(String char, Color color) {
+      return Text(
+        char,
+        style: TextStyle(
+          color: color,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+      );
+    }
+
+    final options = [
+      {
+        'type': 'normal',
+        'label': l10n.set_type_normal,
+        // Wir nutzen 'N' für Normal im Menü, oder einfach leer lassen wenn du willst
+        'symbol': buildSymbol('N', Colors.grey)
+      },
+      {
+        'type': 'warmup',
+        'label': l10n.set_type_warmup,
+        'symbol': buildSymbol('W', Colors.orange)
+      },
+      {
+        'type': 'failure',
+        'label': l10n.set_type_failure,
+        'symbol': buildSymbol('F', Colors.red)
+      },
+      {
+        'type': 'dropset',
+        'label': l10n.set_type_dropset,
+        'symbol': buildSymbol('D', Colors.blue)
+      },
+    ];
+
+    showGlassBottomMenu(
       context: context,
-      builder: (context) {
-        return Wrap(
-          children: <Widget>[
-            ListTile(
-              title: const Text('Normal'),
-              onTap: () => _changeSetType(templateId, 'normal'),
+      title: l10n.changeSetTypTitle,
+      actions: options.map((opt) {
+        return GlassMenuAction(
+          // icon: null, // Brauchen wir nicht mehr
+          customIcon:
+              opt['symbol'] as Widget, // <-- Hier übergeben wir das Text-Widget
+          label: opt['label'] as String,
+          onTap: () => _changeSetType(templateId, opt['type'] as String),
+        );
+      }).toList(),
+    );
+  }
+
+  void _editPauseTime(RoutineExercise routineExercise) async {
+    final l10n = AppLocalizations.of(context)!;
+    final manager = Provider.of<WorkoutSessionManager>(context, listen: false);
+    final currentPause = manager.pauseTimes[routineExercise.id!];
+    final controller =
+        TextEditingController(text: currentPause?.toString() ?? '');
+
+    final result = await showGlassBottomMenu<int?>(
+      context: context,
+      title: l10n.editPauseTimeTitle,
+      contentBuilder: (ctx, close) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: l10n.pauseInSeconds,
+                hintText: "z.B. 90",
+                suffixText: "s",
+              ),
             ),
-            ListTile(
-              title: const Text('Warmup'),
-              onTap: () => _changeSetType(templateId, 'warmup'),
-            ),
-            ListTile(
-              title: const Text('Failure'),
-              onTap: () => _changeSetType(templateId, 'failure'),
-            ),
-            ListTile(
-              title: const Text('Dropset'),
-              onTap: () => _changeSetType(templateId, 'dropset'),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      close();
+                      Navigator.of(ctx).pop(null);
+                    },
+                    child: Text(l10n.cancel),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      final val = int.tryParse(controller.text);
+                      close();
+                      Navigator.of(ctx).pop(val);
+                    },
+                    child: Text(l10n.save),
+                  ),
+                ),
+              ],
             ),
           ],
         );
       },
     );
+
+    if (result != null) {
+      manager.updatePauseTime(routineExercise.id!, result);
+    }
   }
 
   // NEUE HELFER-METHODE für den leeren Zustand
@@ -22075,6 +21470,66 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
     final manager = Provider.of<WorkoutSessionManager>(context);
+    void editPauseTime(RoutineExercise routineExercise) async {
+      final l10n = AppLocalizations.of(context)!;
+      final manager =
+          Provider.of<WorkoutSessionManager>(context, listen: false);
+      final currentPause = manager.pauseTimes[routineExercise.id!];
+      final controller =
+          TextEditingController(text: currentPause?.toString() ?? '');
+
+      final result = await showGlassBottomMenu<int?>(
+        context: context,
+        title: l10n.editPauseTimeTitle,
+        contentBuilder: (ctx, close) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: controller,
+                keyboardType: TextInputType.number,
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: l10n.pauseInSeconds,
+                  hintText: "z.B. 90",
+                  suffixText: "s",
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        close();
+                        Navigator.of(ctx).pop(null);
+                      },
+                      child: Text(l10n.cancel),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () {
+                        final val = int.tryParse(controller.text);
+                        close();
+                        Navigator.of(ctx).pop(val);
+                      },
+                      child: Text(l10n.save),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
+
+      if (result != null) {
+        manager.updatePauseTime(routineExercise.id!, result);
+      }
+    }
+
     final mgr = manager;
 
     // geplante/angelegte Sets = Anzahl aller SetLogs (egal ob erledigt)
@@ -22213,7 +21668,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                           ),
                                           tooltip: l10n.editPauseTime,
                                           onPressed: () =>
-                                              _editPauseTime(routineExercise),
+                                              editPauseTime(routineExercise),
                                         ),
                                         IconButton(
                                           icon: const Icon(
@@ -22625,6 +22080,7 @@ import 'package:lightweight/models/supplement.dart';
 import 'package:lightweight/screens/create_supplement_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/util/supplement_l10n.dart';
+import 'package:lightweight/widgets/glass_bottom_menu.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/summary_card.dart';
@@ -22667,45 +22123,67 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
     if (changed == true) _load();
   }
 
+// In lib/screens/manage_supplements_screen.dart
+
   Future<void> _delete(Supplement s) async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      final ok = await showDialog<bool>(
+      final ok = await showGlassBottomMenu<bool>(
             context: context,
-            builder: (_) => AlertDialog(
-              title: Text(l10n.deleteConfirmTitle),
-              content: Text(
-                l10n.deleteConfirmContent, // du kannst hier einen spezifischen Text ergänzen
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: Text(l10n.cancel),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: Text(l10n.delete),
-                ),
-              ],
-            ),
+            title: l10n.deleteConfirmTitle,
+            contentBuilder: (ctx, close) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text(
+                      l10n.deleteConfirmContent, // oder spezieller Text für Supplements
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            close();
+                            Navigator.of(ctx).pop(false);
+                          },
+                          child: Text(l10n.cancel),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton(
+                          style: FilledButton.styleFrom(
+                              backgroundColor: Colors.red),
+                          onPressed: () {
+                            close();
+                            Navigator.of(ctx).pop(true);
+                          },
+                          child: Text(l10n.delete),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
           ) ??
           false;
+
       if (!ok) return;
 
       await DatabaseHelper.instance.deleteSupplement(s.id!);
       if (!mounted) return;
       _load();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.deleted)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.deleted)));
     } catch (e) {
-      // builtin blockiert -> freundlich erklären
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n.operationNotAllowed /* ergänze passenden l10n-Text */,
-          ),
-        ),
+        SnackBar(content: Text(l10n.operationNotAllowed)),
       );
     }
   }
@@ -22812,6 +22290,8 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
 
 
 ===== Datei: /Users/richard/Projects/Lightweight/lightweight/lib/screens/meal_screen.dart =====
+
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:lightweight/data/database_helper.dart';
@@ -23202,31 +22682,39 @@ class _MealScreenState extends State<MealScreen> {
       if (mounted) setState(() => _saving = false);
     }
   }
+// In lib/screens/meal_screen.dart
 
-  /// Food auswählen & Menge setzen
   Future<void> _addIngredientFlow() async {
     final l10n = AppLocalizations.of(context)!;
     final searchCtrl = TextEditingController();
+    // Menge standardmäßig auf 100
     final qtyCtrl = TextEditingController(text: '100');
 
+    // 1. Schritt: Produkt auswählen
+    // Wir öffnen das Such-Menu. Es gibt ein Tuple (Barcode, Menge) zurück.
     final picked = await showGlassBottomMenu<(String, int)?>(
       context: context,
       title: l10n.mealAddIngredient,
-      contentBuilder: (ctx, close) {
+      contentBuilder: (searchCtx, closeSearch) {
+        // Lokaler State für Suchergebnisse
         List<FoodItem> results = [];
         bool loading = false;
+        Timer? debounce;
 
         return StatefulBuilder(
-          builder: (context, setState) {
+          builder: (context, setStateSB) {
             Future<void> runSearch(String q) async {
               if (q.trim().isEmpty) {
-                setState(() => results = []);
+                setStateSB(() => results = []);
                 return;
               }
-              setState(() => loading = true);
-              results =
+              setStateSB(() => loading = true);
+              final res =
                   await ProductDatabaseHelper.instance.searchProducts(q.trim());
-              setState(() => loading = false);
+              setStateSB(() {
+                results = res;
+                loading = false;
+              });
             }
 
             return Column(
@@ -23234,69 +22722,61 @@ class _MealScreenState extends State<MealScreen> {
               children: [
                 TextField(
                   controller: searchCtrl,
+                  autofocus: true,
                   decoration: InputDecoration(
                     hintText: l10n.searchHintText,
                     prefixIcon: const Icon(Icons.search),
+                    filled: true,
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none),
                   ),
-                  onChanged: runSearch,
+                  onChanged: (val) {
+                    debounce?.cancel();
+                    debounce = Timer(const Duration(milliseconds: 300),
+                        () => runSearch(val));
+                  },
                 ),
                 const SizedBox(height: 8),
                 if (loading) const LinearProgressIndicator(minHeight: 2),
                 ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 360),
+                  constraints: const BoxConstraints(maxHeight: 300),
                   child: results.isEmpty
                       ? Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          child: Text(l10n.searchInitialHint),
+                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          child: Text(searchCtrl.text.isEmpty
+                              ? l10n.searchInitialHint
+                              : l10n.searchNoResults),
                         )
-                      : ListView.builder(
+                      : ListView.separated(
                           shrinkWrap: true,
                           itemCount: results.length,
+                          separatorBuilder: (_, __) => const Divider(height: 1),
                           itemBuilder: (_, i) {
                             final fi = results[i];
                             return ListTile(
                               dense: true,
                               title: Text(fi.name),
-                              subtitle: Text(fi.brand.isNotEmpty
-                                  ? fi.brand
-                                  : l10n.noBrand),
+                              subtitle: Text(fi.brand),
                               trailing: IconButton(
-                                icon: const Icon(Icons.add),
+                                icon: const Icon(Icons.add_circle_outline),
                                 onPressed: () async {
-                                  final grams = await showGlassBottomMenu<int?>(
-                                    context: context,
-                                    title: l10n.mealIngredientAmountLabel,
-                                    contentBuilder: (ctx2, close2) {
-                                      return Row(
-                                        children: [
-                                          Expanded(
-                                            child: TextField(
-                                              controller: qtyCtrl,
-                                              keyboardType: const TextInputType
-                                                  .numberWithOptions(
-                                                  decimal: false),
-                                              decoration: const InputDecoration(
-                                                  suffixText: 'g/ml'),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          FilledButton(
-                                            onPressed: () {
-                                              final val = int.tryParse(
-                                                  qtyCtrl.text.trim());
-                                              close2();
-                                              Navigator.of(ctx2).pop(val);
-                                            },
-                                            child: Text(l10n.add_button),
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  );
-                                  if (grams != null && grams > 0) {
-                                    close();
-                                    Navigator.of(ctx).pop((fi.barcode, grams));
-                                  }
+                                  // HIER IST DER FIX:
+                                  // Wir schließen das Such-Menü NICHT sofort.
+                                  // Wir öffnen den Mengen-Dialog DARÜBER (nested) oder ersetzen den Content.
+                                  // Am sichersten: Wir fragen die Menge in einem separaten Schritt ab.
+
+                                  // Menge abfragen
+                                  // HINWEIS: Wir nutzen hier den searchCtx für den Navigator, um im selben Overlay-Kontext zu bleiben
+                                  // oder wir schließen und öffnen neu.
+
+                                  // Strategie: Schließen und Ergebnis (Barcode) zurückgeben,
+                                  // dann im Parent die Menge abfragen. Das ist am stabilsten.
+                                  closeSearch();
+                                  Navigator.of(searchCtx).pop((
+                                    fi.barcode,
+                                    -1
+                                  )); // -1 signalisiert: "Barcode gewählt, Menge fragen"
                                 },
                               ),
                             );
@@ -23310,10 +22790,78 @@ class _MealScreenState extends State<MealScreen> {
       },
     );
 
-    if (picked != null) {
-      final (barcode, grams) = picked;
+    // Wenn nichts gewählt wurde, abbrechen
+    if (picked == null) return;
+
+    final String barcode = picked.$1;
+    int quantity = picked.$2;
+
+    // Wenn Menge noch nicht festgelegt (-1), dann jetzt abfragen
+    if (quantity == -1) {
+      // Produktnamen laden für den Titel
+      final fi =
+          await ProductDatabaseHelper.instance.getProductByBarcode(barcode);
+      final displayName = fi?.name ?? barcode;
+
+      if (!mounted) return;
+
+      final qtyResult = await showGlassBottomMenu<int?>(
+        context: context,
+        title: displayName,
+        contentBuilder: (qtyCtx, closeQty) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(l10n.mealIngredientAmountLabel),
+              const SizedBox(height: 12),
+              TextField(
+                controller: qtyCtrl,
+                keyboardType: TextInputType.number,
+                autofocus: true,
+                decoration: const InputDecoration(suffixText: 'g/ml'),
+                onSubmitted: (val) {
+                  final q = int.tryParse(val);
+                  closeQty();
+                  Navigator.of(qtyCtx).pop(q);
+                },
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                      child: OutlinedButton(
+                          onPressed: () {
+                            closeQty();
+                            Navigator.of(qtyCtx).pop(null);
+                          },
+                          child: Text(l10n.cancel))),
+                  const SizedBox(width: 12),
+                  Expanded(
+                      child: FilledButton(
+                          onPressed: () {
+                            final val = int.tryParse(qtyCtrl.text);
+                            closeQty();
+                            Navigator.of(qtyCtx).pop(val);
+                          },
+                          child: Text(l10n.add_button))),
+                ],
+              )
+            ],
+          );
+        },
+      );
+
+      if (qtyResult != null && qtyResult > 0) {
+        quantity = qtyResult;
+      } else {
+        return; // Abgebrochen bei Menge
+      }
+    }
+
+    // Hinzufügen zur Liste
+    if (quantity > 0) {
       setState(() {
-        _items.add({'barcode': barcode, 'quantity_in_grams': grams});
+        _items.add({'barcode': barcode, 'quantity_in_grams': quantity});
       });
       await _recomputeTotals();
       if (mounted) setState(() {});
@@ -24425,10 +23973,21 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       GlobalKey<DiaryScreenState>();
   bool _isAddMenuOpen = false;
   late final AnimationController _menuController;
-  double kNavBarHeight = 65.0;
+
+  ThemeService get themeService =>
+      Provider.of<ThemeService>(context, listen: false);
+  bool get isLiquid => themeService.visualStyle == 1;
+
+  double get kNavBarHeight => isLiquid ? 65 : 72;
   double kBarFabGap = 12.0;
 
   double _safe01(double v) => v.isNaN ? 0.0 : v.clamp(0.0, 1.0).toDouble();
+  DateTime get _currentActiveDate {
+    if (_currentIndex == 0 && _tagebuchKey.currentState != null) {
+      return _tagebuchKey.currentState!.selectedDateNotifier.value;
+    }
+    return DateTime.now();
+  }
 
   @override
   void initState() {
@@ -24438,7 +23997,70 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     _menuController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
-    );
+    ); // In lib/screens/main_screen.dart
+
+    Future<void> handleAddFood() async {
+      final FoodItem? selectedFoodItem =
+          await Navigator.of(context).push<FoodItem>(
+        MaterialPageRoute(builder: (context) => const AddFoodScreen()),
+      );
+
+      if (selectedFoodItem == null || !mounted) return;
+
+      // FIX: Datum holen
+      final targetDate = _currentActiveDate;
+
+      // FIX: Datum übergeben (Signatur unten anpassen!)
+      final result =
+          await _showQuantityMenu(selectedFoodItem, initialDate: targetDate);
+
+      if (result == null || !mounted) return;
+
+      final int quantity = result.quantity;
+      final DateTime timestamp =
+          result.timestamp; // Das kommt jetzt korrekt aus dem Dialog
+      final String mealType = result.mealType;
+      final bool isLiquid = result.isLiquid;
+      final double? caffeinePer100 = result.caffeinePer100ml;
+
+      // ... (Restliche Logik: insertFoodEntry, insertFluidEntry etc. bleibt gleich) ...
+      // Der timestamp hier ist bereits korrekt, weil er aus dem Dialog kommt,
+      // der mit targetDate initialisiert wurde.
+
+      final newFoodEntry = FoodEntry(
+        barcode: selectedFoodItem.barcode,
+        timestamp: timestamp,
+        quantityInGrams: quantity,
+        mealType: mealType,
+      );
+
+      final newFoodEntryId =
+          await DatabaseHelper.instance.insertFoodEntry(newFoodEntry);
+
+      if (isLiquid) {
+        // ... insertFluidEntry mit timestamp ...
+        final newFluidEntry = FluidEntry(
+          timestamp: timestamp,
+          quantityInMl: quantity,
+          name: selectedFoodItem.name,
+          kcal: null,
+          sugarPer100ml: null,
+          carbsPer100ml: null,
+          caffeinePer100ml: null,
+          linked_food_entry_id: newFoodEntryId,
+        );
+        await DatabaseHelper.instance.insertFluidEntry(newFluidEntry);
+      }
+
+      if (isLiquid && caffeinePer100 != null && caffeinePer100 > 0) {
+        // ... logCaffeineDose ...
+        final totalCaffeine = (caffeinePer100 / 100.0) * quantity;
+        await _logCaffeineDose(totalCaffeine, timestamp,
+            foodEntryId: newFoodEntryId);
+      }
+
+      _refreshHomeScreen();
+    }
   }
 
   @override
@@ -24506,18 +24128,19 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _showLogSupplementMenu() async {
+    // ... (Supplement Auswahl bleibt gleich) ...
     final l10n = AppLocalizations.of(context)!;
-
     final Supplement? selectedSupplement =
         await showGlassBottomMenu<Supplement>(
       context: context,
       title: l10n.logIntakeTitle,
-      contentBuilder: (ctx, close) {
-        return LogSupplementMenu(close: close);
-      },
+      contentBuilder: (ctx, close) => LogSupplementMenu(close: close),
     );
 
     if (selectedSupplement == null || !mounted) return;
+
+    // FIX: Datum holen
+    final targetDate = _currentActiveDate;
 
     final result = await showGlassBottomMenu<(double, DateTime)?>(
       context: context,
@@ -24525,6 +24148,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       contentBuilder: (ctx, close) {
         return LogSupplementDoseBody(
           supplement: selectedSupplement,
+          initialTimestamp: targetDate, // <--- FIX: Datum übergeben
           primaryLabel: l10n.add_button,
           onCancel: close,
           onSubmit: (dose, ts) {
@@ -24708,6 +24332,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     );
   }
 
+  // In lib/screens/main_screen.dart
+
   Future<void> _handleAddFood() async {
     final FoodItem? selectedFoodItem =
         await Navigator.of(context).push<FoodItem>(
@@ -24716,14 +24342,25 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
     if (selectedFoodItem == null || !mounted) return;
 
-    final result = await _showQuantityMenu(selectedFoodItem);
+    // FIX: Datum holen
+    final targetDate = _currentActiveDate;
+
+    // FIX: Datum übergeben (Signatur unten anpassen!)
+    final result =
+        await _showQuantityMenu(selectedFoodItem, initialDate: targetDate);
+
     if (result == null || !mounted) return;
 
     final int quantity = result.quantity;
-    final DateTime timestamp = result.timestamp;
+    final DateTime timestamp =
+        result.timestamp; // Das kommt jetzt korrekt aus dem Dialog
     final String mealType = result.mealType;
     final bool isLiquid = result.isLiquid;
     final double? caffeinePer100 = result.caffeinePer100ml;
+
+    // ... (Restliche Logik: insertFoodEntry, insertFluidEntry etc. bleibt gleich) ...
+    // Der timestamp hier ist bereits korrekt, weil er aus dem Dialog kommt,
+    // der mit targetDate initialisiert wurde.
 
     final newFoodEntry = FoodEntry(
       barcode: selectedFoodItem.barcode,
@@ -24731,11 +24368,12 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       quantityInGrams: quantity,
       mealType: mealType,
     );
-    final newFoodEntryId = await DatabaseHelper.instance.insertFoodEntry(
-      newFoodEntry,
-    );
+
+    final newFoodEntryId =
+        await DatabaseHelper.instance.insertFoodEntry(newFoodEntry);
 
     if (isLiquid) {
+      // ... insertFluidEntry mit timestamp ...
       final newFluidEntry = FluidEntry(
         timestamp: timestamp,
         quantityInMl: quantity,
@@ -24750,12 +24388,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     }
 
     if (isLiquid && caffeinePer100 != null && caffeinePer100 > 0) {
+      // ... logCaffeineDose ...
       final totalCaffeine = (caffeinePer100 / 100.0) * quantity;
-      await _logCaffeineDose(
-        totalCaffeine,
-        timestamp,
-        foodEntryId: newFoodEntryId,
-      );
+      await _logCaffeineDose(totalCaffeine, timestamp,
+          foodEntryId: newFoodEntryId);
     }
 
     _refreshHomeScreen();
@@ -24764,6 +24400,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   Future<void> _showAddFluidMenu() async {
     final l10n = AppLocalizations.of(context)!;
     final key = GlobalKey<FluidDialogContentState>();
+    final targetDate = _currentActiveDate; // <--- FIX
+
     await showGlassBottomMenu(
       context: context,
       title: l10n.add_liquid_title,
@@ -24771,7 +24409,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            FluidDialogContent(key: key),
+            FluidDialogContent(
+              key: key,
+              initialTimestamp: targetDate, // <--- FIX: Datum übergeben
+            ),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -24869,33 +24510,33 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   }
 
   Future<
-      ({
-        int quantity,
-        DateTime timestamp,
-        String mealType,
-        bool isLiquid,
-        double? sugarPer100ml,
-        double? caffeinePer100ml,
-      })?> _showQuantityMenu(FoodItem item) async {
+          ({
+            int quantity,
+            DateTime timestamp,
+            String mealType,
+            bool isLiquid,
+            double? sugarPer100ml,
+            double? caffeinePer100ml,
+          })?>
+      _showQuantityMenu(FoodItem item,
+          {DateTime? initialDate} // <--- NEUER PARAMETER
+          ) async {
     final l10n = AppLocalizations.of(context)!;
     final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
 
-    return showGlassBottomMenu<
-        ({
-          int quantity,
-          DateTime timestamp,
-          String mealType,
-          bool isLiquid,
-          double? sugarPer100ml,
-          double? caffeinePer100ml,
-        })>(
+    return showGlassBottomMenu(
       context: context,
       title: item.name,
       contentBuilder: (ctx, close) {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            QuantityDialogContent(key: dialogStateKey, item: item),
+            QuantityDialogContent(
+              key: dialogStateKey,
+              item: item,
+              initialTimestamp:
+                  initialDate ?? DateTime.now(), // <--- FIX: Nutzen
+            ),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -25655,7 +25296,7 @@ class _FrostedBar extends StatelessWidget {
     final Color neutralTint =
         (isDark ? Colors.white : Colors.black).withOpacity(isDark ? 0.1 : 0.1);
     final Color effectiveGlass =
-        Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.22 : 0.16));
+        Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.8 : 0.5));
 
     if (themeService.visualStyle == 1) {
       double radius = 99;
@@ -26670,14 +26311,42 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _categoryController =
-      TextEditingController(); // Controller für das Textfeld
 
-  // State-Variablen
-  List<String> _allCategories = []; // Für Autocomplete-Vorschläge
-  List<String> _allMuscleGroups = []; // Für Chip-Auswahl
+  // Statt Controller nutzen wir jetzt eine Variable für das Dropdown
+  String? _selectedCategory;
+
+  // Fallback-Listen, falls die DB leer ist
+  final List<String> _defaultCategories = [
+    'Abs',
+    'Arms',
+    'Back',
+    'Calves',
+    'Chest',
+    'Legs',
+    'Shoulders',
+    'Cardio'
+  ];
+  final List<String> _defaultMuscles = [
+    'Biceps',
+    'Triceps',
+    'Quadriceps',
+    'Hamstrings',
+    'Calves',
+    'Chest',
+    'Back',
+    'Shoulders',
+    'Abs',
+    'Glutes',
+    'Forearms',
+    'Traps'
+  ];
+
+  List<String> _allCategories = [];
+  List<String> _allMuscleGroups = [];
+
   final List<String> _selectedPrimaryMuscles = [];
   final List<String> _selectedSecondaryMuscles = [];
+
   bool _isLoading = true;
   bool _saving = false;
 
@@ -26693,82 +26362,78 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
-    _categoryController.dispose();
     super.dispose();
   }
 
   Future<void> _loadData() async {
-    setState(() => _isLoading = true); // Ladeindikator starten
-    final db = WorkoutDatabaseHelper.instance;
+    setState(() => _isLoading = true);
     try {
+      final db = WorkoutDatabaseHelper.instance;
       final categories = await db.getAllCategories();
       final muscles = await db.getAllMuscleGroups();
+
       if (mounted) {
         setState(() {
-          _allCategories = categories;
-          _allMuscleGroups = muscles;
-          _isLoading = false; // Ladeindikator beenden
+          // Nutze DB-Werte oder Fallback, falls leer
+          _allCategories =
+              categories.isNotEmpty ? categories : _defaultCategories;
+          _allMuscleGroups = muscles.isNotEmpty ? muscles : _defaultMuscles;
+
+          // Sortieren für bessere UX
+          _allCategories.sort();
+          _allMuscleGroups.sort();
+
+          _isLoading = false;
         });
       }
     } catch (e) {
-      print("Fehler beim Laden der Daten für CreateExerciseScreen: $e");
+      debugPrint("Fehler beim Laden der Daten: $e");
       if (mounted) {
-        setState(
-            () => _isLoading = false); // Ladeindikator auch bei Fehler beenden
-        // Optional: Fehlermeldung anzeigen
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Fehler beim Laden der Daten: $e')),
-        );
+        setState(() {
+          _allCategories = _defaultCategories;
+          _allMuscleGroups = _defaultMuscles;
+          _isLoading = false;
+        });
       }
     }
   }
 
   Future<void> _saveExercise() async {
-    // Verhindere Doppelklick und Speichern ohne Daten
-    if (_saving || !(_formKey.currentState?.validate() ?? false)) return;
+    if (_saving) return;
+    if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _saving = true); // Zeige Ladezustand im Button
+    setState(() => _saving = true);
 
     try {
       final newExercise = Exercise(
-        // ID wird von der DB vergeben
-        nameDe: _nameController.text
-            .trim(), // Annahme: Deutscher Name = Englischer Name für Custom
+        // ID ist null, DB vergibt neue ID
+        nameDe: _nameController.text.trim(),
         nameEn: _nameController.text.trim(),
         descriptionDe: _descriptionController.text.trim(),
         descriptionEn: _descriptionController.text.trim(),
-        categoryName:
-            _categoryController.text.trim(), // Kategorie aus dem Textfeld
-        primaryMuscles: List.from(_selectedPrimaryMuscles), // Kopie erstellen
-        secondaryMuscles:
-            List.from(_selectedSecondaryMuscles), // Kopie erstellen
-        // imagePath bleibt null für Custom Exercises
+        categoryName: _selectedCategory ?? 'Other', // Fallback
+        primaryMuscles: _selectedPrimaryMuscles,
+        secondaryMuscles: _selectedSecondaryMuscles,
+        imagePath: null, // Kein Bild für Custom Exercises
       );
 
-      // Speichere über den WorkoutDatabaseHelper (der jetzt is_custom=1 setzt)
       await WorkoutDatabaseHelper.instance.insertExercise(newExercise);
 
       if (mounted) {
-        // Erfolgs-Snackbar
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.snackbarSaveSuccess(newExercise.nameDe))),
         );
-        // Schließe den Screen und gib 'true' zurück, um anzuzeigen, dass gespeichert wurde
         Navigator.of(context).pop(true);
       }
     } catch (e) {
-      print("Fehler beim Speichern der Übung: $e");
+      debugPrint("Fehler beim Speichern: $e");
       if (mounted) {
-        // Fehler-Snackbar
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${l10n.error}: $e')),
         );
       }
     } finally {
-      // Ladezustand im Button beenden, auch bei Fehler
-      if (mounted) {
-        setState(() => _saving = false);
-      }
+      if (mounted) setState(() => _saving = false);
     }
   }
 
@@ -26776,23 +26441,19 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
   Widget build(BuildContext context) {
     final double topPadding =
         MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: GlobalAppBar(
         title: l10n.create_exercise_screen_title,
         actions: [
-          // Speicher-Button in der AppBar
           TextButton(
-            onPressed: _saving
-                ? null
-                : _saveExercise, // Deaktivieren während Speichern
+            onPressed: _saving ? null : _saveExercise,
             child: _saving
                 ? const SizedBox(
-                    // Ladeindikator im Button
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
+                    child: CircularProgressIndicator(strokeWidth: 2))
                 : Text(
                     l10n.save,
                     style: TextStyle(
@@ -26806,8 +26467,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator()) // Zeige Ladeindikator
+          ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               padding: DesignConstants.cardPadding.copyWith(
                 top: DesignConstants.cardPadding.top + topPadding,
@@ -26815,100 +26475,47 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
               child: Form(
                 key: _formKey,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment
-                      .stretch, // Formularelemente füllen Breite
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // --- Name ---
                     TextFormField(
                       controller: _nameController,
                       decoration: InputDecoration(
-                        labelText: l10n.exercise_name_label, // Benötigt
+                        labelText: l10n.exercise_name_label,
+                        filled: true,
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return l10n
-                              .validatorPleaseEnterName; // Standard-Validierung
+                          return l10n.validatorPleaseEnterName;
                         }
                         return null;
                       },
-                      textInputAction:
-                          TextInputAction.next, // Fokus zum nächsten Feld
+                      textInputAction: TextInputAction.next,
                     ),
                     const SizedBox(height: DesignConstants.spacingL),
 
-                    // --- Kategorie (Autocomplete) ---
-                    Autocomplete<String>(
-                      // Controller für das zugrundeliegende Textfeld
-                      initialValue:
-                          TextEditingValue(text: _categoryController.text),
-                      optionsBuilder: (TextEditingValue textEditingValue) {
-                        final query = textEditingValue.text.toLowerCase();
-                        if (query.isEmpty) {
-                          return const Iterable<
-                              String>.empty(); // Keine Vorschläge bei leerem Feld
+                    // --- Kategorie (Dropdown) ---
+                    DropdownButtonFormField<String>(
+                      initialValue: _selectedCategory,
+                      items: _allCategories.map((cat) {
+                        return DropdownMenuItem(
+                          value: cat,
+                          child: Text(cat),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        setState(() => _selectedCategory = val);
+                      },
+                      decoration: InputDecoration(
+                        labelText: l10n.category_label,
+                        hintText: l10n.categoryHint,
+                        filled: true,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return l10n.validatorPleaseEnterCategory;
                         }
-                        // Filtere existierende Kategorien
-                        return _allCategories
-                            .where((cat) => cat.toLowerCase().contains(query));
-                      },
-                      onSelected: (String selection) {
-                        // Wenn ein Vorschlag ausgewählt wird, übernehme ihn
-                        _categoryController.text = selection;
-                        // Schließe die Tastatur
-                        FocusScope.of(context).unfocus();
-                      },
-                      fieldViewBuilder: (context, fieldController, focusNode,
-                          onFieldSubmitted) {
-                        // Wichtig: Internen Controller mit unserem synchronisieren
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (_categoryController.text !=
-                              fieldController.text) {
-                            _categoryController.text = fieldController.text;
-                          }
-                        });
-
-                        return TextFormField(
-                          controller:
-                              fieldController, // Interner Controller des Autocomplete
-                          focusNode: focusNode,
-                          decoration: InputDecoration(
-                            labelText: l10n.category_label, // Benötigt
-                            hintText: l10n.categoryHint, // Beispiel anzeigen
-                          ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return l10n
-                                  .validatorPleaseEnterCategory; // Eigene Validierung
-                            }
-                            return null;
-                          },
-                          textInputAction: TextInputAction.next, // Fokus weiter
-                        );
-                      },
-                      optionsViewBuilder: (context, onSelected, options) {
-                        // Style für die Vorschlagsliste
-                        return Align(
-                          alignment: Alignment.topLeft,
-                          child: Material(
-                            elevation: 4.0,
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(
-                                  maxHeight: 200), // Begrenzte Höhe
-                              child: ListView.builder(
-                                padding: EdgeInsets.zero,
-                                shrinkWrap: true,
-                                itemCount: options.length,
-                                itemBuilder: (BuildContext context, int index) {
-                                  final option = options.elementAt(index);
-                                  return InkWell(
-                                    onTap: () => onSelected(option),
-                                    child: ListTile(title: Text(option)),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                        );
+                        return null;
                       },
                     ),
                     const SizedBox(height: DesignConstants.spacingL),
@@ -26917,33 +26524,31 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                     TextFormField(
                       controller: _descriptionController,
                       decoration: InputDecoration(
-                        labelText: l10n.description_optional_label, // Optional
+                        labelText: l10n.description_optional_label,
+                        filled: true,
                       ),
-                      maxLines: 3, // Mehrzeilig
-                      textInputAction:
-                          TextInputAction.done, // Formular abschließen
+                      maxLines: 3,
                     ),
-                    const SizedBox(
-                        height: DesignConstants.spacingXL), // Größerer Abstand
+                    const SizedBox(height: DesignConstants.spacingXL),
 
                     // --- Primäre Muskeln ---
                     _buildSectionTitle(context, l10n.primary_muscles_label),
-                    _buildMuscleSelection(
-                      allMuscles: _allMuscleGroups,
+                    const SizedBox(height: 8),
+                    _buildMuscleSelector(
+                      availableMuscles: _allMuscleGroups,
                       selectedMuscles: _selectedPrimaryMuscles,
                     ),
-                    const SizedBox(
-                        height: DesignConstants.spacingXL), // Größerer Abstand
+                    const SizedBox(height: DesignConstants.spacingXL),
 
                     // --- Sekundäre Muskeln ---
                     _buildSectionTitle(context, l10n.secondary_muscles_label),
-                    _buildMuscleSelection(
-                      allMuscles: _allMuscleGroups,
+                    const SizedBox(height: 8),
+                    _buildMuscleSelector(
+                      availableMuscles: _allMuscleGroups,
                       selectedMuscles: _selectedSecondaryMuscles,
                     ),
-                    const SizedBox(
-                        height:
-                            DesignConstants.spacingXXL), // Extra Abstand unten
+
+                    const SizedBox(height: DesignConstants.spacingXXL),
                   ],
                 ),
               ),
@@ -26951,42 +26556,30 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
     );
   }
 
-  // Helfer-Widget für Sektionstitel (kannst du behalten oder anpassen)
   Widget _buildSectionTitle(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.grey[700], // Etwas dunkler für mehr Kontrast
-              fontWeight: FontWeight.bold,
-            ),
-      ),
+    return Text(
+      title,
+      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: Colors.grey[700],
+            fontWeight: FontWeight.bold,
+          ),
     );
   }
 
-  // Helfer-Widget für die Muskelauswahl mit Chips
-  Widget _buildMuscleSelection({
-    required List<String> allMuscles,
+  Widget _buildMuscleSelector({
+    required List<String> availableMuscles,
     required List<String> selectedMuscles,
   }) {
-    // Falls keine Muskeln geladen wurden (Fehlerfall)
-    if (allMuscles.isEmpty && !_isLoading) {
-      return Text("Fehler: Muskelgruppen konnten nicht geladen werden.",
-          style: TextStyle(color: Theme.of(context).colorScheme.error));
-    }
-
     return Wrap(
-      spacing: 8.0, // Horizontaler Abstand
-      runSpacing: 4.0, // Vertikaler Abstand
-      children: allMuscles.map((muscle) {
+      spacing: 8.0,
+      runSpacing: 4.0,
+      children: availableMuscles.map((muscle) {
         final isSelected = selectedMuscles.contains(muscle);
         return FilterChip(
           label: Text(muscle),
           selected: isSelected,
           onSelected: (bool selected) {
             setState(() {
-              // Wichtig: UI muss neu gezeichnet werden
               if (selected) {
                 selectedMuscles.add(muscle);
               } else {
@@ -26994,11 +26587,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
               }
             });
           },
-          // Visuelle Anpassungen für besseres Aussehen
-          selectedColor: Theme.of(context).colorScheme.primaryContainer,
           checkmarkColor: Theme.of(context).colorScheme.onPrimaryContainer,
-          showCheckmark: true,
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap, // Kompakter
         );
       }).toList(),
     );
@@ -29617,7 +29206,7 @@ class WorkoutDatabaseHelper {
     }
     // --- KORREKTUR ENDE ---
 
-    return await openDatabase(path, version: 10, onUpgrade: _upgradeDB);
+    return await openDatabase(path, version: 11, onUpgrade: _upgradeDB);
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
@@ -29732,6 +29321,29 @@ class WorkoutDatabaseHelper {
             "Fehler beim Hinzufügen der Spalte 'is_custom' (evtl. existiert sie schon): $e");
       }
     }
+    if (oldVersion < 11) {
+      print(
+          "Upgrade DB auf v11: Fehlende Spalten für Custom Exercises hinzufügen...");
+
+      final columnsToAdd = [
+        "name_de TEXT",
+        "name_en TEXT",
+        "description_de TEXT",
+        "description_en TEXT",
+        "category_name TEXT",
+        "primaryMuscles TEXT",
+        "secondaryMuscles TEXT",
+        "image_path TEXT"
+      ];
+
+      for (var col in columnsToAdd) {
+        try {
+          await db.execute("ALTER TABLE exercises ADD COLUMN $col");
+        } catch (e) {
+          // Spalte existiert evtl. schon, Fehler ignorieren
+        }
+      }
+    }
     print("DB-Upgrade auf v$newVersion erfolgreich abgeschlossen.");
   }
 
@@ -29767,65 +29379,131 @@ class WorkoutDatabaseHelper {
   // --- EXERCISE MANAGEMENT ---
   Future<List<String>> getAllCategories() async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'exercises_flat', // WAR: 'exercises'
+
+    // 1. Kategorien aus den Standard-Daten (View)
+    final List<Map<String, dynamic>> standardMaps = await db.query(
+      'exercises_flat',
       columns: ['category_name'],
       distinct: true,
-      orderBy: 'category_name ASC',
     );
-    return maps
-        .map((map) => map['category_name'] as String?)
-        .where((category) => category != null && category.isNotEmpty)
-        .cast<String>()
-        .toList();
+
+    // 2. Kategorien aus den eigenen Übungen (Tabelle)
+    final List<Map<String, dynamic>> customMaps = await db.query(
+      'exercises',
+      columns: ['category_name'],
+      where: 'is_custom = 1',
+      distinct: true,
+    );
+
+    final Set<String> categories = {};
+
+    for (var map in standardMaps) {
+      if (map['category_name'] != null) {
+        categories.add(map['category_name'] as String);
+      }
+    }
+    for (var map in customMaps) {
+      if (map['category_name'] != null) {
+        categories.add(map['category_name'] as String);
+      }
+    }
+
+    final sortedList = categories.toList()..sort();
+    return sortedList;
   }
 
-  Future<List<Exercise>> searchExercises({
-    String query = '',
-    List<String> selectedCategories = const [],
-  }) async {
+  Future<List<Exercise>> searchExercises(
+      {String query = '', List<String> selectedCategories = const []}) async {
     final db = await database;
-    List<String> whereClauses = [];
-    List<dynamic> whereArgs = [];
+
+    // --- TEIL A: Standard-Daten aus der View laden ---
+    List<String> whereClausesFlat = [];
+    List<dynamic> whereArgsFlat = [];
+
     if (query.isNotEmpty) {
-      whereClauses.add('(name_de LIKE ? OR name_en LIKE ?)');
-      whereArgs.addAll(['%$query%', '%$query%']);
+      // Hinweis: In der View heißen die Spalten evtl. noch alt, aber dein Model erwartet name_de/name_en.
+      // Die View exercises_flat mappt das oft schon. Wir suchen hier im Standard.
+      whereClausesFlat.add('(name_de LIKE ? OR name_en LIKE ?)');
+      whereArgsFlat.addAll(['%$query%', '%$query%']);
     }
     if (selectedCategories.isNotEmpty) {
-      String placeholders = List.filled(
-        selectedCategories.length,
-        '?',
-      ).join(', ');
-      whereClauses.add('category_name IN ($placeholders)');
-      whereArgs.addAll(selectedCategories);
+      String placeholders =
+          List.filled(selectedCategories.length, '?').join(', ');
+      whereClausesFlat.add('category_name IN ($placeholders)');
+      whereArgsFlat.addAll(selectedCategories);
     }
-    String finalWhere =
-        whereClauses.isNotEmpty ? whereClauses.join(' AND ') : '';
-    final String sql = '''
-      SELECT e.*, CASE WHEN sl.id IS NOT NULL THEN 0 ELSE 1 END as sort_priority
-      FROM exercises_flat e -- WAR: 'exercises e'
-      LEFT JOIN (SELECT exercise_name, MAX(id) as id FROM set_logs GROUP BY exercise_name) sl
-      ON e.name_de = sl.exercise_name OR e.name_en = sl.exercise_name
-      ${finalWhere.isNotEmpty ? 'WHERE $finalWhere' : ''}
-      ORDER BY sort_priority ASC, e.name_de ASC
-    ''';
-    final List<Map<String, dynamic>> maps = await db.rawQuery(sql, whereArgs);
-    return List.generate(maps.length, (i) => Exercise.fromMap(maps[i]));
+    String whereStringFlat =
+        whereClausesFlat.isNotEmpty ? whereClausesFlat.join(' AND ') : '';
+
+    final List<Map<String, dynamic>> standardMaps = await db.query(
+      'exercises_flat',
+      where: whereStringFlat.isEmpty ? null : whereStringFlat,
+      whereArgs: whereArgsFlat.isEmpty ? null : whereArgsFlat,
+    );
+
+    // --- TEIL B: Eigene Daten aus der Tabelle laden ---
+    List<String> whereClausesCustom = ['is_custom = 1']; // Nur Custom
+    List<dynamic> whereArgsCustom = [];
+
+    if (query.isNotEmpty) {
+      whereClausesCustom.add('(name_de LIKE ? OR name_en LIKE ?)');
+      whereArgsCustom.addAll(['%$query%', '%$query%']);
+    }
+    if (selectedCategories.isNotEmpty) {
+      String placeholders =
+          List.filled(selectedCategories.length, '?').join(', ');
+      whereClausesCustom.add('category_name IN ($placeholders)');
+      whereArgsCustom.addAll(selectedCategories);
+    }
+
+    final List<Map<String, dynamic>> customMaps = await db.query(
+      'exercises',
+      where: whereClausesCustom.join(' AND '),
+      whereArgs: whereArgsCustom,
+    );
+
+    // --- TEIL C: Zusammenfügen ---
+    List<Exercise> allExercises = [];
+
+    // Custom zuerst (optional)
+    for (var map in customMaps) {
+      allExercises.add(Exercise.fromMap(map));
+    }
+    for (var map in standardMaps) {
+      allExercises.add(Exercise.fromMap(map));
+    }
+
+    // Sortieren: Custom zuerst, dann alphabetisch
+    allExercises.sort((a, b) {
+      // Sortiere nach Name DE
+      return a.nameDe.toLowerCase().compareTo(b.nameDe.toLowerCase());
+    });
+
+    return allExercises;
   }
 
   Future<Exercise?> getExerciseByName(String name) async {
     final db = await database;
-    // --- HIER IST DIE ÄNDERUNG ---
-    final maps = await db.query(
-      'exercises_flat', // WAR: 'exercises'
-      where: 'name_de = ? OR name_en = ?',
+
+    // 1. Zuerst in den Custom Exercises suchen (Priorität)
+    final customMaps = await db.query(
+      'exercises',
+      where: 'is_custom = 1 AND (name_de = ? OR name_en = ?)',
       whereArgs: [name, name],
       limit: 1,
     );
-    // --- ENDE DER ÄNDERUNG ---
-    if (maps.isNotEmpty) {
-      return Exercise.fromMap(maps.first);
+    if (customMaps.isNotEmpty) {
+      return Exercise.fromMap(customMaps.first);
     }
+
+    // 2. Fallback auf Standard View
+    final standardMaps = await db.query('exercises_flat',
+        where: 'name_de = ? OR name_en = ?', whereArgs: [name, name], limit: 1);
+
+    if (standardMaps.isNotEmpty) {
+      return Exercise.fromMap(standardMaps.first);
+    }
+
     return null;
   }
 
@@ -29934,54 +29612,68 @@ class WorkoutDatabaseHelper {
     );
   }
 
+// In lib/data/workout_database_helper.dart
+
   Future<Routine?> getRoutineById(int id) async {
     final db = await database;
-    final routineMaps = await db.query(
-      'routines',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    final routineMaps =
+        await db.query('routines', where: 'id = ?', whereArgs: [id]);
     if (routineMaps.isEmpty) return null;
-    final routineExerciseMaps = await db.query(
-      'routine_exercises',
-      where: 'routine_id = ?',
-      whereArgs: [id],
-      orderBy: 'exercise_order ASC',
-    );
+
+    final routineExerciseMaps = await db.query('routine_exercises',
+        where: 'routine_id = ?',
+        whereArgs: [id],
+        orderBy: 'exercise_order ASC');
+
     final List<RoutineExercise> routineExercises = [];
     for (final reMap in routineExerciseMaps) {
       final routineExerciseId = reMap['id'] as int;
       final exerciseId = reMap['exercise_id'] as int;
-      // --- FIX IS HERE ---
-      final exerciseMaps = await db.query(
-        'exercises_flat', // Use the view that has all the data
-        where: 'id = ?',
-        whereArgs: [exerciseId],
-      );
-      // --- END FIX ---
+
+      // --- FIX START: Intelligentes Laden der Übungsdetails ---
+
+      // 1. Versuch: Direkt aus der Tabelle laden (für Custom Exercises essentiell)
+      List<Map<String, dynamic>> exerciseMaps =
+          await db.query('exercises', where: 'id = ?', whereArgs: [exerciseId]);
+
+      bool usableDataFound = false;
+      if (exerciseMaps.isNotEmpty) {
+        final row = exerciseMaps.first;
+        // Wir prüfen, ob wir hier Namen finden (Indikator für Custom Exercise mit unseren neuen Spalten)
+        if ((row['name_de'] != null && row['name_de'].toString().isNotEmpty) ||
+            (row['name_en'] != null && row['name_en'].toString().isNotEmpty)) {
+          usableDataFound = true;
+        }
+      }
+
+      // 2. Versuch: Wenn Tabelle keine Namen lieferte (Standard-Übung), fallback auf die View
+      if (!usableDataFound) {
+        exerciseMaps = await db
+            .query('exercises_flat', where: 'id = ?', whereArgs: [exerciseId]);
+      }
+      // --- FIX ENDE ---
+
       if (exerciseMaps.isEmpty) continue;
-      final setTemplateMaps = await db.query(
-        'routine_set_templates',
-        where: 'routine_exercise_id = ?',
-        whereArgs: [routineExerciseId],
-        orderBy: 'set_index ASC',
-      );
+
+      final setTemplateMaps = await db.query('routine_set_templates',
+          where: 'routine_exercise_id = ?',
+          whereArgs: [routineExerciseId],
+          orderBy: 'set_index ASC');
       final setTemplates =
           setTemplateMaps.map((stMap) => SetTemplate.fromMap(stMap)).toList();
-      routineExercises.add(
-        RoutineExercise(
-          id: routineExerciseId,
-          exercise: Exercise.fromMap(exerciseMaps.first),
-          setTemplates: setTemplates,
-          pauseSeconds: reMap['pause_seconds'] as int?,
-        ),
-      );
+
+      routineExercises.add(RoutineExercise(
+        id: routineExerciseId,
+        exercise: Exercise.fromMap(exerciseMaps.first),
+        setTemplates: setTemplates,
+        pauseSeconds: reMap['pause_seconds'] as int?,
+      ));
     }
+
     return Routine(
-      id: id,
-      name: routineMaps.first['name'] as String,
-      exercises: routineExercises,
-    );
+        id: id,
+        name: routineMaps.first['name'] as String,
+        exercises: routineExercises);
   }
 
   Future<void> updateSetTemplate(SetTemplate setTemplate) async {
@@ -30337,27 +30029,53 @@ class WorkoutDatabaseHelper {
     return logs;
   }
 
-  Future<void> importWorkoutData({
-    required List<Routine> routines,
-    required List<WorkoutLog> workoutLogs,
-  }) async {
+  Future<void> importWorkoutData(
+      {required List<Routine> routines,
+      required List<WorkoutLog> workoutLogs}) async {
     final db = await database;
     await db.transaction((txn) async {
-      // Routinen importieren
+      // A. Routinen importieren
       for (final routine in routines) {
-        final newRoutineId = await txn.insert('routines', {
-          'name': routine.name,
-        });
+        // Wir nutzen die ID aus dem Backup, falls vorhanden
+        int routineId;
+        if (routine.id != null) {
+          await txn.insert(
+              'routines',
+              {
+                'id': routine.id, // ID erzwingen
+                'name': routine.name
+              },
+              conflictAlgorithm: ConflictAlgorithm.replace);
+          routineId = routine.id!;
+        } else {
+          routineId = await txn.insert('routines', {'name': routine.name});
+        }
+
         for (final re in routine.exercises) {
-          final newReId = await txn.insert('routine_exercises', {
-            'routine_id': newRoutineId,
-            'exercise_id': re.exercise.id,
+          // Auch hier: routine_exercise ID erzwingen, falls vorhanden (für perfekte Kopie)
+          // Wichtig ist aber vor allem 'exercise_id', die auf die Custom Exercise zeigt
+          await txn.insert('routine_exercises', {
+            // 'id': re.id, // Optional, können wir auch neu generieren lassen, aber sicherer ist mit.
+            'routine_id': routineId,
+            'exercise_id':
+                re.exercise.id, // Das muss matchen mit importCustomExercises!
             'exercise_order': routine.exercises.indexOf(re),
             'pause_seconds': re.pauseSeconds,
           });
+
+          // Da wir die ID von routine_exercises oben nicht zwingend holen (da auto-increment im Backup evtl fehlt),
+          // müssen wir die letzte ID abfragen oder Logik anpassen.
+          // Einfacherer Weg für Import: Wir verlassen uns darauf, dass die Reihenfolge stimmt.
+          // BESSERER WEG: Wir holen uns die ID des gerade eingefügten 'routine_exercises'.
+
+          final lastReRow =
+              await txn.rawQuery('SELECT last_insert_rowid() as id');
+          final newReId = lastReRow.first['id'] as int;
+
           for (final st in re.setTemplates) {
             final stMap = st.toMap();
-            stMap.remove('id');
+            stMap.remove(
+                'id'); // Set Template IDs sind nicht so wichtig für Verknüpfungen
             stMap['routine_exercise_id'] = newReId;
             stMap['set_index'] = re.setTemplates.indexOf(st);
             await txn.insert('routine_set_templates', stMap);
@@ -30365,16 +30083,20 @@ class WorkoutDatabaseHelper {
         }
       }
 
-      // Workout Logs importieren
+      // B. Workout Logs importieren
       for (final log in workoutLogs) {
         final logMap = log.toMap();
-        logMap.remove('id');
+        // Hier behalten wir die ID, falls wir später mal Logs editieren und die ID referenzieren
+        // logMap.remove('id');
         logMap['status'] = 'completed';
-        final newLogId = await txn.insert('workout_logs', logMap);
+
+        final newLogId = await txn.insert('workout_logs', logMap,
+            conflictAlgorithm: ConflictAlgorithm.replace);
 
         for (final setLog in log.sets) {
           final setMap = setLog.toMap();
-          setMap.remove('id');
+          setMap.remove(
+              'id'); // SetLog IDs sind egal, solange sie dem Workout gehören
           setMap['workout_log_id'] = newLogId;
           await txn.insert('set_logs', setMap);
         }
@@ -30438,9 +30160,16 @@ class WorkoutDatabaseHelper {
     List<String> parseMuscles(String? jsonString) {
       if (jsonString == null || jsonString.isEmpty) return [];
       try {
-        return (jsonDecode(jsonString) as List)
-            .map((item) => item.toString())
-            .toList();
+        // Versuche JSON zu decodieren
+        final decoded = jsonDecode(jsonString);
+        if (decoded is List) {
+          return decoded.map((item) => item.toString()).toList();
+        }
+        // Fallback: Falls es als CSV gespeichert wurde (legacy data)
+        if (jsonString.contains(',')) {
+          return jsonString.split(',').map((e) => e.trim()).toList();
+        }
+        return [];
       } catch (e) {
         return [];
       }
@@ -30514,22 +30243,26 @@ class WorkoutDatabaseHelper {
     return setMaps.map((map) => SetLog.fromMap(map)).toList();
   }
 
+// In lib/data/workout_database_helper.dart
+
   Future<Exercise> insertExercise(Exercise exercise) async {
     final db = await database;
-    // Setze is_custom auf 1 für alle hier eingefügten Übungen
-    final Map<String, Object?> exerciseMap = exercise.toMap();
-    exerciseMap['is_custom'] = 1; // Markiere als benutzerdefiniert
 
-    // Entferne die ID, falls sie versehentlich gesetzt wurde,
-    // damit die DB eine neue generiert.
+    // Dein Model nutzt toMap(), was JSON-Listen korrekt in Strings umwandelt
+    final Map<String, Object?> exerciseMap = exercise.toMap();
+
+    // WICHTIG: ID entfernen, damit die DB eine neue generiert
     exerciseMap.remove('id');
+
+    // WICHTIG: Als eigene Übung markieren
+    exerciseMap['is_custom'] = 1;
 
     final id = await db.insert(
       'exercises',
       exerciseMap,
-      conflictAlgorithm: ConflictAlgorithm
-          .replace, // Falls Name schon existiert (sollte nicht)
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
+
     print(
         "Benutzerdefinierte Übung '${exercise.nameDe}' mit ID $id eingefügt.");
     return exercise.copyWith(id: id);
@@ -30547,7 +30280,6 @@ class WorkoutDatabaseHelper {
     return maps.map((map) => Exercise.fromMap(map)).toList();
   }
 
-  // *** NEU: Methode zum Importieren benutzerdefinierter Übungen aus dem Backup ***
   Future<void> importCustomExercises(List<Exercise> exercises) async {
     if (exercises.isEmpty) return;
     final db = await database;
@@ -30555,19 +30287,22 @@ class WorkoutDatabaseHelper {
       final batch = txn.batch();
       for (final exercise in exercises) {
         final exerciseMap = exercise.toMap();
-        exerciseMap['is_custom'] =
-            1; // Sicherstellen, dass sie als custom markiert sind
-        exerciseMap.remove('id'); // ID wird von der DB neu vergeben
+        exerciseMap['is_custom'] = 1;
+
+        // WICHTIG: Wir entfernen die ID NICHT.
+        // Wir wollen exakt dieselbe ID wiederherstellen, damit Routinen funktionieren.
+        // exerciseMap.remove('id'); <--- DAS WAR DER FEHLERQUELLE
+
         batch.insert(
           'exercises',
           exerciseMap,
           conflictAlgorithm:
-              ConflictAlgorithm.ignore, // Ignoriere, falls Name schon existiert
+              ConflictAlgorithm.replace, // Überschreiben, falls da
         );
       }
       await batch.commit(noResult: true);
       print(
-          "${exercises.length} benutzerdefinierte Übungen erfolgreich importiert.");
+          "${exercises.length} benutzerdefinierte Übungen erfolgreich importiert (IDs erhalten).");
     });
   }
 
@@ -32313,10 +32048,9 @@ class UiStateService {
 ===== Datei: /Users/richard/Projects/Lightweight/lightweight/lib/services/profile_service.dart =====
 
 // lib/services/profile_service.dart
-// VEREINFACHTE UND KORRIGIERTE VERSION
-
 import 'dart:io';
 import 'package:flutter/material.dart';
+// Wichtig für ImageCache
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -32328,6 +32062,8 @@ class ProfileService extends ChangeNotifier {
 
   String? _profileImagePath;
   String? get profileImagePath => _profileImagePath;
+
+  // CacheBuster hilft dem Widget, aber wir brauchen auch evict() für den ImageProvider
   int cacheBuster = 0;
 
   bool _isPickerActive = false;
@@ -32336,6 +32072,15 @@ class ProfileService extends ChangeNotifier {
   Future<void> initialize() async {
     final prefs = await SharedPreferences.getInstance();
     _profileImagePath = prefs.getString(_profileImageKey);
+
+    // Validierung: Existiert die Datei wirklich noch?
+    if (_profileImagePath != null) {
+      final file = File(_profileImagePath!);
+      if (!await file.exists()) {
+        _profileImagePath = null;
+        await prefs.remove(_profileImageKey);
+      }
+    }
     notifyListeners();
   }
 
@@ -32351,16 +32096,29 @@ class ProfileService extends ChangeNotifier {
         final appDir = await getApplicationDocumentsDirectory();
         const fileName = 'profile_image.jpg';
         final localPath = '${appDir.path}/$fileName';
+        final targetFile = File(localPath);
 
-        final newImage = await File(pickedFile.path).copy(localPath);
+        // 1. WICHTIG: Das alte Bild aus dem Flutter-Cache werfen,
+        // bevor wir das neue schreiben.
+        try {
+          await FileImage(targetFile).evict();
+        } catch (e) {
+          // Ignorieren, falls es nicht im Cache war
+        }
+
+        // 2. Datei kopieren/überschreiben
+        await File(pickedFile.path).copy(localPath);
+
+        // 3. Pfad speichern
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(_profileImageKey, newImage.path);
-        _profileImagePath = newImage.path;
+        await prefs.setString(_profileImageKey, localPath);
 
-        // Erhöhe den Cache-Buster, um einen Rebuild zu erzwingen
-        cacheBuster++;
+        _profileImagePath = localPath;
+        cacheBuster++; // Zwingt das Widget zum Neu-Zeichnen
         notifyListeners();
       }
+    } catch (e) {
+      debugPrint('Fehler beim Bild-Upload: $e');
     } finally {
       _isPickerActive = false;
     }
@@ -32371,23 +32129,27 @@ class ProfileService extends ChangeNotifier {
     final currentPath = prefs.getString(_profileImageKey);
 
     if (currentPath != null) {
-      // 1. Immediately remove the reference from persistent storage.
-      await prefs.remove(_profileImageKey);
+      // 1. Aus Cache entfernen (WICHTIG!)
+      try {
+        await FileImage(File(currentPath)).evict();
+      } catch (e) {
+        // Egal, wenn es nicht im Cache war
+      }
 
-      // 2. Immediately update the internal state and notify the UI.
+      // 2. UI sofort aktualisieren (Optimistic UI update)
       _profileImagePath = null;
+      await prefs.remove(_profileImageKey);
       cacheBuster++;
       notifyListeners();
 
-      // 3. Try to delete the actual file from disk in the background.
+      // 3. Datei physisch löschen
       try {
         final imageFile = File(currentPath);
         if (await imageFile.exists()) {
           await imageFile.delete();
         }
       } catch (e) {
-        // Log the error, but the app's state is already corrected.
-        debugPrint('Failed to delete profile image file: $e');
+        debugPrint('Fehler beim Löschen der Datei: $e');
       }
     }
   }
@@ -33788,7 +33550,7 @@ class GlassBottomNavBar extends StatelessWidget {
       ],
     );
 
-    const barHeight = 65.0;
+    final double barHeight = themeService.visualStyle == 1 ? 65 : 76.0;
 
     switch (themeService.visualStyle) {
       case 1:
@@ -33798,7 +33560,7 @@ class GlassBottomNavBar extends StatelessWidget {
 
         // smarteres Glas: bg-Color + neutraler Tint "verheiraten"
         final Color effectiveGlass =
-            Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.22 : 0.16));
+            Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.8 : 0.5));
 
         // Drag-to-select + Release-to-activate: über GestureDetector
         return LayoutBuilder(
@@ -34873,7 +34635,7 @@ class _GlassFabState extends State<GlassFab>
     final Color neutralTint =
         (isDark ? Colors.white : Colors.black).withOpacity(isDark ? 0.1 : 0.1);
     final Color effectiveGlass =
-        Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.22 : 0.16));
+        Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.8 : 0.5));
 
     final iconAndText = Padding(
       padding: hasLabel
@@ -35524,6 +35286,7 @@ class _InfoBox extends StatelessWidget {
 
 ===== Datei: /Users/richard/Projects/Lightweight/lightweight/lib/widgets/glass_bottom_menu.dart =====
 
+/*
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -35941,6 +35704,441 @@ class _GlassTile extends StatelessWidget {
     }
   }
 }
+*/
+// lib/widgets/glass_bottom_menu.dart
+import 'dart:ui';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:lightweight/services/theme_service.dart';
+import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
+import 'package:provider/provider.dart';
+
+class GlassMenuAction {
+  final IconData? icon; // Jetzt nullable
+  final Widget? customIcon; // NEU: Für deine Buchstaben
+  final String label;
+  final String? subtitle;
+  final VoidCallback onTap;
+
+  GlassMenuAction({
+    this.icon,
+    this.customIcon, // NEU
+    required this.label,
+    this.subtitle,
+    required this.onTap,
+  }) : assert(icon != null || customIcon != null,
+            'Icon or customIcon must be provided');
+}
+
+// ... (showGlassBottomMenu und _GlassBottomMenuSheet bleiben unverändert) ...
+// ... BITTE DEN CODE DAZWISCHEN NICHT LÖSCHEN, NUR ÜBERSPRINGEN ...
+
+Future<T?> showGlassBottomMenu<T>({
+  required BuildContext context,
+  String? title,
+  List<GlassMenuAction>? actions,
+  Widget Function(BuildContext, VoidCallback)? contentBuilder,
+}) {
+  // ... (Code bleibt gleich wie vorher) ...
+  assert(
+    (actions != null && contentBuilder == null) ||
+        (actions == null && contentBuilder != null),
+    'Either actions OR contentBuilder must be provided',
+  );
+
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final themeService = Provider.of<ThemeService>(context, listen: false);
+  final bool isLiquid = themeService.visualStyle == 1;
+
+  final Color barrierColor = isDark
+      ? (!isLiquid
+          ? Colors.grey.withOpacity(0.187)
+          : Colors.black.withOpacity(0.5))
+      : Colors.black.withOpacity(0.3);
+
+  return showModalBottomSheet<T>(
+    context: context,
+    isScrollControlled: true,
+    useRootNavigator: true,
+    backgroundColor: Colors.transparent,
+    barrierColor: barrierColor,
+    builder: (ctx) {
+      final kb = MediaQuery.of(ctx).viewInsets.bottom;
+      return AnimatedPadding(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        padding: EdgeInsets.only(bottom: kb),
+        child: _GlassBottomMenuSheet(
+          title: title,
+          actions: actions ?? const <GlassMenuAction>[],
+          contentBuilder: contentBuilder,
+        ),
+      );
+    },
+  );
+}
+
+class _GlassBottomMenuSheet extends StatelessWidget {
+  const _GlassBottomMenuSheet({
+    this.title,
+    this.contentBuilder,
+    this.actions = const <GlassMenuAction>[],
+  });
+
+  final String? title;
+  final Widget Function(BuildContext, VoidCallback)? contentBuilder;
+  final List<GlassMenuAction> actions;
+
+  @override
+  Widget build(BuildContext context) {
+    // ... (Dieser Teil bleibt 1:1 identisch wie in deiner aktuellen Datei) ...
+    // ...
+    final media = MediaQuery.of(context);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final bottomInset = media.viewPadding.bottom;
+    final themeService = context.watch<ThemeService>();
+
+    final Color neutralTint = (isDark
+        ? Colors.white.withOpacity(0.05)
+        : Colors.white.withOpacity(0.22));
+
+    final Color effectiveGlass = Color.alphaBlend(
+        neutralTint, theme.colorScheme.surface.withOpacity(isDark ? 0.8 : 0.5));
+
+    const double r = 24;
+    const EdgeInsets outerMargin = EdgeInsets.fromLTRB(16, 0, 16, 16);
+
+    Widget contentColumn() {
+      return Padding(
+        padding: EdgeInsets.only(bottom: bottomInset),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 44,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.75),
+                borderRadius: BorderRadius.circular(100),
+              ),
+            ),
+            if (title != null) ...[
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  title!,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+            if (contentBuilder != null) ...[
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: contentBuilder!(
+                  context,
+                  () => Navigator.of(context).maybePop(),
+                ),
+              ),
+            ] else if (actions.isNotEmpty) ...[
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 420),
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 12, 8, 8),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: List.generate(actions.length, (i) {
+                        final a = actions[i];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: _GlassTile(
+                            icon: a.icon,
+                            customIcon: a.customIcon, // <--- NEU übergeben
+                            title: a.label,
+                            subtitle: a.subtitle,
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              Navigator.of(context).maybePop();
+                              WidgetsBinding.instance.addPostFrameCallback(
+                                (_) => a.onTap(),
+                              );
+                            },
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+
+    // ... (liquidCard und plainCard bleiben identisch, hier gekürzt) ...
+    Widget liquidCard() {
+      return Stack(
+        children: [
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(r),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.18),
+                    blurRadius: 30,
+                    spreadRadius: 4,
+                    offset: const Offset(0, 14),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          LiquidGlass.withOwnLayer(
+            settings: LiquidGlassSettings(
+              thickness: 30,
+              blur: 8,
+              glassColor: effectiveGlass,
+              lightIntensity: 0.35,
+              saturation: 1.10,
+            ),
+            shape: const LiquidRoundedSuperellipse(borderRadius: r),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: neutralTint,
+                      borderRadius: BorderRadius.circular(r),
+                    ),
+                  ),
+                ),
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(r),
+                        border: Border.all(
+                          color: isDark
+                              ? Colors.white.withOpacity(0.20)
+                              : Colors.black.withOpacity(0.08),
+                          width: 1.2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                contentColumn(),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    Widget plainCard() {
+      return Stack(
+        children: [
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(r),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.18),
+                    blurRadius: 30,
+                    spreadRadius: 4,
+                    offset: const Offset(0, 14),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(r),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface.withOpacity(
+                    isDark ? 0.80 : 0.92,
+                  ),
+                ),
+                child: contentColumn(),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return SafeArea(
+      top: false,
+      bottom: false,
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: Padding(
+          padding: outerMargin,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 680),
+            child: themeService.visualStyle == 1 ? liquidCard() : plainCard(),
+          ),
+        ),
+      ),
+    );
+  }
+}
+// In lib/widgets/glass_bottom_menu.dart
+
+class _GlassTile extends StatelessWidget {
+  const _GlassTile({
+    this.icon,
+    this.customIcon,
+    required this.title,
+    this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData? icon;
+  final Widget? customIcon;
+  final String title;
+  final String? subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textTheme = theme.textTheme;
+    final themeService = context.watch<ThemeService>();
+
+    // Hintergrund-Tint etwas anpassen
+    final Color neutralTint =
+        (isDark ? Colors.white : Colors.black).withOpacity(0.05);
+
+    final Color effectiveGlass = Color.alphaBlend(
+        neutralTint, Colors.white.withOpacity(isDark ? 0.10 : 0.12));
+
+    final Widget leadingWidget =
+        customIcon != null ? customIcon! : Icon(icon, size: 22);
+
+    final tileContent = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: isDark
+                  ? Colors.white.withOpacity(0.1)
+                  : Colors.white.withOpacity(0.2),
+              border: Border.all(
+                color: Colors.white.withOpacity(isDark ? 0.14 : 0.18),
+                width: 1,
+              ),
+            ),
+            child: Center(child: leadingWidget),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: textTheme.bodySmall?.color?.withOpacity(0.8),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Icon(
+            Icons.chevron_right_rounded,
+            size: 22,
+            color: Colors.white.withOpacity(0.8),
+          ),
+        ],
+      ),
+    );
+
+    if (themeService.visualStyle == 1) {
+      return LiquidGlass.withOwnLayer(
+        settings: LiquidGlassSettings(
+          // HIER GEÄNDERT: thickness 0 entfernt die Verzerrung/Verschiebung
+          thickness: 0,
+          blur: 5,
+          glassColor: effectiveGlass,
+          // HIER GEÄNDERT: Weniger Lichtintensität reduziert harte Kanten
+          lightIntensity: 0.1,
+          saturation: 1.10,
+        ),
+        shape: const LiquidRoundedSuperellipse(borderRadius: 18),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(18),
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
+            hoverColor: Colors.transparent,
+            focusColor: Colors.transparent,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: DecoratedBox(
+                    // BorderRadius hier hilft zusätzlich bei der visuellen Abgrenzung
+                    decoration: BoxDecoration(
+                      color: neutralTint,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                  ),
+                ),
+                tileContent,
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Material(
+      color: isDark
+          ? Colors.white.withOpacity(0.06)
+          : Colors.white.withOpacity(0.08),
+      borderRadius: BorderRadius.circular(18),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: tileContent,
+      ),
+    );
+  }
+}
 
 
 ===== Datei: /Users/richard/Projects/Lightweight/lightweight/lib/widgets/keep_alive_page.dart =====
@@ -36156,7 +36354,7 @@ class _GlassPillButtonState extends State<GlassPillButton>
     final Color neutralTint =
         (isDark ? Colors.white : Colors.black).withOpacity(0.10);
     final Color effectiveGlass =
-        Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.22 : 0.16));
+        Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.8 : 0.5));
 
     // Adaptive border radius: round if not Row, pill if Row
     final bool isCircle = widget.child is! Row;

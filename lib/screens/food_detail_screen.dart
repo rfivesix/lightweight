@@ -251,8 +251,13 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
     final displayQuantity =
         _showPer100g || !_hasPortionInfo ? 100 : _trackedQuantity!;
 
-    final double topPadding =
-        MediaQuery.of(context).padding.top + kToolbarHeight;
+    // KORREKTUR: Explizite Berechnung des oberen Abstands
+    // MediaQuery.padding.top = Statusleiste
+    // kToolbarHeight = Höhe der AppBar (56.0)
+    // + Extra Abstand (DesignConstants.cardPaddingInternal), damit es nicht klebt
+    final double topInset = MediaQuery.of(context).padding.top;
+    final double totalTopPadding =
+        topInset + kToolbarHeight + DesignConstants.cardPaddingInternal;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -277,7 +282,13 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
         ],
       ),
       body: SingleChildScrollView(
-        padding: DesignConstants.cardPadding,
+        // KORREKTUR: Padding direkt setzen statt copyWith, um Fehler zu vermeiden
+        padding: EdgeInsets.fromLTRB(
+          DesignConstants.cardPaddingInternal,
+          totalTopPadding,
+          DesignConstants.cardPaddingInternal,
+          DesignConstants.cardPaddingInternal + 80.0, // + Platz für FAB unten
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -286,6 +297,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                 _displayItem.brand,
                 style: textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
               ),
+            // Falls Brand leer ist, sorgt dieser Divider für Abstand,
+            // aber das Padding oben ist jetzt das Wichtigste.
             Divider(
               height: 32,
               thickness: 1,

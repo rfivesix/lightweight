@@ -10,6 +10,7 @@ import 'package:lightweight/models/set_template.dart';
 import 'package:lightweight/screens/exercise_catalog_screen.dart';
 import 'package:lightweight/screens/exercise_detail_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
+import 'package:lightweight/widgets/glass_bottom_menu.dart';
 // Zum Starten der Routine
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/global_app_bar.dart';
@@ -258,7 +259,6 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
       final setIndex = routineExercise.setTemplates.indexOf(setTemplate);
       if (setIndex == -1) return;
 
-      // --- START FIX ---
       final updatedTemplates = [...routineExercise.setTemplates];
       updatedTemplates[setIndex] = setTemplate.copyWith(setType: newType);
 
@@ -268,38 +268,61 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         setTemplates: updatedTemplates,
         pauseSeconds: routineExercise.pauseSeconds,
       );
-      // --- END FIX ---
     });
-    Navigator.pop(context);
+    // Navigator.pop(context); // ENTFERNT: GlassMenu schließt sich selbst
   }
 
   void _showSetTypePicker(SetTemplate setTemplate) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return Wrap(
-          children: <Widget>[
-            ListTile(
-              title: const Text('Normal'),
-              onTap: () => _changeSetType(setTemplate, 'normal'),
-            ),
-            ListTile(
-              title: const Text('Warmup'),
-              onTap: () => _changeSetType(setTemplate, 'warmup'),
-            ),
-            ListTile(
-              title: const Text('Failure'),
-              onTap: () => _changeSetType(setTemplate, 'failure'),
-            ),
-            ListTile(
-              title: const Text('Dropset'),
-              onTap: () => _changeSetType(setTemplate, 'dropset'),
-            ),
-          ],
-        );
+    final l10n = AppLocalizations.of(context)!;
+
+    Widget buildSymbol(String char, Color color) {
+      return Text(
+        char,
+        style: TextStyle(
+          color: color,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+      );
+    }
+
+    final options = [
+      {
+        'type': 'normal',
+        'label': l10n.set_type_normal,
+        'symbol': buildSymbol('N', Colors.grey)
       },
+      {
+        'type': 'warmup',
+        'label': l10n.set_type_warmup,
+        'symbol': buildSymbol('W', Colors.orange)
+      },
+      {
+        'type': 'failure',
+        'label': l10n.set_type_failure,
+        'symbol': buildSymbol('F', Colors.red)
+      },
+      {
+        'type': 'dropset',
+        'label': l10n.set_type_dropset,
+        'symbol': buildSymbol('D', Colors.blue)
+      },
+    ];
+
+    showGlassBottomMenu(
+      context: context,
+      title: l10n.changeSetTypTitle,
+      actions: options.map((opt) {
+        return GlassMenuAction(
+          customIcon: opt['symbol'] as Widget,
+          label: opt['label'] as String,
+          onTap: () => _changeSetType(setTemplate, opt['type'] as String),
+        );
+      }).toList(),
     );
   }
+
+  // In lib/screens/edit_routine_screen.dart
 
   void _editPauseTime(RoutineExercise routineExercise) async {
     final l10n = AppLocalizations.of(context)!;
@@ -307,29 +330,59 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
       text: routineExercise.pauseSeconds?.toString() ?? '',
     );
 
-    final result = await showDialog<int?>(
+    // KORREKTUR: showGlassBottomMenu statt showDialog
+    final result = await showGlassBottomMenu<int?>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.editPauseTimeTitle),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(labelText: l10n.pauseInSeconds),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () {
-              final seconds = int.tryParse(controller.text);
-              Navigator.of(ctx).pop(seconds);
-            },
-            child: Text(l10n.save),
-          ),
-        ],
-      ),
+      title: l10n.editPauseTimeTitle,
+      contentBuilder: (ctx, close) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: l10n.pauseInSeconds,
+                hintText: "z.B. 90",
+                suffixText: "s",
+                filled: true,
+                fillColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white.withOpacity(0.05)
+                    : Colors.black.withOpacity(0.05),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      close();
+                      Navigator.of(ctx).pop(null);
+                    },
+                    child: Text(l10n.cancel),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      final seconds = int.tryParse(controller.text);
+                      close();
+                      Navigator.of(ctx).pop(seconds);
+                    },
+                    child: Text(l10n.save),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
     );
 
     if (result != null) {
@@ -341,31 +394,20 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     }
   }
 
+  // In lib/screens/edit_routine_screen.dart
+
   void _deleteSingleExercise(RoutineExercise exerciseToDelete) async {
     final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.deleteExerciseConfirmTitle),
-        content: Text(
-          l10n.deleteExerciseConfirmContent(
-            exerciseToDelete.exercise.getLocalizedName(context),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l10n.delete),
-          ),
-        ],
+    // NEU: Helper
+    final confirmed = await showDeleteConfirmation(
+      context,
+      title: l10n.deleteExerciseConfirmTitle,
+      content: l10n.deleteExerciseConfirmContent(
+        exerciseToDelete.exercise.getLocalizedName(context),
       ),
     );
 
-    if (confirmed == true && _routineId != null) {
+    if (confirmed && _routineId != null) {
       await WorkoutDatabaseHelper.instance.removeExerciseFromRoutine(
         exerciseToDelete.id!,
       );
@@ -505,6 +547,23 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                                   trailing: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
+                                      // HIER GEÄNDERT: Pause direkt neben Icon anzeigen
+                                      if (routineExercise.pauseSeconds !=
+                                              null &&
+                                          routineExercise.pauseSeconds! > 0)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            right: 4.0,
+                                          ),
+                                          child: Text(
+                                            "${routineExercise.pauseSeconds}s",
+                                            style:
+                                                textTheme.bodyMedium?.copyWith(
+                                              color: colorScheme.primary,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
                                       IconButton(
                                         icon: const Icon(Icons.timer_outlined),
                                         tooltip: l10n.editPauseTime,
@@ -531,27 +590,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      if (routineExercise.pauseSeconds !=
-                                              null &&
-                                          routineExercise.pauseSeconds! > 0)
-                                        Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                            16,
-                                            12,
-                                            16,
-                                            12,
-                                          ),
-                                          child: Text(
-                                            l10n.pauseDuration(
-                                              routineExercise.pauseSeconds!,
-                                            ),
-                                            style:
-                                                textTheme.bodyMedium?.copyWith(
-                                              color: Colors.grey[600],
-                                              fontStyle: FontStyle.italic,
-                                            ),
-                                          ),
-                                        ),
+                                      // ALTER ANZEIGE-BLOCK ENTFERNT
                                       Row(
                                         children: [
                                           _buildHeader(l10n.setLabel, flex: 2),
@@ -569,7 +608,6 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                                         final setIndex = entry.key;
                                         final setTemplate = entry.value;
 
-                                        // HIER IST DIE NEUE LOGIK
                                         int workingSetIndex = 0;
                                         for (int i = 0; i <= setIndex; i++) {
                                           if (routineExercise
@@ -618,7 +656,6 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
           ),
         ],
       ),
-      // KORRIGIERT: label hinzugefügt
       floatingActionButton: GlassFab(
         label: l10n.fabAddExercise,
         onPressed: _addExercises,
