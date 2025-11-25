@@ -1014,7 +1014,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     final manager = context.watch<WorkoutSessionManager>();
     final bool isWorkoutRunning = manager.isActive;
     final String elapsed = _formatDuration(manager.elapsedDuration);
-    
+
     // Parameter für Animation
     // const basePad = 120.0; // Unused locally
     // final runningPad = manager.isActive ? 68.0 : 0.0; // Unused locally
@@ -1083,8 +1083,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                   final confirmed = await showDeleteConfirmation(
                     context,
                     title: l10n.discard_button, // "Verwerfen"
-                    content: l10n.deleteWorkoutConfirmContent, // "Wirklich löschen?"
-                    confirmLabel: l10n.discard_button, // Roter Button: "Verwerfen"
+                    content:
+                        l10n.deleteWorkoutConfirmContent, // "Wirklich löschen?"
+                    confirmLabel:
+                        l10n.discard_button, // Roter Button: "Verwerfen"
                   );
 
                   if (confirmed) {
@@ -1156,9 +1158,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                     .withOpacity(isDarkLocal ? 0.10 : 0.10);
             final Color effectiveGlassLocal = Color.alphaBlend(neutralTintLocal,
                 bgLocal.withOpacity(isDarkLocal ? 0.22 : 0.16));
-            
+
             // Radius für Liquid Animation hier lokal definieren oder aus Konstante
-            const double rLiquid = 99; 
+            const double rLiquid = 99;
 
             return Offstage(
               offstage: v == 0.0,
@@ -1302,8 +1304,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                     width: 76,
                                                     height: 76,
                                                     decoration: BoxDecoration(
-                                                      color:
-                                                          bgLocal.withOpacity(0.80),
+                                                      color: bgLocal
+                                                          .withOpacity(0.80),
                                                       borderRadius:
                                                           BorderRadius.circular(
                                                               18),
@@ -1358,6 +1360,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       ],
     );
   }
+
   Widget _profileAppBarButton(BuildContext context) {
     final profileService = Provider.of<ProfileService>(context, listen: false);
     return Padding(

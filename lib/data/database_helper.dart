@@ -1016,27 +1016,41 @@ class DatabaseHelper {
   }) async {
     final db = await database;
     await db.transaction((txn) async {
+// 1. Food Entries (Referenz für Supplement Logs)
       for (final entry in foodEntries) {
         await txn.insert('food_entries', entry.toMap());
       }
+// 2. Fluid Entries (Referenz für Supplement Logs)
       for (final entry in fluidEntries) {
         await txn.insert('fluid_entries', entry.toMap());
       }
+// 3. Favorites
       for (final barcode in favoriteBarcodes) {
         await txn.insert('favorites', {'barcode': barcode});
       }
+// 4. Measurements
       for (final session in measurementSessions) {
-        // KORREKTUR: Erstellt die Map für die Session direkt hier.
         final sessionId = await txn.insert('measurement_sessions', {
           'timestamp': session.timestamp.toIso8601String(),
         });
         for (final measurement in session.measurements) {
-          // KORREKTUR: Erstellt die Map für das Measurement hier und fügt die NEUE sessionId hinzu.
           await txn.insert('measurements', {
-            ...measurement.toMap(), // Nutzt die existierende toMap()
-            'session_id': sessionId, // Überschreibt mit der neuen ID
+            ...measurement.toMap(),
+            'session_id': sessionId,
           });
         }
+      }
+// 5. Supplements (Wichtig: replace, falls Built-ins wie Caffeine kollidieren)
+      for (final s in supplements) {
+        await txn.insert(
+          'supplements',
+          s.toMap(), // Enthält ID aus Backup
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+// 6. Supplement Logs (Referenzieren Supplements, FoodEntry, FluidEntry)
+      for (final log in supplementLogs) {
+        await txn.insert('supplement_logs', log.toMap());
       }
     });
   }

@@ -18,7 +18,7 @@ class WgerAttributionWidget extends StatelessWidget {
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.only(bottom: 2.5),
         child: GestureDetector(
           // Macht den Text klickbar
           onTap: () async {

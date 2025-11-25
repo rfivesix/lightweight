@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## [0.4.0-beta.9] - 2025-11-25
+
+### Bug Fixes
+- **Datensicherung**: Ein Fehler wurde behoben, durch den Supplements und Supplement-Logs beim Wiederherstellen eines Backups ignoriert wurden. Diese werden nun korrekt in die Datenbank importiert (#70).
+- **UI / Design**: Die AppBar im Mahlzeiten-Editor (`MealScreen`) wurde korrigiert. Sie verwendet nun die globale `GlobalAppBar` für ein einheitliches Design (Glassmorphismus), insbesondere im Light Mode (#68).
+
 ## [0.4.0-beta.8] - 2025-11-25
 ### UI/UX Improvements
 - **Unified Design:** Replaced the native `AlertDialog`s with the custom **Glass Bottom Menu** for a consistent look and feel.

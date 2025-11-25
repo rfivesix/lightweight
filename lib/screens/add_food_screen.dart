@@ -432,7 +432,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(
           // KORREKTUR: Lokalisierter Hint
-          hintText: l10n.searchBaseFoodHint, 
+          hintText: l10n.searchBaseFoodHint,
           prefixIcon: const Icon(Icons.search),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           isDense: true,
@@ -458,7 +458,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                 final items = snap.data ?? [];
                 if (items.isEmpty) {
                   // KORREKTUR: Lokalisierter Text
-                  return Center(child: Text(l10n.searchNoHits)); 
+                  return Center(child: Text(l10n.searchNoHits));
                 }
                 return ListView.builder(
                   padding: DesignConstants.cardPadding,

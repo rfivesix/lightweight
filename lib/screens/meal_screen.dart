@@ -11,6 +11,7 @@ import 'package:lightweight/models/supplement_log.dart';
 import 'package:lightweight/screens/food_detail_screen.dart';
 import 'package:lightweight/widgets/glass_bottom_menu.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/widgets/swipe_action_background.dart';
 
@@ -116,7 +117,11 @@ class _MealScreenState extends State<MealScreen> {
     final canSave =
         _nameCtrl.text.trim().isNotEmpty && _items.isNotEmpty && !_saving;
 
-    // Floating Action Button je Modus
+// NEU: Top Padding berechnen für Content unter der GlobalAppBar
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
+
+// Floating Action Button je Modus
     Widget? fab;
     if (_editMode) {
       fab = GlassFab(
@@ -135,18 +140,16 @@ class _MealScreenState extends State<MealScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: true,
-        title: Text(
-          _editMode
-              ? l10n.mealsEdit // (L10n: du kannst das zu „Bearbeiten“ ändern)
-              : (_nameCtrl.text.isNotEmpty
-                  ? _nameCtrl.text
-                  : l10n.mealsViewTitle),
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w900,
-          ),
-        ),
+      // NEU: Body hinter die AppBar erweitern für Glas-Effekt
+      extendBodyBehindAppBar: true,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: GlobalAppBar(
+        // NEU: GlobalAppBar statt AppBar
+        title: _editMode
+            ? l10n.mealsEdit
+            : (_nameCtrl.text.isNotEmpty
+                ? _nameCtrl.text
+                : l10n.mealsViewTitle),
         actions: [
           if (_editMode)
             TextButton(
@@ -185,7 +188,8 @@ class _MealScreenState extends State<MealScreen> {
       body: _loadingItems
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
+              // NEU: Padding oben angepasst (12 + topPadding)
+              padding: EdgeInsets.fromLTRB(16, 12 + topPadding, 16, 96),
               children: [
                 // NAME & NOTIZEN
                 SummaryCard(
@@ -315,14 +319,11 @@ class _MealScreenState extends State<MealScreen> {
                           if (mounted) setState(() {});
                         },
                         onDelete: () async {
-                          // --- KORREKTUR START ---
-                          // Statt showDialog nutzen wir jetzt den Glas-Helper
                           final ok = await showDeleteConfirmation(
                             context,
                             title: l10n.deleteConfirmTitle,
                             content: l10n.deleteConfirmContent,
                           );
-                          // --- KORREKTUR ENDE ---
 
                           if (ok) {
                             setState(() => _items.removeAt(i));

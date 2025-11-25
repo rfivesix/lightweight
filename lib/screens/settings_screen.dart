@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/screens/data_management_screen.dart';
-import 'package:lightweight/services/profile_service.dart';
 import 'package:lightweight/services/theme_service.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/summary_card.dart';
@@ -40,7 +39,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final themeService = Provider.of<ThemeService>(context);
     // profileService wird hier aktuell nicht genutzt, aber stört auch nicht
-    // final profileService = Provider.of<ProfileService>(context); 
+    // final profileService = Provider.of<ProfileService>(context);
     final double topPadding =
         MediaQuery.of(context).padding.top + kToolbarHeight;
 
@@ -89,22 +88,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                         child: Text(
                           l10n.settingsVisualStyleTitle,
-                          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                color: Colors.grey,
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.labelLarge?.copyWith(
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                       ),
                       RadioListTile<int>(
-                        title: Text(l10n.settingsVisualStyleStandard), // LOKALISIERT
+                        title: Text(
+                            l10n.settingsVisualStyleStandard), // LOKALISIERT
                         value: 0,
                         groupValue: themeService.visualStyle,
                         onChanged: (value) =>
                             themeService.setVisualStyle(value!),
                       ),
                       RadioListTile<int>(
-                        title: Text(l10n.settingsVisualStyleLiquid), // LOKALISIERT
-                        subtitle: Text(l10n.settingsVisualStyleLiquidDesc), // LOKALISIERT
+                        title:
+                            Text(l10n.settingsVisualStyleLiquid), // LOKALISIERT
+                        subtitle: Text(
+                            l10n.settingsVisualStyleLiquidDesc), // LOKALISIERT
                         value: 1,
                         groupValue: themeService.visualStyle,
                         onChanged: (value) =>
