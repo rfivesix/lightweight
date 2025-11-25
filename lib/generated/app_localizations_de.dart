@@ -1444,4 +1444,55 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get changeSetTypTitle => 'Satztyp ändern';
+
+  @override
+  String get settingsVisualStyleTitle => 'Visueller Stil';
+
+  @override
+  String get settingsVisualStyleStandard => 'Standard (Glas)';
+
+  @override
+  String get settingsVisualStyleLiquid => 'Flüssig (Liquid Glass)';
+
+  @override
+  String get settingsVisualStyleLiquidDesc => 'Runde, schwebende UI-Elemente';
+
+  @override
+  String get searchBaseFoodHint => 'Suche Grundnahrungsmittel';
+
+  @override
+  String get searchNoHits => 'Keine Treffer.';
+
+  @override
+  String get onbSubtitleWelcome =>
+      'Dein zentrales Werkzeug für Fitness, Ernährung & Fortschritt.';
+
+  @override
+  String get onbBodyWelcome =>
+      'Wir helfen dir, deine Ziele zu setzen und zu verfolgen. Du kannst Workouts, Ernährung, Supps und Körpermaße effizient protokollieren.';
+
+  @override
+  String get onbBodyNutritionVisual =>
+      'Erfasse Mahlzeiten mit wenigen Klicks. Behalte Kalorien, Makros und Wasser im Blick, um dein Ziel mühelos zu verfolgen.';
+
+  @override
+  String get onbBodyMeasurementsVisual =>
+      'Visualisiere deinen Fortschritt. Der Gewichts- und Umfangsverlauf macht deinen Erfolg sichtbar und motiviert dich.';
+
+  @override
+  String get onbBodyWorkoutVisual =>
+      'Erstelle Routinen und starte dein Training in Sekunden. Protokolliere Sätze, Gewichte und Pausen für maximale Progression.';
+
+  @override
+  String get onbTitleAppLayout => 'Navigation & Quick-Add';
+
+  @override
+  String get onbBodyAppLayout =>
+      'Die Bottom Bar ermöglicht den schnellen Wechsel zwischen den Bereichen. Mit dem großen [+] Button kannst du sofort alles protokollieren.';
+
+  @override
+  String get dataHubTitle => 'Data Hub';
+
+  @override
+  String get resumeButton => 'Fortsetzen';
 }

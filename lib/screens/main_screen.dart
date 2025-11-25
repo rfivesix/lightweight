@@ -1014,18 +1014,21 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     final manager = context.watch<WorkoutSessionManager>();
     final bool isWorkoutRunning = manager.isActive;
     final String elapsed = _formatDuration(manager.elapsedDuration);
-    const basePad = 120.0;
-    final runningPad = manager.isActive ? 68.0 : 0.0;
+    
+    // Parameter für Animation
+    // const basePad = 120.0; // Unused locally
+    // final runningPad = manager.isActive ? 68.0 : 0.0; // Unused locally
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
+    // final bg = isDark ? summary_card_dark_mode : summary_card_white_mode; // Unused locally in build, used in GlassNavBar logic internal
 
-    const double rLiquid = 99;
+    // Radius für Liquid Animation (falls aktiv)
+    // const double rLiquid = 99; // Unused here directly
 
     return Stack(
       children: [
         Scaffold(
-          extendBodyBehindAppBar: true, // <-- WICHTIGE ÄNDERUNG
+          extendBodyBehindAppBar: true,
           extendBody: true,
           appBar: _buildAppBar(context, _currentIndex, l10n),
           body: PageView(
@@ -1034,26 +1037,24 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             children: <Widget>[
               KeepAlivePage(
                 storageKey: const PageStorageKey('tab_tagebuch'),
-                child: DiaryScreen(key: _tagebuchKey), // Bereits korrekt
+                child: DiaryScreen(key: _tagebuchKey),
               ),
               const KeepAlivePage(
                 storageKey: PageStorageKey('tab_workout'),
-                // Wrapper entfernt
                 child: WorkoutHubScreen(),
               ),
               const KeepAlivePage(
                 storageKey: PageStorageKey('tab_stats'),
-                // Wrapper entfernt
                 child: StatisticsHubScreen(),
               ),
               const KeepAlivePage(
                 storageKey: PageStorageKey('tab_nutrition'),
-                // Wrapper entfernt
                 child: NutritionHubScreen(),
               ),
             ],
           ),
         ),
+        // Laufendes Workout Overlay
         if (isWorkoutRunning)
           Positioned(
             bottom: 36 + kNavBarHeight,
@@ -1078,25 +1079,15 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                   final wsm = context.read<WorkoutSessionManager>();
                   final logId = wsm.workoutLog?.id;
 
-                  final bool? confirmed = await showDialog<bool>(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: Text(l10n.discard_button),
-                      content: Text(l10n.dialogFinishWorkoutBody),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, false),
-                          child: Text(l10n.cancel),
-                        ),
-                        FilledButton(
-                          onPressed: () => Navigator.pop(ctx, true),
-                          child: Text(l10n.discard_button),
-                        ),
-                      ],
-                    ),
+                  // KORREKTUR: showDeleteConfirmation statt showDialog
+                  final confirmed = await showDeleteConfirmation(
+                    context,
+                    title: l10n.discard_button, // "Verwerfen"
+                    content: l10n.deleteWorkoutConfirmContent, // "Wirklich löschen?"
+                    confirmLabel: l10n.discard_button, // Roter Button: "Verwerfen"
                   );
 
-                  if (confirmed == true) {
+                  if (confirmed) {
                     if (logId != null) {
                       await WorkoutDatabaseHelper.instance.deleteWorkoutLog(
                         logId,
@@ -1109,6 +1100,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
               ),
             ),
           ),
+        // Bottom Nav Bar & FAB
         Positioned(
           bottom: 24,
           left: 16,
@@ -1149,6 +1141,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             ],
           ),
         ),
+        // Speed Dial Menu Animation
         AnimatedBuilder(
           animation: _menuController,
           builder: (context, _) {
@@ -1163,6 +1156,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                     .withOpacity(isDarkLocal ? 0.10 : 0.10);
             final Color effectiveGlassLocal = Color.alphaBlend(neutralTintLocal,
                 bgLocal.withOpacity(isDarkLocal ? 0.22 : 0.16));
+            
+            // Radius für Liquid Animation hier lokal definieren oder aus Konstante
+            const double rLiquid = 99; 
+
             return Offstage(
               offstage: v == 0.0,
               child: IgnorePointer(
@@ -1306,12 +1303,12 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                     height: 76,
                                                     decoration: BoxDecoration(
                                                       color:
-                                                          bg.withOpacity(0.80),
+                                                          bgLocal.withOpacity(0.80),
                                                       borderRadius:
                                                           BorderRadius.circular(
                                                               18),
                                                       border: Border.all(
-                                                        color: isDark
+                                                        color: isDarkLocal
                                                             ? Colors.white
                                                                 .withOpacity(
                                                                     0.30)
@@ -1335,7 +1332,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                     child: Icon(
                                                       action['icon'],
                                                       size: 28,
-                                                      color: isDark
+                                                      color: isDarkLocal
                                                           ? Colors.white
                                                           : Colors.black,
                                                     ),
@@ -1361,7 +1358,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       ],
     );
   }
-
   Widget _profileAppBarButton(BuildContext context) {
     final profileService = Provider.of<ProfileService>(context, listen: false);
     return Padding(

@@ -431,7 +431,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         controller: _baseSearchCtrl,
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(
-          hintText: 'Suche Grundnahrungsmittel', //l10n.searchBaseFoodHintText
+          // KORREKTUR: Lokalisierter Hint
+          hintText: l10n.searchBaseFoodHint, 
           prefixIcon: const Icon(Icons.search),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           isDense: true,
@@ -456,7 +457,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                 }
                 final items = snap.data ?? [];
                 if (items.isEmpty) {
-                  return const Center(child: Text('Keine Treffer.'));
+                  // KORREKTUR: Lokalisierter Text
+                  return Center(child: Text(l10n.searchNoHits)); 
                 }
                 return ListView.builder(
                   padding: DesignConstants.cardPadding,

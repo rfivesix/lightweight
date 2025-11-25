@@ -619,5 +619,20 @@
   "nutritionHubSubtitle": "Entdecke Einblicke, verfolge Mahlzeiten und erstelle hier bald deinen Ernährungsplan.",
   "nutritionHubTitle": "Ernährung",
   "nutrition": "Ernährung",
-  "changeSetTypTitle":"Satztyp ändern"
+  "changeSetTypTitle":"Satztyp ändern",
+  "settingsVisualStyleTitle": "Visueller Stil",
+  "settingsVisualStyleStandard": "Standard (Glas)",
+  "settingsVisualStyleLiquid": "Flüssig (Liquid Glass)",
+  "settingsVisualStyleLiquidDesc": "Runde, schwebende UI-Elemente",
+  "searchBaseFoodHint": "Suche Grundnahrungsmittel",
+  "searchNoHits": "Keine Treffer.",
+  "onbSubtitleWelcome": "Dein zentrales Werkzeug für Fitness, Ernährung & Fortschritt.",
+  "onbBodyWelcome": "Wir helfen dir, deine Ziele zu setzen und zu verfolgen. Du kannst Workouts, Ernährung, Supps und Körpermaße effizient protokollieren.",
+  "onbBodyNutritionVisual": "Erfasse Mahlzeiten mit wenigen Klicks. Behalte Kalorien, Makros und Wasser im Blick, um dein Ziel mühelos zu verfolgen.",
+  "onbBodyMeasurementsVisual": "Visualisiere deinen Fortschritt. Der Gewichts- und Umfangsverlauf macht deinen Erfolg sichtbar und motiviert dich.",
+  "onbBodyWorkoutVisual": "Erstelle Routinen und starte dein Training in Sekunden. Protokolliere Sätze, Gewichte und Pausen für maximale Progression.",
+  "onbTitleAppLayout": "Navigation & Quick-Add",
+  "onbBodyAppLayout": "Die Bottom Bar ermöglicht den schnellen Wechsel zwischen den Bereichen. Mit dem großen [+] Button kannst du sofort alles protokollieren.",
+  "dataHubTitle": "Data Hub",
+  "resumeButton": "Fortsetzen"
 }

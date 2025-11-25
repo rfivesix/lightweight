@@ -202,9 +202,9 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: const GlobalAppBar(
+      appBar: GlobalAppBar(
         // l10n.dataHubTitle wäre hier ideal, aber "Data Hub" ist auch ok
-        title: "Data Hub",
+        title: l10n.dataHubTitle,
       ),
       // Das SafeArea-Widget wurde hier entfernt. Der Body ist jetzt direkt der SingleChildScrollView.
       body: SingleChildScrollView(

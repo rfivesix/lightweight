@@ -1379,7 +1379,7 @@ abstract class AppLocalizations {
   /// No description provided for @chart_no_data_for_period.
   ///
   /// In en, this message translates to:
-  /// **'Keine Daten für diesen Zeitraum.'**
+  /// **'No chart data for this period'**
   String get chart_no_data_for_period;
 
   /// No description provided for @amount_in_milliliters.
@@ -2779,6 +2779,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Change set type'**
   String get changeSetTypTitle;
+
+  /// No description provided for @settingsVisualStyleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Visual Style'**
+  String get settingsVisualStyleTitle;
+
+  /// No description provided for @settingsVisualStyleStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard (Glass)'**
+  String get settingsVisualStyleStandard;
+
+  /// No description provided for @settingsVisualStyleLiquid.
+  ///
+  /// In en, this message translates to:
+  /// **'Fluid (Liquid Glass)'**
+  String get settingsVisualStyleLiquid;
+
+  /// No description provided for @settingsVisualStyleLiquidDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Rounded, floating UI elements'**
+  String get settingsVisualStyleLiquidDesc;
+
+  /// No description provided for @searchBaseFoodHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search base foods'**
+  String get searchBaseFoodHint;
+
+  /// No description provided for @searchNoHits.
+  ///
+  /// In en, this message translates to:
+  /// **'No hits.'**
+  String get searchNoHits;
+
+  /// No description provided for @onbSubtitleWelcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Your central tool for fitness, nutrition & progress.'**
+  String get onbSubtitleWelcome;
+
+  /// No description provided for @onbBodyWelcome.
+  ///
+  /// In en, this message translates to:
+  /// **'We help you set and track your goals. Efficiently log workouts, nutrition, supplements, and body measurements.'**
+  String get onbBodyWelcome;
+
+  /// No description provided for @onbBodyNutritionVisual.
+  ///
+  /// In en, this message translates to:
+  /// **'Log meals with just a few clicks. Keep an eye on calories, macros, and water to effortlessly track your goal.'**
+  String get onbBodyNutritionVisual;
+
+  /// No description provided for @onbBodyMeasurementsVisual.
+  ///
+  /// In en, this message translates to:
+  /// **'Visualize your progress. The weight and circumference chart makes your success visible and keeps you motivated.'**
+  String get onbBodyMeasurementsVisual;
+
+  /// No description provided for @onbBodyWorkoutVisual.
+  ///
+  /// In en, this message translates to:
+  /// **'Create routines and start your training in seconds. Log sets, weights, and rests for maximum progression.'**
+  String get onbBodyWorkoutVisual;
+
+  /// No description provided for @onbTitleAppLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigation & Quick-Add'**
+  String get onbTitleAppLayout;
+
+  /// No description provided for @onbBodyAppLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'The bottom bar allows quick switching between areas. Use the large [+] button to log everything instantly.'**
+  String get onbBodyAppLayout;
+
+  /// No description provided for @dataHubTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Data Hub'**
+  String get dataHubTitle;
+
+  /// No description provided for @resumeButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get resumeButton;
 }
 
 class _AppLocalizationsDelegate

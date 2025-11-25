@@ -1,4 +1,5 @@
-// lib/screens/onboarding_screen.dart - ERSETZE DIE GESAMTE DATEI
+// lib/screens/onboarding_screen.dart
+// VOLLSTÄNDIGE DATEI (LOKALISIERT)
 
 import 'package:flutter/material.dart';
 import 'package:lightweight/util/design_constants.dart';
@@ -51,10 +52,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       // 1) Welcome/Goals
       _WelcomeSlide(
         title: l10n.appTitle,
-        subtitle:
-            "Dein zentrales Werkzeug für Fitness, Ernährung & Fortschritt.", // TODO: LOKALISIEREN
-        body:
-            "Wir helfen dir, deine Ziele zu setzen und zu verfolgen. Du kannst Workouts, Ernährung, Supps und Körpermaße effizient protokollieren.", // TODO: LOKALISIEREN
+        subtitle: l10n.onbSubtitleWelcome,
+        body: l10n.onbBodyWelcome,
         primaryCta: _Cta(
           icon: Icons.edit_outlined,
           label: l10n.onbSetGoalsCta,
@@ -69,32 +68,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       // 2) Nutrition: Visueller Fokus auf Today-Summary
       _VisualSlide(
         title: l10n.nutrition,
-        body:
-            "Erfasse Mahlzeiten mit wenigen Klicks. Behalte Kalorien, Makros und Wasser im Blick, um dein Ziel mühelos zu verfolgen.", // TODO: LOKALISIEREN
+        body: l10n.onbBodyNutritionVisual,
         visual: _NutritionDiaryVisual(l10n: l10n),
       ),
 
       // 3) Measurements: Visueller Fokus auf Chart
       _VisualSlide(
         title: l10n.drawerMeasurements,
-        body:
-            "Visualisiere deinen Fortschritt. Der Gewichts- und Umfangsverlauf macht deinen Erfolg sichtbar und motiviert dich.", // TODO: LOKALISIEREN
+        body: l10n.onbBodyMeasurementsVisual,
         visual: _MeasurementChartVisual(l10n: l10n),
       ),
 
       // 4) Training: Visueller Fokus auf Workout History
       _VisualSlide(
         title: l10n.workout,
-        body:
-            "Erstelle Routinen und starte dein Training in Sekunden. Protokolliere Sätze, Gewichte und Pausen für maximale Progression.", // TODO: LOKALISIEREN
+        body: l10n.onbBodyWorkoutVisual,
         visual: _WorkoutHistoryVisual(l10n: l10n),
       ),
 
       // 5) App-Bauplan: Bottom Bar und FAB
-      const _AppLayoutSlide(
-        title: "Navigation & Quick-Add", // TODO: LOKALISIEREN
-        body:
-            "Die Bottom Bar ermöglicht den schnellen Wechsel zwischen den Bereichen. Mit dem großen [+] Button kannst du sofort alles protokollieren.", // TODO: LOKALISIEREN
+      _AppLayoutSlide(
+        title: l10n.onbTitleAppLayout,
+        body: l10n.onbBodyAppLayout,
       ),
 
       // 6) Privacy bleibt
@@ -426,7 +421,7 @@ class _NutritionDiaryVisual extends StatelessWidget {
           // Titel
           Align(
             alignment: Alignment.centerLeft,
-            child: Text("HEUTE IM BLICK",
+            child: Text(l10n.today_overview_text,
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     color: Colors.grey.shade600, fontWeight: FontWeight.bold)),
           ),

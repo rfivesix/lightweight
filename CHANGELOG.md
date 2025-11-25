@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## [0.4.0-beta.8] - 2025-11-25
+### UI/UX Improvements
+- **Unified Design:** Replaced the native `AlertDialog`s with the custom **Glass Bottom Menu** for a consistent look and feel.
+  - Applied to: Delete discard workout from main_screen.dart
+### fix(l10n): localize remaining hardcoded UI strings for v0.6
+
+- Added missing translation keys to `app_de.arb` and `app_en.arb` (Settings, Onboarding, Data Hub, Workout Bar).
+- Replaced hardcoded strings in `SettingsScreen` (Visual Style selection).
+- Localized search hints and empty states in `AddFoodScreen`.
+- Localized app bar title in `DataManagementScreen`.
+- Updated `OnboardingScreen` to use localization keys.
+
 ## [0.4.0-beta.7] - 2025-11-24
 
 ### Features

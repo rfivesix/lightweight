@@ -1,3 +1,4 @@
+// lib/screens/settings_screen.dart
 import 'package:flutter/material.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/screens/data_management_screen.dart';
@@ -38,7 +39,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final themeService = Provider.of<ThemeService>(context);
-    final profileService = Provider.of<ProfileService>(context);
+    // profileService wird hier aktuell nicht genutzt, aber stört auch nicht
+    // final profileService = Provider.of<ProfileService>(context); 
     final double topPadding =
         MediaQuery.of(context).padding.top + kToolbarHeight;
 
@@ -74,22 +76,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   groupValue: themeService.themeMode,
                   onChanged: (value) => themeService.setThemeMode(value!),
                 ),
-                // Innerhalb der Column der ersten SummaryCard, nach den Theme-Radios
                 const Divider(height: 1),
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        child: Text(
+                          l10n.settingsVisualStyleTitle,
+                          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                                color: Colors.grey,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                      ),
                       RadioListTile<int>(
-                        title: const Text('Standard (Glas)'),
+                        title: Text(l10n.settingsVisualStyleStandard), // LOKALISIERT
                         value: 0,
                         groupValue: themeService.visualStyle,
                         onChanged: (value) =>
                             themeService.setVisualStyle(value!),
                       ),
                       RadioListTile<int>(
-                        title: const Text('Flüssig (Liquid Glass)'),
-                        subtitle: const Text('Runde, schwebende UI-Elemente'),
+                        title: Text(l10n.settingsVisualStyleLiquid), // LOKALISIERT
+                        subtitle: Text(l10n.settingsVisualStyleLiquidDesc), // LOKALISIERT
                         value: 1,
                         groupValue: themeService.visualStyle,
                         onChanged: (value) =>

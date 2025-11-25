@@ -701,7 +701,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get snackbar_could_not_open_open_link => 'Konnte Link nicht öffnen';
 
   @override
-  String get chart_no_data_for_period => 'Keine Daten für diesen Zeitraum.';
+  String get chart_no_data_for_period => 'No chart data for this period';
 
   @override
   String get amount_in_milliliters => 'Menge in Millilitern';
@@ -1436,4 +1436,55 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get changeSetTypTitle => 'Change set type';
+
+  @override
+  String get settingsVisualStyleTitle => 'Visual Style';
+
+  @override
+  String get settingsVisualStyleStandard => 'Standard (Glass)';
+
+  @override
+  String get settingsVisualStyleLiquid => 'Fluid (Liquid Glass)';
+
+  @override
+  String get settingsVisualStyleLiquidDesc => 'Rounded, floating UI elements';
+
+  @override
+  String get searchBaseFoodHint => 'Search base foods';
+
+  @override
+  String get searchNoHits => 'No hits.';
+
+  @override
+  String get onbSubtitleWelcome =>
+      'Your central tool for fitness, nutrition & progress.';
+
+  @override
+  String get onbBodyWelcome =>
+      'We help you set and track your goals. Efficiently log workouts, nutrition, supplements, and body measurements.';
+
+  @override
+  String get onbBodyNutritionVisual =>
+      'Log meals with just a few clicks. Keep an eye on calories, macros, and water to effortlessly track your goal.';
+
+  @override
+  String get onbBodyMeasurementsVisual =>
+      'Visualize your progress. The weight and circumference chart makes your success visible and keeps you motivated.';
+
+  @override
+  String get onbBodyWorkoutVisual =>
+      'Create routines and start your training in seconds. Log sets, weights, and rests for maximum progression.';
+
+  @override
+  String get onbTitleAppLayout => 'Navigation & Quick-Add';
+
+  @override
+  String get onbBodyAppLayout =>
+      'The bottom bar allows quick switching between areas. Use the large [+] button to log everything instantly.';
+
+  @override
+  String get dataHubTitle => 'Data Hub';
+
+  @override
+  String get resumeButton => 'Resume';
 }
