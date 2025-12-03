@@ -11837,7 +11837,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(
           // KORREKTUR: Lokalisierter Hint
-          hintText: l10n.searchBaseFoodHint, 
+          hintText: l10n.searchBaseFoodHint,
           prefixIcon: const Icon(Icons.search),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           isDense: true,
@@ -11863,7 +11863,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                 final items = snap.data ?? [];
                 if (items.isEmpty) {
                   // KORREKTUR: Lokalisierter Text
-                  return Center(child: Text(l10n.searchNoHits)); 
+                  return Center(child: Text(l10n.searchNoHits));
                 }
                 return ListView.builder(
                   padding: DesignConstants.cardPadding,
@@ -15344,7 +15344,6 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
 import 'package:flutter/material.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/screens/data_management_screen.dart';
-import 'package:lightweight/services/profile_service.dart';
 import 'package:lightweight/services/theme_service.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/summary_card.dart';
@@ -15382,7 +15381,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final themeService = Provider.of<ThemeService>(context);
     // profileService wird hier aktuell nicht genutzt, aber stört auch nicht
-    // final profileService = Provider.of<ProfileService>(context); 
+    // final profileService = Provider.of<ProfileService>(context);
     final double topPadding =
         MediaQuery.of(context).padding.top + kToolbarHeight;
 
@@ -15431,22 +15430,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                         child: Text(
                           l10n.settingsVisualStyleTitle,
-                          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                color: Colors.grey,
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.labelLarge?.copyWith(
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                       ),
                       RadioListTile<int>(
-                        title: Text(l10n.settingsVisualStyleStandard), // LOKALISIERT
+                        title: Text(
+                            l10n.settingsVisualStyleStandard), // LOKALISIERT
                         value: 0,
                         groupValue: themeService.visualStyle,
                         onChanged: (value) =>
                             themeService.setVisualStyle(value!),
                       ),
                       RadioListTile<int>(
-                        title: Text(l10n.settingsVisualStyleLiquid), // LOKALISIERT
-                        subtitle: Text(l10n.settingsVisualStyleLiquidDesc), // LOKALISIERT
+                        title:
+                            Text(l10n.settingsVisualStyleLiquid), // LOKALISIERT
+                        subtitle: Text(
+                            l10n.settingsVisualStyleLiquidDesc), // LOKALISIERT
                         value: 1,
                         groupValue: themeService.visualStyle,
                         onChanged: (value) =>
@@ -15556,6 +15559,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 }
+
 
 ===== Datei: /Users/richard/Projects/Lightweight/lightweight/lib/screens/food_explorer_screen.dart =====
 
@@ -19387,6 +19391,7 @@ class _Hint extends StatelessWidget {
   }
 }
 
+
 ===== Datei: /Users/richard/Projects/Lightweight/lightweight/lib/screens/meals_screen.dart =====
 
 import 'package:flutter/material.dart';
@@ -22516,6 +22521,7 @@ import 'package:lightweight/models/supplement_log.dart';
 import 'package:lightweight/screens/food_detail_screen.dart';
 import 'package:lightweight/widgets/glass_bottom_menu.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
+import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/summary_card.dart';
 import 'package:lightweight/widgets/swipe_action_background.dart';
 
@@ -22621,7 +22627,11 @@ class _MealScreenState extends State<MealScreen> {
     final canSave =
         _nameCtrl.text.trim().isNotEmpty && _items.isNotEmpty && !_saving;
 
-    // Floating Action Button je Modus
+// NEU: Top Padding berechnen für Content unter der GlobalAppBar
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
+
+// Floating Action Button je Modus
     Widget? fab;
     if (_editMode) {
       fab = GlassFab(
@@ -22640,18 +22650,16 @@ class _MealScreenState extends State<MealScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: true,
-        title: Text(
-          _editMode
-              ? l10n.mealsEdit // (L10n: du kannst das zu „Bearbeiten“ ändern)
-              : (_nameCtrl.text.isNotEmpty
-                  ? _nameCtrl.text
-                  : l10n.mealsViewTitle),
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w900,
-          ),
-        ),
+      // NEU: Body hinter die AppBar erweitern für Glas-Effekt
+      extendBodyBehindAppBar: true,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: GlobalAppBar(
+        // NEU: GlobalAppBar statt AppBar
+        title: _editMode
+            ? l10n.mealsEdit
+            : (_nameCtrl.text.isNotEmpty
+                ? _nameCtrl.text
+                : l10n.mealsViewTitle),
         actions: [
           if (_editMode)
             TextButton(
@@ -22690,7 +22698,8 @@ class _MealScreenState extends State<MealScreen> {
       body: _loadingItems
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
+              // NEU: Padding oben angepasst (12 + topPadding)
+              padding: EdgeInsets.fromLTRB(16, 12 + topPadding, 16, 96),
               children: [
                 // NAME & NOTIZEN
                 SummaryCard(
@@ -22820,14 +22829,11 @@ class _MealScreenState extends State<MealScreen> {
                           if (mounted) setState(() {});
                         },
                         onDelete: () async {
-                          // --- KORREKTUR START ---
-                          // Statt showDialog nutzen wir jetzt den Glas-Helper
                           final ok = await showDeleteConfirmation(
                             context,
                             title: l10n.deleteConfirmTitle,
                             content: l10n.deleteConfirmContent,
                           );
-                          // --- KORREKTUR ENDE ---
 
                           if (ok) {
                             setState(() => _items.removeAt(i));
@@ -25125,7 +25131,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     final manager = context.watch<WorkoutSessionManager>();
     final bool isWorkoutRunning = manager.isActive;
     final String elapsed = _formatDuration(manager.elapsedDuration);
-    
+
     // Parameter für Animation
     // const basePad = 120.0; // Unused locally
     // final runningPad = manager.isActive ? 68.0 : 0.0; // Unused locally
@@ -25194,8 +25200,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                   final confirmed = await showDeleteConfirmation(
                     context,
                     title: l10n.discard_button, // "Verwerfen"
-                    content: l10n.deleteWorkoutConfirmContent, // "Wirklich löschen?"
-                    confirmLabel: l10n.discard_button, // Roter Button: "Verwerfen"
+                    content:
+                        l10n.deleteWorkoutConfirmContent, // "Wirklich löschen?"
+                    confirmLabel:
+                        l10n.discard_button, // Roter Button: "Verwerfen"
                   );
 
                   if (confirmed) {
@@ -25267,9 +25275,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                     .withOpacity(isDarkLocal ? 0.10 : 0.10);
             final Color effectiveGlassLocal = Color.alphaBlend(neutralTintLocal,
                 bgLocal.withOpacity(isDarkLocal ? 0.22 : 0.16));
-            
+
             // Radius für Liquid Animation hier lokal definieren oder aus Konstante
-            const double rLiquid = 99; 
+            const double rLiquid = 99;
 
             return Offstage(
               offstage: v == 0.0,
@@ -25413,8 +25421,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                     width: 76,
                                                     height: 76,
                                                     decoration: BoxDecoration(
-                                                      color:
-                                                          bgLocal.withOpacity(0.80),
+                                                      color: bgLocal
+                                                          .withOpacity(0.80),
                                                       borderRadius:
                                                           BorderRadius.circular(
                                                               18),
@@ -25469,6 +25477,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       ],
     );
   }
+
   Widget _profileAppBarButton(BuildContext context) {
     final profileService = Provider.of<ProfileService>(context, listen: false);
     return Padding(
@@ -28980,27 +28989,41 @@ class DatabaseHelper {
   }) async {
     final db = await database;
     await db.transaction((txn) async {
+// 1. Food Entries (Referenz für Supplement Logs)
       for (final entry in foodEntries) {
         await txn.insert('food_entries', entry.toMap());
       }
+// 2. Fluid Entries (Referenz für Supplement Logs)
       for (final entry in fluidEntries) {
         await txn.insert('fluid_entries', entry.toMap());
       }
+// 3. Favorites
       for (final barcode in favoriteBarcodes) {
         await txn.insert('favorites', {'barcode': barcode});
       }
+// 4. Measurements
       for (final session in measurementSessions) {
-        // KORREKTUR: Erstellt die Map für die Session direkt hier.
         final sessionId = await txn.insert('measurement_sessions', {
           'timestamp': session.timestamp.toIso8601String(),
         });
         for (final measurement in session.measurements) {
-          // KORREKTUR: Erstellt die Map für das Measurement hier und fügt die NEUE sessionId hinzu.
           await txn.insert('measurements', {
-            ...measurement.toMap(), // Nutzt die existierende toMap()
-            'session_id': sessionId, // Überschreibt mit der neuen ID
+            ...measurement.toMap(),
+            'session_id': sessionId,
           });
         }
+      }
+// 5. Supplements (Wichtig: replace, falls Built-ins wie Caffeine kollidieren)
+      for (final s in supplements) {
+        await txn.insert(
+          'supplements',
+          s.toMap(), // Enthält ID aus Backup
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+// 6. Supplement Logs (Referenzieren Supplements, FoodEntry, FluidEntry)
+      for (final log in supplementLogs) {
+        await txn.insert('supplement_logs', log.toMap());
       }
     });
   }
@@ -33959,7 +33982,7 @@ class WgerAttributionWidget extends StatelessWidget {
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.only(bottom: 2.5),
         child: GestureDetector(
           // Macht den Text klickbar
           onTap: () async {
@@ -36443,43 +36466,43 @@ class TodaysWorkoutSummaryCard extends StatelessWidget {
 // @dart = 3.0
 
 import 'dart:io'; // flutter_ignore: dart_io_import.
-import 'package:file_picker/file_picker.dart';
-import 'package:image_picker_android/image_picker_android.dart';
-import 'package:path_provider_android/path_provider_android.dart';
-import 'package:shared_preferences_android/shared_preferences_android.dart';
-import 'package:sqflite_android/sqflite_android.dart';
-import 'package:url_launcher_android/url_launcher_android.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:image_picker_ios/image_picker_ios.dart';
-import 'package:path_provider_foundation/path_provider_foundation.dart';
-import 'package:shared_preferences_foundation/shared_preferences_foundation.dart';
-import 'package:sqflite_darwin/sqflite_darwin.dart';
-import 'package:url_launcher_ios/url_launcher_ios.dart';
-import 'package:device_info_plus/device_info_plus.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:file_selector_linux/file_selector_linux.dart';
-import 'package:image_picker_linux/image_picker_linux.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:path_provider_linux/path_provider_linux.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:shared_preferences_linux/shared_preferences_linux.dart';
-import 'package:url_launcher_linux/url_launcher_linux.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:file_selector_macos/file_selector_macos.dart';
-import 'package:image_picker_macos/image_picker_macos.dart';
-import 'package:path_provider_foundation/path_provider_foundation.dart';
-import 'package:shared_preferences_foundation/shared_preferences_foundation.dart';
-import 'package:sqflite_darwin/sqflite_darwin.dart';
-import 'package:url_launcher_macos/url_launcher_macos.dart';
-import 'package:device_info_plus/device_info_plus.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:file_selector_windows/file_selector_windows.dart';
-import 'package:image_picker_windows/image_picker_windows.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:path_provider_windows/path_provider_windows.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:shared_preferences_windows/shared_preferences_windows.dart';
-import 'package:url_launcher_windows/url_launcher_windows.dart';
+import 'package:file_picker/file_picker.dart' as file_picker;
+import 'package:image_picker_android/image_picker_android.dart' as image_picker_android;
+import 'package:path_provider_android/path_provider_android.dart' as path_provider_android;
+import 'package:shared_preferences_android/shared_preferences_android.dart' as shared_preferences_android;
+import 'package:sqflite_android/sqflite_android.dart' as sqflite_android;
+import 'package:url_launcher_android/url_launcher_android.dart' as url_launcher_android;
+import 'package:file_picker/file_picker.dart' as file_picker;
+import 'package:image_picker_ios/image_picker_ios.dart' as image_picker_ios;
+import 'package:path_provider_foundation/path_provider_foundation.dart' as path_provider_foundation;
+import 'package:shared_preferences_foundation/shared_preferences_foundation.dart' as shared_preferences_foundation;
+import 'package:sqflite_darwin/sqflite_darwin.dart' as sqflite_darwin;
+import 'package:url_launcher_ios/url_launcher_ios.dart' as url_launcher_ios;
+import 'package:device_info_plus/device_info_plus.dart' as device_info_plus;
+import 'package:file_picker/file_picker.dart' as file_picker;
+import 'package:file_selector_linux/file_selector_linux.dart' as file_selector_linux;
+import 'package:image_picker_linux/image_picker_linux.dart' as image_picker_linux;
+import 'package:package_info_plus/package_info_plus.dart' as package_info_plus;
+import 'package:path_provider_linux/path_provider_linux.dart' as path_provider_linux;
+import 'package:share_plus/share_plus.dart' as share_plus;
+import 'package:shared_preferences_linux/shared_preferences_linux.dart' as shared_preferences_linux;
+import 'package:url_launcher_linux/url_launcher_linux.dart' as url_launcher_linux;
+import 'package:file_picker/file_picker.dart' as file_picker;
+import 'package:file_selector_macos/file_selector_macos.dart' as file_selector_macos;
+import 'package:image_picker_macos/image_picker_macos.dart' as image_picker_macos;
+import 'package:path_provider_foundation/path_provider_foundation.dart' as path_provider_foundation;
+import 'package:shared_preferences_foundation/shared_preferences_foundation.dart' as shared_preferences_foundation;
+import 'package:sqflite_darwin/sqflite_darwin.dart' as sqflite_darwin;
+import 'package:url_launcher_macos/url_launcher_macos.dart' as url_launcher_macos;
+import 'package:device_info_plus/device_info_plus.dart' as device_info_plus;
+import 'package:file_picker/file_picker.dart' as file_picker;
+import 'package:file_selector_windows/file_selector_windows.dart' as file_selector_windows;
+import 'package:image_picker_windows/image_picker_windows.dart' as image_picker_windows;
+import 'package:package_info_plus/package_info_plus.dart' as package_info_plus;
+import 'package:path_provider_windows/path_provider_windows.dart' as path_provider_windows;
+import 'package:share_plus/share_plus.dart' as share_plus;
+import 'package:shared_preferences_windows/shared_preferences_windows.dart' as shared_preferences_windows;
+import 'package:url_launcher_windows/url_launcher_windows.dart' as url_launcher_windows;
 
 @pragma('vm:entry-point')
 class _PluginRegistrant {
@@ -36488,7 +36511,7 @@ class _PluginRegistrant {
   static void register() {
     if (Platform.isAndroid) {
       try {
-        FilePickerIO.registerWith();
+        file_picker.FilePickerIO.registerWith();
       } catch (err) {
         print(
           '`file_picker` threw an error: $err. '
@@ -36497,7 +36520,7 @@ class _PluginRegistrant {
       }
 
       try {
-        ImagePickerAndroid.registerWith();
+        image_picker_android.ImagePickerAndroid.registerWith();
       } catch (err) {
         print(
           '`image_picker_android` threw an error: $err. '
@@ -36506,7 +36529,7 @@ class _PluginRegistrant {
       }
 
       try {
-        PathProviderAndroid.registerWith();
+        path_provider_android.PathProviderAndroid.registerWith();
       } catch (err) {
         print(
           '`path_provider_android` threw an error: $err. '
@@ -36515,7 +36538,7 @@ class _PluginRegistrant {
       }
 
       try {
-        SharedPreferencesAndroid.registerWith();
+        shared_preferences_android.SharedPreferencesAndroid.registerWith();
       } catch (err) {
         print(
           '`shared_preferences_android` threw an error: $err. '
@@ -36524,7 +36547,7 @@ class _PluginRegistrant {
       }
 
       try {
-        SqfliteAndroid.registerWith();
+        sqflite_android.SqfliteAndroid.registerWith();
       } catch (err) {
         print(
           '`sqflite_android` threw an error: $err. '
@@ -36533,7 +36556,7 @@ class _PluginRegistrant {
       }
 
       try {
-        UrlLauncherAndroid.registerWith();
+        url_launcher_android.UrlLauncherAndroid.registerWith();
       } catch (err) {
         print(
           '`url_launcher_android` threw an error: $err. '
@@ -36543,7 +36566,7 @@ class _PluginRegistrant {
 
     } else if (Platform.isIOS) {
       try {
-        FilePickerIO.registerWith();
+        file_picker.FilePickerIO.registerWith();
       } catch (err) {
         print(
           '`file_picker` threw an error: $err. '
@@ -36552,7 +36575,7 @@ class _PluginRegistrant {
       }
 
       try {
-        ImagePickerIOS.registerWith();
+        image_picker_ios.ImagePickerIOS.registerWith();
       } catch (err) {
         print(
           '`image_picker_ios` threw an error: $err. '
@@ -36561,7 +36584,7 @@ class _PluginRegistrant {
       }
 
       try {
-        PathProviderFoundation.registerWith();
+        path_provider_foundation.PathProviderFoundation.registerWith();
       } catch (err) {
         print(
           '`path_provider_foundation` threw an error: $err. '
@@ -36570,7 +36593,7 @@ class _PluginRegistrant {
       }
 
       try {
-        SharedPreferencesFoundation.registerWith();
+        shared_preferences_foundation.SharedPreferencesFoundation.registerWith();
       } catch (err) {
         print(
           '`shared_preferences_foundation` threw an error: $err. '
@@ -36579,7 +36602,7 @@ class _PluginRegistrant {
       }
 
       try {
-        SqfliteDarwin.registerWith();
+        sqflite_darwin.SqfliteDarwin.registerWith();
       } catch (err) {
         print(
           '`sqflite_darwin` threw an error: $err. '
@@ -36588,7 +36611,7 @@ class _PluginRegistrant {
       }
 
       try {
-        UrlLauncherIOS.registerWith();
+        url_launcher_ios.UrlLauncherIOS.registerWith();
       } catch (err) {
         print(
           '`url_launcher_ios` threw an error: $err. '
@@ -36598,7 +36621,7 @@ class _PluginRegistrant {
 
     } else if (Platform.isLinux) {
       try {
-        DeviceInfoPlusLinuxPlugin.registerWith();
+        device_info_plus.DeviceInfoPlusLinuxPlugin.registerWith();
       } catch (err) {
         print(
           '`device_info_plus` threw an error: $err. '
@@ -36607,7 +36630,7 @@ class _PluginRegistrant {
       }
 
       try {
-        FilePickerLinux.registerWith();
+        file_picker.FilePickerLinux.registerWith();
       } catch (err) {
         print(
           '`file_picker` threw an error: $err. '
@@ -36616,7 +36639,7 @@ class _PluginRegistrant {
       }
 
       try {
-        FileSelectorLinux.registerWith();
+        file_selector_linux.FileSelectorLinux.registerWith();
       } catch (err) {
         print(
           '`file_selector_linux` threw an error: $err. '
@@ -36625,7 +36648,7 @@ class _PluginRegistrant {
       }
 
       try {
-        ImagePickerLinux.registerWith();
+        image_picker_linux.ImagePickerLinux.registerWith();
       } catch (err) {
         print(
           '`image_picker_linux` threw an error: $err. '
@@ -36634,7 +36657,7 @@ class _PluginRegistrant {
       }
 
       try {
-        PackageInfoPlusLinuxPlugin.registerWith();
+        package_info_plus.PackageInfoPlusLinuxPlugin.registerWith();
       } catch (err) {
         print(
           '`package_info_plus` threw an error: $err. '
@@ -36643,7 +36666,7 @@ class _PluginRegistrant {
       }
 
       try {
-        PathProviderLinux.registerWith();
+        path_provider_linux.PathProviderLinux.registerWith();
       } catch (err) {
         print(
           '`path_provider_linux` threw an error: $err. '
@@ -36652,7 +36675,7 @@ class _PluginRegistrant {
       }
 
       try {
-        SharePlusLinuxPlugin.registerWith();
+        share_plus.SharePlusLinuxPlugin.registerWith();
       } catch (err) {
         print(
           '`share_plus` threw an error: $err. '
@@ -36661,7 +36684,7 @@ class _PluginRegistrant {
       }
 
       try {
-        SharedPreferencesLinux.registerWith();
+        shared_preferences_linux.SharedPreferencesLinux.registerWith();
       } catch (err) {
         print(
           '`shared_preferences_linux` threw an error: $err. '
@@ -36670,7 +36693,7 @@ class _PluginRegistrant {
       }
 
       try {
-        UrlLauncherLinux.registerWith();
+        url_launcher_linux.UrlLauncherLinux.registerWith();
       } catch (err) {
         print(
           '`url_launcher_linux` threw an error: $err. '
@@ -36680,7 +36703,7 @@ class _PluginRegistrant {
 
     } else if (Platform.isMacOS) {
       try {
-        FilePickerMacOS.registerWith();
+        file_picker.FilePickerMacOS.registerWith();
       } catch (err) {
         print(
           '`file_picker` threw an error: $err. '
@@ -36689,7 +36712,7 @@ class _PluginRegistrant {
       }
 
       try {
-        FileSelectorMacOS.registerWith();
+        file_selector_macos.FileSelectorMacOS.registerWith();
       } catch (err) {
         print(
           '`file_selector_macos` threw an error: $err. '
@@ -36698,7 +36721,7 @@ class _PluginRegistrant {
       }
 
       try {
-        ImagePickerMacOS.registerWith();
+        image_picker_macos.ImagePickerMacOS.registerWith();
       } catch (err) {
         print(
           '`image_picker_macos` threw an error: $err. '
@@ -36707,7 +36730,7 @@ class _PluginRegistrant {
       }
 
       try {
-        PathProviderFoundation.registerWith();
+        path_provider_foundation.PathProviderFoundation.registerWith();
       } catch (err) {
         print(
           '`path_provider_foundation` threw an error: $err. '
@@ -36716,7 +36739,7 @@ class _PluginRegistrant {
       }
 
       try {
-        SharedPreferencesFoundation.registerWith();
+        shared_preferences_foundation.SharedPreferencesFoundation.registerWith();
       } catch (err) {
         print(
           '`shared_preferences_foundation` threw an error: $err. '
@@ -36725,7 +36748,7 @@ class _PluginRegistrant {
       }
 
       try {
-        SqfliteDarwin.registerWith();
+        sqflite_darwin.SqfliteDarwin.registerWith();
       } catch (err) {
         print(
           '`sqflite_darwin` threw an error: $err. '
@@ -36734,7 +36757,7 @@ class _PluginRegistrant {
       }
 
       try {
-        UrlLauncherMacOS.registerWith();
+        url_launcher_macos.UrlLauncherMacOS.registerWith();
       } catch (err) {
         print(
           '`url_launcher_macos` threw an error: $err. '
@@ -36744,7 +36767,7 @@ class _PluginRegistrant {
 
     } else if (Platform.isWindows) {
       try {
-        DeviceInfoPlusWindowsPlugin.registerWith();
+        device_info_plus.DeviceInfoPlusWindowsPlugin.registerWith();
       } catch (err) {
         print(
           '`device_info_plus` threw an error: $err. '
@@ -36753,7 +36776,7 @@ class _PluginRegistrant {
       }
 
       try {
-        FilePickerWindows.registerWith();
+        file_picker.FilePickerWindows.registerWith();
       } catch (err) {
         print(
           '`file_picker` threw an error: $err. '
@@ -36762,7 +36785,7 @@ class _PluginRegistrant {
       }
 
       try {
-        FileSelectorWindows.registerWith();
+        file_selector_windows.FileSelectorWindows.registerWith();
       } catch (err) {
         print(
           '`file_selector_windows` threw an error: $err. '
@@ -36771,7 +36794,7 @@ class _PluginRegistrant {
       }
 
       try {
-        ImagePickerWindows.registerWith();
+        image_picker_windows.ImagePickerWindows.registerWith();
       } catch (err) {
         print(
           '`image_picker_windows` threw an error: $err. '
@@ -36780,7 +36803,7 @@ class _PluginRegistrant {
       }
 
       try {
-        PackageInfoPlusWindowsPlugin.registerWith();
+        package_info_plus.PackageInfoPlusWindowsPlugin.registerWith();
       } catch (err) {
         print(
           '`package_info_plus` threw an error: $err. '
@@ -36789,7 +36812,7 @@ class _PluginRegistrant {
       }
 
       try {
-        PathProviderWindows.registerWith();
+        path_provider_windows.PathProviderWindows.registerWith();
       } catch (err) {
         print(
           '`path_provider_windows` threw an error: $err. '
@@ -36798,7 +36821,7 @@ class _PluginRegistrant {
       }
 
       try {
-        SharePlusWindowsPlugin.registerWith();
+        share_plus.SharePlusWindowsPlugin.registerWith();
       } catch (err) {
         print(
           '`share_plus` threw an error: $err. '
@@ -36807,7 +36830,7 @@ class _PluginRegistrant {
       }
 
       try {
-        SharedPreferencesWindows.registerWith();
+        shared_preferences_windows.SharedPreferencesWindows.registerWith();
       } catch (err) {
         print(
           '`shared_preferences_windows` threw an error: $err. '
@@ -36816,7 +36839,7 @@ class _PluginRegistrant {
       }
 
       try {
-        UrlLauncherWindows.registerWith();
+        url_launcher_windows.UrlLauncherWindows.registerWith();
       } catch (err) {
         print(
           '`url_launcher_windows` threw an error: $err. '

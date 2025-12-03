@@ -3,6 +3,30 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## [0.4.0] - 2025-12-03
+
+### 🚀 Major Release: The "Glass & Fluid" Update
+
+This release marks a significant milestone, introducing a complete UI overhaul, advanced meal tracking, and fluid intake management.
+
+### ✨ Top Features
+- **Meals (Mahlzeiten):** Create, edit, and log meals composed of multiple ingredients. Diary entries are now grouped by meal type (Breakfast, Lunch, Dinner, Snack).
+- **Fluid & Caffeine Tracking:** dedicated tracking for water and other liquids. Automatic caffeine logging based on beverage intake.
+- **Glass UI Design:** A completely new visual language featuring glassmorphism, unified bottom sheets, and an optional "Liquid Glass" visual style.
+- **Onboarding:** A brand new onboarding experience for new users.
+- **Hypertrack:** Official rebranding and new App Icon.
+
+### 🎨 UI/UX
+- **Unified Menu System:** Replaced system dialogs with consistent **Glass Bottom Menus** for a smoother experience.
+- **Predictive Back:** Enabled support for Android 14+ predictive back gestures.
+- **Haptic Feedback:** Enhanced tactile feedback across the app (Charts, Navigation, FAB).
+
+### 🛠 Technical & Stability
+- **Database Architecture:** Robust versioning for internal asset databases and improved backup/restore logic (including supplements).
+- **Performance:** Optimized workout session handling and state management.
+- **Localization:** Full German and English support across all new features.
+
+
 ## [0.4.0-beta.9] - 2025-11-25
 
 ### Bug Fixes
