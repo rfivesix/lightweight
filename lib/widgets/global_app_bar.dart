@@ -56,11 +56,6 @@ class GlobalAppBar extends StatelessWidget implements PreferredSizeWidget {
     final Color glassColor =
         isDark ? Colors.black.withOpacity(0.5) : Colors.white.withOpacity(0.3);
 
-    // Farbe für die feine Trennlinie am unteren Rand
-    final Color dividerColor = isDark
-        ? Colors.white.withOpacity(0.15)
-        : Colors.black.withOpacity(0.10);
-
     // Die finale Struktur mit statischem Blur
     return ClipRect(
       child: BackdropFilter(

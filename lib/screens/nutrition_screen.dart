@@ -69,17 +69,21 @@ class _NutritionScreenState extends State<NutritionScreen> {
       _isLoading = true;
     });
 
+    final dbHelper = DatabaseHelper.instance;
+    final settings = await dbHelper.getAppSettings();
+
+    // Nur für die Extras noch Prefs
     final prefs = await SharedPreferences.getInstance();
-    final targetCalories = prefs.getInt('targetCalories') ?? 2500;
-    final targetProtein = prefs.getInt('targetProtein') ?? 180;
-    final targetCarbs = prefs.getInt('targetCarbs') ?? 250;
-    final targetFat = prefs.getInt('targetFat') ?? 80;
-    final targetWater = prefs.getInt('targetWater') ?? 3000;
+
+    final targetCalories = settings?.targetCalories ?? 2500;
+    final targetProtein = settings?.targetProtein ?? 180;
+    final targetCarbs = settings?.targetCarbs ?? 250;
+    final targetFat = settings?.targetFat ?? 80;
+    final targetWater = settings?.targetWater ?? 3000;
+
     final targetSugar = prefs.getInt('targetSugar') ?? 50;
     final targetFiber = prefs.getInt('targetFiber') ?? 30;
     final targetSalt = prefs.getInt('targetSalt') ?? 6;
-    final targetCaffeine = prefs.getInt('targetCaffeine') ?? 400;
-
     final foodEntries = await DatabaseHelper.instance.getEntriesForDateRange(
       range.start,
       range.end,
@@ -103,7 +107,6 @@ class _NutritionScreenState extends State<NutritionScreen> {
       targetSugar: targetSugar * numberOfDays,
       targetFiber: targetFiber * numberOfDays,
       targetSalt: targetSalt * numberOfDays,
-      targetCaffeine: targetCaffeine * numberOfDays,
     );
 
     final List<FoodTimelineEntry> foodTimeline = [];

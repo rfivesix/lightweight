@@ -235,18 +235,6 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     _loadDetails();
   }
 
-  Widget _buildHeader(String text) => Expanded(
-        child: Text(
-          text,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      );
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -262,9 +250,6 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     }
     final Duration duration =
         _log?.endTime?.difference(_log!.startTime) ?? Duration.zero;
-
-    final double topPadding =
-        MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -629,7 +614,6 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
   }
 
   List<Widget> _buildSetList(BuildContext context, AppLocalizations l10n) {
-    final textTheme = Theme.of(context).textTheme;
     final entries = _groupedSets.entries.toList();
 
     if (!_isEditMode) {

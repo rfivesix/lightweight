@@ -3,6 +3,35 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## [0.5.0-alpha.1] - 2025-12-27
+
+### 🚀 Major Features & Onboarding
+- **New Onboarding Wizard:** Completely rewrote the initial setup process.
+    - Replaced single-page tutorial with a multi-step wizard.
+    - Added dedicated pages for: Name/Birthday, Height/Gender, Weight, Calories, Macros (Protein/Carbs/Fat), and Water.
+    - Replaced sliders with precise text input fields.
+- **Profile 2.0:** Redesigned the Profile Screen.
+    - Now displays calculated Age, Gender, and Height alongside the profile picture.
+    - Added logic to edit these stats directly.
+- **Auto-Caffeine Logging:** Adding a drink with caffeine (e.g., Coffee/Energy Drink) now automatically creates a corresponding entry in the Supplement Logs.
+
+### 💾 Database & Architecture (Drift v6)
+- **Schema Migration (v1 -> v6):** Massive database update.
+    - Added `height` (int) and `gender` (string) to `Profiles`.
+    - Added `birthday` (datetime) to `Profiles`.
+    - Added `carbsPer100ml` to `FluidLogs`.
+    - Added `rir` (Reps in Reserve) and `pauseSeconds` columns (backend preparation).
+- **Single Source of Truth:**
+    - Migrated user goals (Calories, Macros, Water) from `SharedPreferences` to the local SQLite database (`app_settings` table).
+    - Enabled "Live Updates": Changing goals in Settings or Onboarding now updates the Dashboard immediately without a restart.
+
+### 🐛 Fixes & Improvements
+- **Backup System:**
+    - Fixed critical bug where importing backups caused crashes due to `int` vs `string` ID conflicts.
+    - Fixed issue where Supplements were duplicated upon import.
+    - Implemented robust `clearAllUserData` to ensure a clean state before importing.
+- **Fluid Tracking:** Fixed logic where sugary drinks showed 0g Carbs. Sugar content is now automatically treated as Carbs for the daily summary.
+- **Stability:** Added `ensureStandardSupplements()` on app start to prevent crashes if "Caffeine" is missing from the database.
 ## [0.4.0] - 2025-12-03
 
 ### 🚀 Major Release: The "Glass & Fluid" Update

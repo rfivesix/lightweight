@@ -18,6 +18,7 @@ class FoodItem {
   final double carbs; // pro 100g
   final double fat; // pro 100g
   final FoodItemSource source;
+  final String? category;
 
   final double? kj;
   final double? fiber;
@@ -39,6 +40,7 @@ class FoodItem {
     required this.carbs,
     required this.fat,
     this.source = FoodItemSource.user,
+    this.category,
     this.kj,
     this.fiber,
     this.sugar,

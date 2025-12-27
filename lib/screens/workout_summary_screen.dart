@@ -66,9 +66,6 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
     final l10n = AppLocalizations.of(context)!;
     final textTheme = Theme.of(context).textTheme;
 
-    final double topPadding =
-        MediaQuery.of(context).padding.top + kToolbarHeight;
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: GlobalAppBar(

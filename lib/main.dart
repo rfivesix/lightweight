@@ -1,10 +1,13 @@
 // lib/main.dart
-// VOLLSTÄNDIGER CODE (MIT PREDICTIVE BACK)
+// VOLLSTÄNDIGER CODE (MIT PREDICTIVE BACK & STANDARD SUPPLEMENTS)
 
+import 'package:drift/drift.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lightweight/data/backup_manager.dart';
+import 'package:lightweight/data/basis_data_manager.dart';
+import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/screens/main_screen.dart';
 import 'package:lightweight/services/profile_service.dart';
@@ -17,19 +20,18 @@ import 'package:lightweight/services/theme_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Führe das Auto-Backup im Hintergrund aus, ohne darauf zu warten.
-  // Fehler werden innerhalb des Managers abgefangen und geloggt.
-  BackupManager().runAutoBackupIfDue();
+  // Das muss passieren, bevor irgendwas anderes lädt.
+  await DatabaseHelper.instance.ensureStandardSupplements();
 
   // 1. Erstelle die Manager-Instanz
   final workoutSessionManager = WorkoutSessionManager();
 
   // 2. Rufe die neue, gekapselte Wiederherstellungsmethode auf
-  // Annahme: Diese Methode existiert jetzt in deinem WorkoutSessionManager
   await workoutSessionManager.tryRestoreSession();
 
   final themeService = ThemeService(); // Create an instance
-  // 3. Starte die App mit der (möglicherweise wiederhergestellten) Instanz
+
+  // 3. Starte die App
   runApp(
     MultiProvider(
       providers: [
@@ -48,6 +50,59 @@ void main() async {
       child: const MyApp(),
     ),
   );
+
+  // Starte Datenbank-Update im Hintergrund NACHDEM die UI läuft.
+  BasisDataManager.instance
+      .checkForBasisDataUpdate(force: false)
+      .then((_) async {
+    // --- DIAGNOSE START ---
+    debugPrint("\n🔎 --- DB DIAGNOSE REPORT 2.0 ---");
+    try {
+      final db = await DatabaseHelper.instance.database;
+
+      // 1. Produkte prüfen
+      final prodCount = await db.products.count().getSingle();
+      debugPrint("📊 Produkte gesamt: $prodCount");
+
+      final sourceStats = await db
+          .customSelect(
+              'SELECT source, COUNT(*) as c FROM products GROUP BY source')
+          .get();
+      for (final row in sourceStats) {
+        debugPrint(
+            "   📦 ${row.read<String>('source')}: ${row.read<int>('c')}");
+      }
+
+      // 2. KATEGORIEN PRÜFEN
+      final tables = await db
+          .customSelect(
+              "SELECT name FROM sqlite_master WHERE type='table' AND name='food_categories'")
+          .get();
+
+      if (tables.isEmpty) {
+        debugPrint(
+            "\n❌ KRITISCHER FEHLER: Tabelle 'food_categories' existiert NICHT!");
+      } else {
+        debugPrint("\n✅ Tabelle 'food_categories' gefunden.");
+
+        final catResult = await db
+            .customSelect('SELECT COUNT(*) as c FROM food_categories')
+            .getSingle();
+        final catCount = catResult.read<int>('c');
+        debugPrint("📊 Kategorien Einträge: $catCount");
+      }
+    } catch (e) {
+      debugPrint("💥 Diagnose abgestürzt: $e");
+    }
+    debugPrint("----------------------------\n");
+  });
+  // --- DIAGNOSE ENDE ---
+
+  try {
+    await BackupManager.instance.runAutoBackupIfDue();
+  } catch (e) {
+    debugPrint("Fehler beim Auto-Backup Start: $e");
+  }
 }
 
 Future<bool> _hasSeenOnboarding() async {
@@ -66,8 +121,6 @@ class MyApp extends StatelessWidget {
 
     const cardDark = Color(0xFF171717);
     const cardLight = Color(0xFFF3F3F3);
-
-    // HINWEIS: Provider.of<ThemeService>(context) wurde von hier entfernt.
 
     return DynamicColorBuilder(
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
@@ -105,7 +158,7 @@ class MyApp extends StatelessWidget {
           scaffoldBackgroundColor: Colors.white,
           canvasColor: Colors.white,
           cardColor: cardLight,
-          // NEU / ANGEPASST:
+
           splashFactory: NoSplash.splashFactory,
           splashColor: Colors.transparent,
           highlightColor: Colors.transparent,
@@ -113,7 +166,6 @@ class MyApp extends StatelessWidget {
 
           pageTransitionsTheme: const PageTransitionsTheme(
             builders: {
-              // ÄNDERUNG: Predictive Back für Android aktiviert
               TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
               TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
               TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
@@ -166,11 +218,11 @@ class MyApp extends StatelessWidget {
           ),
 
           textTheme: ThemeData.light().textTheme.apply(
-                fontFamily: 'Inter', // Das ist weiterhin korrekt
+                fontFamily: 'Inter',
                 bodyColor: Colors.black87,
                 displayColor: Colors.black87,
               ),
-          // Stellen sicher, dass Akzent sichtbar "lebt"
+
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
               backgroundColor: lightScheme.primary,
@@ -184,7 +236,6 @@ class MyApp extends StatelessWidget {
             backgroundColor: lightScheme.primary,
             foregroundColor: lightScheme.onPrimary,
           ),
-          //toggleableActiveColor: lightScheme.primary,
           progressIndicatorTheme: ProgressIndicatorThemeData(
             color: lightScheme.primary,
           ),
@@ -223,7 +274,7 @@ class MyApp extends StatelessWidget {
           scaffoldBackgroundColor: Colors.black,
           canvasColor: Colors.black,
           cardColor: cardDark,
-          // NEU / ANGEPASST:
+
           splashFactory: NoSplash.splashFactory,
           splashColor: Colors.transparent,
           highlightColor: Colors.transparent,
@@ -231,7 +282,6 @@ class MyApp extends StatelessWidget {
 
           pageTransitionsTheme: const PageTransitionsTheme(
             builders: {
-              // ÄNDERUNG: Predictive Back für Android aktiviert
               TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
               TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
               TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
@@ -284,7 +334,7 @@ class MyApp extends StatelessWidget {
           ),
 
           textTheme: ThemeData.dark().textTheme.apply(
-                fontFamily: 'Inter', // Das ist weiterhin korrekt
+                fontFamily: 'Inter',
                 bodyColor: Colors.white,
                 displayColor: Colors.white,
               ),
@@ -301,7 +351,6 @@ class MyApp extends StatelessWidget {
             backgroundColor: darkScheme.primary,
             foregroundColor: darkScheme.onPrimary,
           ),
-          //toggleableActiveColor: darkScheme.primary,
           progressIndicatorTheme: ProgressIndicatorThemeData(
             color: darkScheme.primary,
           ),
@@ -331,7 +380,7 @@ class MyApp extends StatelessWidget {
             ),
           ),
         );
-        // KORREKTUR HIER: Wir verwenden einen Consumer, um an den ThemeService zu kommen.
+
         return Consumer<ThemeService>(
           builder: (context, themeService, child) {
             return MaterialApp(
@@ -344,13 +393,10 @@ class MyApp extends StatelessWidget {
               title: "LightWeight",
               theme: baseLightTheme,
               darkTheme: baseDarkTheme,
-              themeMode:
-                  themeService.themeMode, // Jetzt funktioniert der Zugriff
-              home: child, // Das home-Widget wird weitergereicht
+              themeMode: themeService.themeMode,
+              home: child,
             );
           },
-          // Der FutureBuilder wird zum 'child' des Consumers, um nicht bei jeder
-          // Theme-Änderung neu aufgebaut zu werden.
           child: FutureBuilder<bool>(
             future: _hasSeenOnboarding(),
             builder: (context, snapshot) {

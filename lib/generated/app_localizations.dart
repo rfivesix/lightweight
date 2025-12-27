@@ -2869,6 +2869,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Resume'**
   String get resumeButton;
+
+  /// No description provided for @onboardingWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Lightweight'**
+  String get onboardingWelcomeTitle;
+
+  /// No description provided for @onboardingWelcomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s set up your profile to get the best results.'**
+  String get onboardingWelcomeSubtitle;
+
+  /// No description provided for @onboardingNameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s your name?'**
+  String get onboardingNameTitle;
+
+  /// No description provided for @onboardingNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Name'**
+  String get onboardingNameLabel;
+
+  /// No description provided for @onboardingNameError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your name'**
+  String get onboardingNameError;
+
+  /// No description provided for @onboardingDobTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'When were you born?'**
+  String get onboardingDobTitle;
+
+  /// No description provided for @onboardingDobLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Date of Birth'**
+  String get onboardingDobLabel;
+
+  /// No description provided for @onboardingDobError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select your date of birth'**
+  String get onboardingDobError;
+
+  /// No description provided for @onboardingWeightTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Weight'**
+  String get onboardingWeightTitle;
+
+  /// No description provided for @onboardingWeightLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight (kg)'**
+  String get onboardingWeightLabel;
+
+  /// No description provided for @onboardingWeightError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid weight'**
+  String get onboardingWeightError;
+
+  /// No description provided for @onboardingGoalsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Nutrition Goals'**
+  String get onboardingGoalsTitle;
+
+  /// No description provided for @onboardingGoalsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You can change these later in settings.'**
+  String get onboardingGoalsSubtitle;
+
+  /// No description provided for @onboardingGoalCalories.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Calories (kcal)'**
+  String get onboardingGoalCalories;
+
+  /// No description provided for @onboardingGoalProtein.
+  ///
+  /// In en, this message translates to:
+  /// **'Protein (g)'**
+  String get onboardingGoalProtein;
+
+  /// No description provided for @onboardingGoalCarbs.
+  ///
+  /// In en, this message translates to:
+  /// **'Carbs (g)'**
+  String get onboardingGoalCarbs;
+
+  /// No description provided for @onboardingGoalFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat (g)'**
+  String get onboardingGoalFat;
+
+  /// No description provided for @onboardingGoalWater.
+  ///
+  /// In en, this message translates to:
+  /// **'Water (ml)'**
+  String get onboardingGoalWater;
+
+  /// No description provided for @onboardingNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get onboardingNext;
+
+  /// No description provided for @onboardingBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get onboardingBack;
+
+  /// No description provided for @onboardingFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Tracking'**
+  String get onboardingFinish;
+
+  /// No description provided for @onboardingHeightLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Height (cm)'**
+  String get onboardingHeightLabel;
+
+  /// No description provided for @onboardingGenderLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Gender'**
+  String get onboardingGenderLabel;
+
+  /// No description provided for @genderMale.
+  ///
+  /// In en, this message translates to:
+  /// **'Male'**
+  String get genderMale;
+
+  /// No description provided for @genderFemale.
+  ///
+  /// In en, this message translates to:
+  /// **'Female'**
+  String get genderFemale;
+
+  /// No description provided for @genderDiverse.
+  ///
+  /// In en, this message translates to:
+  /// **'Diverse'**
+  String get genderDiverse;
 }
 
 class _AppLocalizationsDelegate

@@ -43,7 +43,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
   // --- UNVERÄNDERT: Logik für Komplett-Backup ---
   void _performFullExport() async {
     setState(() => _isFullBackupRunning = true);
-    final success = await BackupManager().exportFullBackup();
+    final success = await BackupManager.instance.exportFullBackup();
     if (!mounted) return;
     setState(() => _isFullBackupRunning = false);
 
@@ -81,13 +81,14 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
 
     if (confirmed == true) {
       setState(() => _isFullBackupRunning = true);
-      bool success = await BackupManager().importFullBackupAuto(filePath);
+      bool success =
+          await BackupManager.instance.importFullBackupAuto(filePath);
       if (!success) {
         // Datei könnte verschlüsselt sein – Passwort abfragen (leer = “kein Passwort” versuchen)
         final pw = await _askPassword(title: l10n.dialogEnterPasswordImport);
         if (pw != null) {
           // <-- wichtig: leer zulassen
-          success = await BackupManager().importFullBackupAuto(
+          success = await BackupManager.instance.importFullBackupAuto(
             filePath,
             passphrase: pw,
           );
@@ -102,11 +103,12 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
         final unknown =
             await WorkoutDatabaseHelper.instance.findUnknownExerciseNames();
         if (mounted && unknown.isNotEmpty) {
-          final bool? changed = await Navigator.of(context).push<bool>(
+          /*final bool? changed = await Navigator.of(context).push<bool>(
             MaterialPageRoute(
               builder: (_) => ExerciseMappingScreen(unknownNames: unknown),
             ),
           );
+          */
           // Optional: Nach Anwendung erneut prüfen/refreshen, aber keine Pflicht.
         }
 
@@ -290,8 +292,8 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                         );
                         if (pw == null || pw.isEmpty) return;
                         setState(() => _isFullBackupRunning = true);
-                        final ok =
-                            await BackupManager().exportFullBackupEncrypted(pw);
+                        final ok = await BackupManager.instance
+                            .exportFullBackupEncrypted(pw);
                         if (!mounted) return;
                         setState(() => _isFullBackupRunning = false);
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -339,7 +341,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
               onTap: _isCsvExportRunning
                   ? null
                   : () => _exportCsv(
-                        BackupManager().exportNutritionAsCsv,
+                        BackupManager.instance.exportNutritionAsCsv,
                         l10n.snackbarSharingNutrition,
                         l10n.snackbarExportFailedNoEntries,
                       ),
@@ -350,7 +352,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
               onTap: _isCsvExportRunning
                   ? null
                   : () => _exportCsv(
-                        BackupManager().exportMeasurementsAsCsv,
+                        BackupManager.instance.exportMeasurementsAsCsv,
                         l10n.snackbarSharingMeasurements,
                         l10n.snackbarExportFailedNoEntries,
                       ),
@@ -361,7 +363,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
               onTap: _isCsvExportRunning
                   ? null
                   : () => _exportCsv(
-                        BackupManager().exportWorkoutsAsCsv,
+                        BackupManager.instance.exportWorkoutsAsCsv,
                         l10n.snackbarSharingWorkouts,
                         l10n.snackbarExportFailedNoEntries,
                       ),
@@ -507,7 +509,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                 icon: const Icon(Icons.backup),
                 label: Text(l10n.autoBackupRunNow),
                 onPressed: () async {
-                  final ok = await BackupManager().runAutoBackupIfDue(
+                  final ok = await BackupManager.instance.runAutoBackupIfDue(
                     interval: const Duration(days: 1),
                     encrypted: false,
                     passphrase: null,

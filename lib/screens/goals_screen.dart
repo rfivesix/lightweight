@@ -5,6 +5,7 @@ import 'package:lightweight/util/design_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/widgets/global_app_bar.dart';
+import 'package:lightweight/data/database_helper.dart';
 
 class GoalsScreen extends StatefulWidget {
   const GoalsScreen({super.key});
@@ -27,27 +28,14 @@ class _GoalsScreenState extends State<GoalsScreen> {
   final _fiberController = TextEditingController();
   final _saltController = TextEditingController();
 
-  double _proteinPercent = 40;
-  double _carbsPercent = 40;
-  double _fatPercent = 20;
-
-  // KORREKTUR: Farben zentral definieren, passend zum NutritionSummaryWidget
-  final Map<String, Color> _macroColors = {
-    'protein': Colors.red.shade400,
-    'carbs': Colors.green.shade400,
-    'fat': Colors.purple.shade300,
-  };
-
   @override
   void initState() {
     super.initState();
     _loadSettings();
-    _caloriesController.addListener(_recalculateGramsFromSliders);
   }
 
   @override
   void dispose() {
-    _caloriesController.removeListener(_recalculateGramsFromSliders);
     _caloriesController.dispose();
     _proteinController.dispose();
     _carbsController.dispose();
@@ -61,19 +49,32 @@ class _GoalsScreenState extends State<GoalsScreen> {
   }
 
   Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
+    final dbHelper = DatabaseHelper.instance;
+    final prefs = await SharedPreferences
+        .getInstance(); // Nur noch für Height gebraucht falls nicht im Profil
+
+    // Lade Ziele aus der DB
+    final settings = await dbHelper.getAppSettings();
+    // Lade Profil für Größe
+    // (Optional: Du könntest auch 'getProfile' im Helper bauen, aber prefs für Height ist ok als Übergang)
+
     setState(() {
       _heightController.text = (prefs.getInt('userHeight') ?? 180).toString();
-      _caloriesController.text =
-          (prefs.getInt('targetCalories') ?? 2500).toString();
-      _proteinController.text =
-          (prefs.getInt('targetProtein') ?? 180).toString();
-      _carbsController.text = (prefs.getInt('targetCarbs') ?? 250).toString();
-      _fatController.text = (prefs.getInt('targetFat') ?? 80).toString();
-      _waterController.text = (prefs.getInt('targetWater') ?? 3000).toString();
+
+      // Werte aus DB oder Default
+      _caloriesController.text = (settings?.targetCalories ?? 2500).toString();
+      _proteinController.text = (settings?.targetProtein ?? 180).toString();
+      _carbsController.text = (settings?.targetCarbs ?? 250).toString();
+      _fatController.text = (settings?.targetFat ?? 80).toString();
+      _waterController.text = (settings?.targetWater ?? 3000).toString();
+
+      // Hinweis: Sugar, Fiber, Salt sind noch nicht im AppSettings Schema von Drift definiert?
+      // Falls du diese auch syncen willst, musst du die Tabelle AppSettings in drift_database.dart erweitern.
+      // Vorerst laden wir diese noch aus Prefs, da sie im Schema fehlten:
       _sugarController.text = (prefs.getInt('targetSugar') ?? 50).toString();
       _fiberController.text = (prefs.getInt('targetFiber') ?? 30).toString();
       _saltController.text = (prefs.getInt('targetSalt') ?? 6).toString();
+
       _isLoading = false;
     });
   }
@@ -81,103 +82,33 @@ class _GoalsScreenState extends State<GoalsScreen> {
   Future<void> _saveSettings() async {
     final isValid = _formKey.currentState?.validate() ?? false;
     if (!isValid) return;
+
     final prefs = await SharedPreferences.getInstance();
 
+    // 1. Größe in Prefs (oder später DB Profile update)
     await prefs.setInt('userHeight', int.parse(_heightController.text));
-    await prefs.setInt('targetCalories', int.parse(_caloriesController.text));
-    await prefs.setInt('targetProtein', int.parse(_proteinController.text));
-    await prefs.setInt('targetCarbs', int.parse(_carbsController.text));
-    await prefs.setInt('targetFat', int.parse(_fatController.text));
-    await prefs.setInt('targetWater', int.parse(_waterController.text));
+
+    // 2. WICHTIG: Ziele in die Datenbank speichern
+    await DatabaseHelper.instance.saveUserGoals(
+      calories: int.parse(_caloriesController.text),
+      protein: int.parse(_proteinController.text),
+      carbs: int.parse(_carbsController.text),
+      fat: int.parse(_fatController.text),
+      water: int.parse(_waterController.text),
+    );
+
+    // 3. Die "Extra"-Werte (Sugar/Fiber/Salt) bleiben vorerst in Prefs,
+    // bis du das DB-Schema erweiterst (Empfehlung für später).
     await prefs.setInt('targetSugar', int.parse(_sugarController.text));
     await prefs.setInt('targetFiber', int.parse(_fiberController.text));
     await prefs.setInt('targetSalt', int.parse(_saltController.text));
 
     if (mounted) {
       final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.snackbarGoalsSaved)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.snackbarGoalsSaved)));
       Navigator.of(context).pop();
     }
-  }
-
-  void _recalculateGramsFromSliders() {
-    final totalCalories = int.tryParse(_caloriesController.text) ?? 0;
-    if (totalCalories <= 0) return;
-
-    final proteinGrams = (totalCalories * (_proteinPercent / 100)) / 4;
-    final carbsGrams = (totalCalories * (_carbsPercent / 100)) / 4;
-    final fatGrams = (totalCalories * (_fatPercent / 100)) / 9;
-
-    _proteinController.text = proteinGrams.round().toString();
-    _carbsController.text = carbsGrams.round().toString();
-    _fatController.text = fatGrams.round().toString();
-  }
-
-  Widget _buildMacroCalculator() {
-    final l10n = AppLocalizations.of(context)!;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Text(
-            l10n.macroDistribution,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          _buildMacroSliderRow(
-            l10n.protein,
-            _proteinPercent,
-            _macroColors['protein']!,
-          ),
-          _buildMacroSliderRow(
-            l10n.carbs,
-            _carbsPercent,
-            _macroColors['carbs']!,
-          ),
-          _buildMacroSliderRow(l10n.fat, _fatPercent, _macroColors['fat']!),
-        ],
-      ),
-    );
-  }
-
-  void _updateSliderValues(String changedMacro, double value) {
-    setState(() {
-      if (changedMacro == 'protein') {
-        _proteinPercent = value;
-      } else if (changedMacro == 'carbs') {
-        _carbsPercent = value;
-      } else if (changedMacro == 'fat') {
-        _fatPercent = value;
-      }
-
-      double sum = _proteinPercent + _carbsPercent + _fatPercent;
-      if (sum.round() != 100) {
-        double diff = 100 - sum;
-        if (changedMacro == 'protein') {
-          _carbsPercent += diff / 2;
-          _fatPercent += diff / 2;
-        } else if (changedMacro == 'carbs') {
-          _proteinPercent += diff / 2;
-          _fatPercent += diff / 2;
-        } else {
-          _proteinPercent += diff / 2;
-          _carbsPercent += diff / 2;
-        }
-      }
-
-      // Clamp values between 0 and 100
-      _proteinPercent = _proteinPercent.clamp(0, 100);
-      _carbsPercent = _carbsPercent.clamp(0, 100);
-      _fatPercent = _fatPercent.clamp(0, 100);
-    });
-    _recalculateGramsFromSliders();
   }
 
   @override
@@ -275,44 +206,6 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 ),
               ),
             ),
-    );
-  }
-
-  // KORREKTUR: Das ist die neue Methode zum Stylen der Slider
-  Widget _buildMacroSliderRow(String macro, double value, Color color) {
-    return Row(
-      children: [
-        SizedBox(width: 70, child: Text("${macro.capitalize()}:")),
-        Expanded(
-          child: SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              trackHeight: 12.0, // Dicke des Sliders
-              thumbShape: const RoundSliderThumbShape(
-                enabledThumbRadius: 8.0,
-              ), // Kleinerer Kreis
-              overlayShape: const RoundSliderOverlayShape(overlayRadius: 16.0),
-              activeTrackColor: color, // Farbe für den aktiven Teil
-              inactiveTrackColor: color.withOpacity(0.2), // Hintergrundfarbe
-              thumbColor: color, // Farbe des Kreises
-              trackShape:
-                  const RoundedRectSliderTrackShape(), // Abgerundete Ecken
-            ),
-            child: Slider(
-              value: value,
-              min: 0,
-              max: 100,
-              label: '${value.round()}%',
-              onChanged: (newValue) {
-                _updateSliderValues(macro, newValue);
-              },
-            ),
-          ),
-        ),
-        SizedBox(
-          width: 50,
-          child: Text("${value.round()}%", textAlign: TextAlign.right),
-        ),
-      ],
     );
   }
 

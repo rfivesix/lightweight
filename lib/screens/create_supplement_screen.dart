@@ -19,7 +19,6 @@ class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _doseController = TextEditingController();
-  final _unitController = TextEditingController();
   final _goalController = TextEditingController();
   final _limitController = TextEditingController();
   final _notesController = TextEditingController();

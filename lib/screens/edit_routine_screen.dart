@@ -36,7 +36,6 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
   bool _isLoading = false;
   final Map<int, TextEditingController> _repsControllers = {};
   final Map<int, TextEditingController> _weightControllers = {};
-  final Map<int, bool> _exerciseExpanded = {};
 
   @override
   void initState() {

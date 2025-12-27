@@ -116,13 +116,6 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
         '${displayPoint.value.toStringAsFixed(1)} ${widget.unit}';
     final String displayDate = DateFormat.yMMMd().format(displayPoint.date);
 
-    final Color lineColor = Theme.of(context).colorScheme.primary;
-    final DateTime baseDate = _dataPoints.first.date;
-    final int totalDays = widget.dateRange.end
-        .difference(widget.dateRange.start)
-        .inDays
-        .clamp(1, 100000); // Schutz
-
     // 1) Basisdaten: auf Tagesgrenzen normalisieren und SPAN berechnen
     final DateTime firstDate = DateTime(
       _dataPoints.first.date.year,

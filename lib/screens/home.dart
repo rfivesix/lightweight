@@ -7,7 +7,6 @@ import 'package:lightweight/models/tracked_supplement.dart';
 import 'package:lightweight/screens/supplement_track_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/supplement_summary_widget.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/data/product_database_helper.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
@@ -76,12 +75,12 @@ class HomeState extends State<Home> {
     // --- DATEN HIER LADEN ---
     final l10n = AppLocalizations.of(context)!;
     final dbHelper = DatabaseHelper.instance;
-    final prefs = await SharedPreferences.getInstance();
-    final targetCalories = prefs.getInt('targetCalories') ?? 2500;
-    final targetProtein = prefs.getInt('targetProtein') ?? 180;
-    final targetCarbs = prefs.getInt('targetCarbs') ?? 250;
-    final targetFat = prefs.getInt('targetFat') ?? 80;
-    final targetWater = prefs.getInt('targetWater') ?? 3000;
+    final settings = await dbHelper.getAppSettings();
+    final targetCalories = settings?.targetCalories ?? 2500;
+    final targetProtein = settings?.targetProtein ?? 180;
+    final targetCarbs = settings?.targetCarbs ?? 250;
+    final targetFat = settings?.targetFat ?? 80;
+    final targetWater = settings?.targetWater ?? 3000;
 
     final entries = await dbHelper.getEntriesForDate(DateTime.now());
     final fluidEntries = await dbHelper.getFluidEntriesForDate(DateTime.now());

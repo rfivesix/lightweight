@@ -81,14 +81,23 @@ class DiaryScreenState extends State<DiaryScreen> {
     if (!mounted) return;
     setState(() => _isLoading = true);
 
-    final prefs = await SharedPreferences.getInstance();
-    final targetCalories = prefs.getInt('targetCalories') ?? 2500;
-    final targetProtein = prefs.getInt('targetProtein') ?? 180;
-    final targetCarbs = prefs.getInt('targetCarbs') ?? 250;
-    final targetFat = prefs.getInt('targetFat') ?? 80;
-    final targetWater = prefs.getInt('targetWater') ?? 3000;
-    final targetCaffeine = prefs.getInt('targetCaffeine') ?? 400;
+    final dbHelper = DatabaseHelper.instance;
 
+    // 1. Ziele aus der DB laden (für Sync)
+    final settings = await dbHelper.getAppSettings();
+
+    // 2. Prefs nur noch für "Extra"-Werte, die nicht im DB-Schema sind
+    final prefs = await SharedPreferences.getInstance();
+
+    // 3. Werte aus DB oder Fallbacks nutzen
+    final targetCalories = settings?.targetCalories ?? 2500;
+    final targetProtein = settings?.targetProtein ?? 180;
+    final targetCarbs = settings?.targetCarbs ?? 250;
+    final targetFat = settings?.targetFat ?? 80;
+    final targetWater = settings?.targetWater ?? 3000;
+
+    // Koffein, Zucker etc. bleiben vorerst in Prefs (da nicht in AppSettings Tabelle)
+    final targetCaffeine = prefs.getInt('targetCaffeine') ?? 400;
     final foodEntries = await DatabaseHelper.instance.getEntriesForDate(date);
     final fluidEntries = await DatabaseHelper.instance.getFluidEntriesForDate(
       date,
@@ -352,108 +361,6 @@ class DiaryScreenState extends State<DiaryScreen> {
     }
   }
 
-// Auch die Methode für FluidEntry Edit muss angepasst werden, um den AlertDialog zu vermeiden.
-
-  Future<void> _editFluidEntry(FluidEntry fluidEntry) async {
-    final l10n = AppLocalizations.of(context)!;
-    final GlobalKey<FluidDialogContentState> dialogStateKey = GlobalKey();
-
-    // Wir ersetzen showDialog durch showGlassBottomMenu
-    final result = await showGlassBottomMenu<
-        (
-          String name,
-          int quantity,
-          double? sugarPer100ml,
-          double? caffeinePer100ml
-        )?>(
-      context: context,
-      title: l10n.waterEntryTitle,
-      contentBuilder: (ctx, close) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            FluidDialogContent(
-              key: dialogStateKey,
-              initialName: fluidEntry.name,
-              initialQuantity: fluidEntry.quantityInMl,
-              initialTimestamp: fluidEntry.timestamp,
-              initialSugar: fluidEntry.sugarPer100ml,
-              initialCaffeine: fluidEntry.caffeinePer100ml,
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: close,
-                    child: Text(l10n.cancel),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton(
-                    child: Text(l10n.save),
-                    onPressed: () {
-                      final state = dialogStateKey.currentState;
-                      if (state != null) {
-                        final quantity = int.tryParse(state.quantityText);
-                        if (quantity != null && quantity > 0) {
-                          close();
-                          Navigator.of(ctx).pop((
-                            state.nameText,
-                            quantity,
-                            double.tryParse(
-                              state.sugarText.replaceAll(',', '.'),
-                            ),
-                            double.tryParse(
-                              state.caffeineText.replaceAll(',', '.'),
-                            ),
-                          ));
-                        }
-                      }
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ],
-        );
-      },
-    );
-
-    if (result != null) {
-      final sugarPer100ml = result.$3;
-      final quantity = result.$2;
-      final kcal = (sugarPer100ml != null)
-          ? ((sugarPer100ml / 100) * quantity * 4).round()
-          : null;
-
-      final updatedEntry = FluidEntry(
-        id: fluidEntry.id,
-        name: result.$1,
-        quantityInMl: quantity,
-        kcal: kcal,
-        sugarPer100ml: sugarPer100ml,
-        carbsPer100ml: sugarPer100ml, // Spiegeln
-        caffeinePer100ml: result.$4,
-        timestamp: fluidEntry.timestamp,
-        linked_food_entry_id: fluidEntry.linked_food_entry_id,
-      );
-      await DatabaseHelper.instance.updateFluidEntry(updatedEntry);
-
-      // Koffein-Log aktualisieren/löschen
-      await _logCaffeineDose(
-        (result.$4 ?? 0) * (quantity / 100.0),
-        fluidEntry.timestamp,
-        fluidEntryId: fluidEntry.id,
-      );
-
-      loadDataForDate(_selectedDate);
-    }
-  }
-
-// In lib/screens/diary_screen.dart
-
   Future<void> _addFoodToMeal(String mealType) async {
     final FoodItem? selectedFoodItem =
         await Navigator.of(context).push<FoodItem>(
@@ -638,24 +545,6 @@ class DiaryScreenState extends State<DiaryScreen> {
     }
   }
 
-  String _getAppBarTitle(AppLocalizations l10n) {
-    final today = DateTime.now();
-    final yesterday = today.subtract(const Duration(days: 1));
-    final dayBeforeYesterday = today.subtract(const Duration(days: 2));
-
-    if (_selectedDate.isSameDate(today)) {
-      return l10n.today;
-    } else if (_selectedDate.isSameDate(yesterday)) {
-      return l10n.yesterday; // ← NEW
-    } else if (_selectedDate.isSameDate(dayBeforeYesterday)) {
-      return l10n.dayBeforeYesterday; // ← NEW
-    } else {
-      return DateFormat.yMMMMd(
-        Localizations.localeOf(context).toString(),
-      ).format(_selectedDate);
-    }
-  }
-
   void navigateDay(bool forward) {
     final newDay = _selectedDate.add(Duration(days: forward ? 1 : -1));
     // Im Gegensatz zum NutritionScreen erlauben wir hier die Navigation in die Zukunft
@@ -764,7 +653,6 @@ class DiaryScreenState extends State<DiaryScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final hasEntries = _entriesByMeal.values.any((list) => list.isNotEmpty);
     final double appBarHeight =
         MediaQuery.of(context).padding.top; // + kToolbarHeight;
 
@@ -1179,30 +1067,6 @@ class DiaryScreenState extends State<DiaryScreen> {
                 )
                 .then((_) => loadDataForDate(_selectedDate));
           },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMacroText(String text) {
-    return Text(
-      text,
-      style: TextStyle(
-        color: Colors.grey[600],
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-      ),
-    );
-  }
-
-  Widget _buildEmptyLogState(AppLocalizations l10n) {
-    return SummaryCard(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Text(
-          l10n.noEntriesForPeriod,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyLarge,
         ),
       ),
     );

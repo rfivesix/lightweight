@@ -1495,4 +1495,84 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get resumeButton => 'Fortsetzen';
+
+  @override
+  String get onboardingWelcomeTitle => 'Willkommen bei Lightweight';
+
+  @override
+  String get onboardingWelcomeSubtitle =>
+      'Lass uns dein Profil einrichten, um loszulegen.';
+
+  @override
+  String get onboardingNameTitle => 'Wie heißt du?';
+
+  @override
+  String get onboardingNameLabel => 'Dein Name';
+
+  @override
+  String get onboardingNameError => 'Bitte gib deinen Namen ein';
+
+  @override
+  String get onboardingDobTitle => 'Wann bist du geboren?';
+
+  @override
+  String get onboardingDobLabel => 'Geburtsdatum';
+
+  @override
+  String get onboardingDobError => 'Bitte wähle dein Geburtsdatum';
+
+  @override
+  String get onboardingWeightTitle => 'Aktuelles Gewicht';
+
+  @override
+  String get onboardingWeightLabel => 'Gewicht (kg)';
+
+  @override
+  String get onboardingWeightError => 'Bitte gib ein gültiges Gewicht ein';
+
+  @override
+  String get onboardingGoalsTitle => 'Deine Ernährungsziele';
+
+  @override
+  String get onboardingGoalsSubtitle =>
+      'Du kannst diese später in den Einstellungen ändern.';
+
+  @override
+  String get onboardingGoalCalories => 'Tagesziel Kalorien (kcal)';
+
+  @override
+  String get onboardingGoalProtein => 'Protein (g)';
+
+  @override
+  String get onboardingGoalCarbs => 'Kohlenhydrate (g)';
+
+  @override
+  String get onboardingGoalFat => 'Fett (g)';
+
+  @override
+  String get onboardingGoalWater => 'Wasser (ml)';
+
+  @override
+  String get onboardingNext => 'Weiter';
+
+  @override
+  String get onboardingBack => 'Zurück';
+
+  @override
+  String get onboardingFinish => 'Loslegen';
+
+  @override
+  String get onboardingHeightLabel => 'Größe (cm)';
+
+  @override
+  String get onboardingGenderLabel => 'Geschlecht';
+
+  @override
+  String get genderMale => 'Männlich';
+
+  @override
+  String get genderFemale => 'Weiblich';
+
+  @override
+  String get genderDiverse => 'Divers';
 }

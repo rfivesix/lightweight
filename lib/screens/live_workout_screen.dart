@@ -379,66 +379,6 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     );
   }
 
-  void _editPauseTime(RoutineExercise routineExercise) async {
-    final l10n = AppLocalizations.of(context)!;
-    final manager = Provider.of<WorkoutSessionManager>(context, listen: false);
-    final currentPause = manager.pauseTimes[routineExercise.id!];
-    final controller =
-        TextEditingController(text: currentPause?.toString() ?? '');
-
-    final result = await showGlassBottomMenu<int?>(
-      context: context,
-      title: l10n.editPauseTimeTitle,
-      contentBuilder: (ctx, close) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              autofocus: true,
-              decoration: InputDecoration(
-                labelText: l10n.pauseInSeconds,
-                hintText: "z.B. 90",
-                suffixText: "s",
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      close();
-                      Navigator.of(ctx).pop(null);
-                    },
-                    child: Text(l10n.cancel),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () {
-                      final val = int.tryParse(controller.text);
-                      close();
-                      Navigator.of(ctx).pop(val);
-                    },
-                    child: Text(l10n.save),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        );
-      },
-    );
-
-    if (result != null) {
-      manager.updatePauseTime(routineExercise.id!, result);
-    }
-  }
-
-  // NEUE HELFER-METHODE für den leeren Zustand
   Widget _buildEmptyState(AppLocalizations l10n) {
     return Center(
       child: Padding(

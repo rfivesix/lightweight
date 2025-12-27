@@ -79,10 +79,10 @@ class _MealScreenState extends State<MealScreen> {
       if (fi == null) continue;
 
       final factor = qty / 100.0;
-      final itemKcal = (fi.calories ?? 0) * factor;
-      final itemC = (fi.carbs ?? 0) * factor;
-      final itemF = (fi.fat ?? 0) * factor;
-      final itemP = (fi.protein ?? 0) * factor;
+      final itemKcal = (fi.calories) * factor;
+      final itemC = (fi.carbs) * factor;
+      final itemF = (fi.fat) * factor;
+      final itemP = (fi.protein) * factor;
 
       kcal += itemKcal.round();
       c += itemC;
@@ -837,10 +837,10 @@ class _IngredientCard extends StatelessWidget {
       double c = 0, f = 0, p = 0;
       if (fi != null) {
         final factor = qty / 100.0;
-        kcal = ((fi.calories ?? 0) * factor).round();
-        c = (fi.carbs ?? 0) * factor;
-        f = (fi.fat ?? 0) * factor;
-        p = (fi.protein ?? 0) * factor;
+        kcal = ((fi.calories) * factor).round();
+        c = (fi.carbs) * factor;
+        f = (fi.fat) * factor;
+        p = (fi.protein) * factor;
       }
 
       final title = InkWell(

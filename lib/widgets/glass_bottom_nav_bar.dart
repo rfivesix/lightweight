@@ -71,13 +71,6 @@ class GlassBottomNavBar extends StatelessWidget {
     );
   }
 
-  /// Berechnet die Align-X-Position (-1..1) für den selektierten Bubble-Hintergrund.
-  double _alignmentXForIndex(int index, int count) {
-    if (count <= 0) return 0;
-    final centerFrac = (index + 0.5) / count; // 0..1
-    return centerFrac * 2 - 1; // -1..1
-  }
-
   /// Mappt eine lokale X-Position (0..width) auf den Tab-Index.
   int _indexFromDx(double dx, double width, int itemCount) {
     if (width <= 0 || itemCount <= 0) return 0;

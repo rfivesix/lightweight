@@ -96,11 +96,6 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
     });
   }
 
-  Future<void> _deleteSession(int id) async {
-    await DatabaseHelper.instance.deleteMeasurementSession(id);
-    _loadMeasurements();
-  }
-
   void _navigateToCreateMeasurement() {
     Navigator.of(context)
         .push(

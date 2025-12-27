@@ -1,13 +1,9 @@
 // lib/data/workout_database_helper.dart
-// VOLLSTÄNDIGER CODE
 
 import 'dart:convert';
-import 'dart:io';
-import 'package:flutter/services.dart';
-import 'package:lightweight/util/mapping_prefs.dart';
-import 'package:path/path.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:drift/drift.dart' as drift;
+import 'package:lightweight/data/database_helper.dart';
+import 'package:lightweight/data/drift_database.dart' as db;
 import 'package:lightweight/models/exercise.dart';
 import 'package:lightweight/models/routine.dart';
 import 'package:lightweight/models/routine_exercise.dart';
@@ -17,1171 +13,975 @@ import 'package:lightweight/models/workout_log.dart';
 
 class WorkoutDatabaseHelper {
   static final WorkoutDatabaseHelper instance = WorkoutDatabaseHelper._init();
-  static Database? _database;
+
   WorkoutDatabaseHelper._init();
 
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDB('vita_training.db');
-    return _database!;
+  // Zugriff auf die zentrale Drift-Instanz aus DatabaseHelper
+  Future<db.AppDatabase> get database async => DatabaseHelper.instance.database;
+
+  // ===========================================================================
+  // HILFSMETHODEN (Mapping & IDs)
+  // ===========================================================================
+
+  /// Wandelt eine lokale ID (int) in die UUID (String) um, die für Relationen benötigt wird.
+  Future<String?> _getUuidFromLocalId<T extends drift.Table, D>(
+    drift.TableInfo<T, D> table,
+    int localId,
+  ) async {
+    final dbInstance = await database;
+    // Annahme: Alle unsere Tabellen haben 'localId' und 'id' (UUID) via HybridId Mixin
+    final query = dbInstance.select(table)
+      ..where((tbl) => (tbl as dynamic).localId.equals(localId));
+    final row = await query.getSingleOrNull();
+    return (row as dynamic)?.id;
   }
 
-  Future<Database> _initDB(String fileName) async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, fileName);
-
-    // --- KORREKTUR START: Versionierungslogik für Asset-DB ---
-    const int currentAssetVersion =
-        9; // Erhöhe diese Zahl, wenn du die vita_training.db in den Assets aktualisierst
-    const String assetVersionKey = 'training_db_asset_version';
-
-    final prefs = await SharedPreferences.getInstance();
-    final lastCopiedVersion = prefs.getInt(assetVersionKey) ?? 0;
-    final exists = await databaseExists(path);
-
-    if (!exists || lastCopiedVersion < currentAssetVersion) {
-      print(
-        "Datenbank '$fileName' ist veraltet (Lokal: v$lastCopiedVersion, Asset: v$currentAssetVersion) oder nicht vorhanden. Kopiere neu...",
-      );
-      try {
-        // Alte DB löschen, falls vorhanden, um eine saubere Kopie zu gewährleisten
-        if (exists) {
-          await deleteDatabase(path);
-        }
-        await Directory(dirname(path)).create(recursive: true);
-        ByteData data = await rootBundle.load(join('assets/db', fileName));
-        List<int> bytes = data.buffer.asUint8List(
-          data.offsetInBytes,
-          data.lengthInBytes,
-        );
-        await File(path).writeAsBytes(bytes, flush: true);
-
-        // Neue Version in SharedPreferences speichern
-        await prefs.setInt(assetVersionKey, currentAssetVersion);
-        print(
-            "Datenbank '$fileName' erfolgreich auf v$currentAssetVersion kopiert.");
-      } catch (e) {
-        print("Fehler beim Kopieren der Datenbank '$fileName': $e");
-        rethrow;
-      }
-    } else {
-      print(
-          "Bestehende und aktuelle Datenbank '$fileName' (v$lastCopiedVersion) gefunden.");
-    }
-    // --- KORREKTUR ENDE ---
-
-    return await openDatabase(path, version: 11, onUpgrade: _upgradeDB);
+  /// Wandelt eine UUID in die lokale ID um (falls nötig)
+  Future<int?> _getLocalIdFromUuid<T extends drift.Table, D>(
+    drift.TableInfo<T, D> table,
+    String uuid,
+  ) async {
+    final dbInstance = await database;
+    final query = dbInstance.select(table)
+      ..where((tbl) => (tbl as dynamic).id.equals(uuid));
+    final row = await query.getSingleOrNull();
+    return (row as dynamic)?.localId;
   }
 
-  Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
-    print("Führe DB-Upgrade von v$oldVersion auf v$newVersion aus...");
-    if (oldVersion < 2) {
-      await db
-          .execute('ALTER TABLE set_logs ADD COLUMN rest_time_seconds INTEGER')
-          .catchError((_) {});
-      await db
-          .execute('ALTER TABLE set_logs ADD COLUMN is_completed INTEGER')
-          .catchError((_) {});
-    }
-    if (oldVersion < 3) {
-      await db
-          .execute(
-            "ALTER TABLE workout_logs ADD COLUMN status TEXT NOT NULL DEFAULT 'completed'",
-          )
-          .catchError((_) {});
-    }
-    if (oldVersion < 4) {
-      await db
-          .execute(
-            "ALTER TABLE routine_exercises ADD COLUMN pause_seconds INTEGER",
-          )
-          .catchError((_) {});
-    }
-    if (oldVersion < 5) {
-      await db
-          .execute("ALTER TABLE set_logs ADD COLUMN log_order INTEGER")
-          .catchError((_) {});
-    }
-    if (oldVersion < 6) {
-      print("Upgrade DB auf v6: Entferne set_index aus set_logs...");
-      await db.transaction((txn) async {
-        await txn.execute('ALTER TABLE set_logs RENAME TO set_logs_old');
-        await txn.execute('''
-          CREATE TABLE set_logs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            workout_log_id INTEGER,
-            exercise_name TEXT,
-            set_type TEXT,
-            weight_kg REAL,
-            reps INTEGER,
-            rest_time_seconds INTEGER,
-            is_completed INTEGER,
-            log_order INTEGER
-          )
-        ''');
-        await txn.execute('''
-          INSERT INTO set_logs (id, workout_log_id, exercise_name, set_type, weight_kg, reps, rest_time_seconds, is_completed, log_order)
-          SELECT id, workout_log_id, exercise_name, set_type, weight_kg, reps, rest_time_seconds, is_completed, log_order FROM set_logs_old
-        ''');
-        await txn.execute('DROP TABLE set_logs_old');
-      });
-    }
-    if (oldVersion < 7) {
-      print("Upgrade DB auf v7: Füge Detail-Spalten zu set_logs hinzu...");
-      await db
-          .execute("ALTER TABLE set_logs ADD COLUMN notes TEXT")
-          .catchError((_) {});
-      await db
-          .execute("ALTER TABLE set_logs ADD COLUMN distance_km REAL")
-          .catchError((_) {});
-      await db
-          .execute("ALTER TABLE set_logs ADD COLUMN duration_seconds INTEGER")
-          .catchError((_) {});
-      await db
-          .execute("ALTER TABLE set_logs ADD COLUMN rpe INTEGER")
-          .catchError((_) {});
-    }
-    if (oldVersion < 8) {
-      print("Upgrade DB auf v8: Füge superset_id zu set_logs hinzu...");
-      await db
-          .execute("ALTER TABLE set_logs ADD COLUMN superset_id INTEGER")
-          .catchError((_) {});
-    }
-    if (oldVersion < 9) {
-      print("Upgrade DB auf v9: Erstelle exercise_mapping Tabelle...");
-      await db.execute('''
-        CREATE TABLE exercise_mapping (
-          external_name TEXT PRIMARY KEY COLLATE NOCASE,
-          target_name TEXT NOT NULL
-        )
-      ''');
-      final oldMappings = await MappingPrefs.load();
-      if (oldMappings.isNotEmpty) {
-        print("Migriere ${oldMappings.length} bestehende Mappings...");
-        final batch = db.batch();
-        for (final entry in oldMappings.entries) {
-          batch.insert(
-              'exercise_mapping',
-              {
-                'external_name': entry.key,
-                'target_name': entry.value,
-              },
-              conflictAlgorithm: ConflictAlgorithm.replace);
-        }
-        await batch.commit(noResult: true);
-        print("Migration abgeschlossen.");
+  List<String> _parseMuscleList(String? jsonStr) {
+    if (jsonStr == null || jsonStr.isEmpty) return [];
+    try {
+      final decoded = jsonDecode(jsonStr);
+      if (decoded is List) {
+        return decoded.map((e) => e.toString()).toList();
       }
-    }
-    if (oldVersion < 10) {
-      print("Upgrade DB auf v10: Füge is_custom zu exercises hinzu...");
-      try {
-        // Füge die neue Spalte hinzu, Standardwert 0 (nicht custom)
-        await db.execute(
-          'ALTER TABLE exercises ADD COLUMN is_custom INTEGER NOT NULL DEFAULT 0',
-        );
-        print("Spalte 'is_custom' erfolgreich zu 'exercises' hinzugefügt.");
-      } catch (e) {
-        print(
-            "Fehler beim Hinzufügen der Spalte 'is_custom' (evtl. existiert sie schon): $e");
+      // Fallback für CSV (Legacy Daten)
+      if (jsonStr.contains(',')) {
+        return jsonStr.split(',').map((e) => e.trim()).toList();
       }
-    }
-    if (oldVersion < 11) {
-      print(
-          "Upgrade DB auf v11: Fehlende Spalten für Custom Exercises hinzufügen...");
-
-      final columnsToAdd = [
-        "name_de TEXT",
-        "name_en TEXT",
-        "description_de TEXT",
-        "description_en TEXT",
-        "category_name TEXT",
-        "primaryMuscles TEXT",
-        "secondaryMuscles TEXT",
-        "image_path TEXT"
-      ];
-
-      for (var col in columnsToAdd) {
-        try {
-          await db.execute("ALTER TABLE exercises ADD COLUMN $col");
-        } catch (e) {
-          // Spalte existiert evtl. schon, Fehler ignorieren
-        }
-      }
-    }
-    print("DB-Upgrade auf v$newVersion erfolgreich abgeschlossen.");
+    } catch (_) {}
+    return [];
   }
 
-  // HINZUGEFÜGT: Neue Methode zur Wiederherstellung
-  /// Sucht nach einem laufenden Workout in der DB. Es sollte immer nur eines geben.
-  Future<WorkoutLog?> getOngoingWorkout() async {
-    final db = await database;
-    final maps = await db.query(
-      'workout_logs',
-      where: "status = 'ongoing'",
-      orderBy: 'start_time DESC',
-      limit: 1,
+  /// Mappt eine Drift Exercise Row auf das App Model
+  Exercise _mapExerciseToModel(db.Exercise row) {
+    return Exercise(
+      id: row.localId,
+      nameDe: row.nameDe,
+      nameEn: row.nameEn,
+      descriptionDe: row.descriptionDe ?? '',
+      descriptionEn: row.descriptionEn ?? '',
+      categoryName: row.categoryName ?? 'Other',
+      imagePath: row.imagePath,
+      primaryMuscles: _parseMuscleList(row.musclesPrimary),
+      secondaryMuscles: _parseMuscleList(row.musclesSecondary),
     );
-
-    if (maps.isNotEmpty) {
-      // Wenn ein laufendes Workout gefunden wird, holen wir auch alle zugehörigen Sätze.
-      final logId = maps.first['id'] as int;
-      return getWorkoutLogById(logId);
-    }
-
-    return null;
   }
 
-  Future<Map<String, String>> getExerciseMappings() async {
-    final db = await database;
-    final maps = await db.query('exercise_mapping');
-    return {
-      for (var map in maps)
-        (map['external_name'] as String): (map['target_name'] as String),
-    };
-  }
+  // ===========================================================================
+  // EXERCISES
+  // ===========================================================================
 
-  // --- EXERCISE MANAGEMENT ---
   Future<List<String>> getAllCategories() async {
-    final db = await database;
+    final dbInstance = await database;
+    final query = dbInstance.selectOnly(dbInstance.exercises, distinct: true)
+      ..addColumns([dbInstance.exercises.categoryName]);
 
-    // 1. Kategorien aus den Standard-Daten (View)
-    final List<Map<String, dynamic>> standardMaps = await db.query(
-      'exercises_flat',
-      columns: ['category_name'],
-      distinct: true,
-    );
+    final rows = await query.get();
+    final categories = rows
+        .map((r) => r.read(dbInstance.exercises.categoryName))
+        .where((c) => c != null && c.isNotEmpty)
+        .cast<String>()
+        .toList();
 
-    // 2. Kategorien aus den eigenen Übungen (Tabelle)
-    final List<Map<String, dynamic>> customMaps = await db.query(
-      'exercises',
-      columns: ['category_name'],
-      where: 'is_custom = 1',
-      distinct: true,
-    );
-
-    final Set<String> categories = {};
-
-    for (var map in standardMaps) {
-      if (map['category_name'] != null) {
-        categories.add(map['category_name'] as String);
-      }
-    }
-    for (var map in customMaps) {
-      if (map['category_name'] != null) {
-        categories.add(map['category_name'] as String);
-      }
-    }
-
-    final sortedList = categories.toList()..sort();
-    return sortedList;
+    return categories..sort();
   }
 
-  Future<List<Exercise>> searchExercises(
-      {String query = '', List<String> selectedCategories = const []}) async {
-    final db = await database;
+  Future<List<String>> getAllMuscleGroups() async {
+    final dbInstance = await database;
+    final exercises = await dbInstance.select(dbInstance.exercises).get();
+    final Set<String> muscles = {};
 
-    // --- TEIL A: Standard-Daten aus der View laden ---
-    List<String> whereClausesFlat = [];
-    List<dynamic> whereArgsFlat = [];
+    for (var ex in exercises) {
+      muscles.addAll(_parseMuscleList(ex.musclesPrimary));
+      muscles.addAll(_parseMuscleList(ex.musclesSecondary));
+    }
+    return muscles.toList()..sort();
+  }
+
+  Future<List<Exercise>> searchExercises({
+    String query = '',
+    List<String> selectedCategories = const [],
+  }) async {
+    final dbInstance = await database;
+
+    var stmt = dbInstance.select(dbInstance.exercises);
 
     if (query.isNotEmpty) {
-      // Hinweis: In der View heißen die Spalten evtl. noch alt, aber dein Model erwartet name_de/name_en.
-      // Die View exercises_flat mappt das oft schon. Wir suchen hier im Standard.
-      whereClausesFlat.add('(name_de LIKE ? OR name_en LIKE ?)');
-      whereArgsFlat.addAll(['%$query%', '%$query%']);
+      stmt = stmt
+        ..where(
+            (tbl) => tbl.nameDe.like('%$query%') | tbl.nameEn.like('%$query%'));
     }
+
     if (selectedCategories.isNotEmpty) {
-      String placeholders =
-          List.filled(selectedCategories.length, '?').join(', ');
-      whereClausesFlat.add('category_name IN ($placeholders)');
-      whereArgsFlat.addAll(selectedCategories);
-    }
-    String whereStringFlat =
-        whereClausesFlat.isNotEmpty ? whereClausesFlat.join(' AND ') : '';
-
-    final List<Map<String, dynamic>> standardMaps = await db.query(
-      'exercises_flat',
-      where: whereStringFlat.isEmpty ? null : whereStringFlat,
-      whereArgs: whereArgsFlat.isEmpty ? null : whereArgsFlat,
-    );
-
-    // --- TEIL B: Eigene Daten aus der Tabelle laden ---
-    List<String> whereClausesCustom = ['is_custom = 1']; // Nur Custom
-    List<dynamic> whereArgsCustom = [];
-
-    if (query.isNotEmpty) {
-      whereClausesCustom.add('(name_de LIKE ? OR name_en LIKE ?)');
-      whereArgsCustom.addAll(['%$query%', '%$query%']);
-    }
-    if (selectedCategories.isNotEmpty) {
-      String placeholders =
-          List.filled(selectedCategories.length, '?').join(', ');
-      whereClausesCustom.add('category_name IN ($placeholders)');
-      whereArgsCustom.addAll(selectedCategories);
+      stmt = stmt..where((tbl) => tbl.categoryName.isIn(selectedCategories));
     }
 
-    final List<Map<String, dynamic>> customMaps = await db.query(
-      'exercises',
-      where: whereClausesCustom.join(' AND '),
-      whereArgs: whereArgsCustom,
-    );
+    stmt = stmt..orderBy([(t) => drift.OrderingTerm(expression: t.nameDe)]);
 
-    // --- TEIL C: Zusammenfügen ---
-    List<Exercise> allExercises = [];
-
-    // Custom zuerst (optional)
-    for (var map in customMaps) {
-      allExercises.add(Exercise.fromMap(map));
-    }
-    for (var map in standardMaps) {
-      allExercises.add(Exercise.fromMap(map));
-    }
-
-    // Sortieren: Custom zuerst, dann alphabetisch
-    allExercises.sort((a, b) {
-      // Sortiere nach Name DE
-      return a.nameDe.toLowerCase().compareTo(b.nameDe.toLowerCase());
-    });
-
-    return allExercises;
+    final rows = await stmt.get();
+    return rows.map(_mapExerciseToModel).toList();
   }
 
   Future<Exercise?> getExerciseByName(String name) async {
-    final db = await database;
+    final dbInstance = await database;
+    final row = await (dbInstance.select(dbInstance.exercises)
+          ..where((tbl) => tbl.nameDe.equals(name) | tbl.nameEn.equals(name))
+          ..limit(1))
+        .getSingleOrNull();
 
-    // 1. Zuerst in den Custom Exercises suchen (Priorität)
-    final customMaps = await db.query(
-      'exercises',
-      where: 'is_custom = 1 AND (name_de = ? OR name_en = ?)',
-      whereArgs: [name, name],
-      limit: 1,
-    );
-    if (customMaps.isNotEmpty) {
-      return Exercise.fromMap(customMaps.first);
-    }
-
-    // 2. Fallback auf Standard View
-    final standardMaps = await db.query('exercises_flat',
-        where: 'name_de = ? OR name_en = ?', whereArgs: [name, name], limit: 1);
-
-    if (standardMaps.isNotEmpty) {
-      return Exercise.fromMap(standardMaps.first);
-    }
-
-    return null;
+    return row != null ? _mapExerciseToModel(row) : null;
   }
 
-  // --- ROUTINE MANAGEMENT ---
-  Future<Routine> createRoutine(String name) async {
-    final db = await database;
-    final id = await db.insert(
-        'routines',
-        {
-          'name': name,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace);
-    return Routine(id: id, name: name);
+  Future<Exercise> insertExercise(Exercise exercise) async {
+    final dbInstance = await database;
+
+    final companion = db.ExercisesCompanion(
+      nameDe: drift.Value(exercise.nameDe),
+      nameEn: drift.Value(exercise.nameEn),
+      descriptionDe: drift.Value(exercise.descriptionDe),
+      descriptionEn: drift.Value(exercise.descriptionEn),
+      categoryName: drift.Value(exercise.categoryName),
+      musclesPrimary: drift.Value(jsonEncode(exercise.primaryMuscles)),
+      musclesSecondary: drift.Value(jsonEncode(exercise.secondaryMuscles)),
+      imagePath: drift.Value(exercise.imagePath),
+      isCustom: const drift.Value(true),
+    );
+
+    final row =
+        await dbInstance.into(dbInstance.exercises).insertReturning(companion);
+    return _mapExerciseToModel(row);
   }
 
-  Future<void> updateRoutineName(int routineId, String newName) async {
-    final db = await database;
-    await db.update(
-      'routines',
-      {'name': newName},
-      where: 'id = ?',
-      whereArgs: [routineId],
-    );
+  Future<List<Exercise>> getCustomExercises() async {
+    final dbInstance = await database;
+    final rows = await (dbInstance.select(dbInstance.exercises)
+          ..where((tbl) => tbl.isCustom.equals(true)))
+        .get();
+    return rows.map(_mapExerciseToModel).toList();
   }
 
-  Future<RoutineExercise?> addExerciseToRoutine(
-    int routineId,
-    int exerciseId,
-  ) async {
-    final db = await database;
-    // --- START FIX ---
-    // Query the VIEW 'exercises_flat' instead of the TABLE 'exercises'
-    // to ensure all necessary fields (like muscle groups) are correctly loaded.
-    final exerciseMaps = await db.query(
-      'exercises_flat', // CORRECT: Use the view
-      where: 'id = ?',
-      whereArgs: [exerciseId],
-    );
-    // --- END FIX ---
-
-    if (exerciseMaps.isEmpty) return null;
-    final result = await db.rawQuery(
-      'SELECT MAX(exercise_order) as max_order FROM routine_exercises WHERE routine_id = ?',
-      [routineId],
-    );
-    final maxOrder = (result.first['max_order'] as int?) ?? -1;
-    final routineExerciseId = await db.insert('routine_exercises', {
-      'routine_id': routineId,
-      'exercise_id': exerciseId,
-      'exercise_order': maxOrder + 1,
+  Future<void> importCustomExercises(List<Exercise> exercises) async {
+    final dbInstance = await database;
+    await dbInstance.batch((batch) {
+      for (final ex in exercises) {
+        batch.insert(
+          dbInstance.exercises,
+          db.ExercisesCompanion(
+            nameDe: drift.Value(ex.nameDe),
+            nameEn: drift.Value(ex.nameEn),
+            descriptionDe: drift.Value(ex.descriptionDe),
+            descriptionEn: drift.Value(ex.descriptionEn),
+            categoryName: drift.Value(ex.categoryName),
+            musclesPrimary: drift.Value(jsonEncode(ex.primaryMuscles)),
+            musclesSecondary: drift.Value(jsonEncode(ex.secondaryMuscles)),
+            imagePath: drift.Value(ex.imagePath),
+            isCustom: const drift.Value(true),
+          ),
+          mode: drift.InsertMode.insertOrReplace,
+        );
+      }
     });
-    final List<SetTemplate> newTemplates = [];
-    for (int i = 0; i < 3; i++) {
-      final setId = await db.insert('routine_set_templates', {
-        'routine_exercise_id': routineExerciseId,
-        'set_index': i,
-        'set_type': 'normal',
-      });
-      newTemplates.add(
-        SetTemplate(id: setId, setType: 'normal', targetReps: '8-12'),
-      );
-    }
-    return RoutineExercise(
-      id: routineExerciseId,
-      exercise: Exercise.fromMap(exerciseMaps.first),
-      setTemplates: newTemplates,
-    );
   }
 
-  Future<void> removeExerciseFromRoutine(int routineExerciseId) async {
-    final db = await database;
-    await db.delete(
-      'routine_exercises',
-      where: 'id = ?',
-      whereArgs: [routineExerciseId],
-    );
-  }
-
-  Future<void> updateExerciseOrder(
-    int routineId,
-    List<RoutineExercise> orderedExercises,
-  ) async {
-    final db = await database;
-    final batch = db.batch();
-    for (int i = 0; i < orderedExercises.length; i++) {
-      final routineExercise = orderedExercises[i];
-      batch.update(
-        'routine_exercises',
-        {'exercise_order': i},
-        where: 'id = ?',
-        whereArgs: [routineExercise.id],
-      );
-    }
-    await batch.commit(noResult: true);
-  }
+  // ===========================================================================
+  // ROUTINES
+  // ===========================================================================
 
   Future<List<Routine>> getAllRoutines() async {
-    final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'routines',
-      orderBy: 'name ASC',
-    );
-    return List.generate(
-      maps.length,
-      (i) => Routine(id: maps[i]['id'], name: maps[i]['name']),
-    );
+    final dbInstance = await database;
+    final rows = await (dbInstance.select(dbInstance.routines)
+          ..orderBy([(t) => drift.OrderingTerm(expression: t.name)]))
+        .get();
+
+    return rows.map((r) => Routine(id: r.localId, name: r.name)).toList();
   }
 
-// In lib/data/workout_database_helper.dart
+  Future<List<Routine>> getAllRoutinesWithDetails() async {
+    final basicRoutines = await getAllRoutines();
+    final detailed = <Routine>[];
+    for (var r in basicRoutines) {
+      if (r.id != null) {
+        final d = await getRoutineById(r.id!);
+        if (d != null) detailed.add(d);
+      }
+    }
+    return detailed;
+  }
 
   Future<Routine?> getRoutineById(int id) async {
-    final db = await database;
-    final routineMaps =
-        await db.query('routines', where: 'id = ?', whereArgs: [id]);
-    if (routineMaps.isEmpty) return null;
+    final dbInstance = await database;
 
-    final routineExerciseMaps = await db.query('routine_exercises',
-        where: 'routine_id = ?',
-        whereArgs: [id],
-        orderBy: 'exercise_order ASC');
+    // 1. Routine laden
+    final routineRow = await (dbInstance.select(dbInstance.routines)
+          ..where((tbl) => tbl.localId.equals(id)))
+        .getSingleOrNull();
 
-    final List<RoutineExercise> routineExercises = [];
-    for (final reMap in routineExerciseMaps) {
-      final routineExerciseId = reMap['id'] as int;
-      final exerciseId = reMap['exercise_id'] as int;
+    if (routineRow == null) return null;
 
-      // --- FIX START: Intelligentes Laden der Übungsdetails ---
+    // 2. RoutineExercises laden
+    final routineExercisesQuery = dbInstance
+        .select(dbInstance.routineExercises)
+        .join([
+      drift.innerJoin(
+          dbInstance.exercises,
+          dbInstance.exercises.id
+              .equalsExp(dbInstance.routineExercises.exerciseId))
+    ])
+      ..where(dbInstance.routineExercises.routineId.equals(routineRow.id))
+      ..orderBy([
+        drift.OrderingTerm(expression: dbInstance.routineExercises.orderIndex)
+      ]);
 
-      // 1. Versuch: Direkt aus der Tabelle laden (für Custom Exercises essentiell)
-      List<Map<String, dynamic>> exerciseMaps =
-          await db.query('exercises', where: 'id = ?', whereArgs: [exerciseId]);
+    final reRows = await routineExercisesQuery.get();
+    final List<RoutineExercise> exercisesList = [];
 
-      bool usableDataFound = false;
-      if (exerciseMaps.isNotEmpty) {
-        final row = exerciseMaps.first;
-        // Wir prüfen, ob wir hier Namen finden (Indikator für Custom Exercise mit unseren neuen Spalten)
-        if ((row['name_de'] != null && row['name_de'].toString().isNotEmpty) ||
-            (row['name_en'] != null && row['name_en'].toString().isNotEmpty)) {
-          usableDataFound = true;
-        }
-      }
+    for (final row in reRows) {
+      final reData = row.readTable(dbInstance.routineExercises);
+      final exData = row.readTable(dbInstance.exercises);
 
-      // 2. Versuch: Wenn Tabelle keine Namen lieferte (Standard-Übung), fallback auf die View
-      if (!usableDataFound) {
-        exerciseMaps = await db
-            .query('exercises_flat', where: 'id = ?', whereArgs: [exerciseId]);
-      }
-      // --- FIX ENDE ---
+      // 3. SetTemplates laden
+      final templates = await (dbInstance.select(dbInstance.routineSetTemplates)
+            ..where((tbl) => tbl.routineExerciseId.equals(reData.id))
+            ..orderBy([
+              (t) => drift.OrderingTerm(expression: t.localId)
+            ])) // oder index spalte wenn vorhanden
+          .get();
 
-      if (exerciseMaps.isEmpty) continue;
+      final setTemplates = templates
+          .map((t) => SetTemplate(
+                id: t.localId,
+                setType: t.setType,
+                targetReps: t.targetReps,
+                targetWeight: t.targetWeight,
+              ))
+          .toList();
 
-      final setTemplateMaps = await db.query('routine_set_templates',
-          where: 'routine_exercise_id = ?',
-          whereArgs: [routineExerciseId],
-          orderBy: 'set_index ASC');
-      final setTemplates =
-          setTemplateMaps.map((stMap) => SetTemplate.fromMap(stMap)).toList();
-
-      routineExercises.add(RoutineExercise(
-        id: routineExerciseId,
-        exercise: Exercise.fromMap(exerciseMaps.first),
+      exercisesList.add(RoutineExercise(
+        id: reData.localId,
+        exercise: _mapExerciseToModel(exData),
         setTemplates: setTemplates,
-        pauseSeconds: reMap['pause_seconds'] as int?,
+        pauseSeconds: reData.pauseSeconds,
       ));
     }
 
     return Routine(
-        id: id,
-        name: routineMaps.first['name'] as String,
-        exercises: routineExercises);
-  }
-
-  Future<void> updateSetTemplate(SetTemplate setTemplate) async {
-    final db = await database;
-    await db.update(
-      'routine_set_templates',
-      {
-        'set_type': setTemplate.setType,
-        'target_reps': setTemplate.targetReps,
-        'target_weight': setTemplate.targetWeight,
-      },
-      where: 'id = ?',
-      whereArgs: [setTemplate.id],
+      id: routineRow.localId,
+      name: routineRow.name,
+      exercises: exercisesList,
     );
   }
 
+  Future<Routine> createRoutine(String name) async {
+    final dbInstance = await database;
+    final row = await dbInstance.into(dbInstance.routines).insertReturning(
+          db.RoutinesCompanion(name: drift.Value(name)),
+        );
+    return Routine(id: row.localId, name: row.name);
+  }
+
+  Future<void> updateRoutineName(int routineId, String newName) async {
+    final dbInstance = await database;
+    await (dbInstance.update(dbInstance.routines)
+          ..where((tbl) => tbl.localId.equals(routineId)))
+        .write(db.RoutinesCompanion(name: drift.Value(newName)));
+  }
+
+  Future<RoutineExercise?> addExerciseToRoutine(
+      int routineId, int exerciseId) async {
+    final dbInstance = await database;
+
+    // UUIDs holen
+    final routineUuid =
+        await _getUuidFromLocalId(dbInstance.routines, routineId);
+    final exerciseUuid =
+        await _getUuidFromLocalId(dbInstance.exercises, exerciseId);
+
+    if (routineUuid == null || exerciseUuid == null) return null;
+
+    // Max Order ermitteln
+    final maxOrderQuery = dbInstance.selectOnly(dbInstance.routineExercises)
+      ..addColumns([dbInstance.routineExercises.orderIndex.max()])
+      ..where(dbInstance.routineExercises.routineId.equals(routineUuid));
+    final maxOrderResult = await maxOrderQuery.getSingle();
+    final maxOrder =
+        maxOrderResult.read(dbInstance.routineExercises.orderIndex.max()) ?? -1;
+
+    // RoutineExercise einfügen
+    final reRow =
+        await dbInstance.into(dbInstance.routineExercises).insertReturning(
+              db.RoutineExercisesCompanion(
+                routineId: drift.Value(routineUuid),
+                exerciseId: drift.Value(exerciseUuid),
+                orderIndex: drift.Value(maxOrder + 1),
+              ),
+            );
+
+    // Standard SetTemplates einfügen (3 Sets)
+    final templates = <SetTemplate>[];
+    for (int i = 0; i < 3; i++) {
+      final stRow =
+          await dbInstance.into(dbInstance.routineSetTemplates).insertReturning(
+                db.RoutineSetTemplatesCompanion(
+                  routineExerciseId: drift.Value(reRow.id),
+                  setType: const drift.Value('normal'),
+                  targetReps: const drift.Value('8-12'),
+                ),
+              );
+      templates.add(SetTemplate(
+          id: stRow.localId, setType: 'normal', targetReps: '8-12'));
+    }
+
+    // Exercise Daten laden für Rückgabe
+    final exRow = await (dbInstance.select(dbInstance.exercises)
+          ..where((tbl) => tbl.id.equals(exerciseUuid)))
+        .getSingle();
+
+    return RoutineExercise(
+      id: reRow.localId,
+      exercise: _mapExerciseToModel(exRow),
+      setTemplates: templates,
+    );
+  }
+
+  Future<void> removeExerciseFromRoutine(int routineExerciseId) async {
+    final dbInstance = await database;
+    // OnDelete Cascade in DB Definition sollte Kinder löschen
+    await (dbInstance.delete(dbInstance.routineExercises)
+          ..where((tbl) => tbl.localId.equals(routineExerciseId)))
+        .go();
+  }
+
+  Future<void> updateExerciseOrder(
+      int routineId, List<RoutineExercise> orderedExercises) async {
+    final dbInstance = await database;
+    await dbInstance.transaction(() async {
+      for (int i = 0; i < orderedExercises.length; i++) {
+        final re = orderedExercises[i];
+        if (re.id != null) {
+          await (dbInstance.update(dbInstance.routineExercises)
+                ..where((tbl) => tbl.localId.equals(re.id!)))
+              .write(db.RoutineExercisesCompanion(orderIndex: drift.Value(i)));
+        }
+      }
+    });
+  }
+
+  Future<void> updateSetTemplate(SetTemplate setTemplate) async {
+    if (setTemplate.id == null) return;
+    final dbInstance = await database;
+    await (dbInstance.update(dbInstance.routineSetTemplates)
+          ..where((tbl) => tbl.localId.equals(setTemplate.id!)))
+        .write(db.RoutineSetTemplatesCompanion(
+      setType: drift.Value(setTemplate.setType),
+      targetReps: drift.Value(setTemplate.targetReps),
+      targetWeight: drift.Value(setTemplate.targetWeight),
+    ));
+  }
+
   Future<void> replaceSetTemplatesForExercise(
-    int routineExerciseId,
-    List<SetTemplate> newTemplates,
-  ) async {
-    final db = await database;
-    await db.transaction((txn) async {
-      await txn.delete(
-        'routine_set_templates',
-        where: 'routine_exercise_id = ?',
-        whereArgs: [routineExerciseId],
-      );
-      for (int i = 0; i < newTemplates.length; i++) {
-        final set = newTemplates[i];
-        await txn.insert('routine_set_templates', {
-          'routine_exercise_id': routineExerciseId,
-          'set_index': i,
-          'set_type': set.setType,
-          'target_reps': set.targetReps,
-          'target_weight': set.targetWeight,
-        });
+      int routineExerciseId, List<SetTemplate> newTemplates) async {
+    final dbInstance = await database;
+    final reUuid = await _getUuidFromLocalId(
+        dbInstance.routineExercises, routineExerciseId);
+    if (reUuid == null) return;
+
+    await dbInstance.transaction(() async {
+      // Löschen
+      await (dbInstance.delete(dbInstance.routineSetTemplates)
+            ..where((tbl) => tbl.routineExerciseId.equals(reUuid)))
+          .go();
+
+      // Neu einfügen
+      for (final t in newTemplates) {
+        await dbInstance.into(dbInstance.routineSetTemplates).insert(
+              db.RoutineSetTemplatesCompanion(
+                routineExerciseId: drift.Value(reUuid),
+                setType: drift.Value(t.setType),
+                targetReps: drift.Value(t.targetReps),
+                targetWeight: drift.Value(t.targetWeight),
+              ),
+            );
       }
     });
   }
 
   Future<void> deleteRoutine(int routineId) async {
-    final db = await database;
-    await db.transaction((txn) async {
-      final reMaps = await txn.query(
-        'routine_exercises',
-        where: 'routine_id = ?',
-        whereArgs: [routineId],
-      );
-      for (var reMap in reMaps) {
-        await txn.delete(
-          'routine_set_templates',
-          where: 'routine_exercise_id = ?',
-          whereArgs: [reMap['id']],
-        );
-      }
-      await txn.delete(
-        'routine_exercises',
-        where: 'routine_id = ?',
-        whereArgs: [routineId],
-      );
-      await txn.delete('routines', where: 'id = ?', whereArgs: [routineId]);
-    });
+    final dbInstance = await database;
+    await (dbInstance.delete(dbInstance.routines)
+          ..where((tbl) => tbl.localId.equals(routineId)))
+        .go();
   }
 
   Future<void> duplicateRoutine(int routineId) async {
-    final db = await database;
-    final originalRoutine = await getRoutineById(routineId);
-    if (originalRoutine == null) return;
-    await db.transaction((txn) async {
-      final newRoutineId = await txn.insert('routines', {
-        'name': '${originalRoutine.name} (Kopie)',
-      });
-      for (var re in originalRoutine.exercises) {
-        final newRoutineExerciseId = await txn.insert('routine_exercises', {
-          'routine_id': newRoutineId,
-          'exercise_id': re.exercise.id,
-          'exercise_order': originalRoutine.exercises.indexOf(re),
-          'pause_seconds': re.pauseSeconds,
-        });
-        for (var st in re.setTemplates) {
-          await txn.insert('routine_set_templates', {
-            'routine_exercise_id': newRoutineExerciseId,
-            'set_index': re.setTemplates.indexOf(st),
-            'set_type': st.setType,
-            'target_reps': st.targetReps,
-            'target_weight': st.targetWeight,
-          });
-        }
+    final original = await getRoutineById(routineId);
+    if (original == null) return;
+
+    final newRoutine = await createRoutine('${original.name} (Kopie)');
+    if (newRoutine.id == null) return;
+
+    for (final re in original.exercises) {
+      if (re.exercise.id == null) continue;
+      // Exercise hinzufügen (erstellt default templates)
+      final newRe = await addExerciseToRoutine(newRoutine.id!, re.exercise.id!);
+
+      if (newRe != null) {
+        // Templates überschreiben mit den kopierten Werten
+        await replaceSetTemplatesForExercise(newRe.id!, re.setTemplates);
+        // Pause kopieren
+        await updatePauseTime(newRe.id!, re.pauseSeconds);
       }
-    });
+    }
   }
 
   Future<void> updatePauseTime(int routineExerciseId, int? seconds) async {
-    final db = await database;
-    await db.update(
-      'routine_exercises',
-      {'pause_seconds': seconds},
-      where: 'id = ?',
-      whereArgs: [routineExerciseId],
-    );
-  }
-
-  // --- WORKOUT LOGGING ---
-  Future<WorkoutLog> startWorkout({String? routineName}) async {
-    final db = await database;
-    final now = DateTime.now();
-    final id = await db.insert('workout_logs', {
-      'routine_name': routineName,
-      'start_time': now.toIso8601String(),
-      'status': 'ongoing',
-    });
-    return WorkoutLog(id: id, routineName: routineName, startTime: now);
-  }
-
-  Future<int> insertSetLog(SetLog setLog) async {
-    final db = await database;
-
-    if (setLog.id != null) {
-      print("--- DEBUG: Update SetLog ID=${setLog.id} ---");
-      return await db.update(
-        'set_logs',
-        setLog.toMap(),
-        where: 'id = ?',
-        whereArgs: [setLog.id],
-      );
-    }
-
-    final id = await db.insert(
-      'set_logs',
-      setLog.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-    print(
-      "--- DEBUG: Insert SetLog (${setLog.exerciseName}, ${setLog.weightKg}kg x ${setLog.reps}) → ID=$id ---",
-    );
-    return id;
-  }
-
-  Future<void> finishWorkout(int workoutLogId) async {
-    final db = await database;
-    await db.update(
-      'workout_logs',
-      {'end_time': DateTime.now().toIso8601String(), 'status': 'completed'},
-      where: 'id = ?',
-      whereArgs: [workoutLogId],
-    );
-  }
-
-  Future<SetLog?> getLastPerformance(String exerciseName) async {
-    final db = await database;
-    final maps = await db.rawQuery(
-      '''
-      SELECT * FROM set_logs
-      WHERE exercise_name = ? AND set_type != 'warmup' AND reps IS NOT NULL AND weight_kg IS NOT NULL
-      ORDER BY id DESC LIMIT 1
-    ''',
-      [exerciseName],
-    );
-    if (maps.isNotEmpty) return SetLog.fromMap(maps.first);
-    return null;
-  }
-
-  // --- WORKOUT HISTORY ---
-  Future<void> deleteWorkoutLog(int logId) async {
-    final db = await database;
-    await db.transaction((txn) async {
-      await txn.delete(
-        'set_logs',
-        where: 'workout_log_id = ?',
-        whereArgs: [logId],
-      );
-      await txn.delete('workout_logs', where: 'id = ?', whereArgs: [logId]);
-    });
-  }
-
-  Future<List<WorkoutLog>> getWorkoutLogs() async {
-    final db = await database;
-    final maps = await db.query(
-      'workout_logs',
-      where: "status = 'completed'",
-      orderBy: 'start_time DESC',
-    );
-    return maps.map((map) => WorkoutLog.fromMap(map)).toList();
-  }
-
-  Future<WorkoutLog?> getWorkoutLogById(int id) async {
-    final db = await database;
-    print("--- DEBUG: getWorkoutLogById gestartet für ID: $id ---");
-
-    final logMaps = await db.query(
-      'workout_logs',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    if (logMaps.isEmpty) {
-      print("--- DEBUG: KEINEN WorkoutLog für ID $id gefunden. Breche ab.");
-      return null;
-    }
-    print("--- DEBUG: WorkoutLog gefunden: ${logMaps.first}");
-
-    final setMaps = await db.query(
-      'set_logs',
-      where: 'workout_log_id = ?',
-      whereArgs: [id],
-      orderBy: 'id ASC',
-    );
-
-    print(
-      "--- DEBUG: Für workout_log_id $id wurden ${setMaps.length} Sätze in der DB gefunden.",
-    );
-    if (setMaps.isNotEmpty) {
-      print("--- DEBUG: Erster gefundener Satz: ${setMaps.first}");
-    }
-
-    final sets = setMaps.map((map) => SetLog.fromMap(map)).toList();
-
-    return WorkoutLog.fromMap(logMaps.first, sets: sets);
-  }
-
-  Future<WorkoutLog?> getLatestWorkoutLog() async {
-    final db = await database;
-    final maps = await db.query(
-      'workout_logs',
-      orderBy: 'start_time DESC',
-      limit: 1,
-    );
-    if (maps.isNotEmpty) {
-      return WorkoutLog.fromMap(maps.first);
-    }
-    return null;
-  }
-// lib/data/workout_database_helper.dart
-
-  Future<List<WorkoutLog>> getWorkoutLogsForDateRange(
-    DateTime start,
-    DateTime end,
-  ) async {
-    final db = await database;
-
-    // HIER IST DIE KORREKTUR: Erzeuge einen validen Datumsbereich für den ganzen Tag.
-    final effectiveStart = DateTime(start.year, start.month, start.day);
-    final effectiveEnd = DateTime(end.year, end.month, end.day, 23, 59, 59);
-
-    final maps = await db.query(
-      'workout_logs',
-      where: 'start_time >= ? AND start_time <= ? AND status = ?',
-      whereArgs: [
-        effectiveStart.toIso8601String(),
-        effectiveEnd.toIso8601String(),
-        'completed'
-      ],
-      orderBy: 'start_time DESC',
-    );
-
-    List<WorkoutLog> logs = [];
-    for (final map in maps) {
-      final sets = await getSetLogsForWorkout(map['id'] as int);
-      logs.add(WorkoutLog.fromMap(map, sets: sets));
-    }
-    return logs;
+    final dbInstance = await database;
+    await (dbInstance.update(dbInstance.routineExercises)
+          ..where((tbl) => tbl.localId.equals(routineExerciseId)))
+        .write(
+            db.RoutineExercisesCompanion(pauseSeconds: drift.Value(seconds)));
   }
 
   Future<Routine?> getRoutineByName(String name) async {
-    final db = await database;
-    final maps = await db.query(
-      'routines',
-      where: 'name = ?',
-      whereArgs: [name],
-      limit: 1,
-    );
-    if (maps.isNotEmpty) {
-      return getRoutineById(maps.first['id'] as int);
+    final dbInstance = await database;
+    final row = await (dbInstance.select(dbInstance.routines)
+          ..where((tbl) => tbl.name.equals(name))
+          ..limit(1))
+        .getSingleOrNull();
+
+    if (row != null) {
+      return getRoutineById(row.localId);
     }
     return null;
   }
 
-  Future<void> updateWorkoutLogDetails(
-    int logId,
-    DateTime startTime,
-    String? notes,
-  ) async {
-    final db = await database;
-    await db.update(
-      'workout_logs',
-      {'start_time': startTime.toIso8601String(), 'notes': notes},
-      where: 'id = ?',
-      whereArgs: [logId],
+  // ===========================================================================
+  // WORKOUT LOGGING
+  // ===========================================================================
+
+  Future<WorkoutLog> startWorkout({String? routineName}) async {
+    final dbInstance = await database;
+    final now = DateTime.now();
+
+    // Versuche Routine-UUID zu finden für Verknüpfung (optional)
+    String? routineId;
+    String? routineNameSnapshot = routineName;
+
+    if (routineName != null) {
+      final rRow = await (dbInstance.select(dbInstance.routines)
+            ..where((tbl) => tbl.name.equals(routineName))
+            ..limit(1))
+          .getSingleOrNull();
+      routineId = rRow?.id;
+    }
+
+    final row = await dbInstance
+        .into(dbInstance.workoutLogs)
+        .insertReturning(db.WorkoutLogsCompanion(
+          startTime: drift.Value(now),
+          status: const drift.Value('ongoing'),
+          routineId: drift.Value(routineId),
+          routineNameSnapshot: drift.Value(routineNameSnapshot),
+        ));
+
+    return WorkoutLog(
+      id: row.localId,
+      routineName: routineName,
+      startTime: row.startTime,
+      // status field removed from WorkoutLog model in UI, handling internally if needed
     );
+  }
+
+  Future<int> insertSetLog(SetLog setLog) async {
+    final dbInstance = await database;
+    final workoutLogUuid =
+        await _getUuidFromLocalId(dbInstance.workoutLogs, setLog.workoutLogId);
+
+    if (workoutLogUuid == null)
+      throw Exception(
+          "WorkoutLog UUID not found for localId ${setLog.workoutLogId}");
+
+    // Exercise UUID suchen (falls vorhanden, sonst null für snapshot only)
+    String? exerciseUuid;
+    final exRow = await (dbInstance.select(dbInstance.exercises)
+          ..where((tbl) =>
+              tbl.nameDe.equals(setLog.exerciseName) |
+              tbl.nameEn.equals(setLog.exerciseName))
+          ..limit(1))
+        .getSingleOrNull();
+    exerciseUuid = exRow?.id;
+
+    final companion = db.SetLogsCompanion(
+      workoutLogId: drift.Value(workoutLogUuid),
+      exerciseId: drift.Value(exerciseUuid),
+      exerciseNameSnapshot: drift.Value(setLog.exerciseName),
+      weight: drift.Value(setLog.weightKg),
+      reps: drift.Value(setLog.reps),
+      setType: drift.Value(setLog.setType),
+      restTimeSeconds: drift.Value(setLog.restTimeSeconds),
+      isCompleted: drift.Value(setLog.isCompleted ?? false),
+      logOrder: drift.Value(setLog.log_order ?? 0),
+      notes: drift.Value(setLog.notes),
+      distance: drift.Value(setLog.distanceKm),
+      durationSeconds: drift.Value(setLog.durationSeconds),
+      rpe: drift.Value(setLog.rpe),
+    );
+
+    if (setLog.id != null) {
+      // Update
+      await (dbInstance.update(dbInstance.setLogs)
+            ..where((tbl) => tbl.localId.equals(setLog.id!)))
+          .write(companion);
+      return setLog.id!;
+    } else {
+      // Insert
+      final row =
+          await dbInstance.into(dbInstance.setLogs).insertReturning(companion);
+      return row.localId;
+    }
+  }
+
+  Future<void> finishWorkout(int workoutLogId) async {
+    final dbInstance = await database;
+    await (dbInstance.update(dbInstance.workoutLogs)
+          ..where((tbl) => tbl.localId.equals(workoutLogId)))
+        .write(db.WorkoutLogsCompanion(
+      endTime: drift.Value(DateTime.now()),
+      status: const drift.Value('completed'),
+    ));
+  }
+
+  Future<SetLog?> getLastPerformance(String exerciseName) async {
+    final dbInstance = await database;
+    // Komplexe Query: Letzter SetLog für diesen Namen, der completed ist und kein Warmup
+    final query = dbInstance.select(dbInstance.setLogs)
+      ..where((tbl) =>
+          tbl.exerciseNameSnapshot.equals(exerciseName) &
+          tbl.setType.isNotValue('warmup') &
+          tbl.weight.isNotNull() &
+          tbl.reps.isNotNull())
+      ..orderBy([
+        (t) => drift.OrderingTerm(
+            expression: t.localId, mode: drift.OrderingMode.desc)
+      ])
+      ..limit(1);
+
+    final row = await query.getSingleOrNull();
+    if (row == null) return null;
+
+    // Lokale ID des Workouts zurückholen für das Model
+    final wLogId =
+        await _getLocalIdFromUuid(dbInstance.workoutLogs, row.workoutLogId);
+
+    return SetLog(
+      id: row.localId,
+      workoutLogId: wLogId ?? 0,
+      exerciseName: row.exerciseNameSnapshot ?? 'Unknown',
+      setType: row.setType,
+      weightKg: row.weight,
+      reps: row.reps,
+      isCompleted: row.isCompleted,
+    );
+  }
+
+  // ===========================================================================
+  // WORKOUT HISTORY
+  // ===========================================================================
+
+  Future<void> deleteWorkoutLog(int logId) async {
+    final dbInstance = await database;
+    await (dbInstance.delete(dbInstance.workoutLogs)
+          ..where((tbl) => tbl.localId.equals(logId)))
+        .go();
+  }
+
+  Future<List<WorkoutLog>> getWorkoutLogs() async {
+    // Gibt nur abgeschlossene Logs zurück (Basis-Infos)
+    final dbInstance = await database;
+    final rows = await (dbInstance.select(dbInstance.workoutLogs)
+          ..where((tbl) => tbl.status.equals('completed'))
+          ..orderBy([
+            (t) => drift.OrderingTerm(
+                expression: t.startTime, mode: drift.OrderingMode.desc)
+          ]))
+        .get();
+
+    return rows
+        .map((r) => WorkoutLog(
+              id: r.localId,
+              routineName: r.routineNameSnapshot,
+              startTime: r.startTime,
+              endTime: r.endTime,
+              notes: r.notes,
+            ))
+        .toList();
+  }
+
+  Future<List<WorkoutLog>> getFullWorkoutLogs() async {
+    final basicLogs = await getWorkoutLogs();
+    final fullLogs = <WorkoutLog>[];
+    for (var log in basicLogs) {
+      if (log.id != null) {
+        final full = await getWorkoutLogById(log.id!);
+        if (full != null) fullLogs.add(full);
+      }
+    }
+    return fullLogs;
+  }
+
+  Future<WorkoutLog?> getWorkoutLogById(int id) async {
+    final dbInstance = await database;
+    final logRow = await (dbInstance.select(dbInstance.workoutLogs)
+          ..where((tbl) => tbl.localId.equals(id)))
+        .getSingleOrNull();
+
+    if (logRow == null) return null;
+
+    final setRows = await (dbInstance.select(dbInstance.setLogs)
+          ..where((tbl) => tbl.workoutLogId.equals(logRow.id))
+          ..orderBy([(t) => drift.OrderingTerm(expression: t.logOrder)]))
+        .get();
+
+    final sets = setRows
+        .map((row) => SetLog(
+              id: row.localId,
+              workoutLogId: id, // Hier die angefragte localId nutzen
+              exerciseName: row.exerciseNameSnapshot ?? 'Unknown',
+              setType: row.setType,
+              weightKg: row.weight,
+              reps: row.reps,
+              restTimeSeconds: row.restTimeSeconds,
+              isCompleted: row.isCompleted,
+              log_order: row.logOrder,
+              notes: row.notes,
+              distanceKm: row.distance,
+              durationSeconds: row.durationSeconds,
+              rpe: row.rpe,
+            ))
+        .toList();
+
+    return WorkoutLog(
+      id: logRow.localId,
+      routineName: logRow.routineNameSnapshot,
+      startTime: logRow.startTime,
+      endTime: logRow.endTime,
+      notes: logRow.notes,
+      sets: sets,
+    );
+  }
+
+  Future<WorkoutLog?> getLatestWorkoutLog() async {
+    final dbInstance = await database;
+    final row = await (dbInstance.select(dbInstance.workoutLogs)
+          ..orderBy([
+            (t) => drift.OrderingTerm(
+                expression: t.startTime, mode: drift.OrderingMode.desc)
+          ])
+          ..limit(1))
+        .getSingleOrNull();
+
+    if (row != null) {
+      return getWorkoutLogById(row.localId);
+    }
+    return null;
+  }
+
+  Future<List<WorkoutLog>> getWorkoutLogsForDateRange(
+      DateTime start, DateTime end) async {
+    final dbInstance = await database;
+
+    final effectiveStart = DateTime(start.year, start.month, start.day);
+    final effectiveEnd = DateTime(end.year, end.month, end.day, 23, 59, 59);
+
+    final rows = await (dbInstance.select(dbInstance.workoutLogs)
+          ..where((tbl) =>
+              tbl.startTime.isBetweenValues(effectiveStart, effectiveEnd) &
+              tbl.status.equals('completed'))
+          ..orderBy([
+            (t) => drift.OrderingTerm(
+                expression: t.startTime, mode: drift.OrderingMode.desc)
+          ]))
+        .get();
+
+    final list = <WorkoutLog>[];
+    for (var r in rows) {
+      final full = await getWorkoutLogById(r.localId);
+      if (full != null) list.add(full);
+    }
+    return list;
+  }
+
+  Future<void> updateWorkoutLogDetails(
+      int logId, DateTime startTime, String? notes) async {
+    final dbInstance = await database;
+    await (dbInstance.update(dbInstance.workoutLogs)
+          ..where((tbl) => tbl.localId.equals(logId)))
+        .write(db.WorkoutLogsCompanion(
+      startTime: drift.Value(startTime),
+      notes: drift.Value(notes),
+    ));
   }
 
   Future<void> updateSetLogs(List<SetLog> updatedSets) async {
     if (updatedSets.isEmpty) return;
-    final db = await database;
-    final batch = db.batch();
-    for (final setLog in updatedSets) {
-      batch.update(
-        'set_logs',
-        setLog.toMap(),
-        where: 'id = ?',
-        whereArgs: [setLog.id],
-      );
-    }
-    await batch.commit(noResult: true);
+    final dbInstance = await database;
+    await dbInstance.batch((batch) {
+      for (final s in updatedSets) {
+        if (s.id != null) {
+          batch.update(
+            dbInstance.setLogs,
+            db.SetLogsCompanion(
+              weight: drift.Value(s.weightKg),
+              reps: drift.Value(s.reps),
+              isCompleted: drift.Value(s.isCompleted ?? false),
+              notes: drift.Value(s.notes),
+            ),
+            where: (tbl) => tbl.localId.equals(s.id!),
+          );
+        }
+      }
+    });
   }
 
   Future<void> deleteSetLogs(List<int> idsToDelete) async {
-    if (idsToDelete.isEmpty) return;
-    final db = await database;
-    final batch = db.batch();
-    for (final id in idsToDelete) {
-      batch.delete('set_logs', where: 'id = ?', whereArgs: [id]);
-    }
-    await batch.commit(noResult: true);
+    final dbInstance = await database;
+    await (dbInstance.delete(dbInstance.setLogs)
+          ..where((tbl) => tbl.localId.isIn(idsToDelete)))
+        .go();
   }
 
   Future<List<SetLog>> getSetLogsForWorkout(int workoutLogId) async {
-    final db = await database;
-    final maps = await db.query(
-      'set_logs',
-      where: 'workout_log_id = ?',
-      whereArgs: [workoutLogId],
-      orderBy: 'log_order ASC',
-    );
-
-    return maps.map((map) => SetLog.fromMap(map)).toList();
-  }
-  // --- NEUE METHODEN FÜR BACKUP & RESTORE ---
-
-  Future<List<Routine>> getAllRoutinesWithDetails() async {
-    final routines = await getAllRoutines();
-    final detailedRoutines = <Routine>[];
-    for (final routine in routines) {
-      if (routine.id != null) {
-        final detailedRoutine = await getRoutineById(routine.id!);
-        if (detailedRoutine != null) {
-          detailedRoutines.add(detailedRoutine);
-        }
-      }
-    }
-    return detailedRoutines;
+    final full = await getWorkoutLogById(workoutLogId);
+    return full?.sets ?? [];
   }
 
-  Future<List<WorkoutLog>> getFullWorkoutLogs() async {
-    final db = await database;
-    final maps = await db.query('workout_logs', orderBy: 'start_time DESC');
-    final logs = <WorkoutLog>[];
-    for (final map in maps) {
-      final log = await getWorkoutLogById(map['id'] as int);
-      if (log != null) {
-        logs.add(log);
-      }
-    }
-    return logs;
-  }
+  // ===========================================================================
+  // MISC / BACKUP / SPECIALS
+  // ===========================================================================
 
   Future<void> importWorkoutData(
       {required List<Routine> routines,
       required List<WorkoutLog> workoutLogs}) async {
-    final db = await database;
-    await db.transaction((txn) async {
-      // A. Routinen importieren
-      for (final routine in routines) {
-        // Wir nutzen die ID aus dem Backup, falls vorhanden
-        int routineId;
-        if (routine.id != null) {
-          await txn.insert(
-              'routines',
-              {
-                'id': routine.id, // ID erzwingen
-                'name': routine.name
-              },
-              conflictAlgorithm: ConflictAlgorithm.replace);
-          routineId = routine.id!;
-        } else {
-          routineId = await txn.insert('routines', {'name': routine.name});
-        }
+    final dbInstance = await database;
+    await dbInstance.transaction(() async {
+      // Routines
+      for (final r in routines) {
+        final rRow = await dbInstance
+            .into(dbInstance.routines)
+            .insertReturning(db.RoutinesCompanion(name: drift.Value(r.name)));
+        final newRoutineId = rRow.id; // UUID
 
-        for (final re in routine.exercises) {
-          // Auch hier: routine_exercise ID erzwingen, falls vorhanden (für perfekte Kopie)
-          // Wichtig ist aber vor allem 'exercise_id', die auf die Custom Exercise zeigt
-          await txn.insert('routine_exercises', {
-            // 'id': re.id, // Optional, können wir auch neu generieren lassen, aber sicherer ist mit.
-            'routine_id': routineId,
-            'exercise_id':
-                re.exercise.id, // Das muss matchen mit importCustomExercises!
-            'exercise_order': routine.exercises.indexOf(re),
-            'pause_seconds': re.pauseSeconds,
-          });
+        for (final re in r.exercises) {
+          // Exercise Mapping checken (Name -> UUID)
+          // Wir suchen die Übung in der DB. Falls custom und im Backup vorhanden, sollte sie bereits importiert sein.
+          final exModel = re.exercise;
+          final exRow = await (dbInstance.select(dbInstance.exercises)
+                ..where((tbl) =>
+                    tbl.nameEn.equals(exModel.nameEn) |
+                    tbl.nameDe.equals(exModel.nameDe))
+                ..limit(1))
+              .getSingleOrNull();
 
-          // Da wir die ID von routine_exercises oben nicht zwingend holen (da auto-increment im Backup evtl fehlt),
-          // müssen wir die letzte ID abfragen oder Logik anpassen.
-          // Einfacherer Weg für Import: Wir verlassen uns darauf, dass die Reihenfolge stimmt.
-          // BESSERER WEG: Wir holen uns die ID des gerade eingefügten 'routine_exercises'.
+          if (exRow == null) continue;
 
-          final lastReRow =
-              await txn.rawQuery('SELECT last_insert_rowid() as id');
-          final newReId = lastReRow.first['id'] as int;
+          final reRow = await dbInstance
+              .into(dbInstance.routineExercises)
+              .insertReturning(db.RoutineExercisesCompanion(
+                routineId: drift.Value(newRoutineId),
+                exerciseId: drift.Value(exRow.id),
+                orderIndex: const drift.Value(
+                    0), // Einfachheitshalber, korrekter Index wäre besser
+                pauseSeconds: drift.Value(re.pauseSeconds),
+              ));
 
-          for (final st in re.setTemplates) {
-            final stMap = st.toMap();
-            stMap.remove(
-                'id'); // Set Template IDs sind nicht so wichtig für Verknüpfungen
-            stMap['routine_exercise_id'] = newReId;
-            stMap['set_index'] = re.setTemplates.indexOf(st);
-            await txn.insert('routine_set_templates', stMap);
+          // Templates
+          for (final t in re.setTemplates) {
+            await dbInstance
+                .into(dbInstance.routineSetTemplates)
+                .insert(db.RoutineSetTemplatesCompanion(
+                  routineExerciseId: drift.Value(reRow.id),
+                  setType: drift.Value(t.setType),
+                  targetReps: drift.Value(t.targetReps),
+                  targetWeight: drift.Value(t.targetWeight),
+                ));
           }
         }
       }
 
-      // B. Workout Logs importieren
-      for (final log in workoutLogs) {
-        final logMap = log.toMap();
-        // Hier behalten wir die ID, falls wir später mal Logs editieren und die ID referenzieren
-        // logMap.remove('id');
-        logMap['status'] = 'completed';
+      // WorkoutLogs
+      for (final w in workoutLogs) {
+        final wRow = await dbInstance
+            .into(dbInstance.workoutLogs)
+            .insertReturning(db.WorkoutLogsCompanion(
+              startTime: drift.Value(w.startTime),
+              endTime: drift.Value(w.endTime),
+              status: const drift.Value('completed'),
+              routineNameSnapshot: drift.Value(w.routineName),
+              notes: drift.Value(w.notes),
+            ));
 
-        final newLogId = await txn.insert('workout_logs', logMap,
-            conflictAlgorithm: ConflictAlgorithm.replace);
+        for (final s in w.sets) {
+          final exRow = await (dbInstance.select(dbInstance.exercises)
+                ..where((tbl) =>
+                    tbl.nameEn.equals(s.exerciseName) |
+                    tbl.nameDe.equals(s.exerciseName))
+                ..limit(1))
+              .getSingleOrNull();
 
-        for (final setLog in log.sets) {
-          final setMap = setLog.toMap();
-          setMap.remove(
-              'id'); // SetLog IDs sind egal, solange sie dem Workout gehören
-          setMap['workout_log_id'] = newLogId;
-          await txn.insert('set_logs', setMap);
+          await dbInstance.into(dbInstance.setLogs).insert(db.SetLogsCompanion(
+                workoutLogId: drift.Value(wRow.id),
+                exerciseNameSnapshot: drift.Value(s.exerciseName),
+                exerciseId: drift.Value(exRow?.id),
+                weight: drift.Value(s.weightKg),
+                reps: drift.Value(s.reps),
+                setType: drift.Value(s.setType),
+                isCompleted: const drift.Value(true),
+                logOrder: drift.Value(s.log_order ?? 0),
+              ));
         }
       }
     });
   }
 
   Future<List<String>> findUnknownExerciseNames() async {
-    final db = await database;
-    final rows = await db.rawQuery('''
-    SELECT DISTINCT sl.exercise_name
-    FROM set_logs sl
-    LEFT JOIN exercises e
-      ON e.name_de = sl.exercise_name OR e.name_en = sl.exercise_name
-    WHERE e.id IS NULL
-    ORDER BY sl.exercise_name COLLATE NOCASE ASC
-  ''');
-    return rows
-        .map((r) => (r['exercise_name'] as String?) ?? '')
-        .where((s) => s.isNotEmpty)
-        .toList();
+    final dbInstance = await database;
+    // Drift hat keinen direkten Weg für dieses komplexe Join + IS NULL Check in Dart-Syntax
+    // Daher Custom Query.
+    final result = await dbInstance.customSelect('''
+      SELECT DISTINCT sl.exercise_name_snapshot
+      FROM set_logs sl
+      LEFT JOIN exercises e ON sl.exercise_id = e.id
+      WHERE e.id IS NULL AND sl.exercise_name_snapshot IS NOT NULL
+      ORDER BY sl.exercise_name_snapshot ASC
+    ''').get();
+
+    return result.map((r) => r.read<String>('exercise_name_snapshot')).toList();
   }
 
   Future<void> applyExerciseNameMapping(Map<String, String> map) async {
-    if (map.isEmpty) return;
-    final db = await database;
-    await db.transaction((txn) async {
-      final batch = txn.batch();
-      for (final e in map.entries) {
-        batch.insert(
-            'exercise_mapping',
-            {
-              'external_name': e.key,
-              'target_name': e.value,
-            },
-            conflictAlgorithm: ConflictAlgorithm.replace);
-      }
-      await batch.commit(noResult: true);
+    final dbInstance = await database;
+    await dbInstance.transaction(() async {
+      for (final entry in map.entries) {
+        final oldName = entry.key;
+        final newName = entry.value;
 
-      for (final e in map.entries) {
-        await txn.update(
-          'set_logs',
-          {'exercise_name': e.value},
-          where: 'exercise_name = ?',
-          whereArgs: [e.key],
-        );
+        // Finde die neue Exercise UUID
+        final exRow = await (dbInstance.select(dbInstance.exercises)
+              ..where((tbl) =>
+                  tbl.nameEn.equals(newName) | tbl.nameDe.equals(newName))
+              ..limit(1))
+            .getSingleOrNull();
+
+        if (exRow != null) {
+          // Update SetLogs
+          await (dbInstance.update(dbInstance.setLogs)
+                ..where((tbl) => tbl.exerciseNameSnapshot.equals(oldName)))
+              .write(db.SetLogsCompanion(
+            exerciseId: drift.Value(exRow.id),
+            exerciseNameSnapshot: drift.Value(newName),
+          ));
+        }
       }
     });
-  }
-
-  Future<List<String>> getAllMuscleGroups() async {
-    final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'exercises',
-      columns: ['primaryMuscles', 'secondaryMuscles'],
-      distinct: true,
-    );
-
-    final Set<String> allMuscles = {};
-
-    List<String> parseMuscles(String? jsonString) {
-      if (jsonString == null || jsonString.isEmpty) return [];
-      try {
-        // Versuche JSON zu decodieren
-        final decoded = jsonDecode(jsonString);
-        if (decoded is List) {
-          return decoded.map((item) => item.toString()).toList();
-        }
-        // Fallback: Falls es als CSV gespeichert wurde (legacy data)
-        if (jsonString.contains(',')) {
-          return jsonString.split(',').map((e) => e.trim()).toList();
-        }
-        return [];
-      } catch (e) {
-        return [];
-      }
-    }
-
-    for (final map in maps) {
-      final primary = parseMuscles(map['primaryMuscles'] as String?);
-      final secondary = parseMuscles(map['secondaryMuscles'] as String?);
-      allMuscles.addAll(primary);
-      allMuscles.addAll(secondary);
-    }
-
-    final sortedList = allMuscles.toList()..sort();
-    return sortedList;
   }
 
   Future<Set<int>> getWorkoutDaysInMonth(DateTime month) async {
-    final db = await database;
-    final firstDayOfMonth = DateTime(month.year, month.month, 1);
-    final lastDayOfMonth = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
+    final dbInstance = await database;
+    final start = DateTime(month.year, month.month, 1);
+    final end = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
 
-    final maps = await db.query(
-      'workout_logs',
-      columns: ['start_time'],
-      where: 'start_time BETWEEN ? AND ?',
-      whereArgs: [
-        firstDayOfMonth.toIso8601String(),
-        lastDayOfMonth.toIso8601String(),
-      ],
-    );
+    final rows = await (dbInstance.selectOnly(dbInstance.workoutLogs)
+          ..addColumns([dbInstance.workoutLogs.startTime])
+          ..where(dbInstance.workoutLogs.startTime.isBetweenValues(start, end)))
+        .get();
 
-    if (maps.isEmpty) return {};
-
-    return maps
-        .map((map) => DateTime.parse(map['start_time'] as String).day)
+    return rows
+        .map((r) => r.read(dbInstance.workoutLogs.startTime)!.day)
         .toSet();
   }
 
-  /// Findet das letzte Workout, das eine bestimmte Übung enthielt,
-  /// und gibt alle Sätze dieser Übung aus jenem Workout zurück.
   Future<List<SetLog>> getLastSetsForExercise(String exerciseName) async {
-    final db = await database;
+    final dbInstance = await database;
 
-    // Schritt 1: Finde die ID des letzten Workout-Logs, das diese Übung enthält.
-    final latestLogResult = await db.rawQuery(
-      '''
-      SELECT l.id
-      FROM workout_logs l
-      INNER JOIN set_logs s ON l.id = s.workout_log_id
-      WHERE s.exercise_name = ? AND l.status = 'completed'
-      ORDER BY l.start_time DESC
-      LIMIT 1
-    ''',
-      [exerciseName],
-    );
+    final query = dbInstance.select(dbInstance.workoutLogs).join([
+      drift.innerJoin(dbInstance.setLogs,
+          dbInstance.setLogs.workoutLogId.equalsExp(dbInstance.workoutLogs.id))
+    ])
+      ..where(dbInstance.setLogs.exerciseNameSnapshot.equals(exerciseName) &
+          dbInstance.workoutLogs.status.equals('completed'))
+      ..orderBy([
+        drift.OrderingTerm(
+            expression: dbInstance.workoutLogs.startTime,
+            mode: drift.OrderingMode.desc)
+      ])
+      ..limit(1);
 
-    if (latestLogResult.isEmpty) {
-      return []; // Kein vorheriges Workout mit dieser Übung gefunden.
-    }
+    final result = await query.getSingleOrNull();
+    if (result == null) return [];
 
-    final logId = latestLogResult.first['id'] as int;
+    final logUuid = result.readTable(dbInstance.workoutLogs).id;
+    final wLogId = result.readTable(dbInstance.workoutLogs).localId;
 
-    // Schritt 2: Hole alle Sätze für diese Übung aus genau diesem Workout-Log.
-    final setMaps = await db.query(
-      'set_logs',
-      where: 'workout_log_id = ? AND exercise_name = ?',
-      whereArgs: [logId, exerciseName],
-      orderBy: 'id ASC', // Sortiert nach der Reihenfolge der Erstellung
-    );
+    // 2. Alle Sets dieses Logs für diese Exercise holen
+    final setRows = await (dbInstance.select(dbInstance.setLogs)
+          ..where((tbl) =>
+              tbl.workoutLogId.equals(logUuid) &
+              tbl.exerciseNameSnapshot.equals(exerciseName))
+          ..orderBy([(t) => drift.OrderingTerm(expression: t.logOrder)]))
+        .get();
 
-    return setMaps.map((map) => SetLog.fromMap(map)).toList();
+    return setRows
+        .map((r) => SetLog(
+              id: r.localId,
+              workoutLogId: wLogId,
+              exerciseName: r.exerciseNameSnapshot ?? '',
+              setType: r.setType,
+              weightKg: r.weight,
+              reps: r.reps,
+              isCompleted: r.isCompleted,
+            ))
+        .toList();
   }
 
-// In lib/data/workout_database_helper.dart
-
-  Future<Exercise> insertExercise(Exercise exercise) async {
-    final db = await database;
-
-    // Dein Model nutzt toMap(), was JSON-Listen korrekt in Strings umwandelt
-    final Map<String, Object?> exerciseMap = exercise.toMap();
-
-    // WICHTIG: ID entfernen, damit die DB eine neue generiert
-    exerciseMap.remove('id');
-
-    // WICHTIG: Als eigene Übung markieren
-    exerciseMap['is_custom'] = 1;
-
-    final id = await db.insert(
-      'exercises',
-      exerciseMap,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-
-    print(
-        "Benutzerdefinierte Übung '${exercise.nameDe}' mit ID $id eingefügt.");
-    return exercise.copyWith(id: id);
-  }
-
-  // *** NEU: Methode zum Abrufen benutzerdefinierter Übungen für das Backup ***
-  Future<List<Exercise>> getCustomExercises() async {
-    final db = await database;
-    final maps = await db.query(
-      'exercises',
-      where: 'is_custom = ?',
-      whereArgs: [1], // Nur benutzerdefinierte
-    );
-    // Wichtig: 'is_custom' wird von fromMap nicht direkt gelesen, aber das ist ok.
-    return maps.map((map) => Exercise.fromMap(map)).toList();
-  }
-
-  Future<void> importCustomExercises(List<Exercise> exercises) async {
-    if (exercises.isEmpty) return;
-    final db = await database;
-    await db.transaction((txn) async {
-      final batch = txn.batch();
-      for (final exercise in exercises) {
-        final exerciseMap = exercise.toMap();
-        exerciseMap['is_custom'] = 1;
-
-        // WICHTIG: Wir entfernen die ID NICHT.
-        // Wir wollen exakt dieselbe ID wiederherstellen, damit Routinen funktionieren.
-        // exerciseMap.remove('id'); <--- DAS WAR DER FEHLERQUELLE
-
-        batch.insert(
-          'exercises',
-          exerciseMap,
-          conflictAlgorithm:
-              ConflictAlgorithm.replace, // Überschreiben, falls da
-        );
-      }
-      await batch.commit(noResult: true);
-      print(
-          "${exercises.length} benutzerdefinierte Übungen erfolgreich importiert (IDs erhalten).");
-    });
-  }
-
-  // *** WICHTIG: Methode 'clearAllWorkoutData' anpassen ***
   Future<void> clearAllWorkoutData() async {
-    final db = await database;
-    await db.transaction((txn) async {
-      await txn.delete('set_logs');
-      await txn.delete('workout_logs');
-      await txn.delete('routine_set_templates');
-      await txn.delete('routine_exercises');
-      await txn.delete('routines');
-      // *** NEU: Lösche NUR benutzerdefinierte Übungen ***
-      await txn.delete('exercises', where: 'is_custom = ?', whereArgs: [1]);
-      print("Alle Trainingsdaten (Logs, Routinen, Custom Exercises) gelöscht.");
+    final dbInstance = await database;
+    await dbInstance.transaction(() async {
+      await dbInstance.delete(dbInstance.setLogs).go();
+      await dbInstance.delete(dbInstance.workoutLogs).go();
+      await dbInstance.delete(dbInstance.routineSetTemplates).go();
+      await dbInstance.delete(dbInstance.routineExercises).go();
+      await dbInstance.delete(dbInstance.routines).go();
+      // Lösche nur custom exercises
+      await (dbInstance.delete(dbInstance.exercises)
+            ..where((tbl) => tbl.isCustom.equals(true)))
+          .go();
     });
+  }
+
+  Future<WorkoutLog?> getOngoingWorkout() async {
+    final dbInstance = await database;
+    final row = await (dbInstance.select(dbInstance.workoutLogs)
+          ..where((tbl) => tbl.status.equals('ongoing'))
+          ..orderBy([
+            (t) => drift.OrderingTerm(
+                expression: t.startTime, mode: drift.OrderingMode.desc)
+          ])
+          ..limit(1))
+        .getSingleOrNull();
+
+    if (row != null) {
+      return getWorkoutLogById(row.localId);
+    }
+    return null;
   }
 }

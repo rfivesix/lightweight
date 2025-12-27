@@ -1,126 +1,163 @@
-// lib/data/import_manager.dart (Final, mit Deutsch-Support)
+// lib/data/import_manager.dart
 
 import 'dart:io';
 import 'package:csv/csv.dart';
+import 'package:drift/drift.dart' as drift;
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart'; // Für debugPrint
 import 'package:intl/intl.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
+import 'package:lightweight/data/drift_database.dart' as db;
 import 'package:lightweight/models/set_log.dart';
 
 class ImportManager {
   Future<int> importHevyCsv() async {
     try {
+      // 1. Datei auswählen
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['csv'],
       );
+
       if (result == null || result.files.single.path == null) return 0;
+
       final filePath = result.files.single.path!;
       final file = File(filePath);
       final content = await file.readAsString();
+
+      // 2. CSV parsen
       final List<List<dynamic>> rows = const CsvToListConverter(
         shouldParseNumbers: false,
         eol: '\n',
       ).convert(content);
 
-      if (rows.length < 2) return 0;
+      if (rows.length < 2) return 0; // Nur Header oder leer
 
-      final workoutGroups = <String, List<Map<String, dynamic>>>{};
+      // 3. Header mappen
       final header = rows.first.map((e) => e.toString().trim()).toList();
+
+      // 4. Zeilen gruppieren (Ein Workout hat mehrere Sets in mehreren Zeilen)
+      final workoutGroups = <String, List<Map<String, dynamic>>>{};
 
       for (var i = 1; i < rows.length; i++) {
         final row = rows[i];
         if (row.length != header.length) continue;
+
         final rowMap = Map<String, dynamic>.fromIterables(header, row);
 
+        // Ohne Startzeit kein valides Workout
         if (rowMap['start_time'] == null ||
             rowMap['start_time'].toString().trim().isEmpty) {
           continue;
         }
 
+        // Gruppierungsschlüssel: Titel + Startzeit
         final key = "${rowMap['title']}_${rowMap['start_time']}";
-        if (workoutGroups.containsKey(key)) {
-          workoutGroups[key]!.add(rowMap);
-        } else {
-          workoutGroups[key] = [rowMap];
-        }
+        workoutGroups.putIfAbsent(key, () => []).add(rowMap);
       }
 
-      final db = WorkoutDatabaseHelper.instance;
+      // 5. Workouts in DB schreiben
+      final workoutHelper = WorkoutDatabaseHelper.instance;
+      final database =
+          await workoutHelper.database; // Zugriff auf Drift DB Instanz
+
       int importedWorkouts = 0;
-      final knownMap = await db.getExerciseMappings();
+
+      // KORREKTUR: Die Methode getExerciseMappings existiert im neuen Helper nicht mehr.
+      // Wir initialisieren eine leere Map. Das Mapping erfolgt im neuen Flow NACH dem Import
+      // über 'findUnknownExerciseNames'.
+      final knownMap = <String, String>{};
+
       for (var group in workoutGroups.values) {
         final firstRow = group.first;
-        final newLog = await db.startWorkout(routineName: firstRow['title']);
+        final routineName = firstRow['title'] ?? 'Importiertes Workout';
+        final notes = firstRow['description'];
 
-        final dbInstance = await db.database;
-        await dbInstance.update(
-          'workout_logs',
-          {
-            'start_time': _parseHevyDate(
-              firstRow['start_time'],
-            ).toIso8601String(),
-            'end_time': _parseHevyDate(firstRow['end_time']).toIso8601String(),
-            'notes': firstRow['description'],
-            'status': 'completed',
-          },
-          where: 'id = ?',
-          whereArgs: [newLog.id],
+        // A. Workout anlegen (Initial als 'ongoing' mit current time)
+        final newLog =
+            await workoutHelper.startWorkout(routineName: routineName);
+
+        if (newLog.id == null) continue;
+
+        // B. Zeitstempel parsen
+        final startTime = _parseHevyDate(firstRow['start_time']);
+        final endTime = _parseHevyDate(firstRow['end_time']);
+
+        // C. Workout-Details aktualisieren (Zeiten & Status korrigieren)
+        // Wir nutzen hier direkt Drift Updates, um historische Daten korrekt zu setzen
+        // (da finishWorkout DateTime.now() verwenden würde)
+        final updateCompanion = db.WorkoutLogsCompanion(
+          startTime: drift.Value(startTime),
+          endTime: drift.Value(endTime),
+          status: const drift.Value('completed'),
+          notes: drift.Value(notes),
         );
 
+        await (database.update(database.workoutLogs)
+              ..where((tbl) => tbl.localId.equals(newLog.id!)))
+            .write(updateCompanion);
+
+        // D. Sets iterieren und einfügen
         int setOrder = 0;
         for (var row in group) {
           final rawName = row['exercise_title']?.toString() ?? '';
+
+          // Mapping prüfen (falls User schon mal gemappt hat - aktuell leer)
           final mappedName = knownMap[rawName.trim().toLowerCase()] ?? rawName;
 
+          // Daten für SetLog extrahieren
           final setLog = SetLog(
-            workoutLogId: newLog.id!,
-            exerciseName: mappedName, // <— statt rawName
-            setType: row['set_type'] ?? 'normal',
+            workoutLogId: newLog.id!, // Verknüpfung via lokaler ID
+            exerciseName: mappedName,
+            setType: _mapSetType(row['set_type']),
+
+            // Metriken parsen
             weightKg: double.tryParse(row['weight_kg']?.toString() ?? ''),
             reps: int.tryParse(row['reps']?.toString() ?? ''),
+            distanceKm: double.tryParse(row['distance_km']?.toString() ?? ''),
+            durationSeconds:
+                int.tryParse(row['duration_seconds']?.toString() ?? ''),
+            rpe: int.tryParse(row['rpe']?.toString() ?? ''),
+
             log_order: setOrder++,
             notes: row['exercise_notes'],
-            distanceKm: double.tryParse(row['distance_km']?.toString() ?? ''),
-            durationSeconds: int.tryParse(
-              row['duration_seconds']?.toString() ?? '',
-            ),
-            rpe: int.tryParse(row['rpe']?.toString() ?? ''),
-            supersetId: int.tryParse(row['superset_id']?.toString() ?? ''),
+            isCompleted: true, // Importierte Sets sind immer fertig
           );
-          await db.insertSetLog(setLog);
+
+          await workoutHelper.insertSetLog(setLog);
         }
         importedWorkouts++;
       }
       return importedWorkouts;
     } catch (e) {
-      print("Hevy Import Error: $e");
-      return -1;
+      debugPrint("Hevy Import Error: $e");
+      return -1; // Fehlercode
     }
   }
 
-  /// KORREKTUR: Die Parser-Funktion unterstützt jetzt explizit deutsche Monatsnamen.
+  /// Hilfsmethode um Hevy Set-Types auf interne Types zu mappen
+  String _mapSetType(dynamic rawType) {
+    final t = rawType?.toString().toLowerCase() ?? '';
+    if (t == 'warmup') return 'warmup';
+    if (t == 'failure') return 'failure';
+    if (t == 'drop_set' || t == 'dropset') return 'dropset';
+    return 'normal';
+  }
+
+  /// Robuste Datums-Parsing-Funktion
   DateTime _parseHevyDate(dynamic rawDateString) {
     final dateString = rawDateString?.toString().trim();
     if (dateString == null || dateString.isEmpty) {
-      print(
-        "Leere oder null Datumszeichenfolge erhalten. Fallback auf DateTime.now()",
-      );
       return DateTime.now();
     }
 
-    // Die Liste der Formate wurde um das deutsche Locale erweitert.
+    // Liste unterstützter Formate (Erweitert um DE und EN)
     final List<DateFormat> formats = [
-      DateFormat(
-        "dd MMM yyyy, HH:mm",
-        "en_US",
-      ), // Probiert zuerst Englisch (Jan, Feb, Apr...)
-      DateFormat(
-        "dd MMM yyyy, HH:mm",
-        "de_DE",
-      ), // Dann Deutsch (März, Mai, Juni...)
-      DateFormat("yyyy-MM-dd HH:mm:ss"),
-      DateFormat("dd.MM.yyyy, HH:mm"),
+      DateFormat("dd MMM yyyy, HH:mm", "en_US"), // 18 Oct 2023, 14:30
+      DateFormat("dd MMM yyyy, HH:mm", "de_DE"), // 18 Okt 2023, 14:30
+      DateFormat("yyyy-MM-dd HH:mm:ss"), // Standard SQL
+      DateFormat("dd.MM.yyyy, HH:mm"), // Deutsch numerisch
+      DateFormat("dd.MM.yyyy HH:mm"),
     ];
 
     for (final format in formats) {
@@ -131,7 +168,8 @@ class ImportManager {
       }
     }
 
-    print("Konnte Datum nicht mit bekannten Formaten parsen: '$dateString'");
+    debugPrint(
+        "WARNUNG: Konnte Datum nicht parsen: '$dateString'. Nutze JETZT.");
     return DateTime.now();
   }
 }

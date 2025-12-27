@@ -49,3 +49,4 @@ android/key.properties
 android/key.properties
 *.jks
 *.keystore
+assets/db/vita_prep_de.db

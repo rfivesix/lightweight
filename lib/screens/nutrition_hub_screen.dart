@@ -11,7 +11,6 @@ import 'package:lightweight/screens/supplement_track_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/bottom_content_spacer.dart';
 import 'package:lightweight/widgets/summary_card.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class NutritionHubScreen extends StatefulWidget {
   const NutritionHubScreen({super.key});
@@ -39,10 +38,9 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
 
   Future<Map<String, dynamic>> _loadHubData() async {
     final l10n = AppLocalizations.of(context)!;
-    final prefs = await SharedPreferences.getInstance();
-
+    final settings = await DatabaseHelper.instance.getAppSettings();
+    final targetCalories = settings?.targetCalories ?? 2500;
     final meals = await DatabaseHelper.instance.getMeals();
-    final targetCalories = prefs.getInt('targetCalories') ?? 2500;
     final today = DateTime.now();
     final sevenDaysAgo = today.subtract(const Duration(days: 6));
     final recentEntries = await DatabaseHelper.instance.getEntriesForDateRange(

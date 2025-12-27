@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/data/product_database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
 import 'package:lightweight/models/food_item.dart';
 import 'package:lightweight/models/tracked_food_item.dart';
@@ -55,23 +54,6 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
   final _sodCtrl = TextEditingController();
   final _calciumCtrl = TextEditingController();
 
-  void _fillControllers(FoodItem item, {Map<String, dynamic>? rawRow}) {
-    _deCtrl.text = (rawRow?['name_de'] as String?) ?? item.name;
-    _enCtrl.text = (rawRow?['name_en'] as String?) ?? '';
-    _catCtrl.text = (rawRow?['category_key'] as String?) ?? '';
-
-    _calCtrl.text = (item.calories).toString();
-    _proCtrl.text = (item.protein).toString();
-    _carbCtrl.text = (item.carbs).toString();
-    _fatCtrl.text = (item.fat).toString();
-    _kjCtrl.text = (rawRow?['kj_100g'] as num?)?.toString() ?? '';
-    _fibCtrl.text = (rawRow?['fiber_100g'] as num?)?.toString() ?? '';
-    _sugCtrl.text = (rawRow?['sugar_100g'] as num?)?.toString() ?? '';
-    _saltCtrl.text = (rawRow?['salt_100g'] as num?)?.toString() ?? '';
-    _sodCtrl.text = (rawRow?['sodium_100g'] as num?)?.toString() ?? '';
-    _calciumCtrl.text = (rawRow?['calcium_100g'] as num?)?.toString() ?? '';
-  }
-
   @override
   void initState() {
     super.initState();
@@ -117,21 +99,6 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
     return openDatabase(path, readOnly: readOnly);
   }
 
-  Future<Map<String, dynamic>?> _loadRawRow(String barcode) async {
-    final base = await _openBaseDb(readOnly: true);
-    try {
-      final rows = await base.query(
-        'products',
-        where: 'barcode = ?',
-        whereArgs: [barcode],
-        limit: 1,
-      );
-      return rows.isNotEmpty ? rows.first : null;
-    } finally {
-      await base.close();
-    }
-  }
-
   Future<void> _saveDevEdits() async {
     try {
       final barcode = _displayItem.barcode;
@@ -170,7 +137,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
       } finally {
         await db.close();
       }
-      await ProductDatabaseHelper.instance.reloadBaseDb();
+      // await ProductDatabaseHelper.instance.reloadBaseDb();
 
       // Für sichtbares Refresh: Eintrag neu aus Base-DB laden
       final baseDb = await _openBaseDb(readOnly: true);

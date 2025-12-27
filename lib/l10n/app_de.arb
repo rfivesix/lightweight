@@ -634,5 +634,37 @@
   "onbTitleAppLayout": "Navigation & Quick-Add",
   "onbBodyAppLayout": "Die Bottom Bar ermöglicht den schnellen Wechsel zwischen den Bereichen. Mit dem großen [+] Button kannst du sofort alles protokollieren.",
   "dataHubTitle": "Data Hub",
-  "resumeButton": "Fortsetzen"
+  "resumeButton": "Fortsetzen",
+  "onboardingWelcomeTitle": "Willkommen bei Lightweight",
+  "onboardingWelcomeSubtitle": "Lass uns dein Profil einrichten, um loszulegen.",
+  
+  "onboardingNameTitle": "Wie heißt du?",
+  "onboardingNameLabel": "Dein Name",
+  "onboardingNameError": "Bitte gib deinen Namen ein",
+
+  "onboardingDobTitle": "Wann bist du geboren?",
+  "onboardingDobLabel": "Geburtsdatum",
+  "onboardingDobError": "Bitte wähle dein Geburtsdatum",
+
+  "onboardingWeightTitle": "Aktuelles Gewicht",
+  "onboardingWeightLabel": "Gewicht (kg)",
+  "onboardingWeightError": "Bitte gib ein gültiges Gewicht ein",
+
+  "onboardingGoalsTitle": "Deine Ernährungsziele",
+  "onboardingGoalsSubtitle": "Du kannst diese später in den Einstellungen ändern.",
+  
+  "onboardingGoalCalories": "Tagesziel Kalorien (kcal)",
+  "onboardingGoalProtein": "Protein (g)",
+  "onboardingGoalCarbs": "Kohlenhydrate (g)",
+  "onboardingGoalFat": "Fett (g)",
+  "onboardingGoalWater": "Wasser (ml)",
+
+  "onboardingNext": "Weiter",
+  "onboardingBack": "Zurück",
+  "onboardingFinish": "Loslegen",
+  "onboardingHeightLabel": "Größe (cm)",
+  "onboardingGenderLabel": "Geschlecht",
+  "genderMale": "Männlich",
+  "genderFemale": "Weiblich",
+  "genderDiverse": "Divers"
 }
