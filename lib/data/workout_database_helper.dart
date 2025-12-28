@@ -219,68 +219,6 @@ class WorkoutDatabaseHelper {
     return detailed;
   }
 
-  Future<Routine?> getRoutineById(int id) async {
-    final dbInstance = await database;
-
-    // 1. Routine laden
-    final routineRow = await (dbInstance.select(dbInstance.routines)
-          ..where((tbl) => tbl.localId.equals(id)))
-        .getSingleOrNull();
-
-    if (routineRow == null) return null;
-
-    // 2. RoutineExercises laden
-    final routineExercisesQuery = dbInstance
-        .select(dbInstance.routineExercises)
-        .join([
-      drift.innerJoin(
-          dbInstance.exercises,
-          dbInstance.exercises.id
-              .equalsExp(dbInstance.routineExercises.exerciseId))
-    ])
-      ..where(dbInstance.routineExercises.routineId.equals(routineRow.id))
-      ..orderBy([
-        drift.OrderingTerm(expression: dbInstance.routineExercises.orderIndex)
-      ]);
-
-    final reRows = await routineExercisesQuery.get();
-    final List<RoutineExercise> exercisesList = [];
-
-    for (final row in reRows) {
-      final reData = row.readTable(dbInstance.routineExercises);
-      final exData = row.readTable(dbInstance.exercises);
-
-      // 3. SetTemplates laden
-      final templates = await (dbInstance.select(dbInstance.routineSetTemplates)
-            ..where((tbl) => tbl.routineExerciseId.equals(reData.id))
-            ..orderBy([
-              (t) => drift.OrderingTerm(expression: t.localId)
-            ])) // oder index spalte wenn vorhanden
-          .get();
-
-      final setTemplates = templates
-          .map((t) => SetTemplate(
-                id: t.localId,
-                setType: t.setType,
-                targetReps: t.targetReps,
-                targetWeight: t.targetWeight,
-              ))
-          .toList();
-
-      exercisesList.add(RoutineExercise(
-        id: reData.localId,
-        exercise: _mapExerciseToModel(exData),
-        setTemplates: setTemplates,
-        pauseSeconds: reData.pauseSeconds,
-      ));
-    }
-
-    return Routine(
-      id: routineRow.localId,
-      name: routineRow.name,
-      exercises: exercisesList,
-    );
-  }
 
   Future<Routine> createRoutine(String name) async {
     final dbInstance = await database;
@@ -377,6 +315,70 @@ class WorkoutDatabaseHelper {
     });
   }
 
+  Future<Routine?> getRoutineById(int id) async {
+    final dbInstance = await database;
+
+    // 1. Routine laden
+    final routineRow = await (dbInstance.select(dbInstance.routines)
+          ..where((tbl) => tbl.localId.equals(id)))
+        .getSingleOrNull();
+
+    if (routineRow == null) return null;
+
+    // 2. RoutineExercises laden
+    final routineExercisesQuery = dbInstance
+        .select(dbInstance.routineExercises)
+        .join([
+      drift.innerJoin(
+          dbInstance.exercises,
+          dbInstance.exercises.id
+              .equalsExp(dbInstance.routineExercises.exerciseId))
+    ])
+      ..where(dbInstance.routineExercises.routineId.equals(routineRow.id))
+      ..orderBy([
+        drift.OrderingTerm(expression: dbInstance.routineExercises.orderIndex)
+      ]);
+
+    final reRows = await routineExercisesQuery.get();
+    final List<RoutineExercise> exercisesList = [];
+
+    for (final row in reRows) {
+      final reData = row.readTable(dbInstance.routineExercises);
+      final exData = row.readTable(dbInstance.exercises);
+
+      // 3. SetTemplates laden
+      final templates = await (dbInstance.select(dbInstance.routineSetTemplates)
+            ..where((tbl) => tbl.routineExerciseId.equals(reData.id))
+            ..orderBy([
+              (t) => drift.OrderingTerm(expression: t.localId)
+            ]))
+          .get();
+
+      final setTemplates = templates
+          .map((t) => SetTemplate(
+                id: t.localId,
+                setType: t.setType,
+                targetReps: t.targetReps,
+                targetWeight: t.targetWeight,
+                targetRir: t.targetRir, // <--- NEU
+              ))
+          .toList();
+
+      exercisesList.add(RoutineExercise(
+        id: reData.localId,
+        exercise: _mapExerciseToModel(exData),
+        setTemplates: setTemplates,
+        pauseSeconds: reData.pauseSeconds,
+      ));
+    }
+
+    return Routine(
+      id: routineRow.localId,
+      name: routineRow.name,
+      exercises: exercisesList,
+    );
+  }
+
   Future<void> updateSetTemplate(SetTemplate setTemplate) async {
     if (setTemplate.id == null) return;
     final dbInstance = await database;
@@ -386,6 +388,7 @@ class WorkoutDatabaseHelper {
       setType: drift.Value(setTemplate.setType),
       targetReps: drift.Value(setTemplate.targetReps),
       targetWeight: drift.Value(setTemplate.targetWeight),
+      targetRir: drift.Value(setTemplate.targetRir), // <--- NEU
     ));
   }
 
@@ -410,6 +413,7 @@ class WorkoutDatabaseHelper {
                 setType: drift.Value(t.setType),
                 targetReps: drift.Value(t.targetReps),
                 targetWeight: drift.Value(t.targetWeight),
+                targetRir: drift.Value(t.targetRir), // <--- NEU
               ),
             );
       }
@@ -502,16 +506,27 @@ class WorkoutDatabaseHelper {
     );
   }
 
-  Future<int> insertSetLog(SetLog setLog) async {
+
+  Future<void> finishWorkout(int workoutLogId) async {
+    final dbInstance = await database;
+    await (dbInstance.update(dbInstance.workoutLogs)
+          ..where((tbl) => tbl.localId.equals(workoutLogId)))
+        .write(db.WorkoutLogsCompanion(
+      endTime: drift.Value(DateTime.now()),
+      status: const drift.Value('completed'),
+    ));
+  }
+Future<int> insertSetLog(SetLog setLog) async {
     final dbInstance = await database;
     final workoutLogUuid =
         await _getUuidFromLocalId(dbInstance.workoutLogs, setLog.workoutLogId);
 
-    if (workoutLogUuid == null)
+    if (workoutLogUuid == null) {
       throw Exception(
           "WorkoutLog UUID not found for localId ${setLog.workoutLogId}");
+    }
 
-    // Exercise UUID suchen (falls vorhanden, sonst null für snapshot only)
+    // Exercise UUID suchen
     String? exerciseUuid;
     final exRow = await (dbInstance.select(dbInstance.exercises)
           ..where((tbl) =>
@@ -535,6 +550,7 @@ class WorkoutDatabaseHelper {
       distance: drift.Value(setLog.distanceKm),
       durationSeconds: drift.Value(setLog.durationSeconds),
       rpe: drift.Value(setLog.rpe),
+      rir: drift.Value(setLog.rir), // Jetzt direkt int, perfekt!
     );
 
     if (setLog.id != null) {
@@ -550,20 +566,72 @@ class WorkoutDatabaseHelper {
       return row.localId;
     }
   }
-
-  Future<void> finishWorkout(int workoutLogId) async {
+  
+  Future<WorkoutLog?> getWorkoutLogById(int id) async {
     final dbInstance = await database;
-    await (dbInstance.update(dbInstance.workoutLogs)
-          ..where((tbl) => tbl.localId.equals(workoutLogId)))
-        .write(db.WorkoutLogsCompanion(
-      endTime: drift.Value(DateTime.now()),
-      status: const drift.Value('completed'),
-    ));
+    final logRow = await (dbInstance.select(dbInstance.workoutLogs)
+          ..where((tbl) => tbl.localId.equals(id)))
+        .getSingleOrNull();
+
+    if (logRow == null) return null;
+
+    final setRows = await (dbInstance.select(dbInstance.setLogs)
+          ..where((tbl) => tbl.workoutLogId.equals(logRow.id))
+          ..orderBy([(t) => drift.OrderingTerm(expression: t.logOrder)]))
+        .get();
+
+    final sets = setRows
+        .map((row) => SetLog(
+              id: row.localId,
+              workoutLogId: id,
+              exerciseName: row.exerciseNameSnapshot ?? 'Unknown',
+              setType: row.setType,
+              weightKg: row.weight,
+              reps: row.reps,
+              restTimeSeconds: row.restTimeSeconds,
+              isCompleted: row.isCompleted,
+              log_order: row.logOrder,
+              notes: row.notes,
+              distanceKm: row.distance,
+              durationSeconds: row.durationSeconds,
+              rpe: row.rpe,
+              rir: row.rir, // Direkt übernehmen
+            ))
+        .toList();
+
+    return WorkoutLog(
+      id: logRow.localId,
+      routineName: logRow.routineNameSnapshot,
+      startTime: logRow.startTime,
+      endTime: logRow.endTime,
+      notes: logRow.notes,
+      sets: sets,
+    );
+  }
+  Future<void> updateSetLogs(List<SetLog> updatedSets) async {
+    if (updatedSets.isEmpty) return;
+    final dbInstance = await database;
+    await dbInstance.batch((batch) {
+      for (final s in updatedSets) {
+        if (s.id != null) {
+          batch.update(
+            dbInstance.setLogs,
+            db.SetLogsCompanion(
+              weight: drift.Value(s.weightKg),
+              reps: drift.Value(s.reps),
+              isCompleted: drift.Value(s.isCompleted ?? false),
+              notes: drift.Value(s.notes),
+              rir: drift.Value(s.rir), // Direkt übernehmen
+            ),
+            where: (tbl) => tbl.localId.equals(s.id!),
+          );
+        }
+      }
+    });
   }
 
   Future<SetLog?> getLastPerformance(String exerciseName) async {
     final dbInstance = await database;
-    // Komplexe Query: Letzter SetLog für diesen Namen, der completed ist und kein Warmup
     final query = dbInstance.select(dbInstance.setLogs)
       ..where((tbl) =>
           tbl.exerciseNameSnapshot.equals(exerciseName) &
@@ -579,7 +647,6 @@ class WorkoutDatabaseHelper {
     final row = await query.getSingleOrNull();
     if (row == null) return null;
 
-    // Lokale ID des Workouts zurückholen für das Model
     final wLogId =
         await _getLocalIdFromUuid(dbInstance.workoutLogs, row.workoutLogId);
 
@@ -591,6 +658,7 @@ class WorkoutDatabaseHelper {
       weightKg: row.weight,
       reps: row.reps,
       isCompleted: row.isCompleted,
+      rir: row.rir, // Direkt übernehmen
     );
   }
 
@@ -638,48 +706,6 @@ class WorkoutDatabaseHelper {
     }
     return fullLogs;
   }
-
-  Future<WorkoutLog?> getWorkoutLogById(int id) async {
-    final dbInstance = await database;
-    final logRow = await (dbInstance.select(dbInstance.workoutLogs)
-          ..where((tbl) => tbl.localId.equals(id)))
-        .getSingleOrNull();
-
-    if (logRow == null) return null;
-
-    final setRows = await (dbInstance.select(dbInstance.setLogs)
-          ..where((tbl) => tbl.workoutLogId.equals(logRow.id))
-          ..orderBy([(t) => drift.OrderingTerm(expression: t.logOrder)]))
-        .get();
-
-    final sets = setRows
-        .map((row) => SetLog(
-              id: row.localId,
-              workoutLogId: id, // Hier die angefragte localId nutzen
-              exerciseName: row.exerciseNameSnapshot ?? 'Unknown',
-              setType: row.setType,
-              weightKg: row.weight,
-              reps: row.reps,
-              restTimeSeconds: row.restTimeSeconds,
-              isCompleted: row.isCompleted,
-              log_order: row.logOrder,
-              notes: row.notes,
-              distanceKm: row.distance,
-              durationSeconds: row.durationSeconds,
-              rpe: row.rpe,
-            ))
-        .toList();
-
-    return WorkoutLog(
-      id: logRow.localId,
-      routineName: logRow.routineNameSnapshot,
-      startTime: logRow.startTime,
-      endTime: logRow.endTime,
-      notes: logRow.notes,
-      sets: sets,
-    );
-  }
-
   Future<WorkoutLog?> getLatestWorkoutLog() async {
     final dbInstance = await database;
     final row = await (dbInstance.select(dbInstance.workoutLogs)
@@ -732,26 +758,6 @@ class WorkoutDatabaseHelper {
     ));
   }
 
-  Future<void> updateSetLogs(List<SetLog> updatedSets) async {
-    if (updatedSets.isEmpty) return;
-    final dbInstance = await database;
-    await dbInstance.batch((batch) {
-      for (final s in updatedSets) {
-        if (s.id != null) {
-          batch.update(
-            dbInstance.setLogs,
-            db.SetLogsCompanion(
-              weight: drift.Value(s.weightKg),
-              reps: drift.Value(s.reps),
-              isCompleted: drift.Value(s.isCompleted ?? false),
-              notes: drift.Value(s.notes),
-            ),
-            where: (tbl) => tbl.localId.equals(s.id!),
-          );
-        }
-      }
-    });
-  }
 
   Future<void> deleteSetLogs(List<int> idsToDelete) async {
     final dbInstance = await database;
@@ -932,7 +938,6 @@ class WorkoutDatabaseHelper {
     final logUuid = result.readTable(dbInstance.workoutLogs).id;
     final wLogId = result.readTable(dbInstance.workoutLogs).localId;
 
-    // 2. Alle Sets dieses Logs für diese Exercise holen
     final setRows = await (dbInstance.select(dbInstance.setLogs)
           ..where((tbl) =>
               tbl.workoutLogId.equals(logUuid) &
@@ -949,6 +954,7 @@ class WorkoutDatabaseHelper {
               weightKg: r.weight,
               reps: r.reps,
               isCompleted: r.isCompleted,
+              rir: r.rir, // Direkt übernehmen
             ))
         .toList();
   }

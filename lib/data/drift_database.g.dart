@@ -2950,6 +2950,12 @@ class $RoutineSetTemplatesTable extends RoutineSetTemplates
   late final GeneratedColumn<double> targetWeight = GeneratedColumn<double>(
       'target_weight', aliasedName, true,
       type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _targetRirMeta =
+      const VerificationMeta('targetRir');
+  @override
+  late final GeneratedColumn<int> targetRir = GeneratedColumn<int>(
+      'target_rir', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         localId,
@@ -2960,7 +2966,8 @@ class $RoutineSetTemplatesTable extends RoutineSetTemplates
         routineExerciseId,
         setType,
         targetReps,
-        targetWeight
+        targetWeight,
+        targetRir
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3015,6 +3022,10 @@ class $RoutineSetTemplatesTable extends RoutineSetTemplates
           targetWeight.isAcceptableOrUnknown(
               data['target_weight']!, _targetWeightMeta));
     }
+    if (data.containsKey('target_rir')) {
+      context.handle(_targetRirMeta,
+          targetRir.isAcceptableOrUnknown(data['target_rir']!, _targetRirMeta));
+    }
     return context;
   }
 
@@ -3042,6 +3053,8 @@ class $RoutineSetTemplatesTable extends RoutineSetTemplates
           .read(DriftSqlType.string, data['${effectivePrefix}target_reps']),
       targetWeight: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}target_weight']),
+      targetRir: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}target_rir']),
     );
   }
 
@@ -3062,6 +3075,7 @@ class RoutineSetTemplate extends DataClass
   final String setType;
   final String? targetReps;
   final double? targetWeight;
+  final int? targetRir;
   const RoutineSetTemplate(
       {required this.localId,
       required this.id,
@@ -3071,7 +3085,8 @@ class RoutineSetTemplate extends DataClass
       required this.routineExerciseId,
       required this.setType,
       this.targetReps,
-      this.targetWeight});
+      this.targetWeight,
+      this.targetRir});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -3089,6 +3104,9 @@ class RoutineSetTemplate extends DataClass
     }
     if (!nullToAbsent || targetWeight != null) {
       map['target_weight'] = Variable<double>(targetWeight);
+    }
+    if (!nullToAbsent || targetRir != null) {
+      map['target_rir'] = Variable<int>(targetRir);
     }
     return map;
   }
@@ -3110,6 +3128,9 @@ class RoutineSetTemplate extends DataClass
       targetWeight: targetWeight == null && nullToAbsent
           ? const Value.absent()
           : Value(targetWeight),
+      targetRir: targetRir == null && nullToAbsent
+          ? const Value.absent()
+          : Value(targetRir),
     );
   }
 
@@ -3126,6 +3147,7 @@ class RoutineSetTemplate extends DataClass
       setType: serializer.fromJson<String>(json['setType']),
       targetReps: serializer.fromJson<String?>(json['targetReps']),
       targetWeight: serializer.fromJson<double?>(json['targetWeight']),
+      targetRir: serializer.fromJson<int?>(json['targetRir']),
     );
   }
   @override
@@ -3141,6 +3163,7 @@ class RoutineSetTemplate extends DataClass
       'setType': serializer.toJson<String>(setType),
       'targetReps': serializer.toJson<String?>(targetReps),
       'targetWeight': serializer.toJson<double?>(targetWeight),
+      'targetRir': serializer.toJson<int?>(targetRir),
     };
   }
 
@@ -3153,7 +3176,8 @@ class RoutineSetTemplate extends DataClass
           String? routineExerciseId,
           String? setType,
           Value<String?> targetReps = const Value.absent(),
-          Value<double?> targetWeight = const Value.absent()}) =>
+          Value<double?> targetWeight = const Value.absent(),
+          Value<int?> targetRir = const Value.absent()}) =>
       RoutineSetTemplate(
         localId: localId ?? this.localId,
         id: id ?? this.id,
@@ -3165,6 +3189,7 @@ class RoutineSetTemplate extends DataClass
         targetReps: targetReps.present ? targetReps.value : this.targetReps,
         targetWeight:
             targetWeight.present ? targetWeight.value : this.targetWeight,
+        targetRir: targetRir.present ? targetRir.value : this.targetRir,
       );
   RoutineSetTemplate copyWithCompanion(RoutineSetTemplatesCompanion data) {
     return RoutineSetTemplate(
@@ -3182,6 +3207,7 @@ class RoutineSetTemplate extends DataClass
       targetWeight: data.targetWeight.present
           ? data.targetWeight.value
           : this.targetWeight,
+      targetRir: data.targetRir.present ? data.targetRir.value : this.targetRir,
     );
   }
 
@@ -3196,14 +3222,15 @@ class RoutineSetTemplate extends DataClass
           ..write('routineExerciseId: $routineExerciseId, ')
           ..write('setType: $setType, ')
           ..write('targetReps: $targetReps, ')
-          ..write('targetWeight: $targetWeight')
+          ..write('targetWeight: $targetWeight, ')
+          ..write('targetRir: $targetRir')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode => Object.hash(localId, id, createdAt, updatedAt, deletedAt,
-      routineExerciseId, setType, targetReps, targetWeight);
+      routineExerciseId, setType, targetReps, targetWeight, targetRir);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3216,7 +3243,8 @@ class RoutineSetTemplate extends DataClass
           other.routineExerciseId == this.routineExerciseId &&
           other.setType == this.setType &&
           other.targetReps == this.targetReps &&
-          other.targetWeight == this.targetWeight);
+          other.targetWeight == this.targetWeight &&
+          other.targetRir == this.targetRir);
 }
 
 class RoutineSetTemplatesCompanion extends UpdateCompanion<RoutineSetTemplate> {
@@ -3229,6 +3257,7 @@ class RoutineSetTemplatesCompanion extends UpdateCompanion<RoutineSetTemplate> {
   final Value<String> setType;
   final Value<String?> targetReps;
   final Value<double?> targetWeight;
+  final Value<int?> targetRir;
   const RoutineSetTemplatesCompanion({
     this.localId = const Value.absent(),
     this.id = const Value.absent(),
@@ -3239,6 +3268,7 @@ class RoutineSetTemplatesCompanion extends UpdateCompanion<RoutineSetTemplate> {
     this.setType = const Value.absent(),
     this.targetReps = const Value.absent(),
     this.targetWeight = const Value.absent(),
+    this.targetRir = const Value.absent(),
   });
   RoutineSetTemplatesCompanion.insert({
     this.localId = const Value.absent(),
@@ -3250,6 +3280,7 @@ class RoutineSetTemplatesCompanion extends UpdateCompanion<RoutineSetTemplate> {
     this.setType = const Value.absent(),
     this.targetReps = const Value.absent(),
     this.targetWeight = const Value.absent(),
+    this.targetRir = const Value.absent(),
   }) : routineExerciseId = Value(routineExerciseId);
   static Insertable<RoutineSetTemplate> custom({
     Expression<int>? localId,
@@ -3261,6 +3292,7 @@ class RoutineSetTemplatesCompanion extends UpdateCompanion<RoutineSetTemplate> {
     Expression<String>? setType,
     Expression<String>? targetReps,
     Expression<double>? targetWeight,
+    Expression<int>? targetRir,
   }) {
     return RawValuesInsertable({
       if (localId != null) 'local_id': localId,
@@ -3272,6 +3304,7 @@ class RoutineSetTemplatesCompanion extends UpdateCompanion<RoutineSetTemplate> {
       if (setType != null) 'set_type': setType,
       if (targetReps != null) 'target_reps': targetReps,
       if (targetWeight != null) 'target_weight': targetWeight,
+      if (targetRir != null) 'target_rir': targetRir,
     });
   }
 
@@ -3284,7 +3317,8 @@ class RoutineSetTemplatesCompanion extends UpdateCompanion<RoutineSetTemplate> {
       Value<String>? routineExerciseId,
       Value<String>? setType,
       Value<String?>? targetReps,
-      Value<double?>? targetWeight}) {
+      Value<double?>? targetWeight,
+      Value<int?>? targetRir}) {
     return RoutineSetTemplatesCompanion(
       localId: localId ?? this.localId,
       id: id ?? this.id,
@@ -3295,6 +3329,7 @@ class RoutineSetTemplatesCompanion extends UpdateCompanion<RoutineSetTemplate> {
       setType: setType ?? this.setType,
       targetReps: targetReps ?? this.targetReps,
       targetWeight: targetWeight ?? this.targetWeight,
+      targetRir: targetRir ?? this.targetRir,
     );
   }
 
@@ -3328,6 +3363,9 @@ class RoutineSetTemplatesCompanion extends UpdateCompanion<RoutineSetTemplate> {
     if (targetWeight.present) {
       map['target_weight'] = Variable<double>(targetWeight.value);
     }
+    if (targetRir.present) {
+      map['target_rir'] = Variable<int>(targetRir.value);
+    }
     return map;
   }
 
@@ -3342,7 +3380,8 @@ class RoutineSetTemplatesCompanion extends UpdateCompanion<RoutineSetTemplate> {
           ..write('routineExerciseId: $routineExerciseId, ')
           ..write('setType: $setType, ')
           ..write('targetReps: $targetReps, ')
-          ..write('targetWeight: $targetWeight')
+          ..write('targetWeight: $targetWeight, ')
+          ..write('targetRir: $targetRir')
           ..write(')'))
         .toString();
   }
@@ -4067,9 +4106,9 @@ class $SetLogsTable extends SetLogs with TableInfo<$SetLogsTable, SetLog> {
       type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _rirMeta = const VerificationMeta('rir');
   @override
-  late final GeneratedColumn<double> rir = GeneratedColumn<double>(
+  late final GeneratedColumn<int> rir = GeneratedColumn<int>(
       'rir', aliasedName, true,
-      type: DriftSqlType.double, requiredDuringInsert: false);
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _setTypeMeta =
       const VerificationMeta('setType');
   @override
@@ -4273,7 +4312,7 @@ class $SetLogsTable extends SetLogs with TableInfo<$SetLogsTable, SetLog> {
       rpe: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}rpe']),
       rir: attachedDatabase.typeMapping
-          .read(DriftSqlType.double, data['${effectivePrefix}rir']),
+          .read(DriftSqlType.int, data['${effectivePrefix}rir']),
       setType: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}set_type'])!,
       restTimeSeconds: attachedDatabase.typeMapping
@@ -4309,7 +4348,7 @@ class SetLog extends DataClass implements Insertable<SetLog> {
   final double? weight;
   final int? reps;
   final int? rpe;
-  final double? rir;
+  final int? rir;
   final String setType;
   final int? restTimeSeconds;
   final bool isCompleted;
@@ -4364,7 +4403,7 @@ class SetLog extends DataClass implements Insertable<SetLog> {
       map['rpe'] = Variable<int>(rpe);
     }
     if (!nullToAbsent || rir != null) {
-      map['rir'] = Variable<double>(rir);
+      map['rir'] = Variable<int>(rir);
     }
     map['set_type'] = Variable<String>(setType);
     if (!nullToAbsent || restTimeSeconds != null) {
@@ -4438,7 +4477,7 @@ class SetLog extends DataClass implements Insertable<SetLog> {
       weight: serializer.fromJson<double?>(json['weight']),
       reps: serializer.fromJson<int?>(json['reps']),
       rpe: serializer.fromJson<int?>(json['rpe']),
-      rir: serializer.fromJson<double?>(json['rir']),
+      rir: serializer.fromJson<int?>(json['rir']),
       setType: serializer.fromJson<String>(json['setType']),
       restTimeSeconds: serializer.fromJson<int?>(json['restTimeSeconds']),
       isCompleted: serializer.fromJson<bool>(json['isCompleted']),
@@ -4463,7 +4502,7 @@ class SetLog extends DataClass implements Insertable<SetLog> {
       'weight': serializer.toJson<double?>(weight),
       'reps': serializer.toJson<int?>(reps),
       'rpe': serializer.toJson<int?>(rpe),
-      'rir': serializer.toJson<double?>(rir),
+      'rir': serializer.toJson<int?>(rir),
       'setType': serializer.toJson<String>(setType),
       'restTimeSeconds': serializer.toJson<int?>(restTimeSeconds),
       'isCompleted': serializer.toJson<bool>(isCompleted),
@@ -4486,7 +4525,7 @@ class SetLog extends DataClass implements Insertable<SetLog> {
           Value<double?> weight = const Value.absent(),
           Value<int?> reps = const Value.absent(),
           Value<int?> rpe = const Value.absent(),
-          Value<double?> rir = const Value.absent(),
+          Value<int?> rir = const Value.absent(),
           String? setType,
           Value<int?> restTimeSeconds = const Value.absent(),
           bool? isCompleted,
@@ -4639,7 +4678,7 @@ class SetLogsCompanion extends UpdateCompanion<SetLog> {
   final Value<double?> weight;
   final Value<int?> reps;
   final Value<int?> rpe;
-  final Value<double?> rir;
+  final Value<int?> rir;
   final Value<String> setType;
   final Value<int?> restTimeSeconds;
   final Value<bool> isCompleted;
@@ -4701,7 +4740,7 @@ class SetLogsCompanion extends UpdateCompanion<SetLog> {
     Expression<double>? weight,
     Expression<int>? reps,
     Expression<int>? rpe,
-    Expression<double>? rir,
+    Expression<int>? rir,
     Expression<String>? setType,
     Expression<int>? restTimeSeconds,
     Expression<bool>? isCompleted,
@@ -4746,7 +4785,7 @@ class SetLogsCompanion extends UpdateCompanion<SetLog> {
       Value<double?>? weight,
       Value<int?>? reps,
       Value<int?>? rpe,
-      Value<double?>? rir,
+      Value<int?>? rir,
       Value<String>? setType,
       Value<int?>? restTimeSeconds,
       Value<bool>? isCompleted,
@@ -4815,7 +4854,7 @@ class SetLogsCompanion extends UpdateCompanion<SetLog> {
       map['rpe'] = Variable<int>(rpe.value);
     }
     if (rir.present) {
-      map['rir'] = Variable<double>(rir.value);
+      map['rir'] = Variable<int>(rir.value);
     }
     if (setType.present) {
       map['set_type'] = Variable<String>(setType.value);
@@ -14070,6 +14109,7 @@ typedef $$RoutineSetTemplatesTableCreateCompanionBuilder
   Value<String> setType,
   Value<String?> targetReps,
   Value<double?> targetWeight,
+  Value<int?> targetRir,
 });
 typedef $$RoutineSetTemplatesTableUpdateCompanionBuilder
     = RoutineSetTemplatesCompanion Function({
@@ -14082,6 +14122,7 @@ typedef $$RoutineSetTemplatesTableUpdateCompanionBuilder
   Value<String> setType,
   Value<String?> targetReps,
   Value<double?> targetWeight,
+  Value<int?> targetRir,
 });
 
 final class $$RoutineSetTemplatesTableReferences extends BaseReferences<
@@ -14139,6 +14180,9 @@ class $$RoutineSetTemplatesTableFilterComposer
   ColumnFilters<double> get targetWeight => $composableBuilder(
       column: $table.targetWeight, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<int> get targetRir => $composableBuilder(
+      column: $table.targetRir, builder: (column) => ColumnFilters(column));
+
   $$RoutineExercisesTableFilterComposer get routineExerciseId {
     final $$RoutineExercisesTableFilterComposer composer = $composerBuilder(
         composer: this,
@@ -14194,6 +14238,9 @@ class $$RoutineSetTemplatesTableOrderingComposer
       column: $table.targetWeight,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get targetRir => $composableBuilder(
+      column: $table.targetRir, builder: (column) => ColumnOrderings(column));
+
   $$RoutineExercisesTableOrderingComposer get routineExerciseId {
     final $$RoutineExercisesTableOrderingComposer composer = $composerBuilder(
         composer: this,
@@ -14247,6 +14294,9 @@ class $$RoutineSetTemplatesTableAnnotationComposer
 
   GeneratedColumn<double> get targetWeight => $composableBuilder(
       column: $table.targetWeight, builder: (column) => column);
+
+  GeneratedColumn<int> get targetRir =>
+      $composableBuilder(column: $table.targetRir, builder: (column) => column);
 
   $$RoutineExercisesTableAnnotationComposer get routineExerciseId {
     final $$RoutineExercisesTableAnnotationComposer composer = $composerBuilder(
@@ -14304,6 +14354,7 @@ class $$RoutineSetTemplatesTableTableManager extends RootTableManager<
             Value<String> setType = const Value.absent(),
             Value<String?> targetReps = const Value.absent(),
             Value<double?> targetWeight = const Value.absent(),
+            Value<int?> targetRir = const Value.absent(),
           }) =>
               RoutineSetTemplatesCompanion(
             localId: localId,
@@ -14315,6 +14366,7 @@ class $$RoutineSetTemplatesTableTableManager extends RootTableManager<
             setType: setType,
             targetReps: targetReps,
             targetWeight: targetWeight,
+            targetRir: targetRir,
           ),
           createCompanionCallback: ({
             Value<int> localId = const Value.absent(),
@@ -14326,6 +14378,7 @@ class $$RoutineSetTemplatesTableTableManager extends RootTableManager<
             Value<String> setType = const Value.absent(),
             Value<String?> targetReps = const Value.absent(),
             Value<double?> targetWeight = const Value.absent(),
+            Value<int?> targetRir = const Value.absent(),
           }) =>
               RoutineSetTemplatesCompanion.insert(
             localId: localId,
@@ -14337,6 +14390,7 @@ class $$RoutineSetTemplatesTableTableManager extends RootTableManager<
             setType: setType,
             targetReps: targetReps,
             targetWeight: targetWeight,
+            targetRir: targetRir,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
@@ -14949,7 +15003,7 @@ typedef $$SetLogsTableCreateCompanionBuilder = SetLogsCompanion Function({
   Value<double?> weight,
   Value<int?> reps,
   Value<int?> rpe,
-  Value<double?> rir,
+  Value<int?> rir,
   Value<String> setType,
   Value<int?> restTimeSeconds,
   Value<bool> isCompleted,
@@ -14970,7 +15024,7 @@ typedef $$SetLogsTableUpdateCompanionBuilder = SetLogsCompanion Function({
   Value<double?> weight,
   Value<int?> reps,
   Value<int?> rpe,
-  Value<double?> rir,
+  Value<int?> rir,
   Value<String> setType,
   Value<int?> restTimeSeconds,
   Value<bool> isCompleted,
@@ -15052,7 +15106,7 @@ class $$SetLogsTableFilterComposer
   ColumnFilters<int> get rpe => $composableBuilder(
       column: $table.rpe, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<double> get rir => $composableBuilder(
+  ColumnFilters<int> get rir => $composableBuilder(
       column: $table.rir, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get setType => $composableBuilder(
@@ -15156,7 +15210,7 @@ class $$SetLogsTableOrderingComposer
   ColumnOrderings<int> get rpe => $composableBuilder(
       column: $table.rpe, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<double> get rir => $composableBuilder(
+  ColumnOrderings<int> get rir => $composableBuilder(
       column: $table.rir, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get setType => $composableBuilder(
@@ -15259,7 +15313,7 @@ class $$SetLogsTableAnnotationComposer
   GeneratedColumn<int> get rpe =>
       $composableBuilder(column: $table.rpe, builder: (column) => column);
 
-  GeneratedColumn<double> get rir =>
+  GeneratedColumn<int> get rir =>
       $composableBuilder(column: $table.rir, builder: (column) => column);
 
   GeneratedColumn<String> get setType =>
@@ -15358,7 +15412,7 @@ class $$SetLogsTableTableManager extends RootTableManager<
             Value<double?> weight = const Value.absent(),
             Value<int?> reps = const Value.absent(),
             Value<int?> rpe = const Value.absent(),
-            Value<double?> rir = const Value.absent(),
+            Value<int?> rir = const Value.absent(),
             Value<String> setType = const Value.absent(),
             Value<int?> restTimeSeconds = const Value.absent(),
             Value<bool> isCompleted = const Value.absent(),
@@ -15400,7 +15454,7 @@ class $$SetLogsTableTableManager extends RootTableManager<
             Value<double?> weight = const Value.absent(),
             Value<int?> reps = const Value.absent(),
             Value<int?> rpe = const Value.absent(),
-            Value<double?> rir = const Value.absent(),
+            Value<int?> rir = const Value.absent(),
             Value<String> setType = const Value.absent(),
             Value<int?> restTimeSeconds = const Value.absent(),
             Value<bool> isCompleted = const Value.absent(),

@@ -32,16 +32,17 @@ class LiveWorkoutScreen extends StatefulWidget {
 class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
   final Map<int, TextEditingController> _weightControllers = {};
   final Map<int, TextEditingController> _repsControllers = {};
+  // NEU: Controller für RIR
+  final Map<int, TextEditingController> _rirControllers = {};
+  
   final Map<String, List<SetLog>> _lastPerformances = {};
   bool _isLoading = true;
 
-  // Definieren wir den Listener hier, damit er im ganzen State bekannt ist
   late final VoidCallback _onManagerUpdateCallback;
 
   @override
   void initState() {
     super.initState();
-    // Der Listener wird jetzt einer Variable zugewiesen
     _onManagerUpdateCallback = () {
       if (mounted) {
         final manager = Provider.of<WorkoutSessionManager>(
@@ -49,15 +50,12 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
           listen: false,
         );
         _syncControllersWithManager(manager);
-        // setState() wird hier benötigt, um UI-Änderungen zu triggern,
-        // die nicht von Controllern abgedeckt sind (z.B. ein neu hinzugefügter Satz)
         setState(() {});
       }
     };
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeScreen();
-      // Der Listener wird registriert
       Provider.of<WorkoutSessionManager>(
         context,
         listen: false,
@@ -65,10 +63,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     });
   }
 
-  // NEUE, KORREKTE dispose-Methode
   @override
   void dispose() {
-    // Wir greifen direkt auf die Singleton-Instanz zu, ohne den "context" zu nutzen.
     WorkoutSessionManager().removeListener(_onManagerUpdateCallback);
     _clearControllers();
     super.dispose();
@@ -85,7 +81,6 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       exercisesToInit = manager.exercises;
     }
 
-    // Lade die "Last Time"-Daten für alle Übungen, die bereits im Workout sind
     for (var re in exercisesToInit) {
       final lastSets = await WorkoutDatabaseHelper.instance
           .getLastSetsForExercise(re.exercise.nameEn);
@@ -96,13 +91,13 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
 
     _syncControllersWithManager(manager);
     if (mounted) {
-      //manager.addListener(_onManagerUpdate);
       setState(() => _isLoading = false);
     }
   }
 
   void _syncControllersWithManager(WorkoutSessionManager manager) {
     manager.setLogs.forEach((templateId, setLog) {
+      // --- WEIGHT & REPS (Bestehender Code) ---
       if (!_weightControllers.containsKey(templateId)) {
         _weightControllers[templateId] = TextEditingController(
           text: setLog.weightKg?.toStringAsFixed(1).replaceAll('.0', '') ?? '',
@@ -118,9 +113,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
             controllerText.replaceAll(',', '.'),
           );
 
-          // Nur updaten, wenn sich der WERT tatsächlich geändert hat, oder das Feld leer ist.
           if (controllerValue != currentManagerValue) {
-            // Wenn das Feld leer ist, senden wir 0.0, um den Wert im Manager zurückzusetzen.
             manager.updateSet(templateId, weight: controllerValue ?? 0.0);
           }
         });
@@ -135,41 +128,66 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
           }
         });
       } else {
-        // Hier ist die entscheidende Änderung:
-        // Setze den Controller-Text nur, wenn das Feld NICHT den Fokus hat.
-        // Das verhindert, dass der Wert beim Tippen zurückspringt.
+        // Sync Logic für Weight/Reps (nur wenn nicht fokussiert)
         final weightText = setLog.weightKg == 0
             ? ''
             : setLog.weightKg?.toStringAsFixed(1).replaceAll('.0', '') ?? '';
         final repsText = setLog.reps == 0 ? '' : setLog.reps?.toString() ?? '';
 
         if (_weightControllers[templateId]!.text != weightText) {
+          // Kleiner Check: Nur überschreiben wenn leer oder drastisch anders, 
+          // um Cursor-Probleme zu minimieren, falls Focus-Logik versagt.
+          // Hier vertrauen wir aber deiner bestehenden Logik.
           _weightControllers[templateId]!.text = weightText;
         }
         if (_repsControllers[templateId]!.text != repsText) {
           _repsControllers[templateId]!.text = repsText;
         }
       }
+
+      // --- NEU: RIR LOGIC ---
+      if (!_rirControllers.containsKey(templateId)) {
+        _rirControllers[templateId] = TextEditingController(
+          text: setLog.rir?.toString() ?? '',
+        );
+
+        _rirControllers[templateId]!.addListener(() {
+          final currentManagerValue = manager.setLogs[templateId]?.rir;
+          final controllerText = _rirControllers[templateId]!.text;
+          final controllerValue = int.tryParse(controllerText);
+
+          // Update Manager nur bei Änderung
+          if (controllerValue != currentManagerValue) {
+            // Wir übergeben null, wenn das Feld leer ist (kein RIR)
+            manager.updateSet(templateId, rir: controllerValue);
+          }
+        });
+      } else {
+        final rirText = setLog.rir?.toString() ?? '';
+        if (_rirControllers[templateId]!.text != rirText) {
+          _rirControllers[templateId]!.text = rirText;
+        }
+      }
     });
 
+    // Aufräumen gelöschter Sets
     final toRemove = _weightControllers.keys
         .where((id) => !manager.setLogs.containsKey(id))
         .toList();
     for (final id in toRemove) {
       _weightControllers.remove(id)?.dispose();
       _repsControllers.remove(id)?.dispose();
+      _rirControllers.remove(id)?.dispose(); // NEU
     }
   }
 
   void _clearControllers() {
-    for (var c in _weightControllers.values) {
-      c.dispose();
-    }
-    for (var c in _repsControllers.values) {
-      c.dispose();
-    }
+    for (var c in _weightControllers.values) c.dispose();
+    for (var c in _repsControllers.values) c.dispose();
+    for (var c in _rirControllers.values) c.dispose(); // NEU
     _weightControllers.clear();
     _repsControllers.clear();
+    _rirControllers.clear(); // NEU
   }
 
   Future<void> _finishWorkout() async {
@@ -178,7 +196,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
 
     final bool? confirmed = await showGlassBottomMenu<bool>(
       context: context,
-      title: l10n.finishWorkoutButton, // "Beenden"
+      title: l10n.finishWorkoutButton,
       contentBuilder: (ctx, close) {
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -239,42 +257,6 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     ).reorderExercise(oldIndex, newIndex);
   }
 
-/*
-  void _editPauseTime(RoutineExercise routineExercise) async {
-    final l10n = AppLocalizations.of(context)!;
-    final manager = Provider.of<WorkoutSessionManager>(context, listen: false);
-    final currentPause = manager.pauseTimes[routineExercise.id!];
-
-    final controller = TextEditingController(
-      text: currentPause?.toString() ?? '',
-    );
-    final result = await showDialog<int?>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.editPauseTimeTitle),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(labelText: l10n.pauseInSeconds),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () =>
-                Navigator.of(ctx).pop(int.tryParse(controller.text)),
-            child: Text(l10n.save),
-          ),
-        ],
-      ),
-    );
-    if (result != null) {
-      manager.updatePauseTime(routineExercise.id!, result);
-    }
-  }
-*/
   void _removeExercise(RoutineExercise exerciseToRemove) {
     Provider.of<WorkoutSessionManager>(
       context,
@@ -292,7 +274,6 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     );
 
     if (selectedExercise != null) {
-      // Lade "Last Time"-Daten für die NEUE Übung
       final lastSets = await WorkoutDatabaseHelper.instance
           .getLastSetsForExercise(selectedExercise.nameEn);
       if (mounted) {
@@ -328,7 +309,6 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
   void _showSetTypePicker(int templateId) {
     final l10n = AppLocalizations.of(context)!;
 
-    // Helfer zum Erstellen des Buchstaben-Widgets
     Widget buildSymbol(String char, Color color) {
       return Text(
         char,
@@ -344,7 +324,6 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       {
         'type': 'normal',
         'label': l10n.set_type_normal,
-        // Wir nutzen 'N' für Normal im Menü, oder einfach leer lassen wenn du willst
         'symbol': buildSymbol('N', Colors.grey)
       },
       {
@@ -369,9 +348,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       title: l10n.changeSetTypTitle,
       actions: options.map((opt) {
         return GlassMenuAction(
-          // icon: null, // Brauchen wir nicht mehr
-          customIcon:
-              opt['symbol'] as Widget, // <-- Hier übergeben wir das Text-Widget
+          customIcon: opt['symbol'] as Widget,
           label: opt['label'] as String,
           onTap: () => _changeSetType(templateId, opt['type'] as String),
         );
@@ -399,7 +376,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
             ),
             const SizedBox(height: DesignConstants.spacingS),
             Text(
-              "Füge eine Übung hinzu, um mit dem Protokollieren zu beginnen.", // TODO: l10n
+              "Füge eine Übung hinzu, um mit dem Protokollieren zu beginnen.",
               textAlign: TextAlign.center,
               style: Theme.of(
                 context,
@@ -423,6 +400,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
     final manager = Provider.of<WorkoutSessionManager>(context);
+
     void editPauseTime(RoutineExercise routineExercise) async {
       final l10n = AppLocalizations.of(context)!;
       final manager =
@@ -484,18 +462,11 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     }
 
     final mgr = manager;
-
-    // geplante/angelegte Sets = Anzahl aller SetLogs (egal ob erledigt)
     final int planned = mgr.setLogs.length;
-
-    // erledigte Sets = isCompleted == true
     final int completed =
         mgr.setLogs.values.where((s) => s.isCompleted == true).length;
-
     final double progress = planned == 0 ? 0.0 : completed / planned;
 
-    // NEU: Synchronisiere die Controller bei jedem Build
-    // Das ersetzt den alten Listener und ist sicher.
     if (!_isLoading) {
       _syncControllersWithManager(manager);
     }
@@ -534,9 +505,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                 WorkoutSummaryBar(
                   duration: mgr.elapsedDuration,
                   volume: mgr.totalVolume,
-                  sets:
-                      planned, // oder mgr.totalSets, falls das *geplante* Sets sind
-                  progress: progress, // LIVE: echter Fortschritt
+                  sets: planned,
+                  progress: progress,
                 ),
                 Divider(
                   height: 1,
@@ -591,11 +561,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                         ),
                                       ),
                                     ),
-                                    // NEUER, KORRIGIERTER trailing-Block
                                     trailing: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        // Zeigt die eingestellte Pausenzeit an
                                         if (manager.pauseTimes[
                                                     routineExercise.id!] !=
                                                 null &&
@@ -643,6 +611,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
+                                        // --- KOPFZEILE FÜR SETS (Mit RIR) ---
                                         Row(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.center,
@@ -703,6 +672,21 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                                 ),
                                               ),
                                             ),
+                                            // NEU: RIR HEADER
+                                            Expanded(
+                                              flex: 2,
+                                              child: Center(
+                                                child: Text(
+                                                  "RIR", // Ggf. l10n.rirLabel nutzen wenn vorhanden
+                                                  textAlign: TextAlign.center,
+                                                  style: TextStyle(
+                                                    color: Colors.grey[600],
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
                                             const SizedBox(width: 48),
                                           ],
                                         ),
@@ -737,7 +721,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                             setLog,
                                             _lastPerformances[routineExercise
                                                     .exercise.nameEn] ??
-                                                [], // Hier die Liste übergeben
+                                                [],
                                           );
                                         }),
                                         Padding(
@@ -762,19 +746,16 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                 ),
               ],
             ),
-      // KORRIGIERT: label hinzugefügt
       floatingActionButton: GlassFab(
         label: l10n.fabAddExercise,
         onPressed: _addExercise,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      // NEUER, KORREKTER bottomNavigationBar
       bottomNavigationBar: Column(
         mainAxisSize:
-            MainAxisSize.min, // Wichtig: Nimmt nur so viel Höhe wie nötig
+            MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          // 1. Dein bestehender AnimatedBuilder für die Rest-Timer-Bar
           AnimatedBuilder(
             animation: manager,
             builder: (context, _) {
@@ -782,7 +763,6 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
               return bar ?? const SizedBox.shrink();
             },
           ),
-          // 2. Das Wger-Widget direkt darunter (nur wenn kein Timer läuft)
           if (manager.remainingRestSeconds <= 0 && !manager.showRestDone)
             Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
@@ -797,14 +777,12 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     );
   }
 
-  // Ersetze diese Methode im _LiveWorkoutScreenState
-
   Widget _buildSetRow(
     int setIndex,
     int rowIndex,
     int templateId,
     SetLog setLog,
-    List<SetLog> lastPerfSets, // Nimmt jetzt eine Liste entgegen
+    List<SetLog> lastPerfSets,
   ) {
     final manager = Provider.of<WorkoutSessionManager>(context, listen: false);
     final isCompleted = setLog.isCompleted ?? false;
@@ -816,7 +794,6 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
             : Colors.white.withOpacity(0.1))
         : Colors.transparent;
 
-    // Finde den korrespondierenden Satz vom letzten Mal
     SetLog? lastPerf;
     if (rowIndex < lastPerfSets.length) {
       lastPerf = lastPerfSets[rowIndex];
@@ -879,6 +856,25 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
             enabled: !isCompleted,
           ),
         ),
+        // --- NEU: RIR INPUT ---
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 2,
+          child: TextFormField(
+            controller: _rirControllers[templateId],
+            textAlign: TextAlign.center,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              isDense: true,
+              fillColor: Colors.transparent,
+              hintText: "-", // Platzhalter wenn leer
+              hintStyle: TextStyle(color: Colors.black12),
+            ),
+            enabled: !isCompleted,
+          ),
+        ),
+        // ----------------------
         Padding(
           padding: const EdgeInsets.only(right: 8.0),
           child: SizedBox(

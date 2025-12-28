@@ -17,6 +17,7 @@ class SetLog {
   final int? durationSeconds;
   final int? rpe;
   final int? supersetId;
+  final int? rir;
 
   SetLog({
     this.id,
@@ -32,6 +33,7 @@ class SetLog {
     this.distanceKm,
     this.durationSeconds,
     this.rpe,
+    this.rir,
     this.supersetId,
   });
 
@@ -51,6 +53,7 @@ class SetLog {
       distanceKm: map['distance_km'],
       durationSeconds: map['duration_seconds'],
       rpe: map['rpe'],
+      rir: map['rir'],
       supersetId: map['superset_id'],
     );
   }
@@ -71,6 +74,7 @@ class SetLog {
       'distance_km': distanceKm,
       'duration_seconds': durationSeconds,
       'rpe': rpe,
+      'rir': rir,
       'superset_id': supersetId,
     };
   }
@@ -89,6 +93,7 @@ class SetLog {
     double? distanceKm,
     int? durationSeconds,
     int? rpe,
+    int? rir,
     int? supersetId,
   }) {
     return SetLog(
@@ -105,6 +110,7 @@ class SetLog {
       distanceKm: distanceKm ?? this.distanceKm,
       durationSeconds: durationSeconds ?? this.durationSeconds,
       rpe: rpe ?? this.rpe,
+      rir: rir ?? this.rir,
       supersetId: supersetId ?? this.supersetId,
     );
   }

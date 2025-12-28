@@ -5,12 +5,14 @@ class SetTemplate {
   final String setType;
   final String? targetReps;
   final double? targetWeight;
+  final int? targetRir;
 
   SetTemplate({
     this.id,
     required this.setType,
     this.targetReps,
     this.targetWeight,
+    this.targetRir
   });
 
   factory SetTemplate.fromMap(Map<String, dynamic> map) {
@@ -19,6 +21,7 @@ class SetTemplate {
       setType: map['set_type'] ?? 'normal',
       targetReps: map['target_reps'],
       targetWeight: map['target_weight'],
+      targetRir: map['target_rir'],
     );
   }
 
@@ -29,6 +32,7 @@ class SetTemplate {
       'set_type': setType,
       'target_reps': targetReps,
       'target_weight': targetWeight,
+      'target_rir': targetRir,
     };
   }
 
@@ -39,12 +43,14 @@ class SetTemplate {
     String? setType,
     String? targetReps,
     double? targetWeight,
+    int? targetRir,
   }) {
     return SetTemplate(
       id: id ?? this.id,
       setType: setType ?? this.setType,
       targetReps: targetReps ?? this.targetReps,
       targetWeight: targetWeight ?? this.targetWeight,
+      targetRir: targetRir ?? this.targetRir,
     );
   }
 }

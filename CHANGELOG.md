@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## [0.5.0-alpha.2] - 2025-12-28
+
+### Added
+- **RIR (Reps In Reserve) Support**:
+  - Added `rir` column to `SetLogs` database table for tracking actual exertion.
+  - Added `target_rir` column to `RoutineSetTemplates` database table for planning intensity.
+  - Integrated RIR input fields into `LiveWorkoutScreen`.
+  - Integrated RIR display and editing into `WorkoutLogDetailScreen`.
+  - Integrated Target RIR configuration into `EditRoutineScreen`.
+- **Session Restoration**: Added `tryRestoreSession()` to `WorkoutSessionManager` to recover ongoing workouts after app restarts.
+
+### Changed
+- **UI Overhaul (Edit Routine)**: Refactored `EditRoutineScreen` to align with the design of `LiveWorkoutScreen`.
+  - Now uses `WorkoutCard` and `SetTypeChip` widgets.
+  - Consistent column layout (Set, Kg, Reps, RIR).
+- **Database**: Reset schema version to 1 to accommodate new RIR columns cleanly.
+- **Pause Timer**: Improved logic to persist pause time changes immediately to the routine definition.
+
+### Fixed
+- Fixed inconsistent UI styling between routine editing and live tracking.
+
 ## [0.5.0-alpha.1] - 2025-12-27
 
 ### 🚀 Major Features & Onboarding

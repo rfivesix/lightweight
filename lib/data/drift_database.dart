@@ -100,6 +100,7 @@ class RoutineSetTemplates extends Table with HybridId, MetaColumns {
   TextColumn get targetReps =>
       text().nullable()(); // String, da z.B. "8-12" möglich
   RealColumn get targetWeight => real().nullable()();
+  IntColumn get targetRir => integer().nullable()();
 }
 
 // 7. WorkoutLogs
@@ -130,7 +131,7 @@ class SetLogs extends Table with HybridId, MetaColumns {
   RealColumn get weight => real().nullable()();
   IntColumn get reps => integer().nullable()();
   IntColumn get rpe => integer().nullable()();
-  RealColumn get rir => real().nullable()();
+  IntColumn get rir => integer().nullable()();
   // Aus altem Code: Felder die essenziell waren
   TextColumn get setType => text().withDefault(const Constant('normal'))();
   IntColumn get restTimeSeconds => integer().nullable()();

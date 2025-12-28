@@ -1,4 +1,4 @@
-// lib/screens/edit_routine_screen.dart (Final & De-Materialisiert - Endgültig)
+// lib/screens/edit_routine_screen.dart (Final & De-Materialisiert - Endgültig - Mit RIR)
 
 import 'package:flutter/material.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
@@ -34,8 +34,12 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
   int? _routineId;
   String _originalName = '';
   bool _isLoading = false;
+  
   final Map<int, TextEditingController> _repsControllers = {};
   final Map<int, TextEditingController> _weightControllers = {};
+  final Map<int, TextEditingController> _rirControllers = {}; // <--- NEU: RIR Controller
+
+  // _exerciseExpanded wurde entfernt da nicht genutzt/nötig im neuen Layout
 
   @override
   void initState() {
@@ -52,12 +56,9 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
   @override
   void dispose() {
     _nameController.dispose();
-    for (var c in _repsControllers.values) {
-      c.dispose();
-    }
-    for (var c in _weightControllers.values) {
-      c.dispose();
-    }
+    for (var c in _repsControllers.values) c.dispose();
+    for (var c in _weightControllers.values) c.dispose();
+    for (var c in _rirControllers.values) c.dispose(); // <--- NEU
     super.dispose();
   }
 
@@ -67,20 +68,23 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     final routineWithExercises =
         await WorkoutDatabaseHelper.instance.getRoutineById(_routineId!);
     if (mounted && routineWithExercises != null) {
-      for (var c in _repsControllers.values) {
-        c.dispose();
-      }
-      for (var c in _weightControllers.values) {
-        c.dispose();
-      }
+      for (var c in _repsControllers.values) c.dispose();
+      for (var c in _weightControllers.values) c.dispose();
+      for (var c in _rirControllers.values) c.dispose(); // <--- NEU
+      
       _repsControllers.clear();
       _weightControllers.clear();
+      _rirControllers.clear(); // <--- NEU
 
       for (var re in routineWithExercises.exercises) {
         for (var st in re.setTemplates) {
           _repsControllers[st.id!] = TextEditingController(text: st.targetReps);
           _weightControllers[st.id!] = TextEditingController(
             text: st.targetWeight?.toString() ?? '',
+          );
+          // NEU: RIR laden
+          _rirControllers[st.id!] = TextEditingController(
+            text: st.targetRir?.toString() ?? '',
           );
         }
       }
@@ -116,9 +120,12 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
           _weightControllers[st.id!] = TextEditingController(
             text: st.targetWeight?.toString() ?? '',
           );
+          // NEU: RIR init
+          _rirControllers[st.id!] = TextEditingController(
+            text: st.targetRir?.toString() ?? '',
+          );
         }
         setState(() {
-          // KORREKTUR: Erstelle eine neue Liste, um den Rebuild des Widgets zu erzwingen.
           _routineExercises = [..._routineExercises, newRoutineExercise];
         });
       }
@@ -176,6 +183,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
             targetWeight: double.tryParse(
               _weightControllers[set.id!]!.text.replaceAll(',', '.'),
             ),
+            // NEU: RIR speichern
+            targetRir: int.tryParse(_rirControllers[set.id!]?.text ?? ''),
           ),
         );
       }
@@ -199,9 +208,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         targetReps: '8-12',
       );
 
-      // --- START FIX ---
       final exerciseIndex = _routineExercises.indexOf(routineExercise);
-      if (exerciseIndex == -1) return; // Safety check
+      if (exerciseIndex == -1) return; 
 
       final updatedTemplates = [...routineExercise.setTemplates, newSet];
       final updatedExercise = RoutineExercise(
@@ -211,12 +219,12 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         pauseSeconds: routineExercise.pauseSeconds,
       );
       _routineExercises[exerciseIndex] = updatedExercise;
-      // --- END FIX ---
 
       _repsControllers[newSet.id!] = TextEditingController(
         text: newSet.targetReps,
       );
       _weightControllers[newSet.id!] = TextEditingController();
+      _rirControllers[newSet.id!] = TextEditingController(); // <--- NEU
     });
   }
 
@@ -226,7 +234,6 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     int index,
   ) {
     setState(() {
-      // --- START FIX ---
       final exerciseIndex = _routineExercises.indexOf(routineExercise);
       if (exerciseIndex == -1) return;
 
@@ -240,10 +247,10 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         pauseSeconds: routineExercise.pauseSeconds,
       );
       _routineExercises[exerciseIndex] = updatedExercise;
-      // --- END FIX ---
 
       _repsControllers.remove(setTemplateId)?.dispose();
       _weightControllers.remove(setTemplateId)?.dispose();
+      _rirControllers.remove(setTemplateId)?.dispose(); // <--- NEU
     });
   }
 
@@ -268,7 +275,6 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         pauseSeconds: routineExercise.pauseSeconds,
       );
     });
-    // Navigator.pop(context); // ENTFERNT: GlassMenu schließt sich selbst
   }
 
   void _showSetTypePicker(SetTemplate setTemplate) {
@@ -321,15 +327,12 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     );
   }
 
-  // In lib/screens/edit_routine_screen.dart
-
   void _editPauseTime(RoutineExercise routineExercise) async {
     final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController(
       text: routineExercise.pauseSeconds?.toString() ?? '',
     );
 
-    // KORREKTUR: showGlassBottomMenu statt showDialog
     final result = await showGlassBottomMenu<int?>(
       context: context,
       title: l10n.editPauseTimeTitle,
@@ -393,18 +396,29 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     }
   }
 
-  // In lib/screens/edit_routine_screen.dart
-
   void _deleteSingleExercise(RoutineExercise exerciseToDelete) async {
     final l10n = AppLocalizations.of(context)!;
-    // NEU: Helper
-    final confirmed = await showDeleteConfirmation(
-      context,
-      title: l10n.deleteExerciseConfirmTitle,
-      content: l10n.deleteExerciseConfirmContent(
-        exerciseToDelete.exercise.getLocalizedName(context),
+    
+    // Kleiner Inline-Dialog Ersatz, falls kein globaler Helper vorhanden ist
+    // oder Nutzung des Standard Dialogs
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.deleteExerciseConfirmTitle),
+        content: Text(l10n.deleteExerciseConfirmContent(
+            exerciseToDelete.exercise.getLocalizedName(context))),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.delete),
+          ),
+        ],
       ),
-    );
+    ) ?? false;
 
     if (confirmed && _routineId != null) {
       await WorkoutDatabaseHelper.instance.removeExerciseFromRoutine(
@@ -546,7 +560,6 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                                   trailing: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      // HIER GEÄNDERT: Pause direkt neben Icon anzeigen
                                       if (routineExercise.pauseSeconds !=
                                               null &&
                                           routineExercise.pauseSeconds! > 0)
@@ -589,15 +602,17 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      // ALTER ANZEIGE-BLOCK ENTFERNT
+                                      // HEADER ZEILE
                                       Row(
                                         children: [
                                           _buildHeader(l10n.setLabel, flex: 2),
-                                          const Spacer(flex: 3),
                                           _buildHeader(l10n.kgLabel, flex: 2),
+                                          // Spacer entfernt, damit es passt
                                           const SizedBox(width: 8),
                                           _buildHeader(l10n.repsLabel, flex: 2),
-                                          const SizedBox(width: 48),
+                                          const SizedBox(width: 8),
+                                          _buildHeader("RIR", flex: 2), // <--- NEU
+                                          const SizedBox(width: 48), // Platz für Delete Button
                                         ],
                                       ),
                                       ...routineExercise.setTemplates
@@ -699,7 +714,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                 ),
               ),
             ),
-            const Spacer(flex: 3),
+            // Spacer entfernt
             Expanded(
               flex: 2,
               child: TextFormField(
@@ -745,6 +760,22 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                   }
                   return null;
                 },
+              ),
+            ),
+            const SizedBox(width: 8),
+            // NEU: RIR SPALTE
+            Expanded(
+              flex: 2,
+              child: TextFormField(
+                controller: _rirControllers[template.id!],
+                textAlign: TextAlign.center,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  isDense: true,
+                  fillColor: Colors.transparent,
+                  hintText: "-",
+                ),
               ),
             ),
             Padding(
