@@ -166,25 +166,45 @@ class ProductDatabaseHelper {
     final rows = await query.get();
     return rows.map((row) => _mapRowToFoodItem(row)).toList();
   }
-
-  // --- 3. GLOBALE SUCHE (Base + OFF + User) ---
+// --- 3. GLOBALE SUCHE (Base + OFF + User) ---
   Future<List<FoodItem>> searchProducts(String keyword) async {
-    if (keyword.trim().isEmpty) return [];
+    final term = keyword.trim();
+    if (term.isEmpty) return [];
     final db = await database;
+    const int limit = 50;
 
-    final rows = await (db.select(db.products)
-          ..where((t) => t.name.like('%$keyword%') | t.brand.like('%$keyword%'))
+    // 1. Priorisierte Suche: Eigene Lebensmittel (user) & Grundnahrungsmittel (base)
+    // Diese sind am wichtigsten und sollen immer oben stehen.
+    final priorityRows = await (db.select(db.products)
+          ..where((t) =>
+              (t.name.like('%$term%') | t.brand.like('%$term%')) &
+              t.source.isIn(['user', 'base']))
           ..orderBy([
-            // FIX: Absteigend (desc), damit 'user' (u) VOR 'off' (o) und 'base' (b) kommt
-            // u > o > b
-            (t) => OrderingTerm(expression: t.source, mode: OrderingMode.desc),
-            (t) =>
-                OrderingTerm(expression: t.name.length, mode: OrderingMode.asc),
+            // Kürzere Namen zuerst (Exakte Treffer nach oben)
+            (t) => OrderingTerm(expression: t.name.length, mode: OrderingMode.asc),
           ])
-          ..limit(50))
+          ..limit(limit))
         .get();
 
-    return rows.map((row) => _mapRowToFoodItem(row)).toList();
+    final List<FoodItem> results = priorityRows.map(_mapRowToFoodItem).toList();
+
+    // 2. Auffüllen mit Open Food Facts (off), falls noch Platz in der Liste ist
+    if (results.length < limit) {
+      final int remaining = limit - results.length;
+      final offRows = await (db.select(db.products)
+            ..where((t) =>
+                (t.name.like('%$term%') | t.brand.like('%$term%')) &
+                t.source.equals('off'))
+            ..orderBy([
+              (t) => OrderingTerm(expression: t.name.length, mode: OrderingMode.asc),
+            ])
+            ..limit(remaining))
+          .get();
+
+      results.addAll(offRows.map(_mapRowToFoodItem));
+    }
+
+    return results;
   }
 
   // --- 4. SCANNER ---
