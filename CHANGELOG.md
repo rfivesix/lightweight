@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+Hier ist der passende Changelog-Eintrag für **v0.5.0-alpha.3** im gewünschten Stil:
+
+## [0.5.0-alpha.3] - 2025-12-29
+
+### Added
+- **Cardio Support**: Introduced specialized tracking for cardio exercises.
+  - **Dynamic Input Fields**: Based on exercise category ('Cardio'), the input fields in *Live Workout* and *Routine Editor* automatically switch from "Kg / Reps" to "**Distance (km) / Time (min)**".
+  - **Routine Logic**: Cardio exercises in routines now default to 1 set (instead of 3) and initialize with empty fields.
+  - **Summary & History**: Cardio results are now summarized as "Total Distance | Total Duration" instead of volume.
+- **Detailed Database Initialization**:
+  - Replaced background database updates with a dedicated **App Initializer Screen**.
+  - This screen blocks the UI during startup, displaying a progress bar and detailed status ("Updating base foods: 1500/9000..."), preventing app lag and missing data issues.
+
+### Fixed
+- **Workout Reordering**: Fixed a critical bug where reordering exercises during a live workout was not persisted upon saving. The correct order is now saved to the database history.
+- **Search Reliability**:
+  - Fixed an issue where base food items (e.g., "Apple") were hidden in search results due to the sheer volume of Open Food Facts entries. Search now prioritizes local 'User' and 'Base' items.
+  - Fixed a query bug where trailing spaces in search input (often added by keyboards) caused zero results. Input is now trimmed automatically.
+- **Ghost Sets**: Finishing a workout now automatically cleans up incomplete (unchecked) sets from the database.
+- **Type Safety**: Resolved a crash in the workout summary screen caused by incorrect type casting (`num` vs `int`) for duration calculations.
+
 ## [0.5.0-alpha.2] - 2025-12-28
 
 ### Added
