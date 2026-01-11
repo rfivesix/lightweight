@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:lightweight/models/set_template.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/glass_bottom_menu.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
@@ -467,7 +468,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         mgr.setLogs.values.where((s) => s.isCompleted == true).length;
     final double progress = planned == 0 ? 0.0 : completed / planned;
 
-    if (!_isLoading) {
+        if (!_isLoading) {
       _syncControllersWithManager(manager);
     }
 
@@ -530,6 +531,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                  // ... (ListTile Header wie vorher) ...
                                   ListTile(
                                     contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 16.0,
@@ -561,6 +563,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                         ),
                                       ),
                                     ),
+                                    // ... (trailing Icons wie vorher) ...
                                     trailing: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
@@ -589,7 +592,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                           ),
                                           tooltip: l10n.editPauseTime,
                                           onPressed: () =>
-                                              editPauseTime(routineExercise),
+                                              editPauseTime(routineExercise), // muss lokal definiert sein
                                         ),
                                         IconButton(
                                           icon: const Icon(
@@ -611,7 +614,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        // --- KOPFZEILE FÜR SETS (Mit RIR) ---
+                                        // ... (Header Row wie vorher) ...
                                         Row(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.center,
@@ -672,12 +675,11 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                                 ),
                                               ),
                                             ),
-                                            // NEU: RIR HEADER
                                             Expanded(
                                               flex: 2,
                                               child: Center(
                                                 child: Text(
-                                                  "RIR", // Ggf. l10n.rirLabel nutzen wenn vorhanden
+                                                  "RIR",
                                                   textAlign: TextAlign.center,
                                                   style: TextStyle(
                                                     color: Colors.grey[600],
@@ -690,11 +692,13 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                             const SizedBox(width: 48),
                                           ],
                                         ),
+                                        // SET ROWS MAPPER
                                         ...routineExercise.setTemplates
                                             .asMap()
                                             .entries
                                             .map((setEntry) {
                                           final templateId = setEntry.value.id!;
+                                          final template = setEntry.value; // <--- HIER
                                           final setLog =
                                               manager.setLogs[templateId];
                                           if (setLog == null) {
@@ -722,6 +726,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                             _lastPerformances[routineExercise
                                                     .exercise.nameEn] ??
                                                 [],
+                                            template, // <--- HIER ÜBERGEBEN
                                           );
                                         }),
                                         Padding(
@@ -777,15 +782,19 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     );
   }
 
-  Widget _buildSetRow(
+    Widget _buildSetRow(
     int setIndex,
     int rowIndex,
     int templateId,
     SetLog setLog,
     List<SetLog> lastPerfSets,
+    SetTemplate template,
   ) {
     final manager = Provider.of<WorkoutSessionManager>(context, listen: false);
-    final isCompleted = setLog.isCompleted ?? false;
+    
+    // FIX: Null-Safety erzwingen. Wenn null, dann false.
+    final bool isCompleted = setLog.isCompleted ?? false;
+    
     final isLightMode = Theme.of(context).brightness == Brightness.light;
     final bool isColoredRow = rowIndex > 0 && rowIndex.isOdd;
     final Color rowColor = isColoredRow
@@ -799,12 +808,23 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       lastPerf = lastPerfSets[rowIndex];
     }
 
+    // FIX: Sichere Abfrage für Hint-Texte ohne "!" Operator
+    final String repHint = (template.targetReps?.isNotEmpty == true)
+        ? template.targetReps!
+        : '0';
+
+    final double tWeight = template.targetWeight ?? 0.0;
+    final String weightHint = tWeight > 0 
+        ? tWeight.toStringAsFixed(1).replaceAll('.0', '') 
+        : '0';
+
     final rowContent = Row(
       children: [
         Expanded(
           flex: 2,
           child: Center(
             child: GestureDetector(
+              // FIX: isCompleted ist jetzt sicher bool
               onTap: () => isCompleted ? null : _showSetTypePicker(templateId),
               child: Text(
                 _getSetDisplayText(setLog.setType, setIndex),
@@ -833,12 +853,14 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
             controller: _weightControllers[templateId],
             textAlign: TextAlign.center,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               border: InputBorder.none,
               isDense: true,
               fillColor: Colors.transparent,
+              hintText: weightHint, // FIX: Sicherer Hint
+              hintStyle: TextStyle(color: Colors.grey.withOpacity(0.5)),
             ),
-            enabled: !isCompleted,
+            enabled: !isCompleted, // FIX: isCompleted ist sicher bool
           ),
         ),
         const SizedBox(width: 8),
@@ -848,15 +870,16 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
             controller: _repsControllers[templateId],
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               border: InputBorder.none,
               isDense: true,
               fillColor: Colors.transparent,
+              hintText: repHint, // FIX: Sicherer Hint
+              hintStyle: TextStyle(color: Colors.grey.withOpacity(0.5), fontSize: 14),
             ),
             enabled: !isCompleted,
           ),
         ),
-        // --- NEU: RIR INPUT ---
         const SizedBox(width: 8),
         Expanded(
           flex: 2,
@@ -868,13 +891,12 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
               border: InputBorder.none,
               isDense: true,
               fillColor: Colors.transparent,
-              hintText: "-", // Platzhalter wenn leer
+              hintText: "-",
               hintStyle: TextStyle(color: Colors.black12),
             ),
             enabled: !isCompleted,
           ),
         ),
-        // ----------------------
         Padding(
           padding: const EdgeInsets.only(right: 8.0),
           child: SizedBox(

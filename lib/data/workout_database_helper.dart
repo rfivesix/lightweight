@@ -621,7 +621,9 @@ Future<int> insertSetLog(SetLog setLog) async {
               reps: drift.Value(s.reps),
               isCompleted: drift.Value(s.isCompleted ?? false),
               notes: drift.Value(s.notes),
-              rir: drift.Value(s.rir), // Direkt übernehmen
+              rir: drift.Value(s.rir),
+              // FIX: logOrder muss mit aktualisiert werden, damit Reordering gespeichert wird
+              logOrder: drift.Value(s.log_order ?? 0),
             ),
             where: (tbl) => tbl.localId.equals(s.id!),
           );

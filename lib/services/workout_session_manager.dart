@@ -442,12 +442,57 @@ class WorkoutSessionManager extends ChangeNotifier {
     });
   }
 
-  Future<void> finishWorkout() async {
+Future<void> finishWorkout() async {
     _workoutDurationTimer?.cancel();
     _restTimer?.cancel();
+
     if (_workoutLog != null) {
-      await WorkoutDatabaseHelper.instance.finishWorkout(_workoutLog!.id!);
+      final db = WorkoutDatabaseHelper.instance;
+      final logId = _workoutLog!.id!;
+
+      // 1. Unvollständige Sets identifizieren und löschen
+      // Wir filtern lokal, welche IDs gelöscht werden müssen
+      final incompleteSetIds = _setLogs.values
+          .where((s) => s.isCompleted == false && s.id != null)
+          .map((s) => s.id!)
+          .toList();
+
+      if (incompleteSetIds.isNotEmpty) {
+        await db.deleteSetLogs(incompleteSetIds);
+      }
+
+      // 2. Reihenfolge aktualisieren (Reordering Fix)
+      // Wir iterieren durch die aktuelle Übungsliste (die vom User ggf. umsortiert wurde)
+      // und vergeben neue logOrder-Indizes für die verbleibenden (completed) Sets.
+      int globalOrderCounter = 0;
+      final List<SetLog> setsToUpdate = [];
+
+      for (final routineExercise in _exercises) {
+        for (final template in routineExercise.setTemplates) {
+          final setLog = _setLogs[template.id];
+          // Nur completed Sets werden behalten und neu sortiert
+          if (setLog != null && setLog.isCompleted == true) {
+            setsToUpdate.add(setLog.copyWith(log_order: globalOrderCounter));
+            globalOrderCounter++;
+          }
+        }
+      }
+
+      // Batch-Update der Reihenfolge in der DB
+      if (setsToUpdate.isNotEmpty) {
+        await db.updateSetLogs(setsToUpdate);
+      }
+
+      // 3. Workout abschließen
+      await db.finishWorkout(logId);
+
+      // Cleanup
       _workoutLog = null;
+      _setLogs.clear();
+      pauseTimes.clear();
+      _exercises.clear();
+      
+      notifyListeners();
     }
   }
 }
