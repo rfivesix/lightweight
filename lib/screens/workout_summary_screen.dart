@@ -21,7 +21,10 @@ class WorkoutSummaryScreen extends StatefulWidget {
 class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
   bool _isLoading = true;
   WorkoutLog? _log;
-  Map<String, double> _volumePerExercise = {};
+  
+  // Wir speichern jetzt einen formatierten String pro Übung, 
+  // da Cardio und Kraft unterschiedliche Einheiten haben.
+  Map<String, String> _summaryPerExercise = {};
 
   @override
   void initState() {
@@ -29,35 +32,62 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
     _loadWorkoutDetails();
   }
 
-  Future<void> _loadWorkoutDetails() async {
-    final data = await WorkoutDatabaseHelper.instance.getWorkoutLogById(
-      widget.logId,
-    );
+Future<void> _loadWorkoutDetails() async {
+    final db = WorkoutDatabaseHelper.instance;
+    final data = await db.getWorkoutLogById(widget.logId);
 
     if (data != null) {
-      final Map<String, double> volumeMap = {};
+      final Map<String, String> summaryMap = {};
+      
+      // FIX: Typ-Sicherheit erhöhen: List<SetLog> statt dynamic
+      final groupedSets = <String, List<dynamic>>{}; // Bleibt dynamisch wegen Initialisierung
       for (var set in data.sets) {
-        final volume = (set.weightKg ?? 0) * (set.reps ?? 0);
-        volumeMap.update(
-          set.exerciseName,
-          (value) => value + volume,
-          ifAbsent: () => volume,
-        );
+        groupedSets.putIfAbsent(set.exerciseName, () => []).add(set);
+      }
+
+      for (var entry in groupedSets.entries) {
+        final name = entry.key;
+        final sets = entry.value; // ist List<dynamic>
+
+        final exercise = await db.getExerciseByName(name);
+        final isCardio = exercise?.categoryName?.toLowerCase() == 'cardio';
+
+        if (isCardio) {
+          double totalDist = 0;
+          int totalSeconds = 0;
+          for (var s in sets) {
+            // FIX: Expliziter Cast, um Analyzer-Fehler zu vermeiden
+            // Wir wissen, dass 's' ein SetLog ist oder zumindest durationSeconds hat.
+            // Der Fehler kam vermutlich, weil 's' dynamic war und durationSeconds nullable int.
+            // Der Analyzer ist bei dynamic manchmal streng oder verwirrt bei +=.
+            final dist = (s.distanceKm as num?)?.toDouble() ?? 0.0;
+            final dur = (s.durationSeconds as num?)?.toInt() ?? 0;
+            
+            totalDist += dist;
+            totalSeconds += dur; 
+          }
+          final int minutes = (totalSeconds / 60).round();
+          summaryMap[name] = "${totalDist.toStringAsFixed(1)} km | ${minutes} min";
+        } else {
+          double totalVol = 0;
+          for (var s in sets) {
+            final w = (s.weightKg as num?)?.toDouble() ?? 0.0;
+            final r = (s.reps as num?)?.toInt() ?? 0;
+            totalVol += w * r;
+          }
+          summaryMap[name] = "${totalVol.toStringAsFixed(0)} kg";
+        }
       }
 
       if (mounted) {
         setState(() {
           _log = data;
-          _volumePerExercise = volumeMap;
+          _summaryPerExercise = summaryMap;
           _isLoading = false;
         });
       }
     } else {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -65,6 +95,16 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final textTheme = Theme.of(context).textTheme;
+
+    // Gesamtvolumen nur für Kraft berechnen? Oder einfach weglassen wenn Mischmasch?
+    // Wir lassen die globale "Volume" Anzeige im Header einfach als Summe aller Kraft-Volumen.
+    double globalVolume = 0;
+    if (_log != null) {
+      for (var set in _log!.sets) {
+        // Nur Gewicht * Reps addieren (Cardio hat hier meist 0 oder null)
+        globalVolume += (set.weightKg ?? 0) * (set.reps ?? 0);
+      }
+    }
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -82,8 +122,7 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
                       // Gesamt-Statistiken
                       WorkoutSummaryBar(
                         duration: _log!.endTime?.difference(_log!.startTime),
-                        volume:
-                            _volumePerExercise.values.fold(0, (a, b) => a + b),
+                        volume: globalVolume,
                         sets: _log!.sets.length,
                         progress: null,
                       ),
@@ -98,7 +137,7 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
                               style: textTheme.titleMedium,
                             ),
                             const SizedBox(height: DesignConstants.spacingS),
-                            ..._volumePerExercise.entries.map((entry) {
+                            ..._summaryPerExercise.entries.map((entry) {
                               return SummaryCard(
                                 child: ListTile(
                                   title: Text(
@@ -107,8 +146,9 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
+                                  // Hier wird nun entweder "X kg" oder "X km | Y min" angezeigt
                                   trailing: Text(
-                                    "${entry.value.toStringAsFixed(0)} kg",
+                                    entry.value,
                                     style: textTheme.bodyLarge,
                                   ),
                                 ),
@@ -127,8 +167,6 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
                           onPressed: () {
-                            // Schließt den Summary-Screen und kehrt zum vorherigen Screen zurück
-                            // (vermutlich der Routines- oder Home-Screen)
                             Navigator.of(context).pop();
                           },
                           child: Text(

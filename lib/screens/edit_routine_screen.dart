@@ -1,4 +1,5 @@
-// lib/screens/edit_routine_screen.dart (Final & De-Materialisiert - Endgültig - Mit RIR)
+// lib/screens/edit_routine_screen.dart
+// FINAL: Cardio Clean-Up (1 Set, Cleaner Layout, Empty Defaults)
 
 import 'package:flutter/material.dart';
 import 'package:lightweight/data/workout_database_helper.dart';
@@ -11,13 +12,11 @@ import 'package:lightweight/screens/exercise_catalog_screen.dart';
 import 'package:lightweight/screens/exercise_detail_screen.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/glass_bottom_menu.dart';
-// Zum Starten der Routine
 import 'package:lightweight/widgets/glass_fab.dart';
 import 'package:lightweight/widgets/global_app_bar.dart';
 import 'package:lightweight/widgets/set_type_chip.dart';
-// HINZUGEFÜGT
-import 'package:lightweight/widgets/wger_attribution_widget.dart'; // HINZUGEFÜGT
-import 'package:lightweight/widgets/workout_card.dart'; // NEUER IMPORT
+import 'package:lightweight/widgets/wger_attribution_widget.dart';
+import 'package:lightweight/widgets/workout_card.dart';
 
 class EditRoutineScreen extends StatefulWidget {
   final Routine? routine;
@@ -34,12 +33,10 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
   int? _routineId;
   String _originalName = '';
   bool _isLoading = false;
-  
+
   final Map<int, TextEditingController> _repsControllers = {};
   final Map<int, TextEditingController> _weightControllers = {};
-  final Map<int, TextEditingController> _rirControllers = {}; // <--- NEU: RIR Controller
-
-  // _exerciseExpanded wurde entfernt da nicht genutzt/nötig im neuen Layout
+  final Map<int, TextEditingController> _rirControllers = {};
 
   @override
   void initState() {
@@ -58,8 +55,12 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     _nameController.dispose();
     for (var c in _repsControllers.values) c.dispose();
     for (var c in _weightControllers.values) c.dispose();
-    for (var c in _rirControllers.values) c.dispose(); // <--- NEU
+    for (var c in _rirControllers.values) c.dispose();
     super.dispose();
+  }
+
+  bool _isCardio(RoutineExercise re) {
+    return re.exercise.categoryName?.toLowerCase() == 'cardio';
   }
 
   Future<void> _loadExercisesForRoutine() async {
@@ -70,19 +71,23 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     if (mounted && routineWithExercises != null) {
       for (var c in _repsControllers.values) c.dispose();
       for (var c in _weightControllers.values) c.dispose();
-      for (var c in _rirControllers.values) c.dispose(); // <--- NEU
-      
+      for (var c in _rirControllers.values) c.dispose();
+
       _repsControllers.clear();
       _weightControllers.clear();
-      _rirControllers.clear(); // <--- NEU
+      _rirControllers.clear();
 
       for (var re in routineWithExercises.exercises) {
+        final isCardio = _isCardio(re);
         for (var st in re.setTemplates) {
-          _repsControllers[st.id!] = TextEditingController(text: st.targetReps);
+          // FIX: Wenn es Cardio ist und der Wert "8-12" (Default DB) ist, leer anzeigen
+          String repsText = st.targetReps ?? '';
+          if (isCardio && repsText == '8-12') repsText = '';
+
+          _repsControllers[st.id!] = TextEditingController(text: repsText);
           _weightControllers[st.id!] = TextEditingController(
             text: st.targetWeight?.toString() ?? '',
           );
-          // NEU: RIR laden
           _rirControllers[st.id!] = TextEditingController(
             text: st.targetRir?.toString() ?? '',
           );
@@ -112,15 +117,23 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     );
 
     if (selectedExercise != null && _routineId != null) {
+      // FIX: Cardio Check vor dem Hinzufügen
+      final isCardio = selectedExercise.categoryName?.toLowerCase() == 'cardio';
+      final initialSetCount = isCardio ? 1 : 3;
+
       final newRoutineExercise = await WorkoutDatabaseHelper.instance
-          .addExerciseToRoutine(_routineId!, selectedExercise.id!);
+          .addExerciseToRoutine(_routineId!, selectedExercise.id!,
+              initialSetCount: initialSetCount); // Parameter
+
       if (newRoutineExercise != null) {
         for (var st in newRoutineExercise.setTemplates) {
-          _repsControllers[st.id!] = TextEditingController(text: st.targetReps);
+          // FIX: Leere Reps für Cardio
+          final defaultReps = isCardio ? '' : st.targetReps;
+          
+          _repsControllers[st.id!] = TextEditingController(text: defaultReps);
           _weightControllers[st.id!] = TextEditingController(
             text: st.targetWeight?.toString() ?? '',
           );
-          // NEU: RIR init
           _rirControllers[st.id!] = TextEditingController(
             text: st.targetRir?.toString() ?? '',
           );
@@ -160,9 +173,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         });
       }
       if (mounted && !isAddingExercise) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.snackbarRoutineCreated)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.snackbarRoutineCreated)));
       }
     } else {
       if (_nameController.text.trim() != _originalName) {
@@ -183,7 +195,6 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
             targetWeight: double.tryParse(
               _weightControllers[set.id!]!.text.replaceAll(',', '.'),
             ),
-            // NEU: RIR speichern
             targetRir: int.tryParse(_rirControllers[set.id!]?.text ?? ''),
           ),
         );
@@ -192,9 +203,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     }
 
     if (mounted && !isAddingExercise) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.snackbarRoutineSaved)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.snackbarRoutineSaved)));
       Navigator.of(context).pop(true);
     }
     return true;
@@ -202,14 +212,15 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
 
   void _addSet(RoutineExercise routineExercise) {
     setState(() {
+      final isCardio = _isCardio(routineExercise);
       final newSet = SetTemplate(
         id: DateTime.now().millisecondsSinceEpoch,
         setType: 'normal',
-        targetReps: '8-12',
+        targetReps: isCardio ? '' : '8-12', // FIX
       );
 
       final exerciseIndex = _routineExercises.indexOf(routineExercise);
-      if (exerciseIndex == -1) return; 
+      if (exerciseIndex == -1) return;
 
       final updatedTemplates = [...routineExercise.setTemplates, newSet];
       final updatedExercise = RoutineExercise(
@@ -224,33 +235,33 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         text: newSet.targetReps,
       );
       _weightControllers[newSet.id!] = TextEditingController();
-      _rirControllers[newSet.id!] = TextEditingController(); // <--- NEU
+      _rirControllers[newSet.id!] = TextEditingController();
     });
   }
 
   void _removeSet(
-    RoutineExercise routineExercise,
+    RoutineExercise re,
     int setTemplateId,
     int index,
   ) {
     setState(() {
-      final exerciseIndex = _routineExercises.indexOf(routineExercise);
+      final exerciseIndex = _routineExercises.indexOf(re);
       if (exerciseIndex == -1) return;
 
-      final updatedTemplates = [...routineExercise.setTemplates];
+      final updatedTemplates = [...re.setTemplates];
       updatedTemplates.removeAt(index);
 
       final updatedExercise = RoutineExercise(
-        id: routineExercise.id,
-        exercise: routineExercise.exercise,
+        id: re.id,
+        exercise: re.exercise,
         setTemplates: updatedTemplates,
-        pauseSeconds: routineExercise.pauseSeconds,
+        pauseSeconds: re.pauseSeconds,
       );
       _routineExercises[exerciseIndex] = updatedExercise;
 
       _repsControllers.remove(setTemplateId)?.dispose();
       _weightControllers.remove(setTemplateId)?.dispose();
-      _rirControllers.remove(setTemplateId)?.dispose(); // <--- NEU
+      _rirControllers.remove(setTemplateId)?.dispose();
     });
   }
 
@@ -327,10 +338,10 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     );
   }
 
-  void _editPauseTime(RoutineExercise routineExercise) async {
+  void _editPauseTime(RoutineExercise re) async {
     final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController(
-      text: routineExercise.pauseSeconds?.toString() ?? '',
+      text: re.pauseSeconds?.toString() ?? '',
     );
 
     final result = await showGlassBottomMenu<int?>(
@@ -389,40 +400,26 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
 
     if (result != null) {
       await WorkoutDatabaseHelper.instance.updatePauseTime(
-        routineExercise.id!,
+        re.id!,
         result,
       );
       _loadExercisesForRoutine();
     }
   }
 
-  void _deleteSingleExercise(RoutineExercise exerciseToDelete) async {
+  void _deleteSingleExercise(RoutineExercise ex) async {
     final l10n = AppLocalizations.of(context)!;
-    
-    // Kleiner Inline-Dialog Ersatz, falls kein globaler Helper vorhanden ist
-    // oder Nutzung des Standard Dialogs
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.deleteExerciseConfirmTitle),
-        content: Text(l10n.deleteExerciseConfirmContent(
-            exerciseToDelete.exercise.getLocalizedName(context))),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
-    ) ?? false;
+
+    final confirmed = await showDeleteConfirmation(
+      context,
+      title: l10n.deleteExerciseConfirmTitle,
+      content: l10n.deleteExerciseConfirmContent(
+          ex.exercise.getLocalizedName(context)),
+    );
 
     if (confirmed && _routineId != null) {
       await WorkoutDatabaseHelper.instance.removeExerciseFromRoutine(
-        exerciseToDelete.id!,
+        ex.id!,
       );
       _loadExercisesForRoutine();
     }
@@ -449,7 +446,6 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-
     final double topPadding =
         MediaQuery.of(context).padding.top + kToolbarHeight;
 
@@ -508,7 +504,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                         padding: EdgeInsets.zero,
                         itemCount: _routineExercises.length,
                         proxyDecorator: (Widget child, int index,
-                            Animation<double> animation) {
+                            Animation<double> anim) {
                           return Material(
                             elevation: 4.0,
                             color: Theme.of(context).scaffoldBackgroundColor,
@@ -518,6 +514,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                         onReorder: _onReorder,
                         itemBuilder: (context, index) {
                           final routineExercise = _routineExercises[index];
+                          final bool isCardio = _isCardio(routineExercise);
 
                           return WorkoutCard(
                             key: ValueKey(routineExercise.id),
@@ -544,9 +541,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                                       ),
                                       child: Text(
                                         routineExercise.exercise
-                                            .getLocalizedName(
-                                          context,
-                                        ),
+                                            .getLocalizedName(context),
                                         style: textTheme.titleLarge?.copyWith(
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -569,8 +564,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                                           ),
                                           child: Text(
                                             "${routineExercise.pauseSeconds}s",
-                                            style:
-                                                textTheme.bodyMedium?.copyWith(
+                                            style: textTheme.bodyMedium
+                                                ?.copyWith(
                                               color: colorScheme.primary,
                                               fontWeight: FontWeight.bold,
                                             ),
@@ -602,19 +597,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      // HEADER ZEILE
-                                      Row(
-                                        children: [
-                                          _buildHeader(l10n.setLabel, flex: 2),
-                                          _buildHeader(l10n.kgLabel, flex: 2),
-                                          // Spacer entfernt, damit es passt
-                                          const SizedBox(width: 8),
-                                          _buildHeader(l10n.repsLabel, flex: 2),
-                                          const SizedBox(width: 8),
-                                          _buildHeader("RIR", flex: 2), // <--- NEU
-                                          const SizedBox(width: 48), // Platz für Delete Button
-                                        ],
-                                      ),
+                                      _buildHeaderRow(routineExercise, l10n),
                                       ...routineExercise.setTemplates
                                           .asMap()
                                           .entries
@@ -637,6 +620,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                                           routineExercise,
                                           setTemplate,
                                           setIndex,
+                                          isCardio, // <--- CARDIO FLAG
+                                          l10n,
                                         );
                                       }),
                                       const SizedBox(
@@ -678,14 +663,46 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     );
   }
 
+  // --- HEADER ROW (Dynamic) ---
+  Widget _buildHeaderRow(RoutineExercise re, AppLocalizations l10n) {
+    final bool isCardio = _isCardio(re);
+    if (isCardio) {
+      return Row(
+        children: [
+          _buildHeader(l10n.setLabel, flex: 2), // FIX: Kleiner
+          _buildHeader("Distance (km)", flex: 4), // FIX: Sehr viel Platz
+          const SizedBox(width: 8),
+          _buildHeader("Time (min)", flex: 4), // FIX: Sehr viel Platz
+          const SizedBox(width: 8),
+          _buildHeader("Intens.", flex: 2),
+          const SizedBox(width: 48),
+        ],
+      );
+    }
+    // Standard Strength Header
+    return Row(
+      children: [
+        _buildHeader(l10n.setLabel, flex: 2),
+        _buildHeader(l10n.kgLabel, flex: 2),
+        const SizedBox(width: 8),
+        _buildHeader(l10n.repsLabel, flex: 2),
+        const SizedBox(width: 8),
+        _buildHeader("RIR", flex: 2),
+        const SizedBox(width: 48),
+      ],
+    );
+  }
+
+  // --- TEMPLATE ROW (Dynamic) ---
   Widget _buildSetTemplateRow(
     int setIndex,
     int rowIndex,
     RoutineExercise re,
     SetTemplate template,
     int listIndex,
+    bool isCardio,
+    AppLocalizations l10n,
   ) {
-    final l10n = AppLocalizations.of(context)!;
     final isLightMode = Theme.of(context).brightness == Brightness.light;
     final bool isColoredRow = rowIndex > 0 && rowIndex.isOdd;
 
@@ -705,7 +722,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         child: Row(
           children: [
             Expanded(
-              flex: 2,
+              flex: isCardio ? 2 : 2, // FIX: Kleiner für Cardio
               child: Center(
                 child: SetTypeChip(
                   setType: template.setType,
@@ -714,70 +731,103 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                 ),
               ),
             ),
-            // Spacer entfernt
-            Expanded(
-              flex: 2,
-              child: TextFormField(
-                controller: _weightControllers[template.id!],
-                textAlign: TextAlign.center,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  isDense: true,
-                  fillColor: Colors.transparent,
-                  hintText: l10n.kgLabelShort,
-                ),
-                validator: (value) {
-                  if (value != null &&
-                      value.isNotEmpty &&
-                      double.tryParse(value.replaceAll(',', '.')) == null) {
-                    return "!";
-                  }
-                  return null;
-                },
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              flex: 2,
-              child: TextFormField(
-                controller: _repsControllers[template.id!],
-                textAlign: TextAlign.center,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  isDense: true,
-                  fillColor: Colors.transparent,
-                  hintText: l10n.set_reps_hint,
-                ),
-                validator: (value) {
-                  if (value != null &&
-                      value.isNotEmpty &&
-                      int.tryParse(value) == null) {
-                    return "!";
-                  }
-                  return null;
-                },
-              ),
-            ),
-            const SizedBox(width: 8),
-            // NEU: RIR SPALTE
-            Expanded(
-              flex: 2,
-              child: TextFormField(
-                controller: _rirControllers[template.id!],
-                textAlign: TextAlign.center,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  isDense: true,
-                  fillColor: Colors.transparent,
-                  hintText: "-",
+            
+            if (isCardio) ...[
+              // CARDIO FIELDS
+              Expanded(
+                flex: 4, // FIX: Mehr Platz
+                child: TextFormField(
+                  controller: _weightControllers[template.id!],
+                  textAlign: TextAlign.center,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    isDense: true,
+                    fillColor: Colors.transparent,
+                    hintText: "-",
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 2, // FIX: Mehr Platz
+                child: TextFormField(
+                  controller: _repsControllers[template.id!],
+                  textAlign: TextAlign.center,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    isDense: true,
+                    fillColor: Colors.transparent,
+                    hintText: "-",
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 2,
+                child: TextFormField(
+                  controller: _rirControllers[template.id!],
+                  textAlign: TextAlign.center,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    isDense: true,
+                    fillColor: Colors.transparent,
+                    hintText: "-",
+                  ),
+                ),
+              ),
+            ] else ...[
+              // STRENGTH FIELDS
+              Expanded(
+                flex: 2,
+                child: TextFormField(
+                  controller: _weightControllers[template.id!],
+                  textAlign: TextAlign.center,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    isDense: true,
+                    fillColor: Colors.transparent,
+                    hintText: l10n.kgLabelShort,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 2,
+                child: TextFormField(
+                  controller: _repsControllers[template.id!],
+                  textAlign: TextAlign.center,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    isDense: true,
+                    fillColor: Colors.transparent,
+                    hintText: l10n.set_reps_hint,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 2,
+                child: TextFormField(
+                  controller: _rirControllers[template.id!],
+                  textAlign: TextAlign.center,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    isDense: true,
+                    fillColor: Colors.transparent,
+                    hintText: "-",
+                  ),
+                ),
+              ),
+            ],
+
             Padding(
               padding: const EdgeInsets.only(right: 8.0),
               child: SizedBox(

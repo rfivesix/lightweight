@@ -166,13 +166,16 @@ class WorkoutSessionManager extends ChangeNotifier {
     bool? isCompleted,
     String? setType,
     int? rir,
+    // FIX: Cardio Parameter
+    double? distance,
+    int? duration,
   }) async {
     if (!_setLogs.containsKey(templateId)) return;
 
     final oldLog = _setLogs[templateId]!;
     final db = WorkoutDatabaseHelper.instance;
 
-    // Volumens-Berechnung update
+    // Volumens-Berechnung update (Nur für Krafttraining relevant)
     if (weight != null || reps != null) {
       final oldVol = (oldLog.weightKg ?? 0) * (oldLog.reps ?? 0);
       final newWeight = weight ?? oldLog.weightKg ?? 0;
@@ -186,12 +189,14 @@ class WorkoutSessionManager extends ChangeNotifier {
       isCompleted: isCompleted,
       setType: setType,
       rir: rir,
+      distanceKm: distance, // <--- NEU
+      durationSeconds: duration, // <--- NEU
     );
 
     _setLogs[templateId] = newLog;
     await db.insertSetLog(newLog); // Update in DB
 
-    // Timer Logik
+    // Timer Logik (unverändert)
     if (isCompleted == true && oldLog.isCompleted != true) {
       int? pauseTime;
       for (var re in _exercises) {
@@ -200,7 +205,6 @@ class WorkoutSessionManager extends ChangeNotifier {
           break;
         }
       }
-
       if (pauseTime != null && pauseTime > 0) {
         _startRestTimer(pauseTime);
       }
@@ -297,10 +301,15 @@ class WorkoutSessionManager extends ChangeNotifier {
   Future<void> addExercise(Exercise exercise) async {
     final tempReId = DateTime.now().millisecondsSinceEpoch;
     
-    final templates = List.generate(3, (index) => SetTemplate(
+    // FIX: Cardio Check für Anzahl der Sets
+    final isCardio = exercise.categoryName?.toLowerCase() == 'cardio';
+    final initialSetCount = isCardio ? 1 : 3;
+    final initialReps = isCardio ? '' : '10'; // Auch hier: Cardio leer, Kraft 10
+
+    final templates = List.generate(initialSetCount, (index) => SetTemplate(
       id: tempReId + index + 1,
       setType: 'normal',
-      targetReps: '10',
+      targetReps: initialReps,
       targetWeight: 0,
     ));
 
@@ -324,6 +333,8 @@ class WorkoutSessionManager extends ChangeNotifier {
         reps: 0,
         restTimeSeconds: 90,
         isCompleted: false,
+        // Optional: logOrder hier schon setzen, aber Manager macht das nicht explizit bisher
+        log_order: _setLogs.length, 
       );
       final dbId = await db.insertSetLog(newSetLog);
       _setLogs[t.id!] = newSetLog.copyWith(id: dbId);
@@ -332,7 +343,7 @@ class WorkoutSessionManager extends ChangeNotifier {
     
     notifyListeners();
   }
-
+  
   Future<void> removeExercise(int routineExerciseId) async {
     final reIndex = _exercises.indexWhere((e) => e.id == routineExerciseId);
     if (reIndex == -1) return;

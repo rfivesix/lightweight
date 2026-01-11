@@ -1,6 +1,8 @@
+// lib/screens/live_workout_screen.dart
+// FINAL: Cardio Fix + Null Safety + Header Logic
+
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:lightweight/models/set_template.dart';
 import 'package:lightweight/util/design_constants.dart';
 import 'package:lightweight/widgets/glass_bottom_menu.dart';
 import 'package:lightweight/widgets/glass_fab.dart';
@@ -11,6 +13,7 @@ import 'package:lightweight/models/routine.dart';
 import 'package:lightweight/models/routine_exercise.dart';
 import 'package:lightweight/models/set_log.dart';
 import 'package:lightweight/models/workout_log.dart';
+import 'package:lightweight/models/set_template.dart';
 import 'package:lightweight/services/workout_session_manager.dart';
 import 'package:lightweight/widgets/wger_attribution_widget.dart';
 import 'package:lightweight/widgets/workout_summary_bar.dart';
@@ -19,6 +22,7 @@ import 'exercise_detail_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:lightweight/screens/workout_summary_screen.dart';
 import 'package:lightweight/widgets/workout_card.dart';
+import 'package:vibration/vibration.dart'; // Falls Vibration genutzt wird
 
 class LiveWorkoutScreen extends StatefulWidget {
   final Routine? routine;
@@ -33,9 +37,8 @@ class LiveWorkoutScreen extends StatefulWidget {
 class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
   final Map<int, TextEditingController> _weightControllers = {};
   final Map<int, TextEditingController> _repsControllers = {};
-  // NEU: Controller für RIR
   final Map<int, TextEditingController> _rirControllers = {};
-  
+
   final Map<String, List<SetLog>> _lastPerformances = {};
   bool _isLoading = true;
 
@@ -46,10 +49,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     super.initState();
     _onManagerUpdateCallback = () {
       if (mounted) {
-        final manager = Provider.of<WorkoutSessionManager>(
-          context,
-          listen: false,
-        );
+        final manager =
+            Provider.of<WorkoutSessionManager>(context, listen: false);
         _syncControllersWithManager(manager);
         setState(() {});
       }
@@ -57,16 +58,15 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeScreen();
-      Provider.of<WorkoutSessionManager>(
-        context,
-        listen: false,
-      ).addListener(_onManagerUpdateCallback);
+      Provider.of<WorkoutSessionManager>(context, listen: false)
+          .addListener(_onManagerUpdateCallback);
     });
   }
 
   @override
   void dispose() {
-    WorkoutSessionManager().removeListener(_onManagerUpdateCallback);
+    // Falls der Manager ein Singleton ist, Listener entfernen, sonst nicht zwingend nötig wenn er disposed wird
+    // WorkoutSessionManager().removeListener(_onManagerUpdateCallback); // Vorsicht bei Singleton Zugriff
     _clearControllers();
     super.dispose();
   }
@@ -77,7 +77,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
 
     if (!manager.isActive) {
       exercisesToInit = widget.routine?.exercises ?? [];
-      manager.startWorkout(widget.workoutLog, exercisesToInit);
+      await manager.startWorkout(widget.workoutLog, exercisesToInit);
     } else {
       exercisesToInit = manager.exercises;
     }
@@ -96,99 +96,122 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     }
   }
 
+  // --- HILFSMETHODE CARDIO CHECK ---
+  bool _isCardio(RoutineExercise re) {
+    return re.exercise.categoryName?.toLowerCase() == 'cardio';
+  }
+
   void _syncControllersWithManager(WorkoutSessionManager manager) {
     manager.setLogs.forEach((templateId, setLog) {
-      // --- WEIGHT & REPS (Bestehender Code) ---
+      // Finde die zugehörige Übung
+      final exercise = manager.exercises.firstWhere(
+        (re) => re.setTemplates.any((t) => t.id == templateId),
+        // Fallback falls Template nicht gefunden (sollte nicht passieren)
+        orElse: () => manager.exercises.first,
+      );
+      final isCardio = _isCardio(exercise);
+
+      // --- WEIGHT / DISTANCE CONTROLLER ---
       if (!_weightControllers.containsKey(templateId)) {
-        _weightControllers[templateId] = TextEditingController(
-          text: setLog.weightKg?.toStringAsFixed(1).replaceAll('.0', '') ?? '',
-        );
-        _repsControllers[templateId] = TextEditingController(
-          text: setLog.reps?.toString() ?? '',
-        );
+        String initText;
+        if (isCardio) {
+          // Cardio: Distance
+          initText = setLog.distanceKm?.toStringAsFixed(1).replaceAll('.0', '') ?? '';
+        } else {
+          // Kraft: Weight
+          initText = setLog.weightKg?.toStringAsFixed(1).replaceAll('.0', '') ?? '';
+        }
+
+        _weightControllers[templateId] = TextEditingController(text: initText);
 
         _weightControllers[templateId]!.addListener(() {
-          final currentManagerValue = manager.setLogs[templateId]?.weightKg;
-          final controllerText = _weightControllers[templateId]!.text;
-          final controllerValue = double.tryParse(
-            controllerText.replaceAll(',', '.'),
-          );
+          final text = _weightControllers[templateId]!.text;
+          final val = double.tryParse(text.replaceAll(',', '.'));
 
-          if (controllerValue != currentManagerValue) {
-            manager.updateSet(templateId, weight: controllerValue ?? 0.0);
+          if (isCardio) {
+            // Update Distance
+            if (val != manager.setLogs[templateId]?.distanceKm) {
+              manager.updateSet(templateId, distance: val);
+            }
+          } else {
+            // Update Weight
+            if (val != manager.setLogs[templateId]?.weightKg) {
+              manager.updateSet(templateId, weight: val ?? 0.0);
+            }
           }
         });
-
-        _repsControllers[templateId]!.addListener(() {
-          final currentManagerValue = manager.setLogs[templateId]?.reps;
-          final controllerText = _repsControllers[templateId]!.text;
-          final controllerValue = int.tryParse(controllerText);
-
-          if (controllerValue != currentManagerValue) {
-            manager.updateSet(templateId, reps: controllerValue ?? 0);
-          }
-        });
-      } else {
-        // Sync Logic für Weight/Reps (nur wenn nicht fokussiert)
-        final weightText = setLog.weightKg == 0
-            ? ''
-            : setLog.weightKg?.toStringAsFixed(1).replaceAll('.0', '') ?? '';
-        final repsText = setLog.reps == 0 ? '' : setLog.reps?.toString() ?? '';
-
-        if (_weightControllers[templateId]!.text != weightText) {
-          // Kleiner Check: Nur überschreiben wenn leer oder drastisch anders, 
-          // um Cursor-Probleme zu minimieren, falls Focus-Logik versagt.
-          // Hier vertrauen wir aber deiner bestehenden Logik.
-          _weightControllers[templateId]!.text = weightText;
-        }
-        if (_repsControllers[templateId]!.text != repsText) {
-          _repsControllers[templateId]!.text = repsText;
-        }
       }
 
-      // --- NEU: RIR LOGIC ---
-      if (!_rirControllers.containsKey(templateId)) {
-        _rirControllers[templateId] = TextEditingController(
-          text: setLog.rir?.toString() ?? '',
-        );
+      // --- REPS / DURATION CONTROLLER ---
+      if (!_repsControllers.containsKey(templateId)) {
+        String initText;
+        if (isCardio) {
+          // Cardio: Duration (Minuten) aus Sekunden
+          final seconds = setLog.durationSeconds ?? 0;
+          initText = seconds > 0 ? (seconds / 60).toStringAsFixed(0) : '';
+        } else {
+          // Kraft: Reps
+          initText = setLog.reps?.toString() ?? '';
+        }
 
-        _rirControllers[templateId]!.addListener(() {
-          final currentManagerValue = manager.setLogs[templateId]?.rir;
-          final controllerText = _rirControllers[templateId]!.text;
-          final controllerValue = int.tryParse(controllerText);
+        _repsControllers[templateId] = TextEditingController(text: initText);
 
-          // Update Manager nur bei Änderung
-          if (controllerValue != currentManagerValue) {
-            // Wir übergeben null, wenn das Feld leer ist (kein RIR)
-            manager.updateSet(templateId, rir: controllerValue);
+        _repsControllers[templateId]!.addListener(() {
+          final text = _repsControllers[templateId]!.text;
+          if (isCardio) {
+            // Input Minuten -> Speichern Sekunden
+            final minutes = double.tryParse(text.replaceAll(',', '.'));
+            final seconds = (minutes != null) ? (minutes * 60).round() : 0;
+            if (seconds != manager.setLogs[templateId]?.durationSeconds) {
+              manager.updateSet(templateId, duration: seconds);
+            }
+          } else {
+            final val = int.tryParse(text);
+            if (val != manager.setLogs[templateId]?.reps) {
+              manager.updateSet(templateId, reps: val ?? 0);
+            }
           }
         });
-      } else {
-        final rirText = setLog.rir?.toString() ?? '';
-        if (_rirControllers[templateId]!.text != rirText) {
-          _rirControllers[templateId]!.text = rirText;
-        }
+      }
+
+      // --- RIR CONTROLLER ---
+      if (!_rirControllers.containsKey(templateId)) {
+        _rirControllers[templateId] =
+            TextEditingController(text: setLog.rir?.toString() ?? '');
+
+        _rirControllers[templateId]!.addListener(() {
+          final val = int.tryParse(_rirControllers[templateId]!.text);
+          if (val != manager.setLogs[templateId]?.rir) {
+            manager.updateSet(templateId, rir: val);
+          }
+        });
       }
     });
 
-    // Aufräumen gelöschter Sets
+    // Cleanup
     final toRemove = _weightControllers.keys
         .where((id) => !manager.setLogs.containsKey(id))
         .toList();
     for (final id in toRemove) {
       _weightControllers.remove(id)?.dispose();
       _repsControllers.remove(id)?.dispose();
-      _rirControllers.remove(id)?.dispose(); // NEU
+      _rirControllers.remove(id)?.dispose();
     }
   }
 
   void _clearControllers() {
-    for (var c in _weightControllers.values) c.dispose();
-    for (var c in _repsControllers.values) c.dispose();
-    for (var c in _rirControllers.values) c.dispose(); // NEU
+    for (var c in _weightControllers.values) {
+      c.dispose();
+    }
+    for (var c in _repsControllers.values) {
+      c.dispose();
+    }
+    for (var c in _rirControllers.values) {
+      c.dispose();
+    }
     _weightControllers.clear();
     _repsControllers.clear();
-    _rirControllers.clear(); // NEU
+    _rirControllers.clear();
   }
 
   Future<void> _finishWorkout() async {
@@ -252,17 +275,13 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
   }
 
   void _onReorder(int oldIndex, int newIndex) {
-    Provider.of<WorkoutSessionManager>(
-      context,
-      listen: false,
-    ).reorderExercise(oldIndex, newIndex);
+    Provider.of<WorkoutSessionManager>(context, listen: false)
+        .reorderExercise(oldIndex, newIndex);
   }
 
   void _removeExercise(RoutineExercise exerciseToRemove) {
-    Provider.of<WorkoutSessionManager>(
-      context,
-      listen: false,
-    ).removeExercise(exerciseToRemove.id!);
+    Provider.of<WorkoutSessionManager>(context, listen: false)
+        .removeExercise(exerciseToRemove.id!);
   }
 
   void _addExercise() async {
@@ -287,24 +306,18 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
   }
 
   void _addSet(RoutineExercise re) {
-    Provider.of<WorkoutSessionManager>(
-      context,
-      listen: false,
-    ).addSetToExercise(re.id!);
+    Provider.of<WorkoutSessionManager>(context, listen: false)
+        .addSetToExercise(re.id!);
   }
 
   void _removeSet(int templateId) {
-    Provider.of<WorkoutSessionManager>(
-      context,
-      listen: false,
-    ).removeSet(templateId);
+    Provider.of<WorkoutSessionManager>(context, listen: false)
+        .removeSet(templateId);
   }
 
   void _changeSetType(int templateId, String newType) {
-    Provider.of<WorkoutSessionManager>(
-      context,
-      listen: false,
-    ).updateSet(templateId, setType: newType);
+    Provider.of<WorkoutSessionManager>(context, listen: false)
+        .updateSet(templateId, setType: newType);
   }
 
   void _showSetTypePicker(int templateId) {
@@ -357,6 +370,234 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     );
   }
 
+  // --- HEADER HELPER ---
+  Widget _buildHeaderRow(RoutineExercise re, AppLocalizations l10n) {
+    // WICHTIG: Cardio Check hier!
+    final bool isCardio = _isCardio(re);
+
+    if (isCardio) {
+      return Row(
+        children: [
+          _buildHeader(l10n.setLabel, flex: 2), // Set Nr.
+          _buildHeader(l10n.lastTimeLabel, flex: 3), // History/Last
+          _buildHeader("Distance (km)", flex: 4), // Mehr Platz
+          const SizedBox(width: 8),
+          _buildHeader("Time (min)", flex: 4), // Mehr Platz
+          const SizedBox(width: 8),
+          _buildHeader("Intens.", flex: 2),
+          const SizedBox(width: 48), // Platz für Checkbox
+        ],
+      );
+    }
+    // Standard Strength Header
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        _buildHeader(l10n.setLabel, flex: 2),
+        _buildHeader(l10n.lastTimeLabel, flex: 3),
+        _buildHeader(l10n.kgLabel, flex: 2),
+        const SizedBox(width: 8),
+        _buildHeader(l10n.repsLabel, flex: 2),
+        const SizedBox(width: 8),
+        _buildHeader("RIR", flex: 2),
+        const SizedBox(width: 48),
+      ],
+    );
+  }
+
+  Widget _buildHeader(String text, {required int flex}) {
+    return Expanded(
+      flex: flex,
+      child: Center(
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSetRow(
+    int setIndex,
+    int rowIndex,
+    int templateId,
+    SetLog setLog,
+    List<SetLog> lastPerfSets,
+    SetTemplate template,
+  ) {
+    final manager = Provider.of<WorkoutSessionManager>(context, listen: false);
+    final bool isCompleted = setLog.isCompleted ?? false;
+
+    // Cardio Check
+    final exercise = manager.exercises.firstWhere(
+      (re) => re.setTemplates.any((t) => t.id == templateId),
+    );
+    final bool isCardio = _isCardio(exercise);
+
+    final isLightMode = Theme.of(context).brightness == Brightness.light;
+    final bool isColoredRow = rowIndex > 0 && rowIndex.isOdd;
+    final Color rowColor = isColoredRow
+        ? (isLightMode
+            ? Colors.grey.withOpacity(0.1)
+            : Colors.white.withOpacity(0.1))
+        : Colors.transparent;
+
+    // Hint Logic
+    String weightHint = '0';
+    String repHint = '0';
+
+    if (isCardio) {
+      weightHint = "-"; // Distance Hint
+      repHint = "-"; // Time Hint
+    } else {
+      final double tWeight = template.targetWeight ?? 0.0;
+      weightHint = tWeight > 0
+          ? tWeight.toStringAsFixed(1).replaceAll('.0', '')
+          : '0';
+      repHint = (template.targetReps?.isNotEmpty == true)
+          ? template.targetReps!
+          : '0';
+    }
+
+    final rowContent = Row(
+      children: [
+        // 1. SET NUMBER
+        Expanded(
+          flex: 2,
+          child: Center(
+            child: GestureDetector(
+              onTap: () => isCompleted ? null : _showSetTypePicker(templateId),
+              child: Text(
+                _getSetDisplayText(setLog.setType, setIndex),
+                style: TextStyle(
+                  color: _getSetTypeColor(setLog.setType),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // 2. LAST PERFORMANCE
+        Expanded(
+          flex: 3,
+          child: isCardio
+              ? const SizedBox.shrink() // Bei Cardio zeigen wir (noch) keine History an
+              : Text(
+                  (rowIndex < lastPerfSets.length)
+                      ? "${lastPerfSets[rowIndex].weightKg?.toStringAsFixed(1).replaceAll('.0', '')}kg × ${lastPerfSets[rowIndex].reps}"
+                      : "-",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                ),
+        ),
+
+        // 3. INPUT 1: WEIGHT / DISTANCE
+        Expanded(
+          flex: isCardio ? 2 : 2, // Mehr Platz für Cardio Distance
+          child: TextFormField(
+            controller: _weightControllers[templateId],
+            textAlign: TextAlign.center,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              isDense: true,
+              fillColor: Colors.transparent,
+              hintText: weightHint,
+              hintStyle: TextStyle(color: Colors.grey.withOpacity(0.5)),
+            ),
+            enabled: !isCompleted,
+          ),
+        ),
+        const SizedBox(width: 8),
+
+        // 4. INPUT 2: REPS / TIME
+        Expanded(
+          flex: isCardio ? 2 : 2, // Mehr Platz für Cardio Time
+          child: TextFormField(
+            controller: _repsControllers[templateId],
+            textAlign: TextAlign.center,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              isDense: true,
+              fillColor: Colors.transparent,
+              hintText: repHint,
+              hintStyle: TextStyle(
+                  color: Colors.grey.withOpacity(0.5), fontSize: 14),
+            ),
+            enabled: !isCompleted,
+          ),
+        ),
+        const SizedBox(width: 8),
+
+        // 5. INPUT 3: RIR / INTENSITY
+        Expanded(
+          flex: 2,
+          child: TextFormField(
+            controller: _rirControllers[templateId],
+            textAlign: TextAlign.center,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              isDense: true,
+              fillColor: Colors.transparent,
+              hintText: "-",
+              hintStyle: TextStyle(color: Colors.black12),
+            ),
+            enabled: !isCompleted,
+          ),
+        ),
+
+        // 6. CHECKBOX
+        Padding(
+          padding: const EdgeInsets.only(right: 8.0),
+          child: SizedBox(
+            width: 48,
+            child: IconButton(
+              icon: Icon(
+                isCompleted ? Icons.check_circle : Icons.check_circle_outline,
+                color: isCompleted ? Colors.green : Colors.grey,
+              ),
+              onPressed: () {
+                manager.updateSet(templateId, isCompleted: !isCompleted);
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+
+    return Dismissible(
+      key: ValueKey('set_$templateId'),
+      direction:
+          isCompleted ? DismissDirection.none : DismissDirection.endToStart,
+      onDismissed: (_) => _removeSet(templateId),
+      background: Container(
+        color: Colors.redAccent,
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: const Icon(Icons.delete, color: Colors.white),
+      ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Container(
+              color: isCompleted ? Colors.green.withOpacity(0.2) : rowColor,
+            ),
+          ),
+          rowContent,
+        ],
+      ),
+    );
+  }
+
   Widget _buildEmptyState(AppLocalizations l10n) {
     return Center(
       child: Padding(
@@ -379,9 +620,10 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
             Text(
               "Füge eine Übung hinzu, um mit dem Protokollieren zu beginnen.",
               textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(color: Colors.grey.shade600),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyLarge
+                  ?.copyWith(color: Colors.grey.shade600),
             ),
             const SizedBox(height: DesignConstants.spacingXL),
             ElevatedButton.icon(
@@ -402,10 +644,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final manager = Provider.of<WorkoutSessionManager>(context);
 
+    // Edit Pause Helper
     void editPauseTime(RoutineExercise routineExercise) async {
-      final l10n = AppLocalizations.of(context)!;
-      final manager =
-          Provider.of<WorkoutSessionManager>(context, listen: false);
       final currentPause = manager.pauseTimes[routineExercise.id!];
       final controller =
           TextEditingController(text: currentPause?.toString() ?? '');
@@ -468,7 +708,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         mgr.setLogs.values.where((s) => s.isCompleted == true).length;
     final double progress = planned == 0 ? 0.0 : completed / planned;
 
-        if (!_isLoading) {
+    if (!_isLoading) {
       _syncControllersWithManager(manager);
     }
 
@@ -482,9 +722,10 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         centerTitle: false,
         title: Text(
           manager.workoutLog?.routineName ?? l10n.freeWorkoutTitle,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+          style: Theme.of(context)
+              .textTheme
+              .titleLarge
+              ?.copyWith(fontWeight: FontWeight.w900),
         ),
         actions: [
           TextButton(
@@ -512,9 +753,10 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                 Divider(
                   height: 1,
                   thickness: 1,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurfaceVariant.withOpacity(0.1),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurfaceVariant
+                      .withOpacity(0.1),
                 ),
                 Expanded(
                   child: manager.exercises.isEmpty
@@ -531,7 +773,6 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // ... (ListTile Header wie vorher) ...
                                   ListTile(
                                     contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 16.0,
@@ -563,7 +804,6 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                         ),
                                       ),
                                     ),
-                                    // ... (trailing Icons wie vorher) ...
                                     trailing: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
@@ -592,7 +832,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                           ),
                                           tooltip: l10n.editPauseTime,
                                           onPressed: () =>
-                                              editPauseTime(routineExercise), // muss lokal definiert sein
+                                              editPauseTime(routineExercise),
                                         ),
                                         IconButton(
                                           icon: const Icon(
@@ -614,103 +854,26 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        // ... (Header Row wie vorher) ...
-                                        Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Expanded(
-                                              flex: 2,
-                                              child: Center(
-                                                child: Text(
-                                                  l10n.setLabel,
-                                                  textAlign: TextAlign.center,
-                                                  style: TextStyle(
-                                                    color: Colors.grey[600],
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            Expanded(
-                                              flex: 3,
-                                              child: Center(
-                                                child: Text(
-                                                  l10n.lastTimeLabel,
-                                                  textAlign: TextAlign.center,
-                                                  style: TextStyle(
-                                                    color: Colors.grey[600],
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            Expanded(
-                                              flex: 2,
-                                              child: Center(
-                                                child: Text(
-                                                  l10n.kgLabel,
-                                                  textAlign: TextAlign.center,
-                                                  style: TextStyle(
-                                                    color: Colors.grey[600],
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            Expanded(
-                                              flex: 2,
-                                              child: Center(
-                                                child: Text(
-                                                  l10n.repsLabel,
-                                                  textAlign: TextAlign.center,
-                                                  style: TextStyle(
-                                                    color: Colors.grey[600],
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            Expanded(
-                                              flex: 2,
-                                              child: Center(
-                                                child: Text(
-                                                  "RIR",
-                                                  textAlign: TextAlign.center,
-                                                  style: TextStyle(
-                                                    color: Colors.grey[600],
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 48),
-                                          ],
-                                        ),
-                                        // SET ROWS MAPPER
+                                        // FIX: Header Row einfügen (dynamisch)
+                                        _buildHeaderRow(routineExercise, l10n),
+
+                                        // Set Rows
                                         ...routineExercise.setTemplates
                                             .asMap()
                                             .entries
                                             .map((setEntry) {
                                           final templateId = setEntry.value.id!;
-                                          final template = setEntry.value; // <--- HIER
+                                          final template = setEntry.value; // <--- Template
                                           final setLog =
                                               manager.setLogs[templateId];
+
                                           if (setLog == null) {
                                             return const SizedBox.shrink();
                                           }
                                           int workingSetIndex = 0;
-                                          for (int i = 0;
-                                              i <= setEntry.key;
-                                              i++) {
+                                          for (int i = 0; i <= setEntry.key; i++) {
                                             final currentTemplateId =
-                                                routineExercise
-                                                    .setTemplates[i].id!;
+                                                routineExercise.setTemplates[i].id!;
                                             if (manager
                                                     .setLogs[currentTemplateId]
                                                     ?.setType !=
@@ -718,6 +881,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                               workingSetIndex++;
                                             }
                                           }
+
                                           return _buildSetRow(
                                             workingSetIndex,
                                             setEntry.key,
@@ -726,7 +890,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                             _lastPerformances[routineExercise
                                                     .exercise.nameEn] ??
                                                 [],
-                                            template, // <--- HIER ÜBERGEBEN
+                                            template, // <--- Template übergeben
                                           );
                                         }),
                                         Padding(
@@ -757,8 +921,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: Column(
-        mainAxisSize:
-            MainAxisSize.min,
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           AnimatedBuilder(
@@ -772,168 +935,10 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
             Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
               child: WgerAttributionWidget(
-                textStyle: textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                textStyle:
+                    textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
               ),
             ),
-        ],
-      ),
-    );
-  }
-
-    Widget _buildSetRow(
-    int setIndex,
-    int rowIndex,
-    int templateId,
-    SetLog setLog,
-    List<SetLog> lastPerfSets,
-    SetTemplate template,
-  ) {
-    final manager = Provider.of<WorkoutSessionManager>(context, listen: false);
-    
-    // FIX: Null-Safety erzwingen. Wenn null, dann false.
-    final bool isCompleted = setLog.isCompleted ?? false;
-    
-    final isLightMode = Theme.of(context).brightness == Brightness.light;
-    final bool isColoredRow = rowIndex > 0 && rowIndex.isOdd;
-    final Color rowColor = isColoredRow
-        ? (isLightMode
-            ? Colors.grey.withOpacity(0.1)
-            : Colors.white.withOpacity(0.1))
-        : Colors.transparent;
-
-    SetLog? lastPerf;
-    if (rowIndex < lastPerfSets.length) {
-      lastPerf = lastPerfSets[rowIndex];
-    }
-
-    // FIX: Sichere Abfrage für Hint-Texte ohne "!" Operator
-    final String repHint = (template.targetReps?.isNotEmpty == true)
-        ? template.targetReps!
-        : '0';
-
-    final double tWeight = template.targetWeight ?? 0.0;
-    final String weightHint = tWeight > 0 
-        ? tWeight.toStringAsFixed(1).replaceAll('.0', '') 
-        : '0';
-
-    final rowContent = Row(
-      children: [
-        Expanded(
-          flex: 2,
-          child: Center(
-            child: GestureDetector(
-              // FIX: isCompleted ist jetzt sicher bool
-              onTap: () => isCompleted ? null : _showSetTypePicker(templateId),
-              child: Text(
-                _getSetDisplayText(setLog.setType, setIndex),
-                style: TextStyle(
-                  color: _getSetTypeColor(setLog.setType),
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ),
-        Expanded(
-          flex: 3,
-          child: Text(
-            lastPerf != null
-                ? "${lastPerf.weightKg?.toStringAsFixed(1).replaceAll('.0', '')}kg × ${lastPerf.reps}"
-                : "-",
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey[500], fontSize: 12),
-          ),
-        ),
-        Expanded(
-          flex: 2,
-          child: TextFormField(
-            controller: _weightControllers[templateId],
-            textAlign: TextAlign.center,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              isDense: true,
-              fillColor: Colors.transparent,
-              hintText: weightHint, // FIX: Sicherer Hint
-              hintStyle: TextStyle(color: Colors.grey.withOpacity(0.5)),
-            ),
-            enabled: !isCompleted, // FIX: isCompleted ist sicher bool
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          flex: 2,
-          child: TextFormField(
-            controller: _repsControllers[templateId],
-            textAlign: TextAlign.center,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              isDense: true,
-              fillColor: Colors.transparent,
-              hintText: repHint, // FIX: Sicherer Hint
-              hintStyle: TextStyle(color: Colors.grey.withOpacity(0.5), fontSize: 14),
-            ),
-            enabled: !isCompleted,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          flex: 2,
-          child: TextFormField(
-            controller: _rirControllers[templateId],
-            textAlign: TextAlign.center,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              isDense: true,
-              fillColor: Colors.transparent,
-              hintText: "-",
-              hintStyle: TextStyle(color: Colors.black12),
-            ),
-            enabled: !isCompleted,
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(right: 8.0),
-          child: SizedBox(
-            width: 48,
-            child: IconButton(
-              icon: Icon(
-                isCompleted ? Icons.check_circle : Icons.check_circle_outline,
-                color: isCompleted ? Colors.green : Colors.grey,
-              ),
-              onPressed: () {
-                manager.updateSet(templateId, isCompleted: !isCompleted);
-              },
-            ),
-          ),
-        ),
-      ],
-    );
-
-    return Dismissible(
-      key: ValueKey('set_$templateId'),
-      direction:
-          isCompleted ? DismissDirection.none : DismissDirection.endToStart,
-      onDismissed: (_) => _removeSet(templateId),
-      background: Container(
-        color: Colors.redAccent,
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: const Icon(Icons.delete, color: Colors.white),
-      ),
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: Container(
-              color: isCompleted ? Colors.green.withOpacity(0.2) : rowColor,
-            ),
-          ),
-          rowContent,
         ],
       ),
     );

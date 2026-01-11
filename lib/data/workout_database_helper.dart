@@ -235,8 +235,9 @@ class WorkoutDatabaseHelper {
         .write(db.RoutinesCompanion(name: drift.Value(newName)));
   }
 
+  // FIX: Parameter initialSetCount hinzugefügt
   Future<RoutineExercise?> addExerciseToRoutine(
-      int routineId, int exerciseId) async {
+      int routineId, int exerciseId, {int initialSetCount = 3}) async {
     final dbInstance = await database;
 
     // UUIDs holen
@@ -265,9 +266,9 @@ class WorkoutDatabaseHelper {
               ),
             );
 
-    // Standard SetTemplates einfügen (3 Sets)
+    // FIX: Dynamische Anzahl von Sets (statt hardcoded 3)
     final templates = <SetTemplate>[];
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < initialSetCount; i++) {
       final stRow =
           await dbInstance.into(dbInstance.routineSetTemplates).insertReturning(
                 db.RoutineSetTemplatesCompanion(
@@ -291,7 +292,6 @@ class WorkoutDatabaseHelper {
       setTemplates: templates,
     );
   }
-
   Future<void> removeExerciseFromRoutine(int routineExerciseId) async {
     final dbInstance = await database;
     // OnDelete Cascade in DB Definition sollte Kinder löschen
@@ -631,7 +631,7 @@ Future<int> insertSetLog(SetLog setLog) async {
       }
     });
   }
-
+  
   Future<SetLog?> getLastPerformance(String exerciseName) async {
     final dbInstance = await database;
     final query = dbInstance.select(dbInstance.setLogs)
