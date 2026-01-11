@@ -1,3 +1,5 @@
+// lib/data/basis_data_manager.dart
+
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -9,6 +11,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
 import 'package:drift/drift.dart' as drift;
 
+// Typ-Definition für den Callback
+typedef ProgressCallback = void Function(
+    String task, String detail, double progress);
+
 class BasisDataManager {
   static final BasisDataManager instance = BasisDataManager._init();
   BasisDataManager._init();
@@ -16,14 +22,16 @@ class BasisDataManager {
   static const String _keyVersionTraining = 'installed_training_version';
   static const String _keyVersionFood = 'installed_food_version';
   static const String _keyVersionOff = 'installed_off_version';
-  static const String _keyVersionCats =
-      'installed_cats_version'; // Neuer Key für Kategorien
+  static const String _keyVersionCats = 'installed_cats_version';
 
   int _parseInt(dynamic value) => (value as num?)?.toInt() ?? 0;
   double _parseDouble(dynamic value) => (value as num?)?.toDouble() ?? 0.0;
   String _parseString(dynamic value) => value?.toString() ?? '';
 
-  Future<void> checkForBasisDataUpdate({bool force = false}) async {
+  Future<void> checkForBasisDataUpdate({
+    bool force = false,
+    ProgressCallback? onProgress, // NEU: Callback
+  }) async {
     debugPrint("BasisDataManager: Starte Check (Force: $force)...");
     final prefs = await SharedPreferences.getInstance();
 
@@ -31,46 +39,56 @@ class BasisDataManager {
       await prefs.remove(_keyVersionTraining);
       await prefs.remove(_keyVersionFood);
       await prefs.remove(_keyVersionOff);
-      await prefs.remove(_keyVersionCats); // Cache für Kategorien auch leeren
+      await prefs.remove(_keyVersionCats);
       debugPrint("Cache geleert. Import wird erzwungen.");
     }
 
+    // Hilfsfunktion, um den Code lesbarer zu halten
+    Future<void> process(
+      String label,
+      String asset,
+      String key,
+      String table,
+      Function(Map<String, dynamic>) mapper, {
+      String? driftTable,
+    }) async {
+      await _updateDatabaseFromAsset(
+        assetPath: asset,
+        prefKey: key,
+        prefs: prefs,
+        tableName: table,
+        driftTableName: driftTable,
+        mapFunction: mapper,
+        taskLabel: label,
+        onProgress: onProgress,
+      );
+    }
+
     // 1. Übungen
-    await _updateDatabaseFromAsset(
-      assetPath: 'assets/db/vita_training.db',
-      prefKey: _keyVersionTraining,
-      prefs: prefs,
-      tableName: 'exercises',
-      mapFunction: _mapExerciseRow,
+    await process('Übungen', 'assets/db/vita_training.db', _keyVersionTraining,
+        'exercises', _mapExerciseRow);
+
+    // 2a. Base Foods
+    await process('Basis-Produkte', 'assets/db/vita_base_foods.db',
+        _keyVersionFood, 'products', (row) => _mapProductRow(row, sourceLabel: 'base'));
+
+    // 2b. Kategorien
+    await process(
+      'Kategorien',
+      'assets/db/vita_base_foods.db',
+      _keyVersionCats,
+      'categories',
+      _mapCategoryRow,
+      driftTable: 'food_categories',
     );
 
-    // 2a. Base Foods (Produkte)
-    await _updateDatabaseFromAsset(
-      assetPath: 'assets/db/vita_base_foods.db',
-      prefKey: _keyVersionFood,
-      prefs: prefs,
-      tableName: 'products',
-      mapFunction: (row) => _mapProductRow(row, sourceLabel: 'base'),
-    );
-
-    // 2b. KATEGORIEN (Das hat gefehlt!)
-    // Wir holen aus derselben Datei 'vita_base_foods.db' die Tabelle 'categories'
-    await _updateDatabaseFromAsset(
-      assetPath: 'assets/db/vita_base_foods.db',
-      prefKey: _keyVersionCats,
-      prefs: prefs,
-      tableName: 'categories', // So heißt die Tabelle in deiner SQLite Datei
-      driftTableName: 'food_categories', // So heißt sie in Drift (siehe Logs)
-      mapFunction: _mapCategoryRow,
-    );
-
-    // 3. OFF Datenbank
-    await _updateDatabaseFromAsset(
-      assetPath: 'assets/db/vita_prep_de.db',
-      prefKey: _keyVersionOff,
-      prefs: prefs,
-      tableName: 'products',
-      mapFunction: (row) => _mapProductRow(row, sourceLabel: 'off'),
+    // 3. OFF Datenbank (Das große File)
+    await process(
+      'Produktdatenbank',
+      'assets/db/vita_prep_de.db',
+      _keyVersionOff,
+      'products',
+      (row) => _mapProductRow(row, sourceLabel: 'off'),
     );
   }
 
@@ -78,14 +96,19 @@ class BasisDataManager {
     required String assetPath,
     required String prefKey,
     required SharedPreferences prefs,
-    required String tableName, // Name in der Quell-Datei
-    String? driftTableName, // Optional: Name in der Ziel-DB (falls anders)
+    required String tableName,
+    String? driftTableName,
     required Function(Map<String, dynamic>) mapFunction,
+    required String taskLabel,
+    ProgressCallback? onProgress,
   }) async {
     File? tempFile;
     sqflite.Database? assetDb;
 
     try {
+      // Initiale Meldung (0%)
+      onProgress?.call("Prüfe $taskLabel...", "Initialisiere...", 0.0);
+
       final tempDir = await getTemporaryDirectory();
       final tempPath = p.join(tempDir.path, p.basename(assetPath));
 
@@ -101,14 +124,12 @@ class BasisDataManager {
 
       assetDb = await sqflite.openDatabase(tempPath, readOnly: true);
 
-      // Check ob Quell-Tabelle existiert
       var checkTable = tableName;
       if (tableName == 'exercises') {
         final tables = await assetDb.rawQuery(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='exercises'");
         if (tables.isEmpty) checkTable = 'exercise';
       } else {
-        // Genereller Check
         final tables = await assetDb.rawQuery(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='$tableName'");
         if (tables.isEmpty) {
@@ -129,15 +150,27 @@ class BasisDataManager {
 
       final String installedVersion = prefs.getString(prefKey) ?? '0';
 
+      // Wenn Update nötig ist:
       if (assetVersion.compareTo(installedVersion) > 0 ||
           installedVersion == '0') {
-        debugPrint(
-            ">>> IMPORT START: $checkTable -> ${driftTableName ?? 'Default'} (v$assetVersion)...");
-        await _performBatchImport(assetDb, checkTable, mapFunction);
+        debugPrint(">>> IMPORT START: $checkTable (v$assetVersion)...");
+
+        onProgress?.call("Update $taskLabel", "Vorbereitung...", 0.05);
+
+        await _performBatchImport(
+          assetDb,
+          checkTable,
+          mapFunction,
+          onProgress,
+          taskLabel,
+        );
+
         await prefs.setString(prefKey, assetVersion);
         debugPrint(">>> IMPORT FERTIG: $checkTable gespeichert.");
       } else {
         debugPrint("Aktuell: $checkTable (v$installedVersion).");
+        // Falls aktuell, kurz 100% anzeigen, damit es nicht hängt
+        onProgress?.call("$taskLabel aktuell", "Bereit", 1.0);
       }
     } catch (e) {
       debugPrint("!!! FEHLER bei $assetPath ($tableName): $e");
@@ -147,11 +180,30 @@ class BasisDataManager {
     }
   }
 
-  Future<void> _performBatchImport(sqflite.Database assetDb, String tableName,
-      Function(Map<String, dynamic>) mapRowToCompanion) async {
+  Future<void> _performBatchImport(
+    sqflite.Database assetDb,
+    String tableName,
+    Function(Map<String, dynamic>) mapRowToCompanion,
+    ProgressCallback? onProgress,
+    String taskLabel,
+  ) async {
     final mainDb = await DatabaseHelper.instance.database;
     const int batchSize = 2000;
     int offset = 0;
+
+    // 1. Gesamtanzahl ermitteln für Progress Bar
+    int totalCount = 0;
+    try {
+      final countResult =
+          await assetDb.rawQuery('SELECT COUNT(*) as c FROM $tableName');
+      totalCount = sqflite.Sqflite.firstIntValue(countResult) ?? 0;
+    } catch (_) {
+      totalCount = 0;
+    }
+
+    if (totalCount == 0) return; // Nichts zu tun
+
+    int processed = 0;
 
     while (true) {
       final rows =
@@ -169,7 +221,6 @@ class BasisDataManager {
               batch.insert(mainDb.exercises, companion,
                   mode: drift.InsertMode.insertOrReplace);
             } else if (companion is FoodCategoriesCompanion) {
-              // HIER landen die Kategorien!
               batch.insert(mainDb.foodCategories, companion,
                   mode: drift.InsertMode.insertOrReplace);
             }
@@ -178,16 +229,30 @@ class BasisDataManager {
           }
         }
       });
+
+      processed += rows.length;
       offset += batchSize;
-      await Future.delayed(const Duration(milliseconds: 5));
+
+      // Progress melden
+      if (onProgress != null) {
+        final double progress = (processed / totalCount).clamp(0.0, 1.0);
+        onProgress(
+          "Update $taskLabel",
+          "$processed / $totalCount Einträge",
+          progress,
+        );
+      }
+
+      // UI-Thread atmen lassen
+      await Future.delayed(const Duration(milliseconds: 1));
     }
   }
 
-  // --- MAPPING FUNKTIONEN ---
+  // --- MAPPING FUNKTIONEN (Unverändert) ---
 
   dynamic _mapProductRow(Map<String, dynamic> row,
       {required String sourceLabel}) {
-    final barcode = _parseString(row['barcode']);
+    var barcode = _parseString(row['barcode']);
     String id;
     if (row['id'] != null) {
       id = _parseString(row['id']);
@@ -195,6 +260,10 @@ class BasisDataManager {
       id = 'manual_$barcode';
     } else {
       id = 'manual_${_parseString(row['name']).replaceAll(RegExp(r'\s+'), '')}';
+    }
+
+    if (barcode.isEmpty) {
+      barcode = id;
     }
 
     return ProductsCompanion(
@@ -215,7 +284,6 @@ class BasisDataManager {
     );
   }
 
-  // NEU: Mapping für Kategorien
   dynamic _mapCategoryRow(Map<String, dynamic> row) {
     return FoodCategoriesCompanion(
       key: drift.Value(_parseString(row['key'])),

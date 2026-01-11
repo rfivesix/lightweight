@@ -1,20 +1,16 @@
 // lib/main.dart
-// VOLLSTÄNDIGER CODE (MIT PREDICTIVE BACK & STANDARD SUPPLEMENTS)
+// VOLLSTÄNDIGER CODE (MIT APP INITIALIZER SCREEN)
 
-import 'package:drift/drift.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lightweight/data/backup_manager.dart';
-import 'package:lightweight/data/basis_data_manager.dart';
 import 'package:lightweight/data/database_helper.dart';
 import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/screens/main_screen.dart';
+// FIX: Importiere den ausgelagerten Initializer-Screen
+import 'package:lightweight/screens/app_initializer_screen.dart'; 
 import 'package:lightweight/services/profile_service.dart';
 import 'package:lightweight/services/workout_session_manager.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:lightweight/screens/onboarding_screen.dart';
 import 'package:lightweight/services/theme_service.dart';
 
 void main() async {
@@ -51,63 +47,7 @@ void main() async {
     ),
   );
 
-  // Starte Datenbank-Update im Hintergrund NACHDEM die UI läuft.
-  BasisDataManager.instance
-      .checkForBasisDataUpdate(force: false)
-      .then((_) async {
-    // --- DIAGNOSE START ---
-    debugPrint("\n🔎 --- DB DIAGNOSE REPORT 2.0 ---");
-    try {
-      final db = await DatabaseHelper.instance.database;
-
-      // 1. Produkte prüfen
-      final prodCount = await db.products.count().getSingle();
-      debugPrint("📊 Produkte gesamt: $prodCount");
-
-      final sourceStats = await db
-          .customSelect(
-              'SELECT source, COUNT(*) as c FROM products GROUP BY source')
-          .get();
-      for (final row in sourceStats) {
-        debugPrint(
-            "   📦 ${row.read<String>('source')}: ${row.read<int>('c')}");
-      }
-
-      // 2. KATEGORIEN PRÜFEN
-      final tables = await db
-          .customSelect(
-              "SELECT name FROM sqlite_master WHERE type='table' AND name='food_categories'")
-          .get();
-
-      if (tables.isEmpty) {
-        debugPrint(
-            "\n❌ KRITISCHER FEHLER: Tabelle 'food_categories' existiert NICHT!");
-      } else {
-        debugPrint("\n✅ Tabelle 'food_categories' gefunden.");
-
-        final catResult = await db
-            .customSelect('SELECT COUNT(*) as c FROM food_categories')
-            .getSingle();
-        final catCount = catResult.read<int>('c');
-        debugPrint("📊 Kategorien Einträge: $catCount");
-      }
-    } catch (e) {
-      debugPrint("💥 Diagnose abgestürzt: $e");
-    }
-    debugPrint("----------------------------\n");
-  });
-  // --- DIAGNOSE ENDE ---
-
-  try {
-    await BackupManager.instance.runAutoBackupIfDue();
-  } catch (e) {
-    debugPrint("Fehler beim Auto-Backup Start: $e");
-  }
-}
-
-Future<bool> _hasSeenOnboarding() async {
-  final prefs = await SharedPreferences.getInstance();
-  return prefs.getBool('hasSeenOnboarding') == true;
+  // FIX: Keine Hintergrund-Updates mehr hier! Das übernimmt jetzt der AppInitializerScreen.
 }
 
 class MyApp extends StatelessWidget {
@@ -394,21 +334,11 @@ class MyApp extends StatelessWidget {
               theme: baseLightTheme,
               darkTheme: baseDarkTheme,
               themeMode: themeService.themeMode,
-              home: child,
+              // FIX: Hier wird nun der ausgelagerte Screen verwendet
+              home: const AppInitializerScreen(),
             );
           },
-          child: FutureBuilder<bool>(
-            future: _hasSeenOnboarding(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
-                );
-              }
-              final seen = snapshot.data ?? false;
-              return seen ? const MainScreen() : const OnboardingScreen();
-            },
-          ),
+          // FIX: Das 'child' hier war überflüssig, da wir 'home' nutzen.
         );
       },
     );
