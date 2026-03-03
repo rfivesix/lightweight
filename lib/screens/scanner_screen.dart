@@ -1,9 +1,9 @@
 // lib/screens/scanner_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/generated/app_localizations.dart';
+import '../generated/app_localizations.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
+import '../widgets/global_app_bar.dart';
 
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});

@@ -2,27 +2,27 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:lightweight/dialogs/fluid_dialog_content.dart';
-import 'package:lightweight/models/fluid_entry.dart';
-import 'package:lightweight/models/supplement.dart';
-import 'package:lightweight/models/supplement_log.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/glass_bottom_menu.dart';
-import 'package:lightweight/widgets/swipe_action_background.dart';
+import '../dialogs/fluid_dialog_content.dart';
+import '../models/fluid_entry.dart';
+import '../models/supplement.dart';
+import '../models/supplement_log.dart';
+import '../util/design_constants.dart';
+import '../widgets/glass_bottom_menu.dart';
+import '../widgets/swipe_action_background.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/data/product_database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/dialogs/quantity_dialog_content.dart';
-import 'package:lightweight/models/daily_nutrition.dart';
-import 'package:lightweight/models/food_entry.dart';
-import 'package:lightweight/models/tracked_food_item.dart';
-import 'package:lightweight/models/timeline_entry.dart';
-import 'package:lightweight/services/ui_state_service.dart';
-import 'package:lightweight/widgets/nutrition_summary_widget.dart';
-import 'package:lightweight/widgets/summary_card.dart';
+import '../data/database_helper.dart';
+import '../data/product_database_helper.dart';
+import '../generated/app_localizations.dart';
+import '../dialogs/quantity_dialog_content.dart';
+import '../models/daily_nutrition.dart';
+import '../models/food_entry.dart';
+import '../models/tracked_food_item.dart';
+import '../models/timeline_entry.dart';
+import '../services/ui_state_service.dart';
+import '../widgets/nutrition_summary_widget.dart';
+import '../widgets/summary_card.dart';
 import './food_detail_screen.dart';
-import 'package:lightweight/util/date_util.dart';
+import '../util/date_util.dart';
 
 class NutritionScreen extends StatefulWidget {
   const NutritionScreen({super.key});

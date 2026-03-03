@@ -4,7 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-Hier ist der passende Changelog-Eintrag für **v0.5.0-alpha.3** im gewünschten Stil:
+## [0.5.0-alpha.5] - 2026-03-03
+
+### Changed
+- **Branding**: Completed the full rebranding to **Hypertrack**. Updated all project names, package/bundle identifiers, class names, and file references across the entire codebase.
+- **Project Structure**: Converted all internal file paths to **relative paths** to ensure consistency and easier portability of the project.
 
 ## [0.5.0-alpha.3] - 2025-12-29
 
@@ -215,7 +219,7 @@ This release marks a significant milestone, introducing a complete UI overhaul, 
 ### Fixed
 * **Backup:** tried to fix the backup
 ### Changed
-* **App Name:** Changed the name from "Lightweight" to "Hypertrack".
+* **App Name:** Changed the name from "Hypertrack" to "Hypertrack".
 
 
 ## [0.4.0-beta.1] - 2025-10-19
@@ -240,8 +244,8 @@ This release marks a significant milestone, introducing a complete UI overhaul, 
 
 ### Changed
 
-*   **Major Branding Change: Renamed to "Lightweight"**
-    *   The application has been officially renamed from **"Vita" to "Lightweight"** across all screens, assets, bundle identifiers, and localization files.
+*   **Major Branding Change: Renamed to "Hypertrack"**
+    *   The application has been officially renamed from **"Hypertrack" to "Hypertrack"** across all screens, assets, bundle identifiers, and localization files.
 *   **UX Improvement: Modernized Edit Dialogs**
     *   The "Edit Food Entry" and "Edit Fluid Entry" flows in the Diary screen were upgraded from the old `AlertDialog` to the new **Glass Bottom Menu (Bottom Sheet)**, improving mobile UX.
 *   **UI Consistency**
@@ -256,7 +260,7 @@ This release marks a significant milestone, introducing a complete UI overhaul, 
 *   **New Hub UI: Nutrition Hub Overhaul**
     *   The **Nutrition Hub** (`/nutrition-hub` - Issue #53) has been completely redesigned with an improved UI and UX, including new statistical cards and analysis gateways.
 *   **Database Asset Versioning**
-    *   Implemented a robust versioning system for all internal asset databases (`vita_base_foods.db`, `vita_prep_de.db`, `vita_training.db`). This ensures that core app data is updated when the app version changes, preventing outdated database contents.
+    *   Implemented a robust versioning system for all internal asset databases (`hypertrack_base_foods.db`, `hypertrack_prep_de.db`, `hypertrack_training.db`). This ensures that core app data is updated when the app version changes, preventing outdated database contents.
 *   **Workout History Details**
     *   The Workout History screen now displays the **Total Volume** (in kg) and **Total Sets** for each logged workout, providing more context at a glance.
 *   **Automatic Backup Check**
@@ -327,7 +331,7 @@ This release marks a significant milestone, introducing a complete UI overhaul, 
 *   **Data Integrity on Deletion:** Fixed a critical bug where deleting fluid or food entries did not remove associated supplement logs (e.g., for caffeine). The deletion logic has been revised to ensure data consistency.
 *   **Database Structure:** The database has been updated to version 19 to enable linking between food, fluid, and supplement entries.
 *   **UI Improvements in Diary:** Fluids are now displayed in their own section (`Water & Drinks`) on the diary page for better clarity.
-*   **Data Backup Fixes:** The backup model (`LightweightBackup`) has been updated to correctly handle the new `FluidEntry` data.
+*   **Data Backup Fixes:** The backup model (`HypertrackBackup`) has been updated to correctly handle the new `FluidEntry` data.
 
 ## Release Notes - 0.4.0-alpha.9+4009
 
@@ -451,7 +455,7 @@ This is a hotfix release following alpha.4, focused only on database migration s
 ## 0.4.0-alpha.4 — 2025-10-02
 ### Added
 - DEV-only editor in Food Detail Screen: allows editing base food entries directly on-device
-- Export function for `vita_base_foods.db` via share (e.g., AirDrop, Mail, Drive)
+- Export function for `hypertrack_base_foods.db` via share (e.g., AirDrop, Mail, Drive)
 - Search & category accordion in "Grundnahrungsmittel" tab with emoji headers
 
 ### Changed
@@ -503,7 +507,7 @@ This release focuses on massive stability improvements, UI consistency, and crit
 - **Optimized App Startup:** The workout recovery logic was moved from `main.dart` into the `WorkoutSessionManager` to streamline the app's initialization process.
 ## [0.1.0] - 2025-09-23
 
-This is the first feature-complete, stable pre-release of Lightweight. It establishes a robust, offline-first foundation for tracking nutrition, workouts, and body measurements.
+This is the first feature-complete, stable pre-release of Hypertrack. It establishes a robust, offline-first foundation for tracking nutrition, workouts, and body measurements.
 
 ### ✨ Added
 - **Consistency Calendar:** A visual calendar on the Statistics tab now displays days with logged workouts and nutrition entries to motivate users (#22).

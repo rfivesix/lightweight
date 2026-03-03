@@ -1,5 +1,5 @@
 // lib/models/tracked_supplement.dart
-import 'package:lightweight/models/supplement.dart';
+import 'supplement.dart';
 
 class TrackedSupplement {
   final Supplement supplement;

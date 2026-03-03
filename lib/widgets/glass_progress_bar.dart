@@ -1,6 +1,6 @@
 // lib/widgets/glass_progress_bar.dart
 import 'package:flutter/material.dart';
-import 'package:lightweight/theme/color_constants.dart';
+import '../theme/color_constants.dart';
 
 class GlassProgressBar extends StatelessWidget {
   final String label;

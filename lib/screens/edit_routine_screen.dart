@@ -2,21 +2,21 @@
 // FINAL: Cardio Clean-Up (1 Set, Cleaner Layout, Empty Defaults)
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/data/workout_database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/exercise.dart';
-import 'package:lightweight/models/routine.dart';
-import 'package:lightweight/models/routine_exercise.dart';
-import 'package:lightweight/models/set_template.dart';
-import 'package:lightweight/screens/exercise_catalog_screen.dart';
-import 'package:lightweight/screens/exercise_detail_screen.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/glass_bottom_menu.dart';
-import 'package:lightweight/widgets/glass_fab.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
-import 'package:lightweight/widgets/set_type_chip.dart';
-import 'package:lightweight/widgets/wger_attribution_widget.dart';
-import 'package:lightweight/widgets/workout_card.dart';
+import '../data/workout_database_helper.dart';
+import '../generated/app_localizations.dart';
+import '../models/exercise.dart';
+import '../models/routine.dart';
+import '../models/routine_exercise.dart';
+import '../models/set_template.dart';
+import 'exercise_catalog_screen.dart';
+import 'exercise_detail_screen.dart';
+import '../util/design_constants.dart';
+import '../widgets/glass_bottom_menu.dart';
+import '../widgets/glass_fab.dart';
+import '../widgets/global_app_bar.dart';
+import '../widgets/set_type_chip.dart';
+import '../widgets/wger_attribution_widget.dart';
+import '../widgets/workout_card.dart';
 
 class EditRoutineScreen extends StatefulWidget {
   final Routine? routine;
@@ -53,14 +53,20 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
   @override
   void dispose() {
     _nameController.dispose();
-    for (var c in _repsControllers.values) c.dispose();
-    for (var c in _weightControllers.values) c.dispose();
-    for (var c in _rirControllers.values) c.dispose();
+    for (var c in _repsControllers.values) {
+      c.dispose();
+    }
+    for (var c in _weightControllers.values) {
+      c.dispose();
+    }
+    for (var c in _rirControllers.values) {
+      c.dispose();
+    }
     super.dispose();
   }
 
   bool _isCardio(RoutineExercise re) {
-    return re.exercise.categoryName?.toLowerCase() == 'cardio';
+    return re.exercise.categoryName.toLowerCase() == 'cardio';
   }
 
   Future<void> _loadExercisesForRoutine() async {
@@ -69,9 +75,15 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     final routineWithExercises =
         await WorkoutDatabaseHelper.instance.getRoutineById(_routineId!);
     if (mounted && routineWithExercises != null) {
-      for (var c in _repsControllers.values) c.dispose();
-      for (var c in _weightControllers.values) c.dispose();
-      for (var c in _rirControllers.values) c.dispose();
+      for (var c in _repsControllers.values) {
+        c.dispose();
+      }
+      for (var c in _weightControllers.values) {
+        c.dispose();
+      }
+      for (var c in _rirControllers.values) {
+        c.dispose();
+      }
 
       _repsControllers.clear();
       _weightControllers.clear();
@@ -118,7 +130,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
 
     if (selectedExercise != null && _routineId != null) {
       // FIX: Cardio Check vor dem Hinzufügen
-      final isCardio = selectedExercise.categoryName?.toLowerCase() == 'cardio';
+      final isCardio = selectedExercise.categoryName.toLowerCase() == 'cardio';
       final initialSetCount = isCardio ? 1 : 3;
 
       final newRoutineExercise = await WorkoutDatabaseHelper.instance

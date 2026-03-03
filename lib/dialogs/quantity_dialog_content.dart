@@ -2,9 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/food_item.dart';
-import 'package:lightweight/util/design_constants.dart';
+import '../generated/app_localizations.dart';
+import '../models/food_item.dart';
+import '../util/design_constants.dart';
 
 class QuantityDialogContent extends StatefulWidget {
   final FoodItem item;

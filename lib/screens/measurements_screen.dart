@@ -2,19 +2,19 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/measurement_session.dart';
-import 'package:lightweight/screens/add_measurement_screen.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/bottom_content_spacer.dart';
-import 'package:lightweight/widgets/glass_bottom_menu.dart';
-import 'package:lightweight/widgets/glass_fab.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
-import 'package:lightweight/widgets/measurement_chart_widget.dart';
-import 'package:lightweight/widgets/summary_card.dart';
-import 'package:lightweight/util/l10n_ext.dart';
-import 'package:lightweight/widgets/swipe_action_background.dart';
+import '../data/database_helper.dart';
+import '../generated/app_localizations.dart';
+import '../models/measurement_session.dart';
+import 'add_measurement_screen.dart';
+import '../util/design_constants.dart';
+import '../widgets/bottom_content_spacer.dart';
+import '../widgets/glass_bottom_menu.dart';
+import '../widgets/glass_fab.dart';
+import '../widgets/global_app_bar.dart';
+import '../widgets/measurement_chart_widget.dart';
+import '../widgets/summary_card.dart';
+import '../util/l10n_ext.dart';
+import '../widgets/swipe_action_background.dart';
 
 class MeasurementsScreen extends StatefulWidget {
   const MeasurementsScreen({super.key});

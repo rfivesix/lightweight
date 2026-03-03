@@ -1,11 +1,11 @@
 // lib/screens/create_food_screen.dart (Final & De-Materialisiert)
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/data/product_database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/food_item.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
+import '../data/product_database_helper.dart';
+import '../generated/app_localizations.dart';
+import '../models/food_item.dart';
+import '../util/design_constants.dart';
+import '../widgets/global_app_bar.dart';
 
 class CreateFoodScreen extends StatefulWidget {
   final FoodItem? foodItemToEdit;

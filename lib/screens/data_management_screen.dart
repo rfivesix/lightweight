@@ -2,17 +2,17 @@
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:lightweight/data/backup_manager.dart';
-import 'package:lightweight/data/import_manager.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/screens/exercise_mapping_screen.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
-import 'package:lightweight/widgets/summary_card.dart';
-import 'package:lightweight/data/workout_database_helper.dart';
+import '../data/backup_manager.dart';
+import '../data/import_manager.dart';
+import '../generated/app_localizations.dart';
+import 'exercise_mapping_screen.dart';
+import '../util/design_constants.dart';
+import '../widgets/global_app_bar.dart';
+import '../widgets/summary_card.dart';
+import '../data/workout_database_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // NEU
 import 'package:flutter/services.dart'; // NEU (Clipboard)
-import 'package:lightweight/widgets/glass_bottom_menu.dart';
+import '../widgets/glass_bottom_menu.dart';
 
 class DataManagementScreen extends StatefulWidget {
   const DataManagementScreen({super.key});

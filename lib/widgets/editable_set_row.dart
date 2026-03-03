@@ -1,9 +1,9 @@
 // lib/widgets/editable_set_row.dart
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/models/set_log.dart';
-import 'package:lightweight/widgets/set_type_chip.dart';
-import 'package:lightweight/generated/app_localizations.dart';
+import '../models/set_log.dart';
+import 'set_type_chip.dart';
+import '../generated/app_localizations.dart';
 
 class EditableSetRow extends StatefulWidget {
   const EditableSetRow({

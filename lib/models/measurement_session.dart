@@ -1,5 +1,5 @@
 // lib/models/measurement_session.dart
-import 'package:lightweight/models/measurement.dart';
+import 'measurement.dart';
 
 class MeasurementSession {
   final int? id;

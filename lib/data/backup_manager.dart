@@ -12,13 +12,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path/path.dart' as p;
 
 // Eigene Imports
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/data/drift_database.dart'; // Zugriff auf Tabellen & Companions
-import 'package:lightweight/data/product_database_helper.dart';
-import 'package:lightweight/data/workout_database_helper.dart';
-import 'package:lightweight/models/food_item.dart';
-import 'package:lightweight/models/lightweight_backup.dart';
-import 'package:lightweight/util/encryption_util.dart';
+import 'database_helper.dart';
+import 'drift_database.dart'; // Zugriff auf Tabellen & Companions
+import 'product_database_helper.dart';
+import 'workout_database_helper.dart';
+import '../models/food_item.dart';
+import '../models/hypertrack_backup.dart';
+import '../util/encryption_util.dart';
 
 class BackupManager {
   // Singleton Pattern
@@ -38,7 +38,7 @@ class BackupManager {
   Future<bool> exportFullBackup() async {
     try {
       final jsonString = await _generateBackupJson();
-      return await _writeAndShareFile(jsonString, 'lightweight_backup');
+      return await _writeAndShareFile(jsonString, 'hypertrack_backup');
     } catch (e) {
       debugPrint("Fehler beim Exportieren: $e");
       return false;
@@ -54,7 +54,7 @@ class BackupManager {
           await EncryptionUtil.encryptString(jsonString, passphrase);
       final wrappedJson = jsonEncode(wrapper);
 
-      return await _writeAndShareFile(wrappedJson, 'lightweight_backup_enc');
+      return await _writeAndShareFile(wrappedJson, 'hypertrack_backup_enc');
     } catch (e) {
       debugPrint("Fehler beim verschlüsselten Export: $e");
       return false;
@@ -108,7 +108,7 @@ class BackupManager {
     }
 
     // 4. Backup Objekt erstellen
-    final backup = LightweightBackup(
+    final backup = HypertrackBackup(
       schemaVersion: currentSchemaVersion,
       foodEntries: foodEntries,
       fluidEntries: fluidEntries,
@@ -136,7 +136,7 @@ class BackupManager {
     // FIX: Neue API nutzen (Share.shareXFiles ist korrekt, aber wir müssen XFile korrekt importieren)
     final result = await Share.shareXFiles([
       XFile(tempFile.path, mimeType: 'application/json'),
-    ], subject: 'Lightweight Backup $timestamp');
+    ], subject: 'Hypertrack Backup $timestamp');
 
     if (await tempFile.exists()) await tempFile.delete();
     return result.status == ShareResultStatus.success;
@@ -174,7 +174,7 @@ class BackupManager {
         payload = (jsonMapRaw as Map).cast<String, dynamic>();
       }
 
-      final backup = LightweightBackup.fromJson(payload);
+      final backup = HypertrackBackup.fromJson(payload);
 
       if (backup.schemaVersion > currentSchemaVersion) {
         debugPrint("Backup-Version zu neu.");
@@ -279,14 +279,14 @@ class BackupManager {
       }
 
       String content = await _generateBackupJson();
-      String fileName = 'lightweight_auto_v$currentSchemaVersion';
+      String fileName = 'hypertrack_auto_v$currentSchemaVersion';
 
       // FIX: Strenger bool check
       if (encrypted) {
         if (passphrase == null || passphrase.isEmpty) return false;
         final wrapper = await EncryptionUtil.encryptString(content, passphrase);
         content = jsonEncode(wrapper);
-        fileName = 'lightweight_auto_enc_v$currentSchemaVersion';
+        fileName = 'hypertrack_auto_enc_v$currentSchemaVersion';
       }
 
       final docs = await getApplicationDocumentsDirectory();
@@ -318,7 +318,7 @@ class BackupManager {
         final files = baseDir
             .listSync()
             .whereType<File>()
-            .where((f) => p.basename(f.path).startsWith('lightweight_auto'))
+            .where((f) => p.basename(f.path).startsWith('hypertrack_auto'))
             .toList()
           ..sort(
               (a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
@@ -385,7 +385,7 @@ class BackupManager {
           entry.barcode,
         ]);
       }
-      return await _createAndShareCsv(rows, 'lightweight_nutrition_export');
+      return await _createAndShareCsv(rows, 'hypertrack_nutrition_export');
     } catch (e) {
       debugPrint("CSV Export Fehler (Nutrition): $e");
       return false;
@@ -428,7 +428,7 @@ class BackupManager {
           ]);
         }
       }
-      return await _createAndShareCsv(rows, 'lightweight_workouts_export');
+      return await _createAndShareCsv(rows, 'hypertrack_workouts_export');
     } catch (e) {
       debugPrint("CSV Export Fehler (Workout): $e");
       return false;
@@ -454,7 +454,7 @@ class BackupManager {
           ]);
         }
       }
-      return await _createAndShareCsv(rows, 'lightweight_measurements_export');
+      return await _createAndShareCsv(rows, 'hypertrack_measurements_export');
     } catch (e) {
       debugPrint("CSV Export Fehler (Measure): $e");
       return false;

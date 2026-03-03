@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 # --- KONFIGURATION ---
 parquet_file_path = "food.parquet"
-sqlite_db_path = "vita_base_foods.db"
+sqlite_db_path = "hypertrack_prep_de.db"
 table_name = "products"
 BATCH_SIZE = 50000 
 
@@ -20,7 +20,7 @@ NAMESPACE_FOOD = uuid.UUID('6ba7b810-9dad-11d1-80b4-00c04fd430c8')
 # Wir suchen nach diesen Tags in 'countries_tags'.
 # 'en:germany' = Deutschland
 # 'en:united-states' = USA
-ALLOWED_COUNTRIES = ["en:germany", "en:united-states"]
+ALLOWED_COUNTRIES = ["en:germany"]
 
 def generate_uuid(barcode):
     if not barcode: return str(uuid.uuid4()) 

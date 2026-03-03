@@ -1,11 +1,11 @@
 // lib/screens/app_initializer_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/data/backup_manager.dart';
-import 'package:lightweight/data/basis_data_manager.dart';
-// import 'package:lightweight/generated/app_localizations.dart'; // Nicht zwingend nötig hier, da wir dynamische Texte anzeigen
-import 'package:lightweight/screens/main_screen.dart';
-import 'package:lightweight/screens/onboarding_screen.dart';
+import '../data/backup_manager.dart';
+import '../data/basis_data_manager.dart';
+// import '../generated/app_localizations.dart'; // Nicht zwingend nötig hier, da wir dynamische Texte anzeigen
+import 'main_screen.dart';
+import 'onboarding_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AppInitializerScreen extends StatefulWidget {
@@ -67,10 +67,10 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
     final hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') == true;
 
     if (!mounted) return;
-    
+
     // Navigation
     setState(() => _isDone = true);
-    
+
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (_, __, ___) =>
@@ -92,7 +92,7 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
 
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: Padding(
@@ -123,11 +123,11 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: LinearProgressIndicator(
-                value: _progress > 0 ? _progress : null, // null = Indeterminate wenn 0
+                value: _progress > 0
+                    ? _progress
+                    : null, // null = Indeterminate wenn 0
                 minHeight: 8,
-                backgroundColor: isDark 
-                    ? Colors.white10 
-                    : Colors.grey.shade200,
+                backgroundColor: isDark ? Colors.white10 : Colors.grey.shade200,
                 color: theme.colorScheme.primary,
               ),
             ),

@@ -1,7 +1,7 @@
 // lib/models/timeline_entry.dart
 
-import 'package:lightweight/models/tracked_food_item.dart';
-import 'package:lightweight/models/water_entry.dart';
+import 'tracked_food_item.dart';
+import 'water_entry.dart';
 
 // DOC: Dies ist eine "abstrakte" Klasse. Sie dient als gemeinsame
 // Schablone für alle Arten von Einträgen in unserem Tagebuch.

@@ -3,7 +3,7 @@ import os
 import sys
 
 # Liste der Dateien, die standardmäßig geprüft werden sollen
-default_files = ["vita_base_foods.db", "vita_training.db", "vita_prep_de.db"]
+default_files = ["hypertrack_base_foods.db", "hypertrack_training.db", "hypertrack_prep_de.db"]
 
 def inspect_db(db_path):
     print(f"\n{'='*60}")

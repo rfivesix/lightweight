@@ -16,11 +16,11 @@ class DbService {
 
   Future<Database> _init() async {
     final dbDir = await getDatabasesPath();
-    final dbPath = p.join(dbDir, 'vita_training.db');
+    final dbPath = p.join(dbDir, 'hypertrack_training.db');
 
     // Falls Datei noch nicht existiert: aus Assets kopieren
     if (!await File(dbPath).exists()) {
-      final bytes = await rootBundle.load('assets/db/vita_training.db');
+      final bytes = await rootBundle.load('assets/db/hypertrack_training.db');
       await File(dbPath).writeAsBytes(
         bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes),
         flush: true,

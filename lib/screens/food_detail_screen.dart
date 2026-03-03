@@ -1,15 +1,15 @@
 // lib/screens/food_detail_screen.dart (Final & De-Materialisiert - OLED Ready)
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/food_item.dart';
-import 'package:lightweight/models/tracked_food_item.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/glass_fab.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
-import 'package:lightweight/widgets/off_attribution_widget.dart';
-import 'package:lightweight/widgets/summary_card.dart';
+import '../data/database_helper.dart';
+import '../generated/app_localizations.dart';
+import '../models/food_item.dart';
+import '../models/tracked_food_item.dart';
+import '../util/design_constants.dart';
+import '../widgets/glass_fab.dart';
+import '../widgets/global_app_bar.dart';
+import '../widgets/off_attribution_widget.dart';
+import '../widgets/summary_card.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
@@ -91,7 +91,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
   Future<String> _getBaseDbPath() async {
     // Versuche erst den bekannten Namen der Base-DB im App-DB-Verzeichnis
     final dbDir = await getDatabasesPath();
-    return p.join(dbDir, 'vita_base_foods.db');
+    return p.join(dbDir, 'hypertrack_base_foods.db');
   }
 
   Future<Database> _openBaseDb({bool readOnly = false}) async {
@@ -175,7 +175,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
     try {
       final path = await _getBaseDbPath();
       final file = XFile(path, name: p.basename(path));
-      await Share.shareXFiles([file], subject: 'Export: vita_base_foods.db');
+      await Share.shareXFiles([file],
+          subject: 'Export: hypertrack_base_foods.db');
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(

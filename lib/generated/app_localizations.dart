@@ -1991,7 +1991,7 @@ abstract class AppLocalizations {
   /// No description provided for @dataManagementBackupTitle.
   ///
   /// In en, this message translates to:
-  /// **'Lightweight Data Backup'**
+  /// **'Hypertrack Data Backup'**
   String get dataManagementBackupTitle;
 
   /// No description provided for @dataManagementBackupDescription.
@@ -2873,7 +2873,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingWelcomeTitle.
   ///
   /// In en, this message translates to:
-  /// **'Welcome to Lightweight'**
+  /// **'Welcome to Hypertrack'**
   String get onboardingWelcomeTitle;
 
   /// No description provided for @onboardingWelcomeSubtitle.

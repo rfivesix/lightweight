@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/models/chart_data_point.dart';
+import '../data/database_helper.dart';
+import '../models/chart_data_point.dart';
 import 'package:intl/intl.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/util/design_constants.dart';
+import '../generated/app_localizations.dart';
+import '../util/design_constants.dart';
 import 'package:flutter/services.dart';
 
 class MeasurementChartWidget extends StatefulWidget {

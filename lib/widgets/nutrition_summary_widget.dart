@@ -1,10 +1,10 @@
 /*// lib/widgets/nutrition_summary_widget.dart
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/daily_nutrition.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/summary_card.dart';
+import '../generated/app_localizations.dart';
+import '../models/daily_nutrition.dart';
+import '../util/design_constants.dart';
+import 'summary_card.dart';
 import 'dart:ui'; // Für den ImageFilter.blur
 
 class _NutrientSpec {
@@ -238,11 +238,11 @@ class _InfoBox extends StatelessWidget {
 // lib/widgets/nutrition_summary_widget.dart
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/daily_nutrition.dart';
-import 'package:lightweight/util/design_constants.dart';
+import '../generated/app_localizations.dart';
+import '../models/daily_nutrition.dart';
+import '../util/design_constants.dart';
 
-import 'package:lightweight/widgets/glass_progress_bar.dart'; // Für den ImageFilter.blur
+import 'glass_progress_bar.dart'; // Für den ImageFilter.blur
 
 class NutritionSummaryWidget extends StatelessWidget {
   final DailyNutrition nutritionData;

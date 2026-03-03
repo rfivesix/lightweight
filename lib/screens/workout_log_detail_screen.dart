@@ -2,19 +2,19 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:lightweight/data/workout_database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/exercise.dart';
-import 'package:lightweight/models/set_log.dart';
-import 'package:lightweight/models/workout_log.dart';
-import 'package:lightweight/screens/exercise_catalog_screen.dart';
-import 'package:lightweight/screens/exercise_detail_screen.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
-import 'package:lightweight/widgets/summary_card.dart';
-import 'package:lightweight/widgets/wger_attribution_widget.dart';
-import 'package:lightweight/widgets/workout_summary_bar.dart';
-import 'package:lightweight/widgets/workout_card.dart';
+import '../data/workout_database_helper.dart';
+import '../generated/app_localizations.dart';
+import '../models/exercise.dart';
+import '../models/set_log.dart';
+import '../models/workout_log.dart';
+import 'exercise_catalog_screen.dart';
+import 'exercise_detail_screen.dart';
+import '../util/design_constants.dart';
+import '../widgets/global_app_bar.dart';
+import '../widgets/summary_card.dart';
+import '../widgets/wger_attribution_widget.dart';
+import '../widgets/workout_summary_bar.dart';
+import '../widgets/workout_card.dart';
 
 class WorkoutLogDetailScreen extends StatefulWidget {
   final int logId;
@@ -32,13 +32,13 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
   bool _isEditMode = false;
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _notesController;
-  
+
   // Wir nutzen weightController für KG oder DISTANCE
   final Map<int, TextEditingController> _weightControllers = {};
   // Wir nutzen repsController für REPS oder TIME(min)
   final Map<int, TextEditingController> _repsControllers = {};
   final Map<int, TextEditingController> _rirControllers = {};
-  
+
   DateTime? _editedStartTime;
   Map<String, double> _categoryVolume = {};
 
@@ -57,9 +57,15 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
   }
 
   void _clearControllers() {
-    for (var c in _weightControllers.values) c.dispose();
-    for (var c in _repsControllers.values) c.dispose();
-    for (var c in _rirControllers.values) c.dispose();
+    for (var c in _weightControllers.values) {
+      c.dispose();
+    }
+    for (var c in _repsControllers.values) {
+      c.dispose();
+    }
+    for (var c in _rirControllers.values) {
+      c.dispose();
+    }
     _weightControllers.clear();
     _repsControllers.clear();
     _rirControllers.clear();
@@ -67,16 +73,20 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
 
   String _getSetDisplayText(String setType, int setIndex) {
     switch (setType) {
-      case 'warmup': return 'W';
-      case 'failure': return 'F';
-      case 'dropset': return 'D';
-      default: return '$setIndex';
+      case 'warmup':
+        return 'W';
+      case 'failure':
+        return 'F';
+      case 'dropset':
+        return 'D';
+      default:
+        return '$setIndex';
     }
   }
 
   bool _isCardio(String exerciseName) {
     final ex = _exerciseDetails[exerciseName];
-    return ex?.categoryName?.toLowerCase() == 'cardio';
+    return ex?.categoryName.toLowerCase() == 'cardio';
   }
 
   Future<void> _loadDetails({bool preserveEditState = false}) async {
@@ -105,14 +115,12 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     }
 
     // Volumen (nur Kraft) für den Header
-    double totalVol = 0;
     final catVol = <String, double>{};
     for (var set in data.sets) {
       // Nur wenn nicht Cardio zum Volumen zählen?
-      // Vereinfacht: wir zählen alles was weight*reps hat. 
+      // Vereinfacht: wir zählen alles was weight*reps hat.
       // Cardio hat weight=0/null im Log (da in distanceKm gespeichert), also automatisch 0.
       final v = (set.weightKg ?? 0) * (set.reps ?? 0);
-      totalVol += v;
       if (v > 0) {
         final cat = details[set.exerciseName]?.categoryName ?? 'Other';
         catVol.update(cat, (val) => val + v, ifAbsent: () => v);
@@ -126,10 +134,11 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     _clearControllers();
     for (final setLog in data.sets) {
       // Unterscheidung Cardio vs Kraft für Initial-Werte
-      final isCardio = details[setLog.exerciseName]?.categoryName?.toLowerCase() == 'cardio';
-      
+      final isCardio =
+          details[setLog.exerciseName]?.categoryName.toLowerCase() == 'cardio';
+
       String val1, val2;
-      
+
       if (isCardio) {
         // Cardio: Val1 = Distance, Val2 = Duration(min)
         val1 = setLog.distanceKm?.toStringAsFixed(1).replaceAll('.0', '') ?? '';
@@ -143,7 +152,8 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
 
       _weightControllers[setLog.id!] = TextEditingController(text: val1);
       _repsControllers[setLog.id!] = TextEditingController(text: val2);
-      _rirControllers[setLog.id!] = TextEditingController(text: setLog.rir?.toString() ?? '');
+      _rirControllers[setLog.id!] =
+          TextEditingController(text: setLog.rir?.toString() ?? '');
     }
 
     if (!mounted) return;
@@ -215,9 +225,14 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     for (final setLog in currentSets) {
       // Hier wieder die Unterscheidung: Was bedeuten die Controller-Werte?
       final isCardio = _isCardio(setLog.exerciseName);
-      
-      final val1 = double.tryParse(_weightControllers[setLog.id!]?.text.replaceAll(',', '.') ?? '0') ?? 0.0;
-      final val2 = double.tryParse(_repsControllers[setLog.id!]?.text.replaceAll(',', '.') ?? '0') ?? 0.0;
+
+      final val1 = double.tryParse(
+              _weightControllers[setLog.id!]?.text.replaceAll(',', '.') ??
+                  '0') ??
+          0.0;
+      final val2 = double.tryParse(
+              _repsControllers[setLog.id!]?.text.replaceAll(',', '.') ?? '0') ??
+          0.0;
       final rir = int.tryParse(_rirControllers[setLog.id!]?.text ?? '');
 
       SetLog updatedSet;
@@ -229,7 +244,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
           durationSeconds: (val2 * 60).round(),
           rir: rir,
           // Weight/Reps auf 0/null setzen bei Cardio, um Datenmüll zu vermeiden?
-          weightKg: 0, 
+          weightKg: 0,
           reps: 0,
         );
       } else {
@@ -343,7 +358,8 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                                 child: Form(
                                   key: _formKey,
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         _log!.routineName ??
@@ -371,7 +387,8 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                                             ),
                                         ],
                                       ),
-                                      const SizedBox(height: DesignConstants.spacingM),
+                                      const SizedBox(
+                                          height: DesignConstants.spacingM),
                                       _isEditMode
                                           ? TextFormField(
                                               controller: _notesController,
@@ -395,7 +412,8 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                                           l10n.muscleSplitLabel,
                                           style: textTheme.titleMedium,
                                         ),
-                                        const SizedBox(height: DesignConstants.spacingS),
+                                        const SizedBox(
+                                            height: DesignConstants.spacingS),
                                         ..._buildCategoryBars(context),
                                       ],
                                     ],
@@ -425,26 +443,36 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                                     ),
                                   );
                                   if (selectedExercise != null) {
-                                    final isCardio = selectedExercise.categoryName?.toLowerCase() == 'cardio';
                                     setState(() {
                                       // Exercise Details lokal speichern, damit _isCardio und Name funktionieren
-                                      _exerciseDetails[selectedExercise.getLocalizedName(context)] = selectedExercise;
-                                      
+                                      _exerciseDetails[selectedExercise
+                                              .getLocalizedName(context)] =
+                                          selectedExercise;
+
                                       final newSet = SetLog(
-                                        id: DateTime.now().millisecondsSinceEpoch,
-                                        workoutLogId: _log!.id!,
-                                        exerciseName: selectedExercise.getLocalizedName(context),
-                                        setType: 'normal',
-                                        isCompleted: true,
-                                        // Default Werte setzen
-                                        weightKg: 0, reps: 0, 
-                                        distanceKm: 0, durationSeconds: 0
-                                      );
-                                      _groupedSets[selectedExercise.getLocalizedName(context)] = [newSet];
-                                      
-                                      _weightControllers[newSet.id!] = TextEditingController();
-                                      _repsControllers[newSet.id!] = TextEditingController();
-                                      _rirControllers[newSet.id!] = TextEditingController();
+                                          id: DateTime.now()
+                                              .millisecondsSinceEpoch,
+                                          workoutLogId: _log!.id!,
+                                          exerciseName: selectedExercise
+                                              .getLocalizedName(context),
+                                          setType: 'normal',
+                                          isCompleted: true,
+                                          // Default Werte setzen
+                                          weightKg: 0,
+                                          reps: 0,
+                                          distanceKm: 0,
+                                          durationSeconds: 0);
+                                      _groupedSets[selectedExercise
+                                          .getLocalizedName(context)] = [
+                                        newSet
+                                      ];
+
+                                      _weightControllers[newSet.id!] =
+                                          TextEditingController();
+                                      _repsControllers[newSet.id!] =
+                                          TextEditingController();
+                                      _rirControllers[newSet.id!] =
+                                          TextEditingController();
                                     });
                                   }
                                 },
@@ -551,7 +579,8 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             leading: _isEditMode
                 ? ReorderableDragStartListener(
                     index: index,
@@ -573,13 +602,15 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 4.0),
                 child: Text(
                   exercise?.getLocalizedName(context) ?? exerciseName,
-                  style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  style: textTheme.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ),
             ),
             trailing: _isEditMode
                 ? IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                    icon: const Icon(Icons.delete_outline,
+                        color: Colors.redAccent),
                     tooltip: l10n.removeExercise,
                     onPressed: () {
                       setState(() {
@@ -601,23 +632,25 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (isCardio) 
-                  Row(
-                    children: [
-                       _buildHeader(l10n.setLabel, flex: 2),
-                       _buildHeader("Distance (km)", flex: 4),
-                       const SizedBox(width: 8),
-                       _buildHeader("Time (min)", flex: 4),
-                       const SizedBox(width: 8),
-                       _buildHeader("Int.", flex: 2),
-                       const SizedBox(width: 48), // Platz für Check/Del
-                    ],
-                  )
-                else 
+                if (isCardio)
                   Row(
                     children: [
                       _buildHeader(l10n.setLabel, flex: 2),
-                      _buildHeader(l10n.lastTimeLabel, flex: 3), // Nur in View sinnvoll, hier aber Platzhalter
+                      _buildHeader("Distance (km)", flex: 4),
+                      const SizedBox(width: 8),
+                      _buildHeader("Time (min)", flex: 4),
+                      const SizedBox(width: 8),
+                      _buildHeader("Int.", flex: 2),
+                      const SizedBox(width: 48), // Platz für Check/Del
+                    ],
+                  )
+                else
+                  Row(
+                    children: [
+                      _buildHeader(l10n.setLabel, flex: 2),
+                      _buildHeader(l10n.lastTimeLabel,
+                          flex:
+                              3), // Nur in View sinnvoll, hier aber Platzhalter
                       _buildHeader(l10n.kgLabel, flex: 2),
                       _buildHeader(l10n.repsLabel, flex: 2),
                       _buildHeader("RIR", flex: 2),
@@ -628,7 +661,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                 // Set Rows
                 ...sets.asMap().entries.map((setEntry) {
                   final setLog = setEntry.value;
-                  final rowIndex = setEntry.key; 
+                  final rowIndex = setEntry.key;
                   int workingSetIndex = 0;
                   for (int i = 0; i <= rowIndex; i++) {
                     if (sets[i].setType != 'warmup') workingSetIndex++;
@@ -658,8 +691,10 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                         );
                         setState(() {
                           sets.add(newSet);
-                          _weightControllers[newSet.id!] = TextEditingController();
-                          _repsControllers[newSet.id!] = TextEditingController();
+                          _weightControllers[newSet.id!] =
+                              TextEditingController();
+                          _repsControllers[newSet.id!] =
+                              TextEditingController();
                           _rirControllers[newSet.id!] = TextEditingController();
                         });
                       },
@@ -694,7 +729,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
 
   Widget _buildSetRow(
     SetLog setLog,
-    int rowIndex, 
+    int rowIndex,
     int workingSetIndex,
     String exerciseName,
     AppLocalizations l10n,
@@ -704,7 +739,9 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     final isLightMode = Theme.of(context).brightness == Brightness.light;
     final bool isColoredRow = rowIndex > 0 && rowIndex.isOdd;
     final Color rowColor = isColoredRow
-        ? (isLightMode ? Colors.grey.withOpacity(0.1) : Colors.white.withOpacity(0.1))
+        ? (isLightMode
+            ? Colors.grey.withOpacity(0.1)
+            : Colors.white.withOpacity(0.1))
         : Colors.transparent;
 
     // View Values
@@ -714,7 +751,8 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
       final sec = setLog.durationSeconds ?? 0;
       val2Display = sec > 0 ? (sec / 60).round().toString() : '-';
     } else {
-      val1Display = setLog.weightKg?.toStringAsFixed(1).replaceAll('.0', '') ?? '-';
+      val1Display =
+          setLog.weightKg?.toStringAsFixed(1).replaceAll('.0', '') ?? '-';
       val2Display = setLog.reps?.toString() ?? '-';
     }
 
@@ -742,9 +780,11 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                 ),
               ),
             ),
-            
+
             if (!isCardio)
-               const Expanded(flex: 3, child: Center(child: Text("-"))), // Last Time Placeholder
+              const Expanded(
+                  flex: 3,
+                  child: Center(child: Text("-"))), // Last Time Placeholder
 
             Expanded(
               flex: isCardio ? 2 : 2,
@@ -752,14 +792,14 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                   ? TextFormField(
                       controller: _weightControllers[setLog.id!],
                       textAlign: TextAlign.center,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        isDense: true,
-                        fillColor: Colors.transparent,
-                        hintText: "-",
-                        contentPadding: EdgeInsets.zero
-                      ),
+                          border: InputBorder.none,
+                          isDense: true,
+                          fillColor: Colors.transparent,
+                          hintText: "-",
+                          contentPadding: EdgeInsets.zero),
                     )
                   : Text(
                       val1Display,
@@ -816,10 +856,12 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                 width: 48,
                 child: _isEditMode
                     ? IconButton(
-                        icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                        icon: const Icon(Icons.delete_outline,
+                            color: Colors.redAccent),
                         onPressed: () {
                           setState(() {
-                            _groupedSets[exerciseName]?.removeWhere((s) => s.id == setLog.id);
+                            _groupedSets[exerciseName]
+                                ?.removeWhere((s) => s.id == setLog.id);
                             _weightControllers.remove(setLog.id!)?.dispose();
                             _repsControllers.remove(setLog.id!)?.dispose();
                             _rirControllers.remove(setLog.id!)?.dispose();
@@ -856,22 +898,34 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
       builder: (context) {
         return Wrap(
           children: <Widget>[
-            ListTile(title: const Text('Normal'), onTap: () => _changeSetType(setLogId, 'normal')),
-            ListTile(title: const Text('Warmup'), onTap: () => _changeSetType(setLogId, 'warmup')),
-            ListTile(title: const Text('Failure'), onTap: () => _changeSetType(setLogId, 'failure')),
-            ListTile(title: const Text('Dropset'), onTap: () => _changeSetType(setLogId, 'dropset')),
+            ListTile(
+                title: const Text('Normal'),
+                onTap: () => _changeSetType(setLogId, 'normal')),
+            ListTile(
+                title: const Text('Warmup'),
+                onTap: () => _changeSetType(setLogId, 'warmup')),
+            ListTile(
+                title: const Text('Failure'),
+                onTap: () => _changeSetType(setLogId, 'failure')),
+            ListTile(
+                title: const Text('Dropset'),
+                onTap: () => _changeSetType(setLogId, 'dropset')),
           ],
         );
       },
     );
   }
-  
+
   Color _getSetTypeColor(String setType) {
     switch (setType) {
-      case 'warmup': return Colors.orange;
-      case 'dropset': return Colors.blue;
-      case 'failure': return Colors.red;
-      default: return Colors.grey;
+      case 'warmup':
+        return Colors.orange;
+      case 'dropset':
+        return Colors.blue;
+      case 'failure':
+        return Colors.red;
+      default:
+        return Colors.grey;
     }
   }
 }

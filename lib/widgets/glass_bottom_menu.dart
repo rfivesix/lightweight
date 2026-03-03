@@ -2,8 +2,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/services/theme_service.dart';
+import '../generated/app_localizations.dart';
+import '../services/theme_service.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:provider/provider.dart';
 

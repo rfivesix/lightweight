@@ -1,15 +1,15 @@
 // lib/screens/food_explorer_screen.dart (Final & De-Materialisiert)
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/data/product_database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/food_item.dart';
-import 'package:lightweight/screens/create_food_screen.dart';
-import 'package:lightweight/screens/food_detail_screen.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/glass_fab.dart';
-import 'package:lightweight/widgets/off_attribution_widget.dart';
-import 'package:lightweight/widgets/summary_card.dart'; // HINZUGEFÜGT
+import '../data/product_database_helper.dart';
+import '../generated/app_localizations.dart';
+import '../models/food_item.dart';
+import 'create_food_screen.dart';
+import 'food_detail_screen.dart';
+import '../util/design_constants.dart';
+import '../widgets/glass_fab.dart';
+import '../widgets/off_attribution_widget.dart';
+import '../widgets/summary_card.dart'; // HINZUGEFÜGT
 
 class FoodExplorerScreen extends StatefulWidget {
   const FoodExplorerScreen({super.key});

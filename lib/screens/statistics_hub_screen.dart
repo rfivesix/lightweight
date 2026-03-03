@@ -1,12 +1,12 @@
 // lib/screens/statistics_hub_screen.dart
 import 'package:flutter/material.dart';
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/data/workout_database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/screens/measurements_screen.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/bottom_content_spacer.dart';
-import 'package:lightweight/widgets/summary_card.dart';
+import '../data/database_helper.dart';
+import '../data/workout_database_helper.dart';
+import '../generated/app_localizations.dart';
+import 'measurements_screen.dart';
+import '../util/design_constants.dart';
+import '../widgets/bottom_content_spacer.dart';
+import '../widgets/summary_card.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class StatisticsHubScreen extends StatefulWidget {

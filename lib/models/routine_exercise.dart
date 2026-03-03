@@ -1,7 +1,7 @@
 // lib/models/routine_exercise.dart
 
-import 'package:lightweight/models/exercise.dart';
-import 'package:lightweight/models/set_template.dart';
+import 'exercise.dart';
+import 'set_template.dart';
 
 class RoutineExercise {
   final int? id;

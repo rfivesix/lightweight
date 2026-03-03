@@ -4,14 +4,14 @@
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
+import 'data/database_helper.dart';
+import 'generated/app_localizations.dart';
 // FIX: Importiere den ausgelagerten Initializer-Screen
-import 'package:lightweight/screens/app_initializer_screen.dart'; 
-import 'package:lightweight/services/profile_service.dart';
-import 'package:lightweight/services/workout_session_manager.dart';
+import 'screens/app_initializer_screen.dart';
+import 'services/profile_service.dart';
+import 'services/workout_session_manager.dart';
 import 'package:provider/provider.dart';
-import 'package:lightweight/services/theme_service.dart';
+import 'services/theme_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -330,7 +330,7 @@ class MyApp extends StatelessWidget {
                   AppLocalizations.of(context)!.appTitle,
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
-              title: "LightWeight",
+              title: "Hypertrack",
               theme: baseLightTheme,
               darkTheme: baseDarkTheme,
               themeMode: themeService.themeMode,

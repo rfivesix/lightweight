@@ -2,16 +2,16 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:lightweight/data/workout_database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/workout_log.dart';
-import 'package:lightweight/screens/workout_log_detail_screen.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/util/time_util.dart';
-import 'package:lightweight/widgets/glass_bottom_menu.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
-import 'package:lightweight/widgets/summary_card.dart';
-import 'package:lightweight/widgets/swipe_action_background.dart';
+import '../data/workout_database_helper.dart';
+import '../generated/app_localizations.dart';
+import '../models/workout_log.dart';
+import 'workout_log_detail_screen.dart';
+import '../util/design_constants.dart';
+import '../util/time_util.dart';
+import '../widgets/glass_bottom_menu.dart';
+import '../widgets/global_app_bar.dart';
+import '../widgets/summary_card.dart';
+import '../widgets/swipe_action_background.dart';
 
 class WorkoutHistoryScreen extends StatefulWidget {
   const WorkoutHistoryScreen({super.key});

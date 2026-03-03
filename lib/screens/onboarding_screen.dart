@@ -1,9 +1,9 @@
 // lib/screens/onboarding_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/screens/main_screen.dart';
+import '../data/database_helper.dart';
+import '../generated/app_localizations.dart';
+import 'main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 
@@ -96,10 +96,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
 
     // 4. Extra Werte (Sugar/Fiber/Salt) Defaults in Prefs setzen (da noch nicht in DB Schema)
-    if (prefs.getInt('targetSugar') == null)
+    if (prefs.getInt('targetSugar') == null) {
       await prefs.setInt('targetSugar', 50);
-    if (prefs.getInt('targetFiber') == null)
+    }
+    if (prefs.getInt('targetFiber') == null) {
       await prefs.setInt('targetFiber', 30);
+    }
     if (prefs.getInt('targetSalt') == null) await prefs.setInt('targetSalt', 6);
 
     // 5. Fertig markieren

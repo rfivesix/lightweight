@@ -471,7 +471,7 @@
   "categoryHint": "e.g. Chest, Back, Legs...",
   "validatorPleaseEnterCategory": "Please enter a category.",
   "dialogEnterPasswordImport": "Enter password to import backup",
-  "dataManagementBackupTitle": "Lightweight Data Backup",
+  "dataManagementBackupTitle": "Hypertrack Data Backup",
   "dataManagementBackupDescription": "Back up or restore all your app data. Ideal for changing devices.",
   "exportEncrypted": "Export Encrypted",
   "dialogPasswordForExport": "Password for encrypted export",
@@ -630,7 +630,7 @@
   "onbBodyAppLayout": "The bottom bar allows quick switching between areas. Use the large [+] button to log everything instantly.",
   "dataHubTitle": "Data Hub",
   "resumeButton": "Resume",
-  "onboardingWelcomeTitle": "Welcome to Lightweight",
+  "onboardingWelcomeTitle": "Welcome to Hypertrack",
   "onboardingWelcomeSubtitle": "Let's set up your profile to get the best results.",
   
   "onboardingNameTitle": "What's your name?",

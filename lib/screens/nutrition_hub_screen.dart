@@ -1,16 +1,16 @@
 // lib/screens/nutrition_hub_screen.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/data/product_database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/screens/add_food_screen.dart';
-import 'package:lightweight/screens/meal_screen.dart';
-import 'package:lightweight/screens/goals_screen.dart';
-import 'package:lightweight/screens/supplement_track_screen.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/bottom_content_spacer.dart';
-import 'package:lightweight/widgets/summary_card.dart';
+import '../data/database_helper.dart';
+import '../data/product_database_helper.dart';
+import '../generated/app_localizations.dart';
+import 'add_food_screen.dart';
+import 'meal_screen.dart';
+import 'goals_screen.dart';
+import 'supplement_track_screen.dart';
+import '../util/design_constants.dart';
+import '../widgets/bottom_content_spacer.dart';
+import '../widgets/summary_card.dart';
 
 class NutritionHubScreen extends StatefulWidget {
   const NutritionHubScreen({super.key});

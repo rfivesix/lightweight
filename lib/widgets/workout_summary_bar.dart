@@ -1,8 +1,8 @@
 // lib/widgets/workout_summary_bar.dart
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/util/time_util.dart'; // Wir erstellen diese Hilfsdatei gleich
+import '../generated/app_localizations.dart';
+import '../util/time_util.dart'; // Wir erstellen diese Hilfsdatei gleich
 
 class WorkoutSummaryBar extends StatelessWidget {
   const WorkoutSummaryBar({

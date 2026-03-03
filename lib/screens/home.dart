@@ -2,23 +2,23 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:lightweight/models/tracked_supplement.dart';
-//import 'package:lightweight/screens/supplement_hub_screen.dart';
-import 'package:lightweight/screens/supplement_track_screen.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/supplement_summary_widget.dart';
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/data/product_database_helper.dart';
-import 'package:lightweight/data/workout_database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/chart_data_point.dart';
-import 'package:lightweight/models/daily_nutrition.dart';
-import 'package:lightweight/screens/measurements_screen.dart';
-import 'package:lightweight/screens/nutrition_screen.dart';
-import 'package:lightweight/widgets/measurement_chart_widget.dart';
-import 'package:lightweight/widgets/nutrition_summary_widget.dart';
-import 'package:lightweight/widgets/summary_card.dart';
-import 'package:lightweight/util/date_util.dart';
+import '../models/tracked_supplement.dart';
+//import 'supplement_hub_screen.dart';
+import 'supplement_track_screen.dart';
+import '../util/design_constants.dart';
+import '../widgets/supplement_summary_widget.dart';
+import '../data/database_helper.dart';
+import '../data/product_database_helper.dart';
+import '../data/workout_database_helper.dart';
+import '../generated/app_localizations.dart';
+import '../models/chart_data_point.dart';
+import '../models/daily_nutrition.dart';
+import 'measurements_screen.dart';
+import 'nutrition_screen.dart';
+import '../widgets/measurement_chart_widget.dart';
+import '../widgets/nutrition_summary_widget.dart';
+import '../widgets/summary_card.dart';
+import '../util/date_util.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});

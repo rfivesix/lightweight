@@ -1,6 +1,6 @@
 // lib/util/l10n_ext.dart
 import 'package:flutter/widgets.dart';
-import 'package:lightweight/generated/app_localizations.dart';
+import '../generated/app_localizations.dart';
 
 // Bestehende Extension für den BuildContext
 extension L10nX on BuildContext {

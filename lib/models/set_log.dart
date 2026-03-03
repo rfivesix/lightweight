@@ -95,22 +95,28 @@ class SetLog {
     int? rpe,
     int? rir,
     int? supersetId,
+    bool clearWeight = false,
+    bool clearReps = false,
+    bool clearRir = false,
+    bool clearDistance = false,
+    bool clearDuration = false,
   }) {
     return SetLog(
       id: id ?? this.id,
       workoutLogId: workoutLogId ?? this.workoutLogId,
       exerciseName: exerciseName ?? this.exerciseName,
       setType: setType ?? this.setType,
-      weightKg: weightKg ?? this.weightKg,
-      reps: reps ?? this.reps,
+      weightKg: clearWeight ? null : (weightKg ?? this.weightKg),
+      reps: clearReps ? null : (reps ?? this.reps),
       restTimeSeconds: restTimeSeconds ?? this.restTimeSeconds,
       isCompleted: isCompleted ?? this.isCompleted,
       log_order: log_order ?? this.log_order,
       notes: notes ?? this.notes,
-      distanceKm: distanceKm ?? this.distanceKm,
-      durationSeconds: durationSeconds ?? this.durationSeconds,
+      distanceKm: clearDistance ? null : (distanceKm ?? this.distanceKm),
+      durationSeconds:
+          clearDuration ? null : (durationSeconds ?? this.durationSeconds),
       rpe: rpe ?? this.rpe,
-      rir: rir ?? this.rir,
+      rir: clearRir ? null : (rir ?? this.rir),
       supersetId: supersetId ?? this.supersetId,
     );
   }

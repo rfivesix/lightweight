@@ -3,26 +3,26 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/glass_bottom_menu.dart';
-import 'package:lightweight/widgets/glass_fab.dart';
-import 'package:lightweight/data/workout_database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/exercise.dart';
-import 'package:lightweight/models/routine.dart';
-import 'package:lightweight/models/routine_exercise.dart';
-import 'package:lightweight/models/set_log.dart';
-import 'package:lightweight/models/workout_log.dart';
-import 'package:lightweight/models/set_template.dart';
-import 'package:lightweight/services/workout_session_manager.dart';
-import 'package:lightweight/widgets/wger_attribution_widget.dart';
-import 'package:lightweight/widgets/workout_summary_bar.dart';
+import '../util/design_constants.dart';
+import '../widgets/glass_bottom_menu.dart';
+import '../widgets/glass_fab.dart';
+import '../data/workout_database_helper.dart';
+import '../generated/app_localizations.dart';
+import '../models/exercise.dart';
+import '../models/routine.dart';
+import '../models/routine_exercise.dart';
+import '../models/set_log.dart';
+import '../models/workout_log.dart';
+import '../models/set_template.dart';
+import '../services/workout_session_manager.dart';
+import '../widgets/wger_attribution_widget.dart';
+import '../widgets/workout_summary_bar.dart';
 import 'exercise_catalog_screen.dart';
 import 'exercise_detail_screen.dart';
 import 'package:provider/provider.dart';
-import 'package:lightweight/screens/workout_summary_screen.dart';
-import 'package:lightweight/widgets/workout_card.dart';
-import 'package:vibration/vibration.dart'; // Falls Vibration genutzt wird
+import 'workout_summary_screen.dart';
+import '../widgets/workout_card.dart';
+// Falls Vibration genutzt wird
 
 class LiveWorkoutScreen extends StatefulWidget {
   final Routine? routine;
@@ -98,7 +98,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
 
   // --- HILFSMETHODE CARDIO CHECK ---
   bool _isCardio(RoutineExercise re) {
-    return re.exercise.categoryName?.toLowerCase() == 'cardio';
+    return re.exercise.categoryName.toLowerCase() == 'cardio';
   }
 
   void _syncControllersWithManager(WorkoutSessionManager manager) {
@@ -116,10 +116,12 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         String initText;
         if (isCardio) {
           // Cardio: Distance
-          initText = setLog.distanceKm?.toStringAsFixed(1).replaceAll('.0', '') ?? '';
+          initText =
+              setLog.distanceKm?.toStringAsFixed(1).replaceAll('.0', '') ?? '';
         } else {
           // Kraft: Weight
-          initText = setLog.weightKg?.toStringAsFixed(1).replaceAll('.0', '') ?? '';
+          initText =
+              setLog.weightKg?.toStringAsFixed(1).replaceAll('.0', '') ?? '';
         }
 
         _weightControllers[templateId] = TextEditingController(text: initText);
@@ -127,16 +129,19 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         _weightControllers[templateId]!.addListener(() {
           final text = _weightControllers[templateId]!.text;
           final val = double.tryParse(text.replaceAll(',', '.'));
+          final clearValue = val == null && text.isEmpty;
 
           if (isCardio) {
             // Update Distance
-            if (val != manager.setLogs[templateId]?.distanceKm) {
-              manager.updateSet(templateId, distance: val);
+            if (val != manager.setLogs[templateId]?.distanceKm || clearValue) {
+              manager.updateSet(templateId,
+                  distance: val, clearDistance: clearValue);
             }
           } else {
             // Update Weight
-            if (val != manager.setLogs[templateId]?.weightKg) {
-              manager.updateSet(templateId, weight: val ?? 0.0);
+            if (val != manager.setLogs[templateId]?.weightKg || clearValue) {
+              manager.updateSet(templateId,
+                  weight: val, clearWeight: clearValue);
             }
           }
         });
@@ -161,14 +166,18 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
           if (isCardio) {
             // Input Minuten -> Speichern Sekunden
             final minutes = double.tryParse(text.replaceAll(',', '.'));
-            final seconds = (minutes != null) ? (minutes * 60).round() : 0;
-            if (seconds != manager.setLogs[templateId]?.durationSeconds) {
-              manager.updateSet(templateId, duration: seconds);
+            final seconds = (minutes != null) ? (minutes * 60).round() : null;
+            final clearDuration = seconds == null && text.isEmpty;
+            if (seconds != manager.setLogs[templateId]?.durationSeconds ||
+                clearDuration) {
+              manager.updateSet(templateId,
+                  duration: seconds, clearDuration: clearDuration);
             }
           } else {
             final val = int.tryParse(text);
-            if (val != manager.setLogs[templateId]?.reps) {
-              manager.updateSet(templateId, reps: val ?? 0);
+            final clearReps = val == null && text.isEmpty;
+            if (val != manager.setLogs[templateId]?.reps || clearReps) {
+              manager.updateSet(templateId, reps: val, clearReps: clearReps);
             }
           }
         });
@@ -180,11 +189,43 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
             TextEditingController(text: setLog.rir?.toString() ?? '');
 
         _rirControllers[templateId]!.addListener(() {
-          final val = int.tryParse(_rirControllers[templateId]!.text);
-          if (val != manager.setLogs[templateId]?.rir) {
-            manager.updateSet(templateId, rir: val);
+          final text = _rirControllers[templateId]!.text;
+          final val = int.tryParse(text);
+          final clearRir = val == null && text.isEmpty;
+          if (val != manager.setLogs[templateId]?.rir || clearRir) {
+            manager.updateSet(templateId, rir: val, clearRir: clearRir);
           }
         });
+      }
+
+      // --- SYNC FALLBACK VALUES TO UI ---
+      // If a set was completed and the manager filled in a fallback value,
+      // update the UI text fields to show the accepted fallback number.
+      if (setLog.weightKg != null &&
+          _weightControllers[templateId]?.text.isEmpty == true) {
+        _weightControllers[templateId]!.text =
+            setLog.weightKg!.toStringAsFixed(1).replaceAll('.0', '');
+      }
+      if (setLog.distanceKm != null &&
+          _weightControllers[templateId]?.text.isEmpty == true &&
+          isCardio) {
+        _weightControllers[templateId]!.text =
+            setLog.distanceKm!.toStringAsFixed(1).replaceAll('.0', '');
+      }
+      if (setLog.reps != null &&
+          _repsControllers[templateId]?.text.isEmpty == true &&
+          !isCardio) {
+        _repsControllers[templateId]!.text = setLog.reps!.toString();
+      }
+      if (setLog.durationSeconds != null &&
+          _repsControllers[templateId]?.text.isEmpty == true &&
+          isCardio) {
+        _repsControllers[templateId]!.text =
+            (setLog.durationSeconds! / 60).toStringAsFixed(0);
+      }
+      if (setLog.rir != null &&
+          _rirControllers[templateId]?.text.isEmpty == true) {
+        _rirControllers[templateId]!.text = setLog.rir!.toString();
       }
     });
 
@@ -456,9 +497,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       repHint = "-"; // Time Hint
     } else {
       final double tWeight = template.targetWeight ?? 0.0;
-      weightHint = tWeight > 0
-          ? tWeight.toStringAsFixed(1).replaceAll('.0', '')
-          : '0';
+      weightHint =
+          tWeight > 0 ? tWeight.toStringAsFixed(1).replaceAll('.0', '') : '0';
       repHint = (template.targetReps?.isNotEmpty == true)
           ? template.targetReps!
           : '0';
@@ -488,7 +528,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         Expanded(
           flex: 3,
           child: isCardio
-              ? const SizedBox.shrink() // Bei Cardio zeigen wir (noch) keine History an
+              ? const SizedBox
+                  .shrink() // Bei Cardio zeigen wir (noch) keine History an
               : Text(
                   (rowIndex < lastPerfSets.length)
                       ? "${lastPerfSets[rowIndex].weightKg?.toStringAsFixed(1).replaceAll('.0', '')}kg × ${lastPerfSets[rowIndex].reps}"
@@ -529,8 +570,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
               isDense: true,
               fillColor: Colors.transparent,
               hintText: repHint,
-              hintStyle: TextStyle(
-                  color: Colors.grey.withOpacity(0.5), fontSize: 14),
+              hintStyle:
+                  TextStyle(color: Colors.grey.withOpacity(0.5), fontSize: 14),
             ),
             enabled: !isCompleted,
           ),
@@ -863,7 +904,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                             .entries
                                             .map((setEntry) {
                                           final templateId = setEntry.value.id!;
-                                          final template = setEntry.value; // <--- Template
+                                          final template =
+                                              setEntry.value; // <--- Template
                                           final setLog =
                                               manager.setLogs[templateId];
 
@@ -871,9 +913,12 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                             return const SizedBox.shrink();
                                           }
                                           int workingSetIndex = 0;
-                                          for (int i = 0; i <= setEntry.key; i++) {
+                                          for (int i = 0;
+                                              i <= setEntry.key;
+                                              i++) {
                                             final currentTemplateId =
-                                                routineExercise.setTemplates[i].id!;
+                                                routineExercise
+                                                    .setTemplates[i].id!;
                                             if (manager
                                                     .setLogs[currentTemplateId]
                                                     ?.setType !=

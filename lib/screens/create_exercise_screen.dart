@@ -1,10 +1,10 @@
 // lib/screens/create_exercise_screen.dart
 import 'package:flutter/material.dart';
-import 'package:lightweight/data/workout_database_helper.dart';
-import 'package:lightweight/models/exercise.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
+import '../data/workout_database_helper.dart';
+import '../models/exercise.dart';
+import '../generated/app_localizations.dart';
+import '../util/design_constants.dart';
+import '../widgets/global_app_bar.dart';
 
 class CreateExerciseScreen extends StatefulWidget {
   const CreateExerciseScreen({super.key});

@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/dialogs/log_supplement_menu.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/supplement.dart';
-import 'package:lightweight/models/supplement_log.dart';
-import 'package:lightweight/models/tracked_supplement.dart';
-import 'package:lightweight/screens/create_supplement_screen.dart';
-import 'package:lightweight/util/date_util.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/glass_bottom_menu.dart';
-import 'package:lightweight/widgets/glass_fab.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
-import 'package:lightweight/widgets/summary_card.dart';
-import 'package:lightweight/widgets/swipe_action_background.dart';
+import '../data/database_helper.dart';
+import '../dialogs/log_supplement_menu.dart';
+import '../generated/app_localizations.dart';
+import '../models/supplement.dart';
+import '../models/supplement_log.dart';
+import '../models/tracked_supplement.dart';
+import 'create_supplement_screen.dart';
+import '../util/date_util.dart';
+import '../util/design_constants.dart';
+import '../widgets/glass_bottom_menu.dart';
+import '../widgets/glass_fab.dart';
+import '../widgets/global_app_bar.dart';
+import '../widgets/summary_card.dart';
+import '../widgets/swipe_action_background.dart';
 
 class SupplementHubScreen extends StatefulWidget {
   const SupplementHubScreen({super.key});

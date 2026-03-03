@@ -1,8 +1,8 @@
 // lib/widgets/add_menu_sheet.dart
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/util/design_constants.dart';
+import '../generated/app_localizations.dart';
+import '../util/design_constants.dart';
 
 class AddMenuSheet extends StatelessWidget {
   const AddMenuSheet({super.key});

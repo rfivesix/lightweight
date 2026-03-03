@@ -1,13 +1,13 @@
 // lib/screens/workout_summary_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/data/workout_database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/workout_log.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
-import 'package:lightweight/widgets/summary_card.dart';
-import 'package:lightweight/widgets/workout_summary_bar.dart';
+import '../data/workout_database_helper.dart';
+import '../generated/app_localizations.dart';
+import '../models/workout_log.dart';
+import '../util/design_constants.dart';
+import '../widgets/global_app_bar.dart';
+import '../widgets/summary_card.dart';
+import '../widgets/workout_summary_bar.dart';
 
 class WorkoutSummaryScreen extends StatefulWidget {
   final int logId;
@@ -50,7 +50,7 @@ Future<void> _loadWorkoutDetails() async {
         final sets = entry.value; // ist List<dynamic>
 
         final exercise = await db.getExerciseByName(name);
-        final isCardio = exercise?.categoryName?.toLowerCase() == 'cardio';
+        final isCardio = exercise?.categoryName.toLowerCase() == 'cardio';
 
         if (isCardio) {
           double totalDist = 0;
@@ -67,7 +67,7 @@ Future<void> _loadWorkoutDetails() async {
             totalSeconds += dur; 
           }
           final int minutes = (totalSeconds / 60).round();
-          summaryMap[name] = "${totalDist.toStringAsFixed(1)} km | ${minutes} min";
+          summaryMap[name] = "${totalDist.toStringAsFixed(1)} km | $minutes min";
         } else {
           double totalVol = 0;
           for (var s in sets) {

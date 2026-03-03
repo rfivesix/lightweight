@@ -6,9 +6,9 @@ import 'package:drift/drift.dart' as drift;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart'; // Für debugPrint
 import 'package:intl/intl.dart';
-import 'package:lightweight/data/workout_database_helper.dart';
-import 'package:lightweight/data/drift_database.dart' as db;
-import 'package:lightweight/models/set_log.dart';
+import 'workout_database_helper.dart';
+import 'drift_database.dart' as db;
+import '../models/set_log.dart';
 
 class ImportManager {
   Future<int> importHevyCsv() async {

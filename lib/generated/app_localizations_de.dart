@@ -1497,7 +1497,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get resumeButton => 'Fortsetzen';
 
   @override
-  String get onboardingWelcomeTitle => 'Willkommen bei Lightweight';
+  String get onboardingWelcomeTitle => 'Willkommen bei Hypertrack';
 
   @override
   String get onboardingWelcomeSubtitle =>

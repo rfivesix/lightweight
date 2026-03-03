@@ -1,11 +1,11 @@
 // lib/screens/create_supplement_screen.dart
 import 'package:flutter/material.dart';
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/models/supplement.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/util/util_convert.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
+import '../data/database_helper.dart';
+import '../models/supplement.dart';
+import '../generated/app_localizations.dart';
+import '../util/design_constants.dart';
+import '../util/util_convert.dart';
+import '../widgets/global_app_bar.dart';
 
 class CreateSupplementScreen extends StatefulWidget {
   final Supplement? supplementToEdit;

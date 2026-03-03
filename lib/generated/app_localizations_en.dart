@@ -1024,7 +1024,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dialogEnterPasswordImport => 'Enter password to import backup';
 
   @override
-  String get dataManagementBackupTitle => 'Lightweight Data Backup';
+  String get dataManagementBackupTitle => 'Hypertrack Data Backup';
 
   @override
   String get dataManagementBackupDescription =>
@@ -1489,7 +1489,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resumeButton => 'Resume';
 
   @override
-  String get onboardingWelcomeTitle => 'Welcome to Lightweight';
+  String get onboardingWelcomeTitle => 'Welcome to Hypertrack';
 
   @override
   String get onboardingWelcomeSubtitle =>

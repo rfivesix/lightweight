@@ -1,9 +1,9 @@
 // lib/widgets/todays_workout_summary_card.dart
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/util/time_util.dart';
-import 'package:lightweight/widgets/summary_card.dart';
+import '../generated/app_localizations.dart';
+import '../util/time_util.dart';
+import 'summary_card.dart';
 
 class TodaysWorkoutSummaryCard extends StatelessWidget {
   final Duration duration;

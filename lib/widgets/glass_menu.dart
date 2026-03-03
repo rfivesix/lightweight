@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:lightweight/util/design_constants.dart';
+import '../util/design_constants.dart';
 
 class GlassMenuItem {
   final IconData icon;

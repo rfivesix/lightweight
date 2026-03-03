@@ -3,8 +3,8 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/data/drift_database.dart';
+import 'database_helper.dart';
+import 'drift_database.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -65,17 +65,21 @@ class BasisDataManager {
     }
 
     // 1. Übungen
-    await process('Übungen', 'assets/db/vita_training.db', _keyVersionTraining,
-        'exercises', _mapExerciseRow);
+    await process('Übungen', 'assets/db/hypertrack_training.db',
+        _keyVersionTraining, 'exercises', _mapExerciseRow);
 
     // 2a. Base Foods
-    await process('Basis-Produkte', 'assets/db/vita_base_foods.db',
-        _keyVersionFood, 'products', (row) => _mapProductRow(row, sourceLabel: 'base'));
+    await process(
+        'Basis-Produkte',
+        'assets/db/hypertrack_base_foods.db',
+        _keyVersionFood,
+        'products',
+        (row) => _mapProductRow(row, sourceLabel: 'base'));
 
     // 2b. Kategorien
     await process(
       'Kategorien',
-      'assets/db/vita_base_foods.db',
+      'assets/db/hypertrack_base_foods.db',
       _keyVersionCats,
       'categories',
       _mapCategoryRow,
@@ -85,7 +89,7 @@ class BasisDataManager {
     // 3. OFF Datenbank (Das große File)
     await process(
       'Produktdatenbank',
-      'assets/db/vita_prep_de.db',
+      'assets/db/hypertrack_prep_de.db',
       _keyVersionOff,
       'products',
       (row) => _mapProductRow(row, sourceLabel: 'off'),

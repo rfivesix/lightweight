@@ -1,7 +1,7 @@
 // lib/widgets/off_attribution_widget.dart
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/generated/app_localizations.dart';
+import '../generated/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class OffAttributionWidget extends StatelessWidget {

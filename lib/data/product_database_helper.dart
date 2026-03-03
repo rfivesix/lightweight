@@ -1,10 +1,10 @@
 // lib/data/product_database_helper.dart
 
 import 'package:drift/drift.dart';
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/data/drift_database.dart' as db;
-import 'package:lightweight/data/drift_database.dart';
-import 'package:lightweight/models/food_item.dart';
+import 'database_helper.dart';
+import 'drift_database.dart' as db;
+import 'drift_database.dart';
+import '../models/food_item.dart';
 
 class ProductDatabaseHelper {
   static final ProductDatabaseHelper instance = ProductDatabaseHelper._init();

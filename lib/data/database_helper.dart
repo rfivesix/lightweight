@@ -4,16 +4,16 @@ import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 // Import mit Prefix
-import 'package:lightweight/data/drift_database.dart' as db;
-import 'package:lightweight/data/drift_database.dart' show FavoritesCompanion;
+import 'drift_database.dart' as db;
+import 'drift_database.dart' show FavoritesCompanion;
 
-import 'package:lightweight/models/chart_data_point.dart';
-import 'package:lightweight/models/fluid_entry.dart';
-import 'package:lightweight/models/food_entry.dart';
-import 'package:lightweight/models/measurement.dart';
-import 'package:lightweight/models/measurement_session.dart';
-import 'package:lightweight/models/supplement.dart';
-import 'package:lightweight/models/supplement_log.dart';
+import '../models/chart_data_point.dart';
+import '../models/fluid_entry.dart';
+import '../models/food_entry.dart';
+import '../models/measurement.dart';
+import '../models/measurement_session.dart';
+import '../models/supplement.dart';
+import '../models/supplement_log.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();

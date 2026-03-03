@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/supplement.dart';
-import 'package:lightweight/models/tracked_supplement.dart';
-import 'package:lightweight/widgets/glass_progress_bar.dart';
-import 'package:lightweight/theme/color_constants.dart';
+import '../generated/app_localizations.dart';
+import '../models/supplement.dart';
+import '../models/tracked_supplement.dart';
+import 'glass_progress_bar.dart';
+import '../theme/color_constants.dart';
 
 class SupplementSummaryWidget extends StatelessWidget {
   final List<TrackedSupplement> trackedSupplements;

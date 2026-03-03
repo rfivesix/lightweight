@@ -1,5 +1,5 @@
-import 'package:lightweight/models/food_entry.dart';
-import 'package:lightweight/models/food_item.dart';
+import 'food_entry.dart';
+import 'food_item.dart';
 
 // DOC: Diese Klasse ist ein reines "Anzeige-Modell". Sie kombiniert die Daten
 // aus zwei verschiedenen Quellen (unserem Tagebucheintrag und dem Produktkatalog),

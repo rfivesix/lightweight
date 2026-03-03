@@ -1,6 +1,6 @@
 // lib/models/workout_log.dart
 
-import 'package:lightweight/models/set_log.dart';
+import 'set_log.dart';
 
 class WorkoutLog {
   final int? id;

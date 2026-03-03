@@ -2,14 +2,14 @@
 
 import 'dart:convert';
 import 'package:drift/drift.dart' as drift;
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/data/drift_database.dart' as db;
-import 'package:lightweight/models/exercise.dart';
-import 'package:lightweight/models/routine.dart';
-import 'package:lightweight/models/routine_exercise.dart';
-import 'package:lightweight/models/set_log.dart';
-import 'package:lightweight/models/set_template.dart';
-import 'package:lightweight/models/workout_log.dart';
+import 'database_helper.dart';
+import 'drift_database.dart' as db;
+import '../models/exercise.dart';
+import '../models/routine.dart';
+import '../models/routine_exercise.dart';
+import '../models/set_log.dart';
+import '../models/set_template.dart';
+import '../models/workout_log.dart';
 
 class WorkoutDatabaseHelper {
   static final WorkoutDatabaseHelper instance = WorkoutDatabaseHelper._init();

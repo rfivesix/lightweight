@@ -3,20 +3,20 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/data/drift_database.dart'
+import '../data/database_helper.dart';
+import '../data/drift_database.dart'
     as db; // Zugriff auf Profile-Klasse
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/screens/goals_screen.dart';
-import 'package:lightweight/screens/onboarding_screen.dart';
-import 'package:lightweight/screens/settings_screen.dart';
-import 'package:lightweight/services/profile_service.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/bottom_content_spacer.dart';
-import 'package:lightweight/widgets/glass_bottom_menu.dart';
-import 'package:lightweight/widgets/summary_card.dart';
+import '../generated/app_localizations.dart';
+import 'goals_screen.dart';
+import 'onboarding_screen.dart';
+import 'settings_screen.dart';
+import '../services/profile_service.dart';
+import '../util/design_constants.dart';
+import '../widgets/bottom_content_spacer.dart';
+import '../widgets/glass_bottom_menu.dart';
+import '../widgets/summary_card.dart';
 import 'package:provider/provider.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
+import '../widgets/global_app_bar.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});

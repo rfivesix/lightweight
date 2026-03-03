@@ -1,6 +1,6 @@
 // lib/util/supplement_l10n.dart
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/supplement.dart';
+import '../generated/app_localizations.dart';
+import '../models/supplement.dart';
 
 String localizeSupplementName(Supplement s, AppLocalizations l10n) {
   switch (s.code) {

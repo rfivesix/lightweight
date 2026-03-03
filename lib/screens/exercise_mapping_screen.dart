@@ -1,11 +1,11 @@
 // lib/screens/exercise_mapping_screen.dart
 import 'package:flutter/material.dart';
-import 'package:lightweight/data/workout_database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/exercise.dart';
-import 'package:lightweight/screens/exercise_catalog_screen.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
+import '../data/workout_database_helper.dart';
+import '../generated/app_localizations.dart';
+import '../models/exercise.dart';
+import 'exercise_catalog_screen.dart';
+import '../util/design_constants.dart';
+import '../widgets/global_app_bar.dart';
 
 class ExerciseMappingScreen extends StatefulWidget {
   final List<String> unknownNames;

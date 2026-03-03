@@ -1,11 +1,11 @@
 // lib/screens/goals_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/util/design_constants.dart';
+import '../util/design_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
-import 'package:lightweight/data/database_helper.dart';
+import '../generated/app_localizations.dart';
+import '../widgets/global_app_bar.dart';
+import '../data/database_helper.dart';
 
 class GoalsScreen extends StatefulWidget {
   const GoalsScreen({super.key});

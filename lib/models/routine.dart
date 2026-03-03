@@ -1,5 +1,5 @@
 // lib/models/routine.dart
-import 'package:lightweight/models/routine_exercise.dart';
+import 'routine_exercise.dart';
 
 class Routine {
   final int? id;

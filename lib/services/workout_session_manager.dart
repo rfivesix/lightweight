@@ -2,13 +2,13 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:lightweight/models/exercise.dart';
+import '../models/exercise.dart';
 import 'package:vibration/vibration.dart';
-import 'package:lightweight/models/routine_exercise.dart';
-import 'package:lightweight/models/set_log.dart';
-import 'package:lightweight/models/workout_log.dart';
-import 'package:lightweight/data/workout_database_helper.dart';
-import 'package:lightweight/models/set_template.dart';
+import '../models/routine_exercise.dart';
+import '../models/set_log.dart';
+import '../models/workout_log.dart';
+import '../data/workout_database_helper.dart';
+import '../models/set_template.dart';
 
 class WorkoutSessionManager extends ChangeNotifier {
   static final WorkoutSessionManager _instance =
@@ -75,7 +75,8 @@ class WorkoutSessionManager extends ChangeNotifier {
 
     if (ongoingWorkout != null) {
       // ignore: avoid_print
-      print("Laufendes Workout gefunden (ID: ${ongoingWorkout.id}). Stelle Session wieder her...");
+      print(
+          "Laufendes Workout gefunden (ID: ${ongoingWorkout.id}). Stelle Session wieder her...");
       await restoreWorkoutSession(ongoingWorkout);
     }
   }
@@ -89,25 +90,21 @@ class WorkoutSessionManager extends ChangeNotifier {
       for (var template in re.setTemplates) {
         if (template.id == null) continue;
 
-        final initialWeight = template.targetWeight ?? 0.0;
-        final initialReps = int.tryParse(template.targetReps ?? '0') ?? 0;
-
         final newSetLog = SetLog(
           workoutLogId: _workoutLog!.id!,
           exerciseName: re.exercise.nameEn,
           setType: template.setType,
-          weightKg: initialWeight,
-          reps: initialReps,
+          weightKg: null,
+          reps: null,
           restTimeSeconds: re.pauseSeconds,
           isCompleted: false,
-          rir: template.targetRir, // Ziel-RIR als Startwert übernehmen
+          rir: null,
         );
 
         final id = await db.insertSetLog(newSetLog);
 
         _setLogs[template.id!] = newSetLog.copyWith(id: id);
         _totalSets++;
-        _totalVolume += (initialWeight * initialReps);
       }
     }
     notifyListeners();
@@ -162,35 +159,88 @@ class WorkoutSessionManager extends ChangeNotifier {
   Future<void> updateSet(
     int templateId, {
     double? weight,
+    bool clearWeight = false,
     int? reps,
+    bool clearReps = false,
     bool? isCompleted,
     String? setType,
     int? rir,
+    bool clearRir = false,
     // FIX: Cardio Parameter
     double? distance,
+    bool clearDistance = false,
     int? duration,
+    bool clearDuration = false,
   }) async {
     if (!_setLogs.containsKey(templateId)) return;
 
     final oldLog = _setLogs[templateId]!;
     final db = WorkoutDatabaseHelper.instance;
 
+    // Fallback logic for when a set is completed but empty
+    bool newlyCompleted = isCompleted == true && oldLog.isCompleted != true;
+    double? finalWeight = weight;
+    int? finalReps = reps;
+    int? finalRir = rir;
+
+    if (newlyCompleted) {
+      SetTemplate? template;
+      for (var re in _exercises) {
+        for (var t in re.setTemplates) {
+          if (t.id == templateId) {
+            template = t;
+            break;
+          }
+        }
+        if (template != null) break;
+      }
+
+      final currentWeight = weight ?? oldLog.weightKg;
+      final currentReps = reps ?? oldLog.reps;
+
+      if (template != null) {
+        if (currentWeight == null && !clearWeight) {
+          finalWeight = template.targetWeight ?? 0.0;
+        }
+        if (currentReps == null && !clearReps) {
+          if (template.targetReps != null && template.targetReps!.isNotEmpty) {
+            if (template.targetReps!.contains('-')) {
+              final parts = template.targetReps!.split('-');
+              final min = int.tryParse(parts[0]) ?? 0;
+              final max = int.tryParse(parts[1]) ?? 0;
+              finalReps = ((min + max) / 2).round();
+            } else {
+              finalReps = int.tryParse(template.targetReps!) ?? 0;
+            }
+          } else {
+            finalReps = 0;
+          }
+        }
+      }
+    }
+
     // Volumens-Berechnung update (Nur für Krafttraining relevant)
-    if (weight != null || reps != null) {
+    if (finalWeight != null || finalReps != null || clearWeight || clearReps) {
       final oldVol = (oldLog.weightKg ?? 0) * (oldLog.reps ?? 0);
-      final newWeight = weight ?? oldLog.weightKg ?? 0;
-      final newReps = reps ?? oldLog.reps ?? 0;
+      final newWeight =
+          clearWeight ? 0.0 : (finalWeight ?? oldLog.weightKg ?? 0.0);
+      final newReps = clearReps ? 0 : (finalReps ?? oldLog.reps ?? 0);
       _totalVolume = _totalVolume - oldVol + (newWeight * newReps);
     }
 
     final newLog = oldLog.copyWith(
-      weightKg: weight,
-      reps: reps,
+      weightKg: finalWeight,
+      clearWeight: clearWeight,
+      reps: finalReps,
+      clearReps: clearReps,
       isCompleted: isCompleted,
       setType: setType,
-      rir: rir,
+      rir: finalRir,
+      clearRir: clearRir,
       distanceKm: distance, // <--- NEU
+      clearDistance: clearDistance,
       durationSeconds: duration, // <--- NEU
+      clearDuration: clearDuration,
     );
 
     _setLogs[templateId] = newLog;
@@ -237,11 +287,12 @@ class WorkoutSessionManager extends ChangeNotifier {
       setTemplates: [...re.setTemplates, newTemplate],
       pauseSeconds: re.pauseSeconds,
     );
-    
+
     _exercises[reIndex] = updatedRe;
 
-    final prevSet =
-        _setLogs.values.where((s) => s.exerciseName == re.exercise.nameEn).lastOrNull;
+    final prevSet = _setLogs.values
+        .where((s) => s.exerciseName == re.exercise.nameEn)
+        .lastOrNull;
 
     final newSetLog = SetLog(
       workoutLogId: _workoutLog!.id!,
@@ -280,7 +331,7 @@ class WorkoutSessionManager extends ChangeNotifier {
       if (tIndex != -1) {
         final newTemplates = List<SetTemplate>.from(re.setTemplates)
           ..removeAt(tIndex);
-        
+
         // KORREKTUR: Manuelle Erstellung statt copyWith
         _exercises[i] = RoutineExercise(
           id: re.id,
@@ -291,7 +342,7 @@ class WorkoutSessionManager extends ChangeNotifier {
         break;
       }
     }
-    
+
     _totalVolume -= (log.weightKg ?? 0) * (log.reps ?? 0);
     _totalSets--;
 
@@ -300,18 +351,21 @@ class WorkoutSessionManager extends ChangeNotifier {
 
   Future<void> addExercise(Exercise exercise) async {
     final tempReId = DateTime.now().millisecondsSinceEpoch;
-    
-    // FIX: Cardio Check für Anzahl der Sets
-    final isCardio = exercise.categoryName?.toLowerCase() == 'cardio';
-    final initialSetCount = isCardio ? 1 : 3;
-    final initialReps = isCardio ? '' : '10'; // Auch hier: Cardio leer, Kraft 10
 
-    final templates = List.generate(initialSetCount, (index) => SetTemplate(
-      id: tempReId + index + 1,
-      setType: 'normal',
-      targetReps: initialReps,
-      targetWeight: 0,
-    ));
+    // FIX: Cardio Check für Anzahl der Sets
+    final isCardio = exercise.categoryName.toLowerCase() == 'cardio';
+    final initialSetCount = isCardio ? 1 : 3;
+    final initialReps =
+        isCardio ? '' : '10'; // Auch hier: Cardio leer, Kraft 10
+
+    final templates = List.generate(
+        initialSetCount,
+        (index) => SetTemplate(
+              id: tempReId + index + 1,
+              setType: 'normal',
+              targetReps: initialReps,
+              targetWeight: 0,
+            ));
 
     final re = RoutineExercise(
       id: tempReId,
@@ -334,20 +388,20 @@ class WorkoutSessionManager extends ChangeNotifier {
         restTimeSeconds: 90,
         isCompleted: false,
         // Optional: logOrder hier schon setzen, aber Manager macht das nicht explizit bisher
-        log_order: _setLogs.length, 
+        log_order: _setLogs.length,
       );
       final dbId = await db.insertSetLog(newSetLog);
       _setLogs[t.id!] = newSetLog.copyWith(id: dbId);
       _totalSets++;
     }
-    
+
     notifyListeners();
   }
-  
+
   Future<void> removeExercise(int routineExerciseId) async {
     final reIndex = _exercises.indexWhere((e) => e.id == routineExerciseId);
     if (reIndex == -1) return;
-    
+
     final re = _exercises[reIndex];
     final db = WorkoutDatabaseHelper.instance;
 
@@ -365,10 +419,10 @@ class WorkoutSessionManager extends ChangeNotifier {
 
     _exercises.removeAt(reIndex);
     pauseTimes.remove(routineExerciseId);
-    
+
     notifyListeners();
   }
-  
+
   void reorderExercise(int oldIndex, int newIndex) {
     if (oldIndex < newIndex) {
       newIndex -= 1;
@@ -389,8 +443,8 @@ class WorkoutSessionManager extends ChangeNotifier {
     // Lokale SetLogs updaten
     final exercise = _exercises.firstWhere((e) => e.id == routineExerciseId);
     final db = WorkoutDatabaseHelper.instance;
-    
-    for(var t in exercise.setTemplates) {
+
+    for (var t in exercise.setTemplates) {
       if (_setLogs.containsKey(t.id)) {
         final log = _setLogs[t.id]!;
         if (log.isCompleted != true) {
@@ -414,7 +468,7 @@ class WorkoutSessionManager extends ChangeNotifier {
       if (_remainingRestSeconds > 0) {
         _remainingRestSeconds--;
         if (_remainingRestSeconds == 0) {
-           Vibration.vibrate(duration: 500);
+          Vibration.vibrate(duration: 500);
         }
         notifyListeners();
       } else {
@@ -453,7 +507,7 @@ class WorkoutSessionManager extends ChangeNotifier {
     });
   }
 
-Future<void> finishWorkout() async {
+  Future<void> finishWorkout() async {
     _workoutDurationTimer?.cancel();
     _restTimer?.cancel();
 
@@ -502,7 +556,7 @@ Future<void> finishWorkout() async {
       _setLogs.clear();
       pauseTimes.clear();
       _exercises.clear();
-      
+
       notifyListeners();
     }
   }

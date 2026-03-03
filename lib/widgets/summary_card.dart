@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lightweight/theme/color_constants.dart';
+import '../theme/color_constants.dart';
 
 class SummaryCard extends StatelessWidget {
   final Widget child;

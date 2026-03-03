@@ -99,7 +99,7 @@ def process_and_create_db():
     print(f"✨ {len(df)} Übungen fertig verarbeitet.")
 
     # DB erstellen
-    db_name = 'vita_training.db'
+    db_name = 'hypertrack_training.db'
     if os.path.exists(db_name):
         os.remove(db_name) # Alte löschen für sauberen Neustart
 

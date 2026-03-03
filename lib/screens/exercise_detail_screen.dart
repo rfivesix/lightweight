@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/exercise.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/summary_card.dart';
-import 'package:lightweight/widgets/wger_attribution_widget.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
+import '../generated/app_localizations.dart';
+import '../models/exercise.dart';
+import '../util/design_constants.dart';
+import '../widgets/summary_card.dart';
+import '../widgets/wger_attribution_widget.dart';
+import '../widgets/global_app_bar.dart';
 
 class ExerciseDetailScreen extends StatelessWidget {
   final Exercise exercise;

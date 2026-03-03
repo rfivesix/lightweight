@@ -1,8 +1,8 @@
 // lib/widgets/compact_nutrition_bar.dart
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/models/daily_nutrition.dart';
-import 'package:lightweight/util/design_constants.dart';
+import '../models/daily_nutrition.dart';
+import '../util/design_constants.dart';
 
 class CompactNutritionBar extends StatelessWidget {
   final DailyNutrition nutritionData;
