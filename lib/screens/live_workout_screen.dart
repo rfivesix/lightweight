@@ -766,6 +766,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         automaticallyImplyLeading: true,
         elevation: 0,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        foregroundColor: colorScheme.onSurface,
         scrolledUnderElevation: 0,
         centerTitle: false,
         title: Text(
