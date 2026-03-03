@@ -16,6 +16,11 @@ import 'services/theme_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
   // Das muss passieren, bevor irgendwas anderes lädt.
   await DatabaseHelper.instance.ensureStandardSupplements();
 
