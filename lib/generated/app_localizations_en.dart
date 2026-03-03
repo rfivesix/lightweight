@@ -1024,7 +1024,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dialogEnterPasswordImport => 'Enter password to import backup';
 
   @override
-  String get dataManagementBackupTitle => 'Lightweight Data Backup';
+  String get dataManagementBackupTitle => 'Hypertrack Data Backup';
 
   @override
   String get dataManagementBackupDescription =>
@@ -1487,4 +1487,84 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resumeButton => 'Resume';
+
+  @override
+  String get onboardingWelcomeTitle => 'Welcome to Hypertrack';
+
+  @override
+  String get onboardingWelcomeSubtitle =>
+      'Let\'s set up your profile to get the best results.';
+
+  @override
+  String get onboardingNameTitle => 'What\'s your name?';
+
+  @override
+  String get onboardingNameLabel => 'Your Name';
+
+  @override
+  String get onboardingNameError => 'Please enter your name';
+
+  @override
+  String get onboardingDobTitle => 'When were you born?';
+
+  @override
+  String get onboardingDobLabel => 'Date of Birth';
+
+  @override
+  String get onboardingDobError => 'Please select your date of birth';
+
+  @override
+  String get onboardingWeightTitle => 'Current Weight';
+
+  @override
+  String get onboardingWeightLabel => 'Weight (kg)';
+
+  @override
+  String get onboardingWeightError => 'Please enter a valid weight';
+
+  @override
+  String get onboardingGoalsTitle => 'Your Nutrition Goals';
+
+  @override
+  String get onboardingGoalsSubtitle =>
+      'You can change these later in settings.';
+
+  @override
+  String get onboardingGoalCalories => 'Daily Calories (kcal)';
+
+  @override
+  String get onboardingGoalProtein => 'Protein (g)';
+
+  @override
+  String get onboardingGoalCarbs => 'Carbs (g)';
+
+  @override
+  String get onboardingGoalFat => 'Fat (g)';
+
+  @override
+  String get onboardingGoalWater => 'Water (ml)';
+
+  @override
+  String get onboardingNext => 'Next';
+
+  @override
+  String get onboardingBack => 'Back';
+
+  @override
+  String get onboardingFinish => 'Start Tracking';
+
+  @override
+  String get onboardingHeightLabel => 'Height (cm)';
+
+  @override
+  String get onboardingGenderLabel => 'Gender';
+
+  @override
+  String get genderMale => 'Male';
+
+  @override
+  String get genderFemale => 'Female';
+
+  @override
+  String get genderDiverse => 'Diverse';
 }

@@ -1,140 +1,224 @@
-// lib/data/backup_manager.dart (Finale Version)
+// lib/data/backup_manager.dart
 
 import 'dart:convert';
 import 'dart:io';
 import 'package:csv/csv.dart';
-import 'package:flutter/services.dart';
+import 'package:drift/drift.dart' as drift;
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/data/product_database_helper.dart';
-import 'package:lightweight/data/workout_database_helper.dart';
-import 'package:lightweight/models/food_item.dart';
-import 'package:lightweight/models/lightweight_backup.dart';
-import 'package:sqflite/sqflite.dart'; // KORREKTUR: Importiert das neue Modell
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:lightweight/util/encryption_util.dart';
 import 'package:path/path.dart' as p;
-import 'dart:typed_data';
-import 'package:archive/archive.dart'; // for GZipDecoder (add to pubspec if not present)
 
+// Eigene Imports
+import 'database_helper.dart';
+import 'drift_database.dart'; // Zugriff auf Tabellen & Companions
+import 'product_database_helper.dart';
+import 'workout_database_helper.dart';
+import '../models/food_item.dart';
+import '../models/hypertrack_backup.dart';
+import '../util/encryption_util.dart';
+
+/// Manager responsible for application backup, restoration, and data export.
+///
+/// Supports full JSON backups with optional encryption and CSV exports for
+/// nutrition, workouts, and measurements.
 class BackupManager {
+  // Singleton Pattern
+  /// Singleton instance of [BackupManager].
+  static final BackupManager instance = BackupManager._init();
+  BackupManager._init();
+
   final _userDb = DatabaseHelper.instance;
   final _productDb = ProductDatabaseHelper.instance;
   final _workoutDb = WorkoutDatabaseHelper.instance;
 
   static const int currentSchemaVersion = 1;
 
+  // ---------------------------------------------------------------------------
+  // EXPORT (JSON / FULL BACKUP)
+  // ---------------------------------------------------------------------------
+
+  /// Exports a complete application backup as an unencrypted JSON file and shares it.
   Future<bool> exportFullBackup() async {
     try {
-      final foodEntries = await _userDb.getAllFoodEntries();
-      final fluidEntries = await _userDb.getAllFluidEntries();
-      final favoriteBarcodes = await _userDb.getFavoriteBarcodes();
-      final measurementSessions = await _userDb.getMeasurementSessions();
-      final productDb = await _productDb.offDatabase;
-      final customFoodMaps = await productDb?.query(
-            'products',
-            where: 'barcode LIKE ?',
-            whereArgs: ['user_created_%'],
-          ) ??
-          [];
-      final customFoodItems = customFoodMaps
-          .map((map) => FoodItem.fromMap(map, source: FoodItemSource.user))
-          .toList();
-      final routines = await _workoutDb.getAllRoutinesWithDetails();
-      final workoutLogs = await _workoutDb.getFullWorkoutLogs();
-      // --- HINZUGEFÜGT: Benutzereinstellungen auslesen ---
-      final prefs = await SharedPreferences.getInstance();
-      final userPrefs = <String, dynamic>{};
-      final keys = prefs.getKeys();
-      for (String key in keys) {
-        userPrefs[key] = prefs.get(key);
-      }
-      final supplements = await _userDb.getAllSupplements();
-      final supplementLogs = await _userDb.getAllSupplementLogs();
-      final customExercises = await _workoutDb.getCustomExercises();
-      final backup = LightweightBackup(
-        // KORREKTUR: Nutzt das neue Modell
-        schemaVersion: currentSchemaVersion,
-        foodEntries: foodEntries,
-        fluidEntries: fluidEntries,
-        favoriteBarcodes: favoriteBarcodes,
-        customFoodItems: customFoodItems,
-        measurementSessions: measurementSessions,
-        routines: routines,
-        workoutLogs: workoutLogs,
-        userPreferences: userPrefs,
-        supplements: supplements,
-        supplementLogs: supplementLogs,
-        customExercises: customExercises,
-      );
-      final jsonString = jsonEncode(backup.toJson());
-
-      // ... (Logik zum Speichern und Teilen der Datei bleibt identisch)
-      final tempDir = await getTemporaryDirectory();
-      final timestamp = DateFormat('yyyy-MM-dd_HH-mm').format(DateTime.now());
-      final tempFile = File(
-        '${tempDir.path}/lightweight_backup_v$currentSchemaVersion-[$timestamp].json',
-      );
-      await tempFile.writeAsString(jsonString);
-      final result = await Share.shareXFiles([
-        XFile(tempFile.path, mimeType: 'application/json'),
-      ], subject: 'Lightweight App Backup - $timestamp');
-      await tempFile.delete();
-      return result.status == ShareResultStatus.success;
+      final jsonString = await _generateBackupJson();
+      return await _writeAndShareFile(jsonString, 'hypertrack_backup');
     } catch (e) {
-      print("Fehler beim Exportieren der Daten: $e");
+      debugPrint("Fehler beim Exportieren: $e");
       return false;
     }
   }
 
+  /// Exports a complete application backup as an encrypted JSON file and shares it.
+  ///
+  /// Uses [passphrase] for AES-256 encryption.
+  Future<bool> exportFullBackupEncrypted(String passphrase) async {
+    try {
+      final jsonString = await _generateBackupJson();
+
+      // Verschlüsseln
+      final wrapper =
+          await EncryptionUtil.encryptString(jsonString, passphrase);
+      final wrappedJson = jsonEncode(wrapper);
+
+      return await _writeAndShareFile(wrappedJson, 'hypertrack_backup_enc');
+    } catch (e) {
+      debugPrint("Fehler beim verschlüsselten Export: $e");
+      return false;
+    }
+  }
+
+  /// Hilfsmethode: Sammelt alle Daten und baut das JSON
+  Future<String> _generateBackupJson() async {
+    // 1. Daten aus den Helpern sammeln
+    final foodEntries = await _userDb.getAllFoodEntries();
+    final fluidEntries = await _userDb.getAllFluidEntries();
+    final favoriteBarcodes = await _userDb.getFavoriteBarcodes();
+    final measurementSessions = await _userDb.getMeasurementSessions();
+
+    // 2. Custom Products direkt aus Drift laden
+    final db = await _userDb.database;
+    final customProductRows = await (db.select(db.products)
+          ..where((t) => t.source.equals('user')))
+        .get();
+
+    final customFoodItems = customProductRows.map((row) {
+      return FoodItem(
+        barcode: row.barcode,
+        name: row.name,
+        brand: row.brand ?? '',
+        calories: row.calories,
+        protein: row.protein,
+        carbs: row.carbs,
+        fat: row.fat,
+        source: FoodItemSource.user,
+        sugar: row.sugar ?? 0.0,
+        fiber: row.fiber ?? 0.0,
+        salt: row.salt ?? 0.0,
+        isLiquid: row.isLiquid,
+        category: row.category,
+      );
+    }).toList();
+
+    final routines = await _workoutDb.getAllRoutinesWithDetails();
+    final workoutLogs = await _workoutDb.getFullWorkoutLogs();
+
+    final supplements = await _userDb.getAllSupplements();
+    final supplementLogs = await _userDb.getAllSupplementLogs();
+    final customExercises = await _workoutDb.getCustomExercises();
+
+    // 3. User Preferences
+    final prefs = await SharedPreferences.getInstance();
+    final userPrefs = <String, dynamic>{};
+    for (String key in prefs.getKeys()) {
+      userPrefs[key] = prefs.get(key);
+    }
+
+    // 4. Backup Objekt erstellen
+    final backup = HypertrackBackup(
+      schemaVersion: currentSchemaVersion,
+      foodEntries: foodEntries,
+      fluidEntries: fluidEntries,
+      favoriteBarcodes: favoriteBarcodes,
+      customFoodItems: customFoodItems,
+      measurementSessions: measurementSessions,
+      routines: routines,
+      workoutLogs: workoutLogs,
+      userPreferences: userPrefs,
+      supplements: supplements,
+      supplementLogs: supplementLogs,
+      customExercises: customExercises,
+    );
+
+    return jsonEncode(backup.toJson());
+  }
+
+  Future<bool> _writeAndShareFile(String content, String baseName) async {
+    final tempDir = await getTemporaryDirectory();
+    final timestamp = DateFormat('yyyy-MM-dd_HH-mm').format(DateTime.now());
+    final tempFile = File(
+        '${tempDir.path}/$baseName-v$currentSchemaVersion-[$timestamp].json');
+    await tempFile.writeAsString(content);
+
+    // FIX: Neue API nutzen (Share.shareXFiles ist korrekt, aber wir müssen XFile korrekt importieren)
+    final result = await Share.shareXFiles([
+      XFile(tempFile.path, mimeType: 'application/json'),
+    ], subject: 'Hypertrack Backup $timestamp');
+
+    if (await tempFile.exists()) await tempFile.delete();
+    return result.status == ShareResultStatus.success;
+  }
+
+  // ---------------------------------------------------------------------------
+  // IMPORT
+  // ---------------------------------------------------------------------------
+
+  /// Imports a full application backup from the provided [filePath].
   Future<bool> importFullBackup(String filePath) async {
+    return importFullBackupAuto(filePath, passphrase: null);
+  }
+
+  /// Imports a full application backup from [filePath], auto-detecting encryption.
+  ///
+  /// If the backup is encrypted, [passphrase] must be provided.
+  Future<bool> importFullBackupAuto(String filePath,
+      {String? passphrase}) async {
     try {
       final file = File(filePath);
-      final jsonString = await file.readAsString();
-      final jsonMap = jsonDecode(jsonString);
+      final rawString = await file.readAsString();
+      final jsonMapRaw = jsonDecode(rawString);
 
-      final backup = LightweightBackup.fromJson(
-        jsonMap,
-      ); // KORREKTUR: Nutzt das neue Modell
+      Map<String, dynamic> payload;
+
+      if (jsonMapRaw is Map &&
+          jsonMapRaw['enc'] == EncryptionUtil.wrapperVersion) {
+        final effectivePw = passphrase ?? "";
+        try {
+          final clearText = await EncryptionUtil.decryptToString(
+              Map<String, dynamic>.from(jsonMapRaw), effectivePw);
+          payload = jsonDecode(clearText) as Map<String, dynamic>;
+        } catch (e) {
+          debugPrint('Entschlüsselung fehlgeschlagen: $e');
+          return false;
+        }
+      } else {
+        payload = (jsonMapRaw as Map).cast<String, dynamic>();
+      }
+
+      final backup = HypertrackBackup.fromJson(payload);
 
       if (backup.schemaVersion > currentSchemaVersion) {
-        print(
-          "Backup-Version (${backup.schemaVersion}) ist neuer als die App-Version ($currentSchemaVersion). Import abgebrochen.",
-        );
+        debugPrint("Backup-Version zu neu.");
         return false;
       }
 
-      // ... (Logik zum Löschen und Einfügen der Daten bleibt identisch)
-      // HINZUGEFÜGT: Alte Einstellungen löschen
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
-
       await _userDb.clearAllUserData();
       await _workoutDb.clearAllWorkoutData();
-      final productDb = await _productDb.offDatabase;
-      await productDb?.delete(
-        'products',
-        where: 'barcode LIKE ?',
-        whereArgs: ['user_created_%'],
-      );
-      // HINZUGEFÜGT: Neue Einstellungen wiederherstellen
+
+      final db = await _userDb.database;
+      await (db.delete(db.products)..where((t) => t.source.equals('user')))
+          .go();
+
       for (final entry in backup.userPreferences.entries) {
         final key = entry.key;
-        final value = entry.value;
-        if (value is bool) {
-          await prefs.setBool(key, value);
-        } else if (value is int) {
-          await prefs.setInt(key, value);
-        } else if (value is double) {
-          await prefs.setDouble(key, value);
-        } else if (value is String) {
-          await prefs.setString(key, value);
-        } else if (value is List<String>) {
-          await prefs.setStringList(key, value);
+        final val = entry.value;
+        if (val is bool) {
+          await prefs.setBool(key, val);
+        } else if (val is int) {
+          await prefs.setInt(key, val);
+        } else if (val is double) {
+          await prefs.setDouble(key, val);
+        } else if (val is String) {
+          await prefs.setString(key, val);
+        } else if (val is List) {
+          await prefs.setStringList(key, val.cast<String>());
         }
       }
+
       await _userDb.importUserData(
         foodEntries: backup.foodEntries,
         fluidEntries: backup.fluidEntries,
@@ -143,66 +227,148 @@ class BackupManager {
         supplements: backup.supplements,
         supplementLogs: backup.supplementLogs,
       );
-      if (productDb != null) {
-        // --- FIX START ---
-        final cols = await _getTableColumns(productDb, 'products');
-        final batch = productDb.batch();
+
+      await db.batch((batch) {
         for (final item in backup.customFoodItems) {
-          final raw = item.toMap();
-          final filtered = _filterMapForColumns(raw, cols);
           batch.insert(
-            'products',
-            filtered,
-            conflictAlgorithm: ConflictAlgorithm.replace,
-          );
+              db.products,
+              ProductsCompanion(
+                barcode: drift.Value(item.barcode),
+                name: drift.Value(item.name),
+                brand: drift.Value(item.brand),
+                calories: drift.Value(item.calories),
+                protein: drift.Value(item.protein),
+                carbs: drift.Value(item.carbs),
+                fat: drift.Value(item.fat),
+                sugar: drift.Value(item.sugar),
+                fiber: drift.Value(item.fiber),
+                salt: drift.Value(item.salt),
+                source: const drift.Value('user'),
+                // FIX: Fallback '?? false', falls der Wert null ist
+                isLiquid: drift.Value(item.isLiquid ?? false),
+                category: drift.Value(item.category),
+                id: drift.Value(item.barcode.startsWith('user_')
+                    ? item.barcode
+                    : 'user_${item.barcode}'),
+              ),
+              mode: drift.InsertMode.insertOrReplace);
         }
-        await batch.commit(noResult: true);
-        // --- FIX END ---
-      }
+      });
+
       await _workoutDb.importWorkoutData(
         routines: backup.routines,
         workoutLogs: backup.workoutLogs,
       );
 
-      print("Import erfolgreich abgeschlossen.");
+      await _workoutDb.importCustomExercises(backup.customExercises);
+
+      debugPrint("Import erfolgreich.");
       return true;
     } catch (e) {
-      print("Fehler beim Importieren der Daten: $e");
+      debugPrint("Fehler beim Importieren: $e");
       return false;
     }
   }
-  // ... (Rest der Datei, inklusive der neuen Helper am Ende)
 
-  Future<Set<String>> _getTableColumns(Database db, String table) async {
-    final rows = await db.rawQuery('PRAGMA table_info($table)');
-    return rows.map((r) => (r['name'] as String)).toSet();
+  // ---------------------------------------------------------------------------
+  // AUTO BACKUP
+  // ---------------------------------------------------------------------------
+
+  /// Runs an automatic backup if the specified [interval] has passed since the last backup.
+  ///
+  /// Supports encryption via [passphrase] and keeps [retention] number of old backups.
+  Future<bool> runAutoBackupIfDue({
+    Duration interval = const Duration(days: 1),
+    bool encrypted = false,
+    String? passphrase,
+    int retention = 7,
+    String? dirPath,
+    bool force = false,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastMs = prefs.getInt('auto_backup_last_ms') ?? 0;
+      final nowMs = DateTime.now().millisecondsSinceEpoch;
+
+      if (!force && (nowMs - lastMs < interval.inMilliseconds)) {
+        return false;
+      }
+
+      String content = await _generateBackupJson();
+      String fileName = 'hypertrack_auto_v$currentSchemaVersion';
+
+      // FIX: Strenger bool check
+      if (encrypted) {
+        if (passphrase == null || passphrase.isEmpty) return false;
+        final wrapper = await EncryptionUtil.encryptString(content, passphrase);
+        content = jsonEncode(wrapper);
+        fileName = 'hypertrack_auto_enc_v$currentSchemaVersion';
+      }
+
+      final docs = await getApplicationDocumentsDirectory();
+      final savedDir = prefs.getString('auto_backup_dir');
+
+      Directory baseDir;
+      if (dirPath != null && dirPath.isNotEmpty) {
+        baseDir = Directory(dirPath);
+      } else if (savedDir != null && savedDir.isNotEmpty) {
+        baseDir = Directory(savedDir);
+      } else {
+        baseDir = Directory(p.join(docs.path, 'Backups'));
+      }
+
+      if (!await baseDir.exists()) {
+        try {
+          await baseDir.create(recursive: true);
+        } catch (e) {
+          baseDir = Directory(p.join(docs.path, 'Backups'));
+          await baseDir.create(recursive: true);
+        }
+      }
+
+      final ts = DateFormat('yyyy-MM-dd_HH-mm').format(DateTime.now());
+      final file = File(p.join(baseDir.path, '$fileName-[$ts].json'));
+      await file.writeAsString(content);
+
+      try {
+        final files = baseDir
+            .listSync()
+            .whereType<File>()
+            .where((f) => p.basename(f.path).startsWith('hypertrack_auto'))
+            .toList()
+          ..sort(
+              (a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
+
+        if (files.length > retention) {
+          for (var i = retention; i < files.length; i++) {
+            files[i].deleteSync();
+          }
+        }
+      } catch (_) {}
+
+      await prefs.setInt('auto_backup_last_ms', nowMs);
+      return true;
+    } catch (e) {
+      debugPrint("Auto-Backup Fehler: $e");
+      return false;
+    }
   }
 
-  Map<String, Object?> _filterMapForColumns(
-    Map<String, Object?> src,
-    Set<String> allowedCols,
-  ) {
-    final out = <String, Object?>{};
-    src.forEach((k, v) {
-      if (allowedCols.contains(k)) out[k] = v;
-    });
-    return out;
-  }
-  // --- NEUE METHODEN FÜR CSV-EXPORT ---
+  // ---------------------------------------------------------------------------
+  // CSV EXPORT
+  // ---------------------------------------------------------------------------
 
-  /// Exportiert das gesamte Ernährungstagebuch als CSV-Datei.
+  /// Exports all nutrition logs as a CSV file and shares it.
   Future<bool> exportNutritionAsCsv() async {
     try {
       final entries = await _userDb.getAllFoodEntries();
-      if (entries.isEmpty) return false; // Nichts zu exportieren
+      if (entries.isEmpty) return false;
 
-      // Performance-Optimierung: Alle benötigten Produkte auf einmal laden
       final uniqueBarcodes = entries.map((e) => e.barcode).toSet().toList();
       final products = await _productDb.getProductsByBarcodes(uniqueBarcodes);
       final productMap = {for (var p in products) p.barcode: p};
 
       List<List<dynamic>> rows = [];
-      // Header-Zeile
       rows.add([
         'date',
         'time',
@@ -214,7 +380,7 @@ class BackupManager {
         'protein_g',
         'carbs_g',
         'fat_g',
-        'barcode',
+        'barcode'
       ]);
 
       for (final entry in entries) {
@@ -236,41 +402,14 @@ class BackupManager {
           entry.barcode,
         ]);
       }
-      return await _createAndShareCsv(rows, 'lightweight_nutrition_export');
+      return await _createAndShareCsv(rows, 'hypertrack_nutrition_export');
     } catch (e) {
-      print("Fehler beim CSV-Export der Ernährung: $e");
+      debugPrint("CSV Export Fehler (Nutrition): $e");
       return false;
     }
   }
 
-  /// Exportiert alle Messwerte als CSV-Datei.
-  Future<bool> exportMeasurementsAsCsv() async {
-    try {
-      final sessions = await _userDb.getMeasurementSessions();
-      if (sessions.isEmpty) return false;
-
-      List<List<dynamic>> rows = [];
-      rows.add(['date', 'time', 'measurement_type', 'value', 'unit']);
-
-      for (final session in sessions) {
-        for (final measurement in session.measurements) {
-          rows.add([
-            DateFormat('yyyy-MM-dd').format(session.timestamp),
-            DateFormat('HH:mm').format(session.timestamp),
-            measurement.type,
-            measurement.value,
-            measurement.unit,
-          ]);
-        }
-      }
-      return await _createAndShareCsv(rows, 'lightweight_measurements_export');
-    } catch (e) {
-      print("Fehler beim CSV-Export der Messwerte: $e");
-      return false;
-    }
-  }
-
-  /// Exportiert den gesamten Trainingsverlauf als CSV-Datei.
+  /// Exports all workout logs as a CSV file and shares it.
   Future<bool> exportWorkoutsAsCsv() async {
     try {
       final logs = await _workoutDb.getFullWorkoutLogs();
@@ -278,16 +417,16 @@ class BackupManager {
 
       List<List<dynamic>> rows = [];
       rows.add([
-        'workout_start_time',
-        'workout_end_time',
-        'routine_name',
-        'exercise_name',
+        'start_time',
+        'end_time',
+        'routine',
+        'exercise',
         'set_order',
-        'set_type',
+        'type',
         'weight_kg',
         'reps',
-        'rest_seconds',
-        'notes',
+        'rest_sec',
+        'notes'
       ]);
 
       for (final log in logs) {
@@ -307,451 +446,53 @@ class BackupManager {
           ]);
         }
       }
-      return await _createAndShareCsv(rows, 'lightweight_workouts_export');
+      return await _createAndShareCsv(rows, 'hypertrack_workouts_export');
     } catch (e) {
-      print("Fehler beim CSV-Export der Workouts: $e");
+      debugPrint("CSV Export Fehler (Workout): $e");
       return false;
     }
   }
 
-  /// Private Helfer-Methode zum Erstellen, Speichern und Teilen einer CSV-Datei.
+  /// Exports all body measurements as a CSV file and shares it.
+  Future<bool> exportMeasurementsAsCsv() async {
+    try {
+      final sessions = await _userDb.getMeasurementSessions();
+      if (sessions.isEmpty) return false;
+
+      List<List<dynamic>> rows = [];
+      rows.add(['date', 'time', 'type', 'value', 'unit']);
+
+      for (final session in sessions) {
+        for (final m in session.measurements) {
+          rows.add([
+            DateFormat('yyyy-MM-dd').format(session.timestamp),
+            DateFormat('HH:mm').format(session.timestamp),
+            m.type,
+            m.value,
+            m.unit
+          ]);
+        }
+      }
+      return await _createAndShareCsv(rows, 'hypertrack_measurements_export');
+    } catch (e) {
+      debugPrint("CSV Export Fehler (Measure): $e");
+      return false;
+    }
+  }
+
   Future<bool> _createAndShareCsv(
-    List<List<dynamic>> rows,
-    String baseFileName,
-  ) async {
+      List<List<dynamic>> rows, String baseName) async {
     final String csvData = const ListToCsvConverter().convert(rows);
     final tempDir = await getTemporaryDirectory();
     final timestamp = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final tempFile = File('${tempDir.path}/$baseFileName-$timestamp.csv');
+    final tempFile = File('${tempDir.path}/$baseName-$timestamp.csv');
     await tempFile.writeAsString(csvData);
 
     final result = await Share.shareXFiles([
       XFile(tempFile.path, mimeType: 'text/csv'),
-    ], subject: baseFileName);
+    ], subject: baseName);
 
     await tempFile.delete();
     return result.status == ShareResultStatus.success;
   }
-
-  Future<bool> exportFullBackupEncrypted(String passphrase) async {
-    try {
-      // Daten sammeln (wie in exportFullBackup)
-      final foodEntries = await _userDb.getAllFoodEntries();
-      final fluidEntries = await _userDb.getAllFluidEntries();
-      final favoriteBarcodes = await _userDb.getFavoriteBarcodes();
-      final measurementSessions = await _userDb.getMeasurementSessions();
-      final productDb = await _productDb.offDatabase;
-      final customFoodMaps = await productDb?.query(
-            'products',
-            where: 'barcode LIKE ?',
-            whereArgs: ['user_created_%'],
-          ) ??
-          [];
-      final customFoodItems = customFoodMaps
-          .map((m) => FoodItem.fromMap(m, source: FoodItemSource.user))
-          .toList();
-      final routines = await _workoutDb.getAllRoutinesWithDetails();
-      final workoutLogs = await _workoutDb.getFullWorkoutLogs();
-      final prefs = await SharedPreferences.getInstance();
-      final userPrefs = <String, dynamic>{};
-      for (final k in prefs.getKeys()) {
-        userPrefs[k] = prefs.get(k);
-      }
-      final supplements = await _userDb.getAllSupplements();
-      final supplementLogs = await _userDb.getAllSupplementLogs();
-      final customExercises = await _workoutDb.getCustomExercises();
-      final backup = LightweightBackup(
-        schemaVersion: currentSchemaVersion,
-        foodEntries: foodEntries,
-        fluidEntries: fluidEntries,
-        favoriteBarcodes: favoriteBarcodes,
-        customFoodItems: customFoodItems,
-        measurementSessions: measurementSessions,
-        routines: routines,
-        workoutLogs: workoutLogs,
-        userPreferences: userPrefs,
-        supplements: supplements,
-        supplementLogs: supplementLogs,
-        customExercises: customExercises,
-      );
-      final jsonString = jsonEncode(backup.toJson());
-
-      // Verschlüsseln
-      final wrapper = await EncryptionUtil.encryptString(
-        jsonString,
-        passphrase,
-      );
-      final wrappedJson = jsonEncode(wrapper);
-
-      final tempDir = await getTemporaryDirectory();
-      final ts = DateFormat('yyyy-MM-dd_HH-mm').format(DateTime.now());
-      final tempFile = File(
-        p.join(
-          tempDir.path,
-          'lightweight_backup_enc_v$currentSchemaVersion-[$ts].json',
-        ),
-      );
-      await tempFile.writeAsString(wrappedJson);
-      final result = await Share.shareXFiles([
-        XFile(tempFile.path, mimeType: 'application/json'),
-      ], subject: 'Lightweight Encrypted Backup - $ts');
-      await tempFile.delete();
-      return result.status == ShareResultStatus.success;
-    } catch (e) {
-      print('Fehler beim verschlüsselten Export: $e');
-      return false;
-    }
-  }
-
-  Future<bool> importFullBackupAuto(
-    String filePath, {
-    String? passphrase,
-  }) async {
-    try {
-      final file = File(filePath);
-      final raw = await file.readAsString();
-      final top = jsonDecode(raw);
-
-      Map<String, dynamic> payload;
-      if (top is Map && top['enc'] == EncryptionUtil.wrapperVersion) {
-        // Leeres Passwort zulassen (Legacy-Cases) – EncryptionUtil sollte "" akzeptieren
-        final effectivePw = (passphrase ?? "");
-        try {
-          final clear = await EncryptionUtil.decryptToString(
-            Map<String, dynamic>.from(top),
-            effectivePw,
-          );
-          payload = jsonDecode(clear) as Map<String, dynamic>;
-        } catch (e) {
-          // Falsches/fehlendes Passwort → sauber false zurückgeben,
-          // damit der UI-Flow den Dialog zeigen/erneut versuchen kann.
-          print('Decrypt failed: $e');
-          return false;
-        }
-      } else {
-        // Unverschlüsselt (plain JSON)
-        payload = (top as Map).cast<String, dynamic>();
-      }
-
-      final backup = LightweightBackup.fromJson(payload);
-      if (backup.schemaVersion > currentSchemaVersion) {
-        print(
-          'Backup-Version (${backup.schemaVersion}) ist neuer als App-Version ($currentSchemaVersion).',
-        );
-        return false;
-      }
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
-      await _userDb.clearAllUserData();
-      await _workoutDb.clearAllWorkoutData();
-
-      final productDb = await _productDb.offDatabase;
-      await productDb?.delete(
-        'products',
-        where: 'barcode LIKE ?',
-        whereArgs: ['user_created_%'],
-      );
-
-      await _workoutDb.importCustomExercises(backup.customExercises);
-
-      for (final e in backup.userPreferences.entries) {
-        final k = e.key;
-        final v = e.value;
-        if (v is bool) {
-          await prefs.setBool(k, v);
-        } else if (v is int)
-          await prefs.setInt(k, v);
-        else if (v is double)
-          await prefs.setDouble(k, v);
-        else if (v is String)
-          await prefs.setString(k, v);
-        else if (v is List<String>) await prefs.setStringList(k, v);
-      }
-
-      await _userDb.importUserData(
-        foodEntries: backup.foodEntries,
-        fluidEntries: backup.fluidEntries,
-        favoriteBarcodes: backup.favoriteBarcodes,
-        measurementSessions: backup.measurementSessions,
-        supplements: backup.supplements, // NEU
-        supplementLogs: backup.supplementLogs, // NEU
-      );
-
-      if (productDb != null) {
-        final cols = await _getTableColumns(productDb, 'products'); // <-- neu
-        final batch = productDb.batch();
-        for (final item in backup.customFoodItems) {
-          final raw = item.toMap();
-          final filtered = _filterMapForColumns(raw, cols); // <-- neu
-          batch.insert(
-            'products',
-            filtered,
-            conflictAlgorithm: ConflictAlgorithm.replace,
-          );
-        }
-        await batch.commit(noResult: true);
-      }
-
-      await _workoutDb.importWorkoutData(
-        routines: backup.routines,
-        workoutLogs: backup.workoutLogs,
-      );
-
-      print('Import erfolgreich (auto).');
-      return true;
-    } catch (e) {
-      print('Fehler beim Auto-Import: $e');
-      return false;
-    }
-  }
-
-  // lib/data/backup_manager.dart
-
-  Future<bool> runAutoBackupIfDue({
-    Duration interval = const Duration(days: 1),
-    bool encrypted = false,
-    String? passphrase,
-    int retention = 7,
-    String? dirPath,
-    bool force = false, // NEU
-  }) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final lastMs = prefs.getInt('auto_backup_last_ms') ?? 0;
-      final nowMs = DateTime.now().millisecondsSinceEpoch;
-      if (!force && (nowMs - lastMs < interval.inMilliseconds)) {
-        print('Auto-Backup: nicht fällig (force=false)'); // Hinweis
-        return false;
-      }
-
-      // 1) Daten sammeln (wie schon implementiert)
-      final foodEntries = await _userDb.getAllFoodEntries();
-      final fluidEntries = await _userDb.getAllFluidEntries();
-      final favoriteBarcodes = await _userDb.getFavoriteBarcodes();
-      final measurementSessions = await _userDb.getMeasurementSessions();
-      final productDb = await _productDb.offDatabase;
-      final customFoodMaps = await productDb?.query(
-            'products',
-            where: 'barcode LIKE ?',
-            whereArgs: ['user_created_%'],
-          ) ??
-          [];
-      final customFoodItems = customFoodMaps
-          .map((m) => FoodItem.fromMap(m, source: FoodItemSource.user))
-          .toList();
-      final routines = await _workoutDb.getAllRoutinesWithDetails();
-      final workoutLogs = await _workoutDb.getFullWorkoutLogs();
-      final userPrefs = <String, dynamic>{};
-      for (final k in prefs.getKeys()) {
-        userPrefs[k] = prefs.get(k);
-      }
-      final supplements = await _userDb.getAllSupplements();
-      final supplementLogs = await _userDb.getAllSupplementLogs();
-      final customExercises = await _workoutDb.getCustomExercises();
-      final backup = LightweightBackup(
-          schemaVersion: currentSchemaVersion,
-          foodEntries: foodEntries,
-          fluidEntries: fluidEntries,
-          favoriteBarcodes: favoriteBarcodes,
-          customFoodItems: customFoodItems,
-          measurementSessions: measurementSessions,
-          routines: routines,
-          workoutLogs: workoutLogs,
-          userPreferences: userPrefs,
-          supplements: supplements,
-          supplementLogs: supplementLogs,
-          customExercises: customExercises);
-      final jsonString = jsonEncode(backup.toJson());
-
-      // 2) Zielordner auflösen
-      final docs = await getApplicationDocumentsDirectory();
-      final saved = prefs.getString('auto_backup_dir');
-      Directory baseDir = (dirPath != null && dirPath.trim().isNotEmpty)
-          ? Directory(dirPath)
-          : ((saved != null && saved.trim().isNotEmpty)
-              ? Directory(saved)
-              : Directory(p.join(docs.path, 'Backups')));
-      await baseDir.create(recursive: true);
-      final ts = DateFormat('yyyy-MM-dd_HH-mm').format(DateTime.now());
-
-      // 3) Klar/verschlüsselt vorbereiten
-      late final String content;
-      late final String name;
-      if (encrypted) {
-        if (passphrase == null || passphrase.isEmpty) {
-          print('Auto-Backup ENC: Passwort fehlt');
-          return false;
-        }
-        final wrapper = await EncryptionUtil.encryptString(
-          jsonString,
-          passphrase,
-        );
-        content = jsonEncode(wrapper);
-        name = 'lightweight_auto_enc_v$currentSchemaVersion-[$ts].json';
-      } else {
-        content = jsonString;
-        name = 'lightweight_auto_v$currentSchemaVersion-[$ts].json';
-      }
-
-      // 4) Schreiben mit Fallback bei Fehler
-      File outFile = File(p.join(baseDir.path, name));
-      try {
-        await outFile.writeAsString(content);
-      } on FileSystemException catch (e) {
-        print(
-          'Auto-Backup: Schreiben in $baseDir fehlgeschlagen, Fallback → App-Ordner ($e)',
-        );
-        baseDir = Directory(p.join(docs.path, 'Backups'));
-        await baseDir.create(recursive: true);
-        outFile = File(p.join(baseDir.path, name));
-        await outFile.writeAsString(content);
-      }
-
-      print('Auto-Backup geschrieben: ${outFile.path}');
-
-      // 5) Retention
-      final files = baseDir
-          .listSync()
-          .whereType<File>()
-          .where((f) => p.basename(f.path).startsWith('lightweight_auto'))
-          .toList()
-        ..sort(
-          (a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()),
-        );
-      for (var i = retention; i < files.length; i++) {
-        try {
-          files[i].deleteSync();
-        } catch (_) {}
-      }
-
-      await prefs.setInt('auto_backup_last_ms', nowMs);
-      return true;
-    } catch (e) {
-      print('Auto-Backup fehlgeschlagen: $e');
-      return false;
-    }
-  }
-}
-
-class ProbeResult {
-  final bool encrypted;
-  final bool gzipped;
-  ProbeResult({required this.encrypted, required this.gzipped});
-}
-
-ProbeResult _probeBackup(Uint8List bytes) {
-  // 1) Quick JSON sniff
-  if (bytes.isNotEmpty &&
-      (bytes.first == 0x7B /* '{' */ || bytes.first == 0x5B /* '[' */)) {
-    // Looks like plain JSON (very common for unencrypted exports)
-    return ProbeResult(encrypted: false, gzipped: false);
-  }
-
-  // 2) GZIP magic: 1F 8B
-  if (bytes.length >= 2 && bytes[0] == 0x1F && bytes[1] == 0x8B) {
-    // Might be gzipped JSON (unencrypted) or gzipped+encrypted (rare)
-    // We'll try inflate first; if it fails later we can still treat as encrypted
-    return ProbeResult(encrypted: false, gzipped: true);
-  }
-
-  // 3) Optional custom magic headers you may have used
-  // e.g., "VITA1" or "ENC1"... adapt if your exporter wrote a header.
-  const encHeader = [0x45, 0x4E, 0x43, 0x31]; // "ENC1"
-  if (bytes.length >= 4 &&
-      bytes[0] == encHeader[0] &&
-      bytes[1] == encHeader[1] &&
-      bytes[2] == encHeader[2] &&
-      bytes[3] == encHeader[3]) {
-    return ProbeResult(encrypted: true, gzipped: false);
-  }
-
-  // 4) Default: treat as encrypted blob (e.g., {salt|iv|ciphertext} container)
-  return ProbeResult(encrypted: true, gzipped: false);
-}
-
-class BackupPasswordError implements Exception {}
-
-Future<void> importBackupBytes(Uint8List bytes, {String? password}) async {
-  final probe = _probeBackup(bytes);
-
-  Uint8List plainBytes;
-
-  if (!probe.encrypted) {
-    // Try direct JSON first
-    try {
-      final sourceBytes = probe.gzipped
-          ? Uint8List.fromList(const GZipDecoder().decodeBytes(bytes))
-          : bytes;
-      // Basic JSON sanity check
-      jsonDecode(utf8.decode(sourceBytes));
-      plainBytes = sourceBytes;
-    } catch (_) {
-      // If JSON/gzip decode failed, fall back to encrypted flow
-      plainBytes = await _tryDecryptWithCandidates(
-        bytes,
-        passwordCandidates: [password, "", null],
-      );
-    }
-  } else {
-    // Encrypted flow straight away
-    plainBytes = await _tryDecryptWithCandidates(
-      bytes,
-      passwordCandidates: [password, "", null],
-    );
-  }
-
-  final jsonStr = utf8.decode(plainBytes);
-  final Map<String, dynamic> payload =
-      jsonDecode(jsonStr) as Map<String, dynamic>;
-
-  // ✅ Apply payload to DB (your current restore routine)
-  await _applyBackupPayload(payload);
-}
-
-/// Tries multiple password candidates in order.
-/// If all fail, throws BackupPasswordError.
-Future<Uint8List> _tryDecryptWithCandidates(
-  Uint8List encrypted, {
-  required List<String?> passwordCandidates,
-}) async {
-  for (final cand in passwordCandidates) {
-    try {
-      final plain = await _decryptPayload(encrypted, cand);
-      // Quick sanity check to ensure we actually decrypted JSON
-      final s = utf8.decode(plain);
-      jsonDecode(s);
-      return plain;
-    } catch (_) {
-      // continue
-    }
-  }
-  throw BackupPasswordError();
-}
-
-/// Replace with your real decryption (AES-GCM, etc.)
-/// Contract: when `password` is `null` or `""`, handle legacy “no password” backups
-Future<Uint8List> _decryptPayload(Uint8List encrypted, String? password) async {
-  // Example structure assumption (adjust to your format):
-  // [salt(16) | iv(12) | ciphertext(...) | tag(16)]
-  // Or if you stored a JSON envelope with base64 fields, parse that here.
-
-  // PSEUDO:
-  // final salt = encrypted.sublist(0, 16);
-  // final iv = encrypted.sublist(16, 28);
-  // final ct = encrypted.sublist(28);
-  // final key = await _deriveKey(password ?? "", salt); // treat null == empty string
-  // final plain = aesGcmDecrypt(key, iv, ct);
-  // return plain;
-
-  // For now we throw to force you to wire this to your actual crypto util:
-  throw UnimplementedError(
-    "Wire _decryptPayload to your existing AES-GCM routine",
-  );
-}
-
-/// Your existing apply logic (truncate & insert or merge)
-Future<void> _applyBackupPayload(Map<String, dynamic> payload) async {
-  // e.g. payload['food_entries'], payload['water_entries'], etc.
-  // Make sure to wrap in a transaction & validate shapes.
 }

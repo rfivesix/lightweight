@@ -1,19 +1,41 @@
 // lib/models/exercise.dart
 import 'dart:convert' show jsonDecode, jsonEncode;
 
+/// Represents a physical exercise in the system.
+///
+/// Contains information about the exercise name, description, category,
+/// and the muscles targeted (primary and secondary).
 class Exercise {
+  /// Unique identifier for the exercise.
+  ///
+  /// Can be null if the exercise is newly created and not yet saved to the database.
   final int? id; // optional für neu angelegte Datensätze
+
+  /// The name of the exercise in German.
   final String nameDe;
+
+  /// The name of the exercise in English.
   final String nameEn;
+
+  /// A detailed description of the exercise in German.
   final String descriptionDe;
+
+  /// A detailed description of the exercise in English.
   final String descriptionEn;
+
+  /// The category of the exercise (e.g., "Strength", "Cardio").
   final String categoryName;
+
+  /// An optional path to an image representing the exercise.
   final String? imagePath;
 
-  /// sauber getrennt
+  /// A list of primary muscles targeted by this exercise.
   final List<String> primaryMuscles;
+
+  /// A list of secondary muscles targeted by this exercise.
   final List<String> secondaryMuscles;
 
+  /// Creates a new [Exercise] instance.
   const Exercise({
     this.id,
     required this.nameDe,
@@ -56,7 +78,9 @@ class Exercise {
         .toList(growable: false);
   }
 
-  // ---------- Factory: DB -> Model ----------
+  /// Creates an [Exercise] instance from a Map, typically from a database row.
+  ///
+  /// The [m] parameter must contain keys like 'id', 'name_de', 'name_en', etc.
   factory Exercise.fromMap(Map<String, Object?> m) {
     final primRaw = m['primaryMuscles_json_de'] ??
         m['primaryMuscles_json_en'] ??
@@ -82,6 +106,7 @@ class Exercise {
   //
   // Achtung: Wir serialisieren Muskulatur als CSV, weil dein Insert
   // in workout_database_helper aktuell CSV erwartet.
+  /// Converts the [Exercise] instance to a Map for database storage.
   Map<String, Object?> toMap() {
     return <String, Object?>{
       if (id != null) 'id': id,
@@ -97,6 +122,7 @@ class Exercise {
   }
 
   // ---------- convenient ----------
+  /// Creates a copy of this [Exercise] with the given fields replaced by the new values.
   Exercise copyWith({
     int? id,
     String? nameDe,
@@ -122,7 +148,14 @@ class Exercise {
   }
 
   // Optional hilfreich im UI:
+  /// Returns the name of the exercise localized to the user's language.
+  ///
+  /// Currently fallbacks to [nameDe] if available, otherwise [nameEn].
   String getLocalizedName(context) => nameDe.isNotEmpty ? nameDe : nameEn;
+
+  /// Returns the description of the exercise localized to the user's language.
+  ///
+  /// Currently fallbacks to [descriptionDe] if available, otherwise [descriptionEn].
   String getLocalizedDescription(context) =>
       descriptionDe.isNotEmpty ? descriptionDe : descriptionEn;
 }

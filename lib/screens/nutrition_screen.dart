@@ -2,28 +2,32 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:lightweight/dialogs/fluid_dialog_content.dart';
-import 'package:lightweight/models/fluid_entry.dart';
-import 'package:lightweight/models/supplement.dart';
-import 'package:lightweight/models/supplement_log.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/glass_bottom_menu.dart';
-import 'package:lightweight/widgets/swipe_action_background.dart';
+import '../dialogs/fluid_dialog_content.dart';
+import '../models/fluid_entry.dart';
+import '../models/supplement.dart';
+import '../models/supplement_log.dart';
+import '../util/design_constants.dart';
+import '../widgets/glass_bottom_menu.dart';
+import '../widgets/swipe_action_background.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/data/product_database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/dialogs/quantity_dialog_content.dart';
-import 'package:lightweight/models/daily_nutrition.dart';
-import 'package:lightweight/models/food_entry.dart';
-import 'package:lightweight/models/tracked_food_item.dart';
-import 'package:lightweight/models/timeline_entry.dart';
-import 'package:lightweight/services/ui_state_service.dart';
-import 'package:lightweight/widgets/nutrition_summary_widget.dart';
-import 'package:lightweight/widgets/summary_card.dart';
+import '../data/database_helper.dart';
+import '../data/product_database_helper.dart';
+import '../generated/app_localizations.dart';
+import '../dialogs/quantity_dialog_content.dart';
+import '../models/daily_nutrition.dart';
+import '../models/food_entry.dart';
+import '../models/tracked_food_item.dart';
+import '../models/timeline_entry.dart';
+import '../services/ui_state_service.dart';
+import '../widgets/nutrition_summary_widget.dart';
+import '../widgets/summary_card.dart';
 import './food_detail_screen.dart';
-import 'package:lightweight/util/date_util.dart';
+import '../util/date_util.dart';
 
+/// A screen for detailed nutrition logging and daily summaries.
+///
+/// Shows a breakdown of macronutrient and micronutrient intake,
+/// water consumption, and caffeine logs over various time ranges.
 class NutritionScreen extends StatefulWidget {
   const NutritionScreen({super.key});
 
@@ -69,17 +73,21 @@ class _NutritionScreenState extends State<NutritionScreen> {
       _isLoading = true;
     });
 
+    final dbHelper = DatabaseHelper.instance;
+    final settings = await dbHelper.getAppSettings();
+
+    // Nur für die Extras noch Prefs
     final prefs = await SharedPreferences.getInstance();
-    final targetCalories = prefs.getInt('targetCalories') ?? 2500;
-    final targetProtein = prefs.getInt('targetProtein') ?? 180;
-    final targetCarbs = prefs.getInt('targetCarbs') ?? 250;
-    final targetFat = prefs.getInt('targetFat') ?? 80;
-    final targetWater = prefs.getInt('targetWater') ?? 3000;
+
+    final targetCalories = settings?.targetCalories ?? 2500;
+    final targetProtein = settings?.targetProtein ?? 180;
+    final targetCarbs = settings?.targetCarbs ?? 250;
+    final targetFat = settings?.targetFat ?? 80;
+    final targetWater = settings?.targetWater ?? 3000;
+
     final targetSugar = prefs.getInt('targetSugar') ?? 50;
     final targetFiber = prefs.getInt('targetFiber') ?? 30;
     final targetSalt = prefs.getInt('targetSalt') ?? 6;
-    final targetCaffeine = prefs.getInt('targetCaffeine') ?? 400;
-
     final foodEntries = await DatabaseHelper.instance.getEntriesForDateRange(
       range.start,
       range.end,
@@ -103,7 +111,6 @@ class _NutritionScreenState extends State<NutritionScreen> {
       targetSugar: targetSugar * numberOfDays,
       targetFiber: targetFiber * numberOfDays,
       targetSalt: targetSalt * numberOfDays,
-      targetCaffeine: targetCaffeine * numberOfDays,
     );
 
     final List<FoodTimelineEntry> foodTimeline = [];

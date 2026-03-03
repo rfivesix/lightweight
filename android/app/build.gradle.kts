@@ -14,11 +14,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.lightweight"
+    namespace = "com.rfivesix.hypertrack"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.lightweight"
+         applicationId = "com.rfivesix.hypertrack"
         versionName = flutterVersionName
         versionCode = flutterVersionCode
 

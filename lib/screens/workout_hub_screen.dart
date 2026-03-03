@@ -1,18 +1,22 @@
 // lib/screens/workout_hub_screen.dart (Final, mit einheitlichem Design)
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/data/workout_database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/routine.dart';
-import 'package:lightweight/screens/edit_routine_screen.dart';
-import 'package:lightweight/screens/exercise_catalog_screen.dart';
-import 'package:lightweight/screens/live_workout_screen.dart';
-import 'package:lightweight/screens/routines_screen.dart';
-import 'package:lightweight/screens/workout_history_screen.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/bottom_content_spacer.dart';
-import 'package:lightweight/widgets/summary_card.dart';
+import '../data/workout_database_helper.dart';
+import '../generated/app_localizations.dart';
+import '../models/routine.dart';
+import 'edit_routine_screen.dart';
+import 'exercise_catalog_screen.dart';
+import 'live_workout_screen.dart';
+import 'routines_screen.dart';
+import 'workout_history_screen.dart';
+import '../util/design_constants.dart';
+import '../widgets/bottom_content_spacer.dart';
+import '../widgets/summary_card.dart';
 
+/// The central management screen for all workout-related activities.
+///
+/// Provides quick actions to start an empty workout, launch saved routines,
+/// and navigate to workout history, routine management, and the exercise catalog.
 class WorkoutHubScreen extends StatefulWidget {
   const WorkoutHubScreen({super.key});
 

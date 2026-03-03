@@ -1,14 +1,22 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lightweight/services/theme_service.dart';
-import 'package:lightweight/theme/color_constants.dart';
+import '../services/theme_service.dart';
+import '../theme/color_constants.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:provider/provider.dart';
 
+/// A floating action button with a premium glass aesthetic.
+///
+/// Can be displayed as a circle (icon only) or a pill (icon and [label]).
 class GlassFab extends StatefulWidget {
+  /// Callback when the button is pressed.
   final VoidCallback onPressed;
+
+  /// The icon to display.
   final IconData icon;
+
+  /// Optional label to display next to the icon, turning the FAB into a pill.
   final String? label;
 
   const GlassFab({

@@ -1,22 +1,27 @@
-// lib/screens/workout_log_detail_screen.dart (Final & Korrigiert - Edit Mode - Neu mit WorkoutCard)
+// lib/screens/workout_log_detail_screen.dart
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:lightweight/data/workout_database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/exercise.dart';
-import 'package:lightweight/models/set_log.dart';
-import 'package:lightweight/models/workout_log.dart';
-import 'package:lightweight/screens/exercise_catalog_screen.dart';
-import 'package:lightweight/screens/exercise_detail_screen.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
-import 'package:lightweight/widgets/summary_card.dart';
-import 'package:lightweight/widgets/wger_attribution_widget.dart';
-import 'package:lightweight/widgets/workout_summary_bar.dart';
-import 'package:lightweight/widgets/workout_card.dart';
+import '../data/workout_database_helper.dart';
+import '../generated/app_localizations.dart';
+import '../models/exercise.dart';
+import '../models/set_log.dart';
+import '../models/workout_log.dart';
+import 'exercise_catalog_screen.dart';
+import 'exercise_detail_screen.dart';
+import '../util/design_constants.dart';
+import '../widgets/global_app_bar.dart';
+import '../widgets/summary_card.dart';
+import '../widgets/wger_attribution_widget.dart';
+import '../widgets/workout_summary_bar.dart';
+import '../widgets/workout_card.dart';
 
+/// A detailed view for a single completed [WorkoutLog].
+///
+/// Displays the full set log for each exercise performed during the session.
+/// Supports an edit mode to adjust notes, start times, and set-level data.
 class WorkoutLogDetailScreen extends StatefulWidget {
+  /// The unique identifier of the workout log to display.
   final int logId;
   const WorkoutLogDetailScreen({super.key, required this.logId});
 
@@ -32,8 +37,13 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
   bool _isEditMode = false;
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _notesController;
+
+  // Wir nutzen weightController für KG oder DISTANCE
   final Map<int, TextEditingController> _weightControllers = {};
+  // Wir nutzen repsController für REPS oder TIME(min)
   final Map<int, TextEditingController> _repsControllers = {};
+  final Map<int, TextEditingController> _rirControllers = {};
+
   DateTime? _editedStartTime;
   Map<String, double> _categoryVolume = {};
 
@@ -52,17 +62,20 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
   }
 
   void _clearControllers() {
-    for (var controller in _weightControllers.values) {
-      controller.dispose();
+    for (var c in _weightControllers.values) {
+      c.dispose();
     }
-    for (var controller in _repsControllers.values) {
-      controller.dispose();
+    for (var c in _repsControllers.values) {
+      c.dispose();
+    }
+    for (var c in _rirControllers.values) {
+      c.dispose();
     }
     _weightControllers.clear();
     _repsControllers.clear();
+    _rirControllers.clear();
   }
 
-  /// Gibt den anzuzeigenden Text für den Set zurück
   String _getSetDisplayText(String setType, int setIndex) {
     switch (setType) {
       case 'warmup':
@@ -74,6 +87,11 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
       default:
         return '$setIndex';
     }
+  }
+
+  bool _isCardio(String exerciseName) {
+    final ex = _exerciseDetails[exerciseName];
+    return ex?.categoryName.toLowerCase() == 'cardio';
   }
 
   Future<void> _loadDetails({bool preserveEditState = false}) async {
@@ -94,48 +112,61 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
       groups.putIfAbsent(set.exerciseName, () => []).add(set);
     }
 
-    final Map<String, double> categoryVolume = {};
-    for (final set in data.sets) {
-      final exercise = await WorkoutDatabaseHelper.instance.getExerciseByName(
-        set.exerciseName,
-      );
-      if (exercise != null) {
-        final volumeForSet = (set.weightKg ?? 0) * (set.reps ?? 0);
-        categoryVolume.update(
-          exercise.categoryName,
-          (value) => value + volumeForSet,
-          ifAbsent: () => volumeForSet,
-        );
-      }
+    // Exercises laden um Cardio zu erkennen
+    final Map<String, Exercise> details = {};
+    for (var name in groups.keys) {
+      final ex = await WorkoutDatabaseHelper.instance.getExerciseByName(name);
+      if (ex != null) details[name] = ex;
     }
 
-    final tempExerciseDetails = <String, Exercise>{};
-    for (var name in groups.keys) {
-      final exercise = await WorkoutDatabaseHelper.instance.getExerciseByName(
-        name,
-      );
-      if (exercise != null) tempExerciseDetails[name] = exercise;
+    // Volumen (nur Kraft) für den Header
+    final catVol = <String, double>{};
+    for (var set in data.sets) {
+      // Nur wenn nicht Cardio zum Volumen zählen?
+      // Vereinfacht: wir zählen alles was weight*reps hat.
+      // Cardio hat weight=0/null im Log (da in distanceKm gespeichert), also automatisch 0.
+      final v = (set.weightKg ?? 0) * (set.reps ?? 0);
+      if (v > 0) {
+        final cat = details[set.exerciseName]?.categoryName ?? 'Other';
+        catVol.update(cat, (val) => val + v, ifAbsent: () => v);
+      }
     }
 
     _notesController.text = data.notes ?? '';
     _editedStartTime = data.startTime;
 
+    // Controller befüllen
     _clearControllers();
     for (final setLog in data.sets) {
-      _weightControllers[setLog.id!] = TextEditingController(
-        text: setLog.weightKg?.toStringAsFixed(1).replaceAll('.0', '') ?? '',
-      );
-      _repsControllers[setLog.id!] = TextEditingController(
-        text: setLog.reps?.toString() ?? '',
-      );
+      // Unterscheidung Cardio vs Kraft für Initial-Werte
+      final isCardio =
+          details[setLog.exerciseName]?.categoryName.toLowerCase() == 'cardio';
+
+      String val1, val2;
+
+      if (isCardio) {
+        // Cardio: Val1 = Distance, Val2 = Duration(min)
+        val1 = setLog.distanceKm?.toStringAsFixed(1).replaceAll('.0', '') ?? '';
+        final sec = setLog.durationSeconds ?? 0;
+        val2 = sec > 0 ? (sec / 60).toStringAsFixed(0) : '';
+      } else {
+        // Kraft: Val1 = Weight, Val2 = Reps
+        val1 = setLog.weightKg?.toStringAsFixed(1).replaceAll('.0', '') ?? '';
+        val2 = setLog.reps?.toString() ?? '';
+      }
+
+      _weightControllers[setLog.id!] = TextEditingController(text: val1);
+      _repsControllers[setLog.id!] = TextEditingController(text: val2);
+      _rirControllers[setLog.id!] =
+          TextEditingController(text: setLog.rir?.toString() ?? '');
     }
 
     if (!mounted) return;
     setState(() {
       _log = data;
       _groupedSets = groups;
-      _exerciseDetails = tempExerciseDetails;
-      _categoryVolume = categoryVolume;
+      _exerciseDetails = details;
+      _categoryVolume = catVol;
       if (!preserveEditState) {
         _isLoading = false;
       }
@@ -197,13 +228,41 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     final List<SetLog> setsToInsert = [];
 
     for (final setLog in currentSets) {
-      final weight = double.tryParse(
-            _weightControllers[setLog.id!]?.text.replaceAll(',', '.') ?? '0',
-          ) ??
-          0.0;
-      final reps = int.tryParse(_repsControllers[setLog.id!]?.text ?? '0') ?? 0;
+      // Hier wieder die Unterscheidung: Was bedeuten die Controller-Werte?
+      final isCardio = _isCardio(setLog.exerciseName);
 
-      final updatedSet = setLog.copyWith(weightKg: weight, reps: reps);
+      final val1 = double.tryParse(
+              _weightControllers[setLog.id!]?.text.replaceAll(',', '.') ??
+                  '0') ??
+          0.0;
+      final val2 = double.tryParse(
+              _repsControllers[setLog.id!]?.text.replaceAll(',', '.') ?? '0') ??
+          0.0;
+      final rir = int.tryParse(_rirControllers[setLog.id!]?.text ?? '');
+
+      SetLog updatedSet;
+
+      if (isCardio) {
+        // Val1 = Distance, Val2 = Minutes (-> Seconds)
+        updatedSet = setLog.copyWith(
+          distanceKm: val1,
+          durationSeconds: (val2 * 60).round(),
+          rir: rir,
+          // Weight/Reps auf 0/null setzen bei Cardio, um Datenmüll zu vermeiden?
+          weightKg: 0,
+          reps: 0,
+        );
+      } else {
+        // Val1 = Weight, Val2 = Reps (int)
+        updatedSet = setLog.copyWith(
+          weightKg: val1,
+          reps: val2.toInt(),
+          rir: rir,
+          // Cardio Felder nullen
+          distanceKm: null,
+          durationSeconds: null,
+        );
+      }
 
       if (initialSetIds.contains(setLog.id)) {
         setsToUpdate.add(updatedSet);
@@ -235,18 +294,6 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     _loadDetails();
   }
 
-  Widget _buildHeader(String text) => Expanded(
-        child: Text(
-          text,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      );
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -262,9 +309,6 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     }
     final Duration duration =
         _log?.endTime?.difference(_log!.startTime) ?? Duration.zero;
-
-    final double topPadding =
-        MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -310,7 +354,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                       child: ListView(
                         padding: EdgeInsets.zero,
                         children: [
-                          // Header Info Section mit SummaryCard
+                          // Header Info
                           Padding(
                             padding: DesignConstants.cardPadding,
                             child: SummaryCard(
@@ -349,8 +393,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                                         ],
                                       ),
                                       const SizedBox(
-                                        height: DesignConstants.spacingM,
-                                      ),
+                                          height: DesignConstants.spacingM),
                                       _isEditMode
                                           ? TextFormField(
                                               controller: _notesController,
@@ -375,8 +418,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                                           style: textTheme.titleMedium,
                                         ),
                                         const SizedBox(
-                                          height: DesignConstants.spacingS,
-                                        ),
+                                            height: DesignConstants.spacingS),
                                         ..._buildCategoryBars(context),
                                       ],
                                     ],
@@ -386,10 +428,10 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                             ),
                           ),
 
-                          // Exercise Sets mit WorkoutCard
+                          // Sets
                           ..._buildSetList(context, l10n),
 
-                          // Add Exercise Button
+                          // Add Exercise (Edit Mode)
                           if (_isEditMode)
                             Padding(
                               padding: const EdgeInsets.all(16.0),
@@ -407,21 +449,34 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                                   );
                                   if (selectedExercise != null) {
                                     setState(() {
+                                      // Exercise Details lokal speichern, damit _isCardio und Name funktionieren
+                                      _exerciseDetails[selectedExercise
+                                              .getLocalizedName(context)] =
+                                          selectedExercise;
+
                                       final newSet = SetLog(
-                                        id: DateTime.now()
-                                            .millisecondsSinceEpoch,
-                                        workoutLogId: _log!.id!,
-                                        exerciseName: selectedExercise
-                                            .getLocalizedName(context),
-                                        setType: 'normal',
-                                      );
+                                          id: DateTime.now()
+                                              .millisecondsSinceEpoch,
+                                          workoutLogId: _log!.id!,
+                                          exerciseName: selectedExercise
+                                              .getLocalizedName(context),
+                                          setType: 'normal',
+                                          isCompleted: true,
+                                          // Default Werte setzen
+                                          weightKg: 0,
+                                          reps: 0,
+                                          distanceKm: 0,
+                                          durationSeconds: 0);
                                       _groupedSets[selectedExercise
                                           .getLocalizedName(context)] = [
-                                        newSet,
+                                        newSet
                                       ];
+
                                       _weightControllers[newSet.id!] =
                                           TextEditingController();
                                       _repsControllers[newSet.id!] =
+                                          TextEditingController();
+                                      _rirControllers[newSet.id!] =
                                           TextEditingController();
                                     });
                                   }
@@ -432,12 +487,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                             ),
 
                           Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                              16.0,
-                              24.0,
-                              16.0,
-                              8.0,
-                            ),
+                            padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
                             child: WgerAttributionWidget(
                               textStyle: textTheme.bodySmall?.copyWith(
                                 color: Colors.grey[600],
@@ -481,164 +531,14 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     }).toList();
   }
 
-  Widget _buildSetRow(
-    SetLog setLog,
-    int rowIndex, // Der Index in der Liste der Sätze für DIESE Übung
-    int workingSetIndex, // Der "Arbeitssatz"-Index
-    String exerciseName,
-    AppLocalizations l10n,
-  ) {
-    final setType = setLog.setType;
-    final isLightMode = Theme.of(context).brightness == Brightness.light;
-
-    final bool isColoredRow = rowIndex > 0 && rowIndex.isOdd;
-    final Color rowColor;
-    if (isColoredRow) {
-      rowColor = isLightMode
-          ? Colors.grey.withOpacity(0.1)
-          // HIER DIE ÄNDERUNG: Erhöhte Opazität für Dark Mode
-          : Colors.white.withOpacity(0.1);
-    } else {
-      rowColor = Colors.transparent;
-    }
-
-    return Container(
-      color: rowColor,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4.0),
-        child: Row(
-          children: [
-            // ... restlicher Code der Methode bleibt unverändert
-            Expanded(
-              flex: 2,
-              child: Center(
-                child: Builder(
-                  builder: (_) {
-                    Color textColor;
-                    switch (setType) {
-                      case 'warmup':
-                        textColor = Colors.orange;
-                        break;
-                      case 'dropset':
-                        textColor = Colors.blue;
-                        break;
-                      case 'failure':
-                        textColor = Colors.red;
-                        break;
-                      default:
-                        textColor = Colors.grey;
-                    }
-                    return GestureDetector(
-                      onTap: () {
-                        if (_isEditMode) _showSetTypePicker(setLog.id!);
-                      },
-                      child: Text(
-                        _getSetDisplayText(setType, workingSetIndex),
-                        style: TextStyle(
-                          color: textColor,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-            const Expanded(
-              flex: 3,
-              child: Center(
-                child: Text(
-                  "-",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey, fontSize: 12),
-                ),
-              ),
-            ),
-            Expanded(
-              flex: 2,
-              child: _isEditMode
-                  ? TextFormField(
-                      controller: _weightControllers[setLog.id!],
-                      textAlign: TextAlign.center,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        isDense: true,
-                        fillColor: Colors.transparent,
-                      ),
-                    )
-                  : Text(
-                      setLog.weightKg
-                              ?.toStringAsFixed(1)
-                              .replaceAll('.0', '') ??
-                          '0',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 16),
-                    ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              flex: 2,
-              child: _isEditMode
-                  ? TextFormField(
-                      controller: _repsControllers[setLog.id!],
-                      textAlign: TextAlign.center,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        isDense: true,
-                        fillColor: Colors.transparent,
-                      ),
-                    )
-                  : Text(
-                      "${setLog.reps ?? '0'}",
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 16),
-                    ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: SizedBox(
-                width: 48,
-                child: _isEditMode
-                    ? IconButton(
-                        icon: const Icon(
-                          Icons.delete_outline,
-                          color: Colors.redAccent,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _groupedSets[exerciseName]?.removeWhere(
-                              (s) => s.id == setLog.id,
-                            );
-                            _weightControllers.remove(setLog.id!)?.dispose();
-                            _repsControllers.remove(setLog.id!)?.dispose();
-                          });
-                        },
-                      )
-                    : const Icon(Icons.check_circle, color: Colors.green),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   List<Widget> _buildSetList(BuildContext context, AppLocalizations l10n) {
-    final textTheme = Theme.of(context).textTheme;
     final entries = _groupedSets.entries.toList();
 
     if (!_isEditMode) {
-      // Normale Liste ohne Reorder-Funktionalität
       return entries
           .map((entry) => _buildExerciseCard(context, l10n, entry, -1))
           .toList();
     } else {
-      // ReorderableListView für Edit-Modus
       return [
         ReorderableListView.builder(
           shrinkWrap: true,
@@ -651,8 +551,6 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
               }
               final item = entries.removeAt(oldIndex);
               entries.insert(newIndex, item);
-
-              // Gruppierte Sets Map neu aufbauen
               _groupedSets.clear();
               for (var entry in entries) {
                 _groupedSets[entry.key] = entry.value;
@@ -678,6 +576,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     final Exercise? exercise = _exerciseDetails[exerciseName];
     final List<SetLog> sets = entry.value;
     final textTheme = Theme.of(context).textTheme;
+    final isCardio = _isCardio(exerciseName);
 
     return WorkoutCard(
       key: _isEditMode ? ValueKey(exerciseName) : null,
@@ -685,10 +584,8 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 8.0,
-            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             leading: _isEditMode
                 ? ReorderableDragStartListener(
                     index: index,
@@ -710,24 +607,22 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 4.0),
                 child: Text(
                   exercise?.getLocalizedName(context) ?? exerciseName,
-                  style: textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: textTheme.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ),
             ),
             trailing: _isEditMode
                 ? IconButton(
-                    icon: const Icon(
-                      Icons.delete_outline,
-                      color: Colors.redAccent,
-                    ),
+                    icon: const Icon(Icons.delete_outline,
+                        color: Colors.redAccent),
                     tooltip: l10n.removeExercise,
                     onPressed: () {
                       setState(() {
                         for (var set in sets) {
                           _weightControllers.remove(set.id!)?.dispose();
                           _repsControllers.remove(set.id!)?.dispose();
+                          _rirControllers.remove(set.id!)?.dispose();
                         }
                         _groupedSets.remove(exerciseName);
                       });
@@ -742,80 +637,39 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: Center(
-                        child: Text(
-                          l10n.setLabel,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 3,
-                      child: Center(
-                        child: Text(
-                          l10n.lastTimeLabel,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Center(
-                        child: Text(
-                          l10n.kgLabel,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Center(
-                        child: Text(
-                          l10n.repsLabel,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 48),
-                  ],
-                ),
+                if (isCardio)
+                  Row(
+                    children: [
+                      _buildHeader(l10n.setLabel, flex: 2),
+                      _buildHeader("Distance (km)", flex: 4),
+                      const SizedBox(width: 8),
+                      _buildHeader("Time (min)", flex: 4),
+                      const SizedBox(width: 8),
+                      _buildHeader("Int.", flex: 2),
+                      const SizedBox(width: 48), // Platz für Check/Del
+                    ],
+                  )
+                else
+                  Row(
+                    children: [
+                      _buildHeader(l10n.setLabel, flex: 2),
+                      _buildHeader(l10n.lastTimeLabel,
+                          flex:
+                              3), // Nur in View sinnvoll, hier aber Platzhalter
+                      _buildHeader(l10n.kgLabel, flex: 2),
+                      _buildHeader(l10n.repsLabel, flex: 2),
+                      _buildHeader("RIR", flex: 2),
+                      const SizedBox(width: 48),
+                    ],
+                  ),
 
                 // Set Rows
                 ...sets.asMap().entries.map((setEntry) {
                   final setLog = setEntry.value;
-                  final rowIndex = setEntry
-                      .key; // Der Index in der Liste der Sätze für DIESE Übung
-
-                  // Normale Sätze zählen (ohne Warmup)
+                  final rowIndex = setEntry.key;
                   int workingSetIndex = 0;
                   for (int i = 0; i <= rowIndex; i++) {
-                    if (sets[i].setType != 'warmup') {
-                      workingSetIndex++;
-                    }
+                    if (sets[i].setType != 'warmup') workingSetIndex++;
                   }
 
                   return _buildSetRow(
@@ -824,10 +678,10 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                     workingSetIndex,
                     exerciseName,
                     l10n,
+                    isCardio,
                   );
                 }),
 
-                // Add Set Button
                 if (_isEditMode)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -838,6 +692,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                           workoutLogId: _log!.id!,
                           exerciseName: exerciseName,
                           setType: 'normal',
+                          isCompleted: true,
                         );
                         setState(() {
                           sets.add(newSet);
@@ -845,6 +700,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                               TextEditingController();
                           _repsControllers[newSet.id!] =
                               TextEditingController();
+                          _rirControllers[newSet.id!] = TextEditingController();
                         });
                       },
                       icon: const Icon(Icons.add),
@@ -859,13 +715,178 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     );
   }
 
+  Widget _buildHeader(String text, {required int flex}) {
+    return Expanded(
+      flex: flex,
+      child: Center(
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSetRow(
+    SetLog setLog,
+    int rowIndex,
+    int workingSetIndex,
+    String exerciseName,
+    AppLocalizations l10n,
+    bool isCardio,
+  ) {
+    final setType = setLog.setType;
+    final isLightMode = Theme.of(context).brightness == Brightness.light;
+    final bool isColoredRow = rowIndex > 0 && rowIndex.isOdd;
+    final Color rowColor = isColoredRow
+        ? (isLightMode
+            ? Colors.grey.withOpacity(0.1)
+            : Colors.white.withOpacity(0.1))
+        : Colors.transparent;
+
+    // View Values
+    String val1Display, val2Display;
+    if (isCardio) {
+      val1Display = setLog.distanceKm?.toString() ?? '-';
+      final sec = setLog.durationSeconds ?? 0;
+      val2Display = sec > 0 ? (sec / 60).round().toString() : '-';
+    } else {
+      val1Display =
+          setLog.weightKg?.toStringAsFixed(1).replaceAll('.0', '') ?? '-';
+      val2Display = setLog.reps?.toString() ?? '-';
+    }
+
+    return Container(
+      color: rowColor,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4.0),
+        child: Row(
+          children: [
+            Expanded(
+              flex: isCardio ? 2 : 2,
+              child: Center(
+                child: GestureDetector(
+                  onTap: () {
+                    if (_isEditMode) _showSetTypePicker(setLog.id!);
+                  },
+                  child: Text(
+                    _getSetDisplayText(setType, workingSetIndex),
+                    style: TextStyle(
+                      color: _getSetTypeColor(setType),
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            if (!isCardio)
+              const Expanded(
+                  flex: 3,
+                  child: Center(child: Text("-"))), // Last Time Placeholder
+
+            Expanded(
+              flex: isCardio ? 2 : 2,
+              child: _isEditMode
+                  ? TextFormField(
+                      controller: _weightControllers[setLog.id!],
+                      textAlign: TextAlign.center,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          isDense: true,
+                          fillColor: Colors.transparent,
+                          hintText: "-",
+                          contentPadding: EdgeInsets.zero),
+                    )
+                  : Text(
+                      val1Display,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 16),
+                    ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              flex: isCardio ? 2 : 2,
+              child: _isEditMode
+                  ? TextFormField(
+                      controller: _repsControllers[setLog.id!],
+                      textAlign: TextAlign.center,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        isDense: true,
+                        fillColor: Colors.transparent,
+                        hintText: "-",
+                      ),
+                    )
+                  : Text(
+                      val2Display,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 16),
+                    ),
+            ),
+            const SizedBox(width: 8),
+            // RIR / Intens
+            Expanded(
+              flex: 2,
+              child: _isEditMode
+                  ? TextFormField(
+                      controller: _rirControllers[setLog.id!],
+                      textAlign: TextAlign.center,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        isDense: true,
+                        fillColor: Colors.transparent,
+                        hintText: "-",
+                      ),
+                    )
+                  : Text(
+                      setLog.rir?.toString() ?? '-',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: SizedBox(
+                width: 48,
+                child: _isEditMode
+                    ? IconButton(
+                        icon: const Icon(Icons.delete_outline,
+                            color: Colors.redAccent),
+                        onPressed: () {
+                          setState(() {
+                            _groupedSets[exerciseName]
+                                ?.removeWhere((s) => s.id == setLog.id);
+                            _weightControllers.remove(setLog.id!)?.dispose();
+                            _repsControllers.remove(setLog.id!)?.dispose();
+                            _rirControllers.remove(setLog.id!)?.dispose();
+                          });
+                        },
+                      )
+                    : const Icon(Icons.check_circle, color: Colors.green),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _changeSetType(int setLogId, String newType) {
     setState(() {
-      // Finde den SetLog und ändere den setType
       for (var entry in _groupedSets.entries) {
         for (var setLog in entry.value) {
           if (setLog.id == setLogId) {
-            // Erstelle eine neue Instanz mit geändertem setType
             final index = entry.value.indexOf(setLog);
             entry.value[index] = setLog.copyWith(setType: newType);
             break;
@@ -883,24 +904,33 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
         return Wrap(
           children: <Widget>[
             ListTile(
-              title: const Text('Normal'),
-              onTap: () => _changeSetType(setLogId, 'normal'),
-            ),
+                title: const Text('Normal'),
+                onTap: () => _changeSetType(setLogId, 'normal')),
             ListTile(
-              title: const Text('Warmup'),
-              onTap: () => _changeSetType(setLogId, 'warmup'),
-            ),
+                title: const Text('Warmup'),
+                onTap: () => _changeSetType(setLogId, 'warmup')),
             ListTile(
-              title: const Text('Failure'),
-              onTap: () => _changeSetType(setLogId, 'failure'),
-            ),
+                title: const Text('Failure'),
+                onTap: () => _changeSetType(setLogId, 'failure')),
             ListTile(
-              title: const Text('Dropset'),
-              onTap: () => _changeSetType(setLogId, 'dropset'),
-            ),
+                title: const Text('Dropset'),
+                onTap: () => _changeSetType(setLogId, 'dropset')),
           ],
         );
       },
     );
+  }
+
+  Color _getSetTypeColor(String setType) {
+    switch (setType) {
+      case 'warmup':
+        return Colors.orange;
+      case 'dropset':
+        return Colors.blue;
+      case 'failure':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
   }
 }

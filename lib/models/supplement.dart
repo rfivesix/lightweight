@@ -1,15 +1,37 @@
 // lib/models/supplement.dart
+/// Represents a supplement that can be tracked by the user.
+///
+/// Contains basic information about the supplement, such as its name,
+/// default dose, and unit of measurement.
 class Supplement {
+  /// Unique identifier for the supplement.
   final int? id;
+
+  /// An optional unique code for the supplement (e.g., for barcode scanning).
   final String? code; // <— NEU, optional
+
+  /// The name of the supplement (e.g., "Creatine Monohydrate").
   final String name;
+
+  /// The default dose amount for this supplement.
   final double defaultDose;
+
+  /// The unit of measurement for the dose (e.g., "g", "mg", "pill").
   final String unit;
+
+  /// An optional daily goal for the amount of supplement to consume.
   final double? dailyGoal;
+
+  /// An optional daily limit for the amount of supplement to consume.
   final double? dailyLimit;
+
+  /// Optional notes or information about the supplement.
   final String? notes;
+
+  /// Whether the supplement is a built-in default or created by the user.
   final bool isBuiltin; // <— NEU
 
+  /// Creates a new [Supplement] instance.
   Supplement({
     this.id,
     this.code,
@@ -22,6 +44,7 @@ class Supplement {
     this.isBuiltin = false,
   });
 
+  /// Creates a [Supplement] instance from a Map, typically from a database row.
   factory Supplement.fromMap(Map<String, dynamic> map) {
     return Supplement(
       id: map['id'] as int?,
@@ -36,6 +59,7 @@ class Supplement {
     );
   }
 
+  /// Converts the [Supplement] instance to a Map for database storage.
   Map<String, dynamic> toMap() {
     return {
       'id': id,

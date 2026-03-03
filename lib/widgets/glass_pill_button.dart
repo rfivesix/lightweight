@@ -1,8 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lightweight/services/theme_service.dart';
-import 'package:lightweight/theme/color_constants.dart';
+import '../services/theme_service.dart';
+import '../theme/color_constants.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:provider/provider.dart';
 
@@ -10,11 +10,23 @@ import 'package:provider/provider.dart';
 /// - Nutze [child], um beliebige Inhalte (Icon, Text, mehrere Elemente) zu platzieren.
 /// - Wenn [onTap] gesetzt ist: leichter Scale-Effekt + HapticFeedback.
 /// - Wenn [onTap] null ist: nur Surface, innere Widgets können eigene Gesten haben.
+/// A reusable pill-shaped button with a glass aesthetic.
+///
+/// Supports both simple icons and complex [child] layouts with optional [onTap] feedback.
 class GlassPillButton extends StatefulWidget {
+  /// The content to display inside the pill.
   final Widget child;
+
+  /// Optional callback for tap events; if null, the button is non-interactive.
   final VoidCallback? onTap;
+
+  /// Internal padding for the [child].
   final EdgeInsetsGeometry padding;
+
+  /// Fixed height of the pill.
   final double height;
+
+  /// Corner radius for the pill shape.
   final double borderRadius;
 
   const GlassPillButton({

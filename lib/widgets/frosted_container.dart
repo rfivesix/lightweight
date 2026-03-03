@@ -2,11 +2,23 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
+/// A container widget that applies a frosted glass (blur) effect to its background.
+///
+/// Typical use case is for overlays or premium-feeling card backgrounds.
 class FrostedContainer extends StatelessWidget {
+  /// The [child] widget to display inside the container.
   final Widget child;
+
+  /// External [margin] around the container.
   final EdgeInsetsGeometry margin;
+
+  /// Internal [padding] for the [child].
   final EdgeInsetsGeometry padding;
+
+  /// The corner [radius] of the container.
   final double radius;
+
+  /// The [blurSigma] controlling the intensity of the frost effect.
   final double blurSigma;
 
   const FrostedContainer({

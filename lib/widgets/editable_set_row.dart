@@ -1,10 +1,13 @@
 // lib/widgets/editable_set_row.dart
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/models/set_log.dart';
-import 'package:lightweight/widgets/set_type_chip.dart';
-import 'package:lightweight/generated/app_localizations.dart';
+import '../models/set_log.dart';
+import 'set_type_chip.dart';
+import '../generated/app_localizations.dart';
 
+/// An interactive row for editing a single workout set's weight and repetitions.
+///
+/// Provides text inputs for weight and reps, and a delete action.
 class EditableSetRow extends StatefulWidget {
   const EditableSetRow({
     super.key,
@@ -15,10 +18,19 @@ class EditableSetRow extends StatefulWidget {
     required this.onDelete,
   });
 
+  /// The [setLog] data being edited.
   final SetLog setLog;
+
+  /// The [setIndex] (1-based) used for labeling.
   final int setIndex;
+
+  /// Callback when the weight input changes.
   final ValueChanged<String> onWeightChanged;
+
+  /// Callback when the reps input changes.
   final ValueChanged<String> onRepsChanged;
+
+  /// Callback to request deletion of this set.
   final VoidCallback onDelete;
 
   @override

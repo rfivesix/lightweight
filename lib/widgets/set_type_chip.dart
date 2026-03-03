@@ -2,10 +2,20 @@
 
 import 'package:flutter/material.dart';
 
+/// A visual indicator for a workout set's type (e.g., normal, warmup, failure).
+///
+/// Displays a single-character code ('W', 'F', 'D') or the set index.
 class SetTypeChip extends StatelessWidget {
+  /// The type of set ('normal', 'warmup', 'failure', 'dropset').
   final String setType;
+
+  /// The 1-based index for 'normal' sets.
   final int? setIndex;
+
+  /// Whether the set is marked as completed; disables interaction if true.
   final bool isCompleted;
+
+  /// Optional callback to cycle through set types.
   final VoidCallback? onTap;
 
   const SetTypeChip({

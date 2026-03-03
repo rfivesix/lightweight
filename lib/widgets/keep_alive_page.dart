@@ -1,7 +1,13 @@
 import 'package:flutter/widgets.dart';
 
+/// A wrapper widget that ensures its [child] is preserved in memory.
+///
+/// Useful for [PageView] or [TabBarView] children to prevent data loss on scroll.
 class KeepAlivePage extends StatefulWidget {
+  /// The widget content to keep alive.
   final Widget child;
+
+  /// Optional key for storage persistence.
   final Key? storageKey; // optional, falls du’s später brauchen willst
 
   const KeepAlivePage({super.key, required this.child, this.storageKey});

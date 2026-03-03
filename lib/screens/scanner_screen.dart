@@ -1,10 +1,13 @@
 // lib/screens/scanner_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/generated/app_localizations.dart';
+import '../generated/app_localizations.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
 
+/// A screen that utilizes the device camera to scan barcodes for product identification.
+///
+/// Uses the `mobile_scanner` package to detect barcodes and returns the first
+/// successfully scanned code to the calling screen.
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
 
@@ -29,44 +32,48 @@ class _ScannerScreenState extends State<ScannerScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final size = MediaQuery.of(context).size;
-    final double topPadding =
-        MediaQuery.of(context).padding.top + kToolbarHeight;
-
     final scanWindow = Rect.fromCenter(
-      center: size.center(const Offset(0, kToolbarHeight / 2)),
+      center: size.center(Offset.zero),
       width: 250,
       height: 250,
     );
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
       backgroundColor: Colors.black,
-      appBar: GlobalAppBar(
-        title: l10n.scann_barcode_capslock,
-      ),
-      body: Padding(
-        padding: EdgeInsets.only(top: topPadding),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            MobileScanner(
-              controller: _controller,
-              scanWindow: scanWindow,
-              onDetect: (capture) {
-                if (!_isDone) {
-                  final String? code = capture.barcodes.first.rawValue;
-                  if (code != null) {
-                    setState(() {
-                      _isDone = true;
-                    });
-                    Navigator.of(context).pop(code);
-                  }
-                }
-              },
-            ),
-            CustomPaint(painter: ScannerOverlay(scanWindow: scanWindow)),
-          ],
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          l10n.scann_barcode_capslock,
+          style: Theme.of(context)
+              .textTheme
+              .titleLarge
+              ?.copyWith(fontWeight: FontWeight.w900),
         ),
+      ),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          MobileScanner(
+            controller: _controller,
+            scanWindow: scanWindow,
+            onDetect: (capture) {
+              if (!_isDone) {
+                final String? code = capture.barcodes.first.rawValue;
+                if (code != null) {
+                  setState(() {
+                    _isDone = true;
+                  });
+                  Navigator.of(context).pop(code);
+                }
+              }
+            },
+          ),
+          CustomPaint(painter: ScannerOverlay(scanWindow: scanWindow)),
+        ],
       ),
     );
   }

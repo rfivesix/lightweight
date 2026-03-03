@@ -1,15 +1,27 @@
 // lib/widgets/todays_workout_summary_card.dart
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/util/time_util.dart';
-import 'package:lightweight/widgets/summary_card.dart';
+import '../generated/app_localizations.dart';
+import '../util/time_util.dart';
+import 'summary_card.dart';
 
+/// A summary card specifically for displaying today's workout activity.
+///
+/// Shows total [duration], [volume], [sets], and the number of performed workouts.
 class TodaysWorkoutSummaryCard extends StatelessWidget {
+  /// Combined duration of all workouts today.
   final Duration duration;
+
+  /// Total weight lifted across all workouts today.
   final double volume;
+
+  /// Total number of sets completed.
   final int sets;
+
+  /// Total number of workout sessions logged today.
   final int workoutCount;
+
+  /// Callback when the card is tapped.
   final VoidCallback onTap;
 
   const TodaysWorkoutSummaryCard({

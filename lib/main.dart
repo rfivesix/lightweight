@@ -1,35 +1,38 @@
 // lib/main.dart
-// VOLLSTÄNDIGER CODE (MIT PREDICTIVE BACK)
+// VOLLSTÄNDIGER CODE (MIT APP INITIALIZER SCREEN)
 
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lightweight/data/backup_manager.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/screens/main_screen.dart';
-import 'package:lightweight/services/profile_service.dart';
-import 'package:lightweight/services/workout_session_manager.dart';
+import 'data/database_helper.dart';
+import 'generated/app_localizations.dart';
+// FIX: Importiere den ausgelagerten Initializer-Screen
+import 'screens/app_initializer_screen.dart';
+import 'services/profile_service.dart';
+import 'services/workout_session_manager.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:lightweight/screens/onboarding_screen.dart';
-import 'package:lightweight/services/theme_service.dart';
+import 'services/theme_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Führe das Auto-Backup im Hintergrund aus, ohne darauf zu warten.
-  // Fehler werden innerhalb des Managers abgefangen und geloggt.
-  BackupManager().runAutoBackupIfDue();
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
+  // Das muss passieren, bevor irgendwas anderes lädt.
+  await DatabaseHelper.instance.ensureStandardSupplements();
 
   // 1. Erstelle die Manager-Instanz
   final workoutSessionManager = WorkoutSessionManager();
 
   // 2. Rufe die neue, gekapselte Wiederherstellungsmethode auf
-  // Annahme: Diese Methode existiert jetzt in deinem WorkoutSessionManager
   await workoutSessionManager.tryRestoreSession();
 
   final themeService = ThemeService(); // Create an instance
-  // 3. Starte die App mit der (möglicherweise wiederhergestellten) Instanz
+
+  // 3. Starte die App
   runApp(
     MultiProvider(
       providers: [
@@ -48,14 +51,16 @@ void main() async {
       child: const MyApp(),
     ),
   );
+
+  // FIX: Keine Hintergrund-Updates mehr hier! Das übernimmt jetzt der AppInitializerScreen.
 }
 
-Future<bool> _hasSeenOnboarding() async {
-  final prefs = await SharedPreferences.getInstance();
-  return prefs.getBool('hasSeenOnboarding') == true;
-}
-
+/// The entry point of the Hypertrack application.
+///
+/// This application is a fitness tracker that allows users to log workouts,
+/// manage supplements, and track body measurements.
 class MyApp extends StatelessWidget {
+  /// Creates the root widget for the application.
   const MyApp({super.key});
 
   @override
@@ -66,8 +71,6 @@ class MyApp extends StatelessWidget {
 
     const cardDark = Color(0xFF171717);
     const cardLight = Color(0xFFF3F3F3);
-
-    // HINWEIS: Provider.of<ThemeService>(context) wurde von hier entfernt.
 
     return DynamicColorBuilder(
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
@@ -105,7 +108,7 @@ class MyApp extends StatelessWidget {
           scaffoldBackgroundColor: Colors.white,
           canvasColor: Colors.white,
           cardColor: cardLight,
-          // NEU / ANGEPASST:
+
           splashFactory: NoSplash.splashFactory,
           splashColor: Colors.transparent,
           highlightColor: Colors.transparent,
@@ -113,7 +116,6 @@ class MyApp extends StatelessWidget {
 
           pageTransitionsTheme: const PageTransitionsTheme(
             builders: {
-              // ÄNDERUNG: Predictive Back für Android aktiviert
               TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
               TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
               TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
@@ -166,11 +168,11 @@ class MyApp extends StatelessWidget {
           ),
 
           textTheme: ThemeData.light().textTheme.apply(
-                fontFamily: 'Inter', // Das ist weiterhin korrekt
+                fontFamily: 'Inter',
                 bodyColor: Colors.black87,
                 displayColor: Colors.black87,
               ),
-          // Stellen sicher, dass Akzent sichtbar "lebt"
+
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
               backgroundColor: lightScheme.primary,
@@ -184,7 +186,6 @@ class MyApp extends StatelessWidget {
             backgroundColor: lightScheme.primary,
             foregroundColor: lightScheme.onPrimary,
           ),
-          //toggleableActiveColor: lightScheme.primary,
           progressIndicatorTheme: ProgressIndicatorThemeData(
             color: lightScheme.primary,
           ),
@@ -223,7 +224,7 @@ class MyApp extends StatelessWidget {
           scaffoldBackgroundColor: Colors.black,
           canvasColor: Colors.black,
           cardColor: cardDark,
-          // NEU / ANGEPASST:
+
           splashFactory: NoSplash.splashFactory,
           splashColor: Colors.transparent,
           highlightColor: Colors.transparent,
@@ -231,7 +232,6 @@ class MyApp extends StatelessWidget {
 
           pageTransitionsTheme: const PageTransitionsTheme(
             builders: {
-              // ÄNDERUNG: Predictive Back für Android aktiviert
               TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
               TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
               TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
@@ -284,7 +284,7 @@ class MyApp extends StatelessWidget {
           ),
 
           textTheme: ThemeData.dark().textTheme.apply(
-                fontFamily: 'Inter', // Das ist weiterhin korrekt
+                fontFamily: 'Inter',
                 bodyColor: Colors.white,
                 displayColor: Colors.white,
               ),
@@ -301,7 +301,6 @@ class MyApp extends StatelessWidget {
             backgroundColor: darkScheme.primary,
             foregroundColor: darkScheme.onPrimary,
           ),
-          //toggleableActiveColor: darkScheme.primary,
           progressIndicatorTheme: ProgressIndicatorThemeData(
             color: darkScheme.primary,
           ),
@@ -331,7 +330,7 @@ class MyApp extends StatelessWidget {
             ),
           ),
         );
-        // KORREKTUR HIER: Wir verwenden einen Consumer, um an den ThemeService zu kommen.
+
         return Consumer<ThemeService>(
           builder: (context, themeService, child) {
             return MaterialApp(
@@ -341,28 +340,15 @@ class MyApp extends StatelessWidget {
                   AppLocalizations.of(context)!.appTitle,
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
-              title: "LightWeight",
+              title: "Hypertrack",
               theme: baseLightTheme,
               darkTheme: baseDarkTheme,
-              themeMode:
-                  themeService.themeMode, // Jetzt funktioniert der Zugriff
-              home: child, // Das home-Widget wird weitergereicht
+              themeMode: themeService.themeMode,
+              // FIX: Hier wird nun der ausgelagerte Screen verwendet
+              home: const AppInitializerScreen(),
             );
           },
-          // Der FutureBuilder wird zum 'child' des Consumers, um nicht bei jeder
-          // Theme-Änderung neu aufgebaut zu werden.
-          child: FutureBuilder<bool>(
-            future: _hasSeenOnboarding(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
-                );
-              }
-              final seen = snapshot.data ?? false;
-              return seen ? const MainScreen() : const OnboardingScreen();
-            },
-          ),
+          // FIX: Das 'child' hier war überflüssig, da wir 'home' nutzen.
         );
       },
     );

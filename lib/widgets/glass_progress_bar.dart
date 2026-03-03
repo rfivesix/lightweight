@@ -1,14 +1,30 @@
 // lib/widgets/glass_progress_bar.dart
 import 'package:flutter/material.dart';
-import 'package:lightweight/theme/color_constants.dart';
+import '../theme/color_constants.dart';
 
+/// A progress bar widget with a glass background and a solid fill color.
+///
+/// Displays a [label], [unit], current [value], and optional [target].
 class GlassProgressBar extends StatelessWidget {
+  /// The descriptive label for the progress (e.g., 'Calories').
   final String label;
+
+  /// The unit of measurement (e.g., 'kcal').
   final String unit;
+
+  /// The current value to display.
   final double value;
+
+  /// The goal or target value; used to calculate progress percentage.
   final double target;
+
+  /// The color of the progress fill.
   final Color color;
+
+  /// The fixed height of the progress bar.
   final double height;
+
+  /// The corner radius for the bar.
   final double borderRadius;
 
   const GlassProgressBar({

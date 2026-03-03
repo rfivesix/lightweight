@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'meal_editor_screen.dart';
 
+/// A screen that displays a list of the user's saved meals.
+///
+/// Provides access to create new meals or edit existing ones.
 class MealsScreen extends StatelessWidget {
   const MealsScreen({super.key});
 

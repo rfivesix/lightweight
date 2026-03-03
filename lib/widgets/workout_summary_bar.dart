@@ -1,9 +1,13 @@
 // lib/widgets/workout_summary_bar.dart
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/util/time_util.dart'; // Wir erstellen diese Hilfsdatei gleich
+import '../generated/app_localizations.dart';
+import '../util/time_util.dart'; // Wir erstellen diese Hilfsdatei gleich
 
+/// A horizontal bar displaying key workout metrics.
+///
+/// Shows [duration], total [volume], and total [sets]. Can optionally
+/// display a [progress] bar.
 class WorkoutSummaryBar extends StatelessWidget {
   const WorkoutSummaryBar({
     super.key,
@@ -13,9 +17,16 @@ class WorkoutSummaryBar extends StatelessWidget {
     this.progress, // NULL => Spacer-Modus
   });
 
+  /// The elapsed or total time.
   final Duration? duration;
+
+  /// Total weight lifted.
   final double volume;
+
+  /// Total number of sets.
   final int sets;
+
+  /// Optional progress value (0..1) for the progress bar.
   final double? progress; // 0..1 oder null
 
   @override

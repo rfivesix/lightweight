@@ -1,10 +1,14 @@
 // lib/widgets/wger_attribution_widget.dart
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/generated/app_localizations.dart';
+import '../generated/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+/// A small widget for displaying source attribution for exercise data from Wger.
+///
+/// Provides a clickable link to their website.
 class WgerAttributionWidget extends StatelessWidget {
+  /// Optional style for the attribution text.
   final TextStyle? textStyle;
 
   const WgerAttributionWidget({super.key, this.textStyle});

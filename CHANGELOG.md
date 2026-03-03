@@ -3,6 +3,131 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+## [0.5.0] - 2026-03-03
+
+### 🚀 Major Release: The "Foundation Overhaul"
+
+This release represents a complete modernization of Hypertrack's core architecture. The database has been rebuilt from the ground up, the onboarding experience has been rewritten, and the app has been fully rebranded. After extensive alpha testing, v0.5.0 is the new stable baseline.
+
+### ✨ New Features
+
+- **Complete Onboarding Wizard**: Replaced the old single-page tutorial with a multi-step setup wizard covering Name/Birthday, Height/Gender, Weight, Calories, Macros, and Water goals — all with precise text input fields.
+- **Cardio Exercise Support**: The app now fully supports cardio exercises.
+  - Dynamic input fields switch from "Kg / Reps" to "Distance (km) / Time (min)" based on exercise category.
+  - Cardio routines default to 1 set and summarize as "Total Distance | Total Duration".
+- **RIR (Reps In Reserve) Tracking**: Plan and log training intensity with RIR fields in routines, live workouts, and workout history.
+- **Session Restoration**: Active workouts now survive app restarts — all logged sets, exercise order, and in-progress values are automatically recovered.
+- **Profile 2.0**: Redesigned Profile Screen displaying Age, Gender, and Height alongside the profile picture, with inline editing.
+- **Auto-Caffeine Logging**: Caffeinated drinks automatically create corresponding Supplement Log entries.
+- **App Initializer Screen**: Database updates now show a clear progress screen during startup instead of running silently in the background.
+- **Portrait Lock**: The app orientation is now locked to portrait for a consistent experience.
+
+### 💾 Database & Architecture
+
+- **Schema v6 Migration**: Major database overhaul adding `height`, `gender`, `birthday` to Profiles, `carbsPer100ml` to FluidLogs, and `rir`/`pauseSeconds` columns for workout tracking.
+- **Single Source of Truth**: User goals (Calories, Macros, Water) migrated from `SharedPreferences` to the SQLite database (`app_settings` table). Changing goals now updates the Dashboard instantly without restart.
+
+### 🎨 UI/UX Improvements
+
+- **Edit Routine Overhaul**: Completely refactored to match the Live Workout design with `WorkoutCard`, `SetTypeChip`, and consistent column layout.
+- **AppBar Consistency**: Fixed back button visibility in light mode across Live Workout and Scanner screens.
+- **Scanner Screen**: Cleaned up AppBar styling and simplified the camera layout.
+
+### 🔧 Branding & Project
+
+- **Full Rebranding**: Completed "Hypertrack" branding across all project names, package/bundle identifiers, class names, localization files, and documentation.
+- **Relative Paths**: Converted all internal file paths to relative paths for better portability.
+- **Documentation**: Added comprehensive project documentation (architecture, data models, UI components).
+
+### 🐛 Bug Fixes
+
+- Fixed workout exercise reordering not being persisted when saving.
+- Fixed base food items being buried in search results — search now prioritizes local 'User' and 'Base' items.
+- Fixed trailing spaces in search input causing zero results.
+- Fixed incomplete (unchecked) "ghost sets" not being cleaned up when finishing a workout.
+- Fixed crash in workout summary from incorrect type casting (`num` vs `int`).
+- Fixed backup import crashes caused by `int` vs `string` ID conflicts.
+- Fixed Supplements being duplicated upon backup import.
+- Fixed sugary drinks showing 0g Carbs in fluid tracking.
+- Fixed inconsistent UI styling between routine editing and live tracking.
+- Improved pause timer logic to persist changes immediately.
+
+## [0.5.0-alpha.5] - 2026-03-03
+
+### Changed
+- **Branding**: Completed the full rebranding to **Hypertrack**. Updated all project names, package/bundle identifiers, class names, and file references across the entire codebase.
+- **Project Structure**: Converted all internal file paths to **relative paths** to ensure consistency and easier portability of the project.
+
+## [0.5.0-alpha.3] - 2025-12-29
+
+### Added
+- **Cardio Support**: Introduced specialized tracking for cardio exercises.
+  - **Dynamic Input Fields**: Based on exercise category ('Cardio'), the input fields in *Live Workout* and *Routine Editor* automatically switch from "Kg / Reps" to "**Distance (km) / Time (min)**".
+  - **Routine Logic**: Cardio exercises in routines now default to 1 set (instead of 3) and initialize with empty fields.
+  - **Summary & History**: Cardio results are now summarized as "Total Distance | Total Duration" instead of volume.
+- **Detailed Database Initialization**:
+  - Replaced background database updates with a dedicated **App Initializer Screen**.
+  - This screen blocks the UI during startup, displaying a progress bar and detailed status ("Updating base foods: 1500/9000..."), preventing app lag and missing data issues.
+
+### Fixed
+- **Workout Reordering**: Fixed a critical bug where reordering exercises during a live workout was not persisted upon saving. The correct order is now saved to the database history.
+- **Search Reliability**:
+  - Fixed an issue where base food items (e.g., "Apple") were hidden in search results due to the sheer volume of Open Food Facts entries. Search now prioritizes local 'User' and 'Base' items.
+  - Fixed a query bug where trailing spaces in search input (often added by keyboards) caused zero results. Input is now trimmed automatically.
+- **Ghost Sets**: Finishing a workout now automatically cleans up incomplete (unchecked) sets from the database.
+- **Type Safety**: Resolved a crash in the workout summary screen caused by incorrect type casting (`num` vs `int`) for duration calculations.
+
+## [0.5.0-alpha.2] - 2025-12-28
+
+### Added
+- **RIR (Reps In Reserve) Support**:
+  - Added `rir` column to `SetLogs` database table for tracking actual exertion.
+  - Added `target_rir` column to `RoutineSetTemplates` database table for planning intensity.
+  - Integrated RIR input fields into `LiveWorkoutScreen`.
+  - Integrated RIR display and editing into `WorkoutLogDetailScreen`.
+  - Integrated Target RIR configuration into `EditRoutineScreen`.
+- **Session Restoration**: Added `tryRestoreSession()` to `WorkoutSessionManager` to recover ongoing workouts after app restarts.
+
+### Changed
+- **UI Overhaul (Edit Routine)**: Refactored `EditRoutineScreen` to align with the design of `LiveWorkoutScreen`.
+  - Now uses `WorkoutCard` and `SetTypeChip` widgets.
+  - Consistent column layout (Set, Kg, Reps, RIR).
+- **Database**: Reset schema version to 1 to accommodate new RIR columns cleanly.
+- **Pause Timer**: Improved logic to persist pause time changes immediately to the routine definition.
+
+### Fixed
+- Fixed inconsistent UI styling between routine editing and live tracking.
+
+## [0.5.0-alpha.1] - 2025-12-27
+
+### 🚀 Major Features & Onboarding
+- **New Onboarding Wizard:** Completely rewrote the initial setup process.
+    - Replaced single-page tutorial with a multi-step wizard.
+    - Added dedicated pages for: Name/Birthday, Height/Gender, Weight, Calories, Macros (Protein/Carbs/Fat), and Water.
+    - Replaced sliders with precise text input fields.
+- **Profile 2.0:** Redesigned the Profile Screen.
+    - Now displays calculated Age, Gender, and Height alongside the profile picture.
+    - Added logic to edit these stats directly.
+- **Auto-Caffeine Logging:** Adding a drink with caffeine (e.g., Coffee/Energy Drink) now automatically creates a corresponding entry in the Supplement Logs.
+
+### 💾 Database & Architecture (Drift v6)
+- **Schema Migration (v1 -> v6):** Massive database update.
+    - Added `height` (int) and `gender` (string) to `Profiles`.
+    - Added `birthday` (datetime) to `Profiles`.
+    - Added `carbsPer100ml` to `FluidLogs`.
+    - Added `rir` (Reps in Reserve) and `pauseSeconds` columns (backend preparation).
+- **Single Source of Truth:**
+    - Migrated user goals (Calories, Macros, Water) from `SharedPreferences` to the local SQLite database (`app_settings` table).
+    - Enabled "Live Updates": Changing goals in Settings or Onboarding now updates the Dashboard immediately without a restart.
+
+### 🐛 Fixes & Improvements
+- **Backup System:**
+    - Fixed critical bug where importing backups caused crashes due to `int` vs `string` ID conflicts.
+    - Fixed issue where Supplements were duplicated upon import.
+    - Implemented robust `clearAllUserData` to ensure a clean state before importing.
+- **Fluid Tracking:** Fixed logic where sugary drinks showed 0g Carbs. Sugar content is now automatically treated as Carbs for the daily summary.
+- **Stability:** Added `ensureStandardSupplements()` on app start to prevent crashes if "Caffeine" is missing from the database.
 ## [0.4.0] - 2025-12-03
 
 ### 🚀 Major Release: The "Glass & Fluid" Update
@@ -143,7 +268,7 @@ This release marks a significant milestone, introducing a complete UI overhaul, 
 ### Fixed
 * **Backup:** tried to fix the backup
 ### Changed
-* **App Name:** Changed the name from "Lightweight" to "Hypertrack".
+* **App Name:** Changed the name from "Hypertrack" to "Hypertrack".
 
 
 ## [0.4.0-beta.1] - 2025-10-19
@@ -168,8 +293,8 @@ This release marks a significant milestone, introducing a complete UI overhaul, 
 
 ### Changed
 
-*   **Major Branding Change: Renamed to "Lightweight"**
-    *   The application has been officially renamed from **"Vita" to "Lightweight"** across all screens, assets, bundle identifiers, and localization files.
+*   **Major Branding Change: Renamed to "Hypertrack"**
+    *   The application has been officially renamed from **"Hypertrack" to "Hypertrack"** across all screens, assets, bundle identifiers, and localization files.
 *   **UX Improvement: Modernized Edit Dialogs**
     *   The "Edit Food Entry" and "Edit Fluid Entry" flows in the Diary screen were upgraded from the old `AlertDialog` to the new **Glass Bottom Menu (Bottom Sheet)**, improving mobile UX.
 *   **UI Consistency**
@@ -184,7 +309,7 @@ This release marks a significant milestone, introducing a complete UI overhaul, 
 *   **New Hub UI: Nutrition Hub Overhaul**
     *   The **Nutrition Hub** (`/nutrition-hub` - Issue #53) has been completely redesigned with an improved UI and UX, including new statistical cards and analysis gateways.
 *   **Database Asset Versioning**
-    *   Implemented a robust versioning system for all internal asset databases (`vita_base_foods.db`, `vita_prep_de.db`, `vita_training.db`). This ensures that core app data is updated when the app version changes, preventing outdated database contents.
+    *   Implemented a robust versioning system for all internal asset databases (`hypertrack_base_foods.db`, `hypertrack_prep_de.db`, `hypertrack_training.db`). This ensures that core app data is updated when the app version changes, preventing outdated database contents.
 *   **Workout History Details**
     *   The Workout History screen now displays the **Total Volume** (in kg) and **Total Sets** for each logged workout, providing more context at a glance.
 *   **Automatic Backup Check**
@@ -255,7 +380,7 @@ This release marks a significant milestone, introducing a complete UI overhaul, 
 *   **Data Integrity on Deletion:** Fixed a critical bug where deleting fluid or food entries did not remove associated supplement logs (e.g., for caffeine). The deletion logic has been revised to ensure data consistency.
 *   **Database Structure:** The database has been updated to version 19 to enable linking between food, fluid, and supplement entries.
 *   **UI Improvements in Diary:** Fluids are now displayed in their own section (`Water & Drinks`) on the diary page for better clarity.
-*   **Data Backup Fixes:** The backup model (`LightweightBackup`) has been updated to correctly handle the new `FluidEntry` data.
+*   **Data Backup Fixes:** The backup model (`HypertrackBackup`) has been updated to correctly handle the new `FluidEntry` data.
 
 ## Release Notes - 0.4.0-alpha.9+4009
 
@@ -379,7 +504,7 @@ This is a hotfix release following alpha.4, focused only on database migration s
 ## 0.4.0-alpha.4 — 2025-10-02
 ### Added
 - DEV-only editor in Food Detail Screen: allows editing base food entries directly on-device
-- Export function for `vita_base_foods.db` via share (e.g., AirDrop, Mail, Drive)
+- Export function for `hypertrack_base_foods.db` via share (e.g., AirDrop, Mail, Drive)
 - Search & category accordion in "Grundnahrungsmittel" tab with emoji headers
 
 ### Changed
@@ -431,7 +556,7 @@ This release focuses on massive stability improvements, UI consistency, and crit
 - **Optimized App Startup:** The workout recovery logic was moved from `main.dart` into the `WorkoutSessionManager` to streamline the app's initialization process.
 ## [0.1.0] - 2025-09-23
 
-This is the first feature-complete, stable pre-release of Lightweight. It establishes a robust, offline-first foundation for tracking nutrition, workouts, and body measurements.
+This is the first feature-complete, stable pre-release of Hypertrack. It establishes a robust, offline-first foundation for tracking nutrition, workouts, and body measurements.
 
 ### ✨ Added
 - **Consistency Calendar:** A visual calendar on the Statistics tab now displays days with logged workouts and nutrition entries to motivate users (#22).

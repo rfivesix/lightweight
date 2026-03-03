@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/exercise.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/summary_card.dart';
-import 'package:lightweight/widgets/wger_attribution_widget.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
+import '../generated/app_localizations.dart';
+import '../models/exercise.dart';
+import '../util/design_constants.dart';
+import '../widgets/summary_card.dart';
+import '../widgets/wger_attribution_widget.dart';
+import '../widgets/global_app_bar.dart';
 
+/// A screen displaying detailed information about a specific [Exercise].
+///
+/// Shows descriptions, involved muscles, and instructional images if available.
 class ExerciseDetailScreen extends StatelessWidget {
+  /// The [Exercise] whose details are to be displayed.
   final Exercise exercise;
   const ExerciseDetailScreen({super.key, required this.exercise});
 

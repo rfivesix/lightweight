@@ -1,19 +1,24 @@
 // lib/services/workout_session_manager.dart
-// VOLLSTÄNDIGER CODE (FINAL)
 
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:lightweight/models/exercise.dart';
+import '../models/exercise.dart';
 import 'package:vibration/vibration.dart';
-import 'package:lightweight/models/routine_exercise.dart';
-import 'package:lightweight/models/set_log.dart';
-import 'package:lightweight/models/workout_log.dart';
-import 'package:lightweight/data/workout_database_helper.dart';
-import 'package:lightweight/models/set_template.dart';
+import '../models/routine_exercise.dart';
+import '../models/set_log.dart';
+import '../models/workout_log.dart';
+import '../data/workout_database_helper.dart';
+import '../models/set_template.dart';
 
+/// Manager responsible for the lifecycle and state of an active workout session.
+///
+/// Handles session timing, set tracking, rest periods, and data persistence
+/// between the UI and the database.
 class WorkoutSessionManager extends ChangeNotifier {
   static final WorkoutSessionManager _instance =
       WorkoutSessionManager._internal();
+
+  /// Returns the singleton instance of [WorkoutSessionManager].
   factory WorkoutSessionManager() => _instance;
   WorkoutSessionManager._internal();
 
@@ -21,6 +26,7 @@ class WorkoutSessionManager extends ChangeNotifier {
   List<RoutineExercise> _exercises = [];
   final Map<int, SetLog> _setLogs = {};
 
+  // Speichert die Pausenzeit pro RoutineExercise-ID
   final Map<int, int?> pauseTimes = {};
 
   Timer? _restTimer;
@@ -30,349 +36,489 @@ class WorkoutSessionManager extends ChangeNotifier {
 
   Timer? _workoutDurationTimer;
   Duration _elapsedDuration = Duration.zero;
+
+  /// The total weight lifted across all completed sets in the current session.
   double _totalVolume = 0.0;
+
+  /// The total number of sets recorded in the current session.
   int _totalSets = 0;
 
+  /// Returns the total volume lifted.
   double get totalVolume => _totalVolume;
+
+  /// Returns the total number of sets.
   int get totalSets => _totalSets;
+
+  /// The active [WorkoutLog] being recorded.
   WorkoutLog? get workoutLog => _workoutLog;
+
+  /// The list of [RoutineExercise]s included in the current workout.
   List<RoutineExercise> get exercises => _exercises;
+
+  /// The number of seconds remaining in the current rest period.
   int get remainingRestSeconds => _remainingRestSeconds;
-  bool get isActive => _workoutLog != null && _workoutLog!.endTime == null;
+
+  /// Whether the "Rest Done" notification banner should be displayed.
   bool get showRestDone => _showRestDone;
+
+  /// The duration since the start of the workout.
   Duration get elapsedDuration => _elapsedDuration;
+
+  /// A map of [SetLog]s indexed by their corresponding [SetTemplate] ID.
   Map<int, SetLog> get setLogs => _setLogs;
 
-  // Ersetze diese Methode in lib/services/workout_session_manager.dart
+  /// Whether a workout session is currently in progress.
+  bool get isActive => _workoutLog != null && _workoutLog!.endTime == null;
 
-  // Ersetze diese Methode in lib/services/workout_session_manager.dart
+  // ===========================================================================
+  // INIT & RESTORE
+  // ===========================================================================
 
-  Future<void> restoreWorkoutSession(WorkoutLog logToRestore) async {
-    final db = WorkoutDatabaseHelper.instance;
-    _workoutLog = logToRestore;
-    _exercises = [];
-    pauseTimes.clear();
+  /// Starts a new workout session with the given [log] and [routineExercises].
+  ///
+  /// Initializes the session state, creates initial [SetLog]s, and starts the timer.
+  Future<void> startWorkout(
+      WorkoutLog log, List<RoutineExercise> routineExercises) async {
+    _workoutLog = log;
+    _exercises = List.from(routineExercises);
     _setLogs.clear();
+    pauseTimes.clear();
 
-    // 1. Hole alle einzigartigen Übungen, sortiert nach ihrem ersten Auftreten (log_order)
-    final sortedSets = logToRestore.sets
-      ..sort((a, b) => (a.log_order ?? 999).compareTo(b.log_order ?? 999));
-    final orderedUniqueExerciseNames =
-        sortedSets.map((s) => s.exerciseName).toSet().toList();
-
-    // 2. Baue die _exercises-Liste in der korrekten Reihenfolge auf
-    for (final name in orderedUniqueExerciseNames) {
-      final exerciseDetail = await db.getExerciseByName(name);
-      if (exerciseDetail != null) {
-        final setsForThisExercise =
-            sortedSets.where((s) => s.exerciseName == name).toList();
-
-        final routineExercise = RoutineExercise(
-          id: DateTime.now().millisecondsSinceEpoch + _exercises.length,
-          exercise: exerciseDetail,
-          setTemplates: setsForThisExercise
-              .map((s) => SetTemplate(id: s.id!, setType: s.setType))
-              .toList(),
-        );
-        _exercises.add(routineExercise);
-
-        // Fülle die _setLogs Map und die Pausenzeiten
-        for (final setLog in setsForThisExercise) {
-          _setLogs[setLog.id!] = setLog;
-        }
-        if (setsForThisExercise.isNotEmpty) {
-          pauseTimes[routineExercise.id!] =
-              setsForThisExercise.first.restTimeSeconds;
-        }
+    // Pause-Zeiten initialisieren
+    for (var re in _exercises) {
+      if (re.id != null) {
+        pauseTimes[re.id!] = re.pauseSeconds;
       }
     }
 
-    _recalculateStats();
+    _createInitialSetLogs();
     _startWorkoutTimer();
     notifyListeners();
   }
 
-  Future<void> startWorkout(
-    WorkoutLog log,
-    List<RoutineExercise> routineExercises,
-  ) async {
-    _workoutLog = log;
-    _exercises = routineExercises;
-    _setLogs.clear();
-    pauseTimes.clear();
-
+  /// Versucht, ein laufendes Workout aus der Datenbank wiederherzustellen.
+  /// Wird in main.dart aufgerufen.
+  /// Attempts to restore an ongoing workout session from the database.
+  ///
+  /// This should be called during application initialization to resume an interrupted workout.
+  Future<void> tryRestoreSession() async {
     final db = WorkoutDatabaseHelper.instance;
+    final ongoingWorkout = await db.getOngoingWorkout();
 
-    for (var re in routineExercises) {
-      pauseTimes[re.id!] = re.pauseSeconds;
-      final exerciseIndex = routineExercises.indexOf(re);
+    if (ongoingWorkout != null) {
+      // ignore: avoid_print
+      print(
+          "Laufendes Workout gefunden (ID: ${ongoingWorkout.id}). Stelle Session wieder her...");
+      await restoreWorkoutSession(ongoingWorkout);
+    }
+  }
 
-      for (final template in re.setTemplates) {
-        final placeholder = SetLog(
+  void _createInitialSetLogs() async {
+    final db = WorkoutDatabaseHelper.instance;
+    _totalVolume = 0;
+    _totalSets = 0;
+
+    for (var re in _exercises) {
+      for (var template in re.setTemplates) {
+        if (template.id == null) continue;
+
+        final newSetLog = SetLog(
           workoutLogId: _workoutLog!.id!,
           exerciseName: re.exercise.nameEn,
           setType: template.setType,
+          weightKg: null,
+          reps: null,
+          restTimeSeconds: re.pauseSeconds,
           isCompleted: false,
-          log_order: exerciseIndex,
+          rir: null,
         );
-        final newId = await db.insertSetLog(placeholder);
-        _setLogs[template.id!] = placeholder.copyWith(id: newId);
+
+        final id = await db.insertSetLog(newSetLog);
+
+        _setLogs[template.id!] = newSetLog.copyWith(id: id);
+        _totalSets++;
       }
     }
-
-    _recalculateStats();
-    _startWorkoutTimer();
     notifyListeners();
   }
 
-  // Ersetze diese Methode in lib/services/workout_session_manager.dart
-
-  Future<void> updateSet(
-    int templateId, {
-    double? weight,
-    int? reps,
-    String? setType,
-    bool? isCompleted,
-  }) async {
-    if (_workoutLog == null || !_setLogs.containsKey(templateId)) return;
-
-    SetLog currentLog = _setLogs[templateId]!;
-    final exerciseIndex = _exercises.indexWhere(
-      (e) => e.setTemplates.any((t) => t.id == templateId),
-    );
-
-    // Hole die aktuelle Pausenzeit für diese Übung
-    int? currentRestTime;
-    if (exerciseIndex != -1) {
-      currentRestTime = pauseTimes[_exercises[exerciseIndex].id!];
-    }
-
-    _setLogs[templateId] = currentLog.copyWith(
-      weightKg: weight,
-      reps: reps,
-      setType: setType,
-      isCompleted: isCompleted,
-      log_order: exerciseIndex,
-      restTimeSeconds:
-          currentRestTime, // KORREKTUR: Speichere die Pause immer mit
-    );
-
+  Future<void> restoreWorkoutSession(WorkoutLog log) async {
     final db = WorkoutDatabaseHelper.instance;
-    final logToSave = _setLogs[templateId]!;
+    _workoutLog = log;
 
-    if (logToSave.id != null && logToSave.id! > 0) {
-      await db.insertSetLog(logToSave);
-    } else {
-      final newId = await db.insertSetLog(logToSave);
-      _setLogs[templateId] = logToSave.copyWith(id: newId);
+    final savedSets = await db.getSetLogsForWorkout(log.id!);
+
+    if (log.routineName != null) {
+      final routine = await db.getRoutineByName(log.routineName!);
+      if (routine != null) {
+        _exercises = routine.exercises;
+        for (var re in _exercises) {
+          if (re.id != null) pauseTimes[re.id!] = re.pauseSeconds;
+        }
+      }
     }
 
-    if (isCompleted != null) {
-      _recalculateStats();
-      if (isCompleted) {
-        if (exerciseIndex != -1) {
-          final re = _exercises[exerciseIndex];
-          final restTime = pauseTimes[re.id!];
-          if (restTime != null && restTime > 0) {
-            _startRestTimer(restTime);
+    _setLogs.clear();
+    _totalVolume = 0;
+    _totalSets = 0;
+
+    // Mapping wiederherstellen (Best Effort)
+    var setLogIndex = 0;
+    for (var re in _exercises) {
+      for (var t in re.setTemplates) {
+        if (setLogIndex < savedSets.length) {
+          final s = savedSets[setLogIndex];
+          // Check ob Exercise Name passt (grob)
+          if (s.exerciseName == re.exercise.nameEn ||
+              s.exerciseName == re.exercise.nameDe) {
+            _setLogs[t.id!] = s;
+            _totalVolume += (s.weightKg ?? 0) * (s.reps ?? 0);
+            _totalSets++;
+            setLogIndex++;
           }
         }
       }
     }
+
+    _startWorkoutTimer();
     notifyListeners();
   }
 
-  // Ersetze diese Methode in lib/services/workout_session_manager.dart
+  // ===========================================================================
+  // ACTIONS
+  // ===========================================================================
 
+  /// Updates a specific set identified by [templateId] with new data.
+  ///
+  /// Handles fallback logic for empty inputs when a set is completed and
+  /// triggers the rest timer if a set is newly marked as finished.
+  Future<void> updateSet(
+    int templateId, {
+    double? weight,
+    bool clearWeight = false,
+    int? reps,
+    bool clearReps = false,
+    bool? isCompleted,
+    String? setType,
+    int? rir,
+    bool clearRir = false,
+    // FIX: Cardio Parameter
+    double? distance,
+    bool clearDistance = false,
+    int? duration,
+    bool clearDuration = false,
+  }) async {
+    if (!_setLogs.containsKey(templateId)) return;
+
+    final oldLog = _setLogs[templateId]!;
+    final db = WorkoutDatabaseHelper.instance;
+
+    // Fallback logic for when a set is completed but empty
+    bool newlyCompleted = isCompleted == true && oldLog.isCompleted != true;
+    double? finalWeight = weight;
+    int? finalReps = reps;
+    int? finalRir = rir;
+
+    if (newlyCompleted) {
+      SetTemplate? template;
+      for (var re in _exercises) {
+        for (var t in re.setTemplates) {
+          if (t.id == templateId) {
+            template = t;
+            break;
+          }
+        }
+        if (template != null) break;
+      }
+
+      final currentWeight = weight ?? oldLog.weightKg;
+      final currentReps = reps ?? oldLog.reps;
+
+      if (template != null) {
+        if (currentWeight == null && !clearWeight) {
+          finalWeight = template.targetWeight ?? 0.0;
+        }
+        if (currentReps == null && !clearReps) {
+          if (template.targetReps != null && template.targetReps!.isNotEmpty) {
+            if (template.targetReps!.contains('-')) {
+              final parts = template.targetReps!.split('-');
+              final min = int.tryParse(parts[0]) ?? 0;
+              final max = int.tryParse(parts[1]) ?? 0;
+              finalReps = ((min + max) / 2).round();
+            } else {
+              finalReps = int.tryParse(template.targetReps!) ?? 0;
+            }
+          } else {
+            finalReps = 0;
+          }
+        }
+      }
+    }
+
+    // Volumens-Berechnung update (Nur für Krafttraining relevant)
+    if (finalWeight != null || finalReps != null || clearWeight || clearReps) {
+      final oldVol = (oldLog.weightKg ?? 0) * (oldLog.reps ?? 0);
+      final newWeight =
+          clearWeight ? 0.0 : (finalWeight ?? oldLog.weightKg ?? 0.0);
+      final newReps = clearReps ? 0 : (finalReps ?? oldLog.reps ?? 0);
+      _totalVolume = _totalVolume - oldVol + (newWeight * newReps);
+    }
+
+    final newLog = oldLog.copyWith(
+      weightKg: finalWeight,
+      clearWeight: clearWeight,
+      reps: finalReps,
+      clearReps: clearReps,
+      isCompleted: isCompleted,
+      setType: setType,
+      rir: finalRir,
+      clearRir: clearRir,
+      distanceKm: distance, // <--- NEU
+      clearDistance: clearDistance,
+      durationSeconds: duration, // <--- NEU
+      clearDuration: clearDuration,
+    );
+
+    _setLogs[templateId] = newLog;
+    await db.insertSetLog(newLog); // Update in DB
+
+    // Timer Logik (unverändert)
+    if (isCompleted == true && oldLog.isCompleted != true) {
+      int? pauseTime;
+      for (var re in _exercises) {
+        if (re.setTemplates.any((t) => t.id == templateId)) {
+          pauseTime = pauseTimes[re.id!];
+          break;
+        }
+      }
+      if (pauseTime != null && pauseTime > 0) {
+        _startRestTimer(pauseTime);
+      }
+    }
+
+    notifyListeners();
+  }
+
+  /// Adds a new set to the exercise identified by [routineExerciseId].
+  ///
+  /// Creates a new [SetTemplate] and [SetLog], copying the weight/reps from the last set if available.
+  Future<void> addSetToExercise(int routineExerciseId) async {
+    final db = WorkoutDatabaseHelper.instance;
+
+    final reIndex = _exercises.indexWhere((e) => e.id == routineExerciseId);
+    if (reIndex == -1) return;
+    final re = _exercises[reIndex];
+
+    final tempTemplateId = DateTime.now().millisecondsSinceEpoch;
+
+    final newTemplate = SetTemplate(
+      id: tempTemplateId,
+      setType: 'normal',
+      targetReps: '0',
+      targetWeight: 0.0,
+      targetRir: 2,
+    );
+
+    // KORREKTUR: Manuelle Erstellung statt copyWith
+    final updatedRe = RoutineExercise(
+      id: re.id,
+      exercise: re.exercise,
+      setTemplates: [...re.setTemplates, newTemplate],
+      pauseSeconds: re.pauseSeconds,
+    );
+
+    _exercises[reIndex] = updatedRe;
+
+    final prevSet = _setLogs.values
+        .where((s) => s.exerciseName == re.exercise.nameEn)
+        .lastOrNull;
+
+    final newSetLog = SetLog(
+      workoutLogId: _workoutLog!.id!,
+      exerciseName: re.exercise.nameEn,
+      setType: 'normal',
+      weightKg: prevSet?.weightKg ?? 0,
+      reps: prevSet?.reps ?? 0,
+      restTimeSeconds: re.pauseSeconds,
+      isCompleted: false,
+      log_order: _setLogs.length,
+      rir: null,
+    );
+
+    final dbId = await db.insertSetLog(newSetLog);
+    _setLogs[tempTemplateId] = newSetLog.copyWith(id: dbId);
+    _totalSets++;
+
+    notifyListeners();
+  }
+
+  /// Removes a specific set identified by [templateId] from the current workout.
+  Future<void> removeSet(int templateId) async {
+    if (!_setLogs.containsKey(templateId)) return;
+
+    final log = _setLogs[templateId]!;
+    final db = WorkoutDatabaseHelper.instance;
+
+    if (log.id != null) {
+      await db.deleteSetLogs([log.id!]);
+    }
+
+    _setLogs.remove(templateId);
+
+    for (var i = 0; i < _exercises.length; i++) {
+      final re = _exercises[i];
+      final tIndex = re.setTemplates.indexWhere((t) => t.id == templateId);
+      if (tIndex != -1) {
+        final newTemplates = List<SetTemplate>.from(re.setTemplates)
+          ..removeAt(tIndex);
+
+        // KORREKTUR: Manuelle Erstellung statt copyWith
+        _exercises[i] = RoutineExercise(
+          id: re.id,
+          exercise: re.exercise,
+          setTemplates: newTemplates,
+          pauseSeconds: re.pauseSeconds,
+        );
+        break;
+      }
+    }
+
+    _totalVolume -= (log.weightKg ?? 0) * (log.reps ?? 0);
+    _totalSets--;
+
+    notifyListeners();
+  }
+
+  /// Adds a new [exercise] to the current workout session.
+  ///
+  /// Automatically generates initial set templates and logs based on the exercise category.
+  Future<void> addExercise(Exercise exercise) async {
+    final tempReId = DateTime.now().millisecondsSinceEpoch;
+
+    // FIX: Cardio Check für Anzahl der Sets
+    final isCardio = exercise.categoryName.toLowerCase() == 'cardio';
+    final initialSetCount = isCardio ? 1 : 3;
+    final initialReps =
+        isCardio ? '' : '10'; // Auch hier: Cardio leer, Kraft 10
+
+    final templates = List.generate(
+        initialSetCount,
+        (index) => SetTemplate(
+              id: tempReId + index + 1,
+              setType: 'normal',
+              targetReps: initialReps,
+              targetWeight: 0,
+            ));
+
+    final re = RoutineExercise(
+      id: tempReId,
+      exercise: exercise,
+      setTemplates: templates,
+      pauseSeconds: 90,
+    );
+
+    _exercises.add(re);
+    pauseTimes[tempReId] = 90;
+
+    final db = WorkoutDatabaseHelper.instance;
+    for (var t in templates) {
+      final newSetLog = SetLog(
+        workoutLogId: _workoutLog!.id!,
+        exerciseName: exercise.nameEn,
+        setType: 'normal',
+        weightKg: 0,
+        reps: 0,
+        restTimeSeconds: 90,
+        isCompleted: false,
+        // Optional: logOrder hier schon setzen, aber Manager macht das nicht explizit bisher
+        log_order: _setLogs.length,
+      );
+      final dbId = await db.insertSetLog(newSetLog);
+      _setLogs[t.id!] = newSetLog.copyWith(id: dbId);
+      _totalSets++;
+    }
+
+    notifyListeners();
+  }
+
+  /// Removes an exercise and all its associated sets from the session.
+  Future<void> removeExercise(int routineExerciseId) async {
+    final reIndex = _exercises.indexWhere((e) => e.id == routineExerciseId);
+    if (reIndex == -1) return;
+
+    final re = _exercises[reIndex];
+    final db = WorkoutDatabaseHelper.instance;
+
+    final idsToDelete = <int>[];
+    for (var t in re.setTemplates) {
+      if (_setLogs.containsKey(t.id)) {
+        final log = _setLogs[t.id]!;
+        if (log.id != null) idsToDelete.add(log.id!);
+        _totalVolume -= (log.weightKg ?? 0) * (log.reps ?? 0);
+        _totalSets--;
+        _setLogs.remove(t.id);
+      }
+    }
+    await db.deleteSetLogs(idsToDelete);
+
+    _exercises.removeAt(reIndex);
+    pauseTimes.remove(routineExerciseId);
+
+    notifyListeners();
+  }
+
+  /// Changes the order of an exercise in the session.
   void reorderExercise(int oldIndex, int newIndex) {
-    if (newIndex > oldIndex) {
+    if (oldIndex < newIndex) {
       newIndex -= 1;
     }
     final item = _exercises.removeAt(oldIndex);
     _exercises.insert(newIndex, item);
+    notifyListeners();
+  }
 
-    // Aktualisiere den log_order für alle Sätze basierend auf der neuen Reihenfolge der Übungen
-    for (int i = 0; i < _exercises.length; i++) {
-      final re = _exercises[i];
-      for (final template in re.setTemplates) {
-        if (_setLogs.containsKey(template.id!)) {
-          // Hier rufen wir direkt updateSet auf, um die Änderung auch in die DB zu schreiben
-          updateSet(
-            template.id!,
-            isCompleted: _setLogs[template.id!]!.isCompleted,
-          );
+  // ===========================================================================
+  // TIMER LOGIC
+  // ===========================================================================
+
+  /// Updates the rest duration for a specific exercise and its pending sets.
+  void updatePauseTime(int routineExerciseId, int seconds) {
+    pauseTimes[routineExerciseId] = seconds;
+    WorkoutDatabaseHelper.instance.updatePauseTime(routineExerciseId, seconds);
+
+    // Lokale SetLogs updaten
+    final exercise = _exercises.firstWhere((e) => e.id == routineExerciseId);
+    final db = WorkoutDatabaseHelper.instance;
+
+    for (var t in exercise.setTemplates) {
+      if (_setLogs.containsKey(t.id)) {
+        final log = _setLogs[t.id]!;
+        if (log.isCompleted != true) {
+          final updatedLog = log.copyWith(restTimeSeconds: seconds);
+          _setLogs[t.id!] = updatedLog;
+          db.insertSetLog(updatedLog);
         }
       }
     }
-    notifyListeners();
-  }
 
-  void updatePauseTime(int routineExerciseId, int newSeconds) {
-    pauseTimes[routineExerciseId] = newSeconds;
-    // Finde die zugehörigen Sätze und speichere die neue Pausezeit in der DB
-    final exercise = _exercises.firstWhere((e) => e.id == routineExerciseId);
-    for (final template in exercise.setTemplates) {
-      if (_setLogs.containsKey(template.id!)) {
-        updateSet(
-          template.id!,
-          isCompleted: _setLogs[template.id!]!.isCompleted,
-        );
-      }
-    }
-    notifyListeners();
-  }
-
-  Future<void> removeExercise(int routineExerciseId) async {
-    final exerciseToRemove = _exercises.firstWhere(
-      (e) => e.id == routineExerciseId,
-    );
-
-    final idsToDelete = <int>[];
-    for (final template in exerciseToRemove.setTemplates) {
-      final log = _setLogs[template.id!];
-      if (log?.id != null) idsToDelete.add(log!.id!);
-      _setLogs.remove(template.id!);
-    }
-    if (idsToDelete.isNotEmpty) {
-      await WorkoutDatabaseHelper.instance.deleteSetLogs(idsToDelete);
-    }
-
-    _exercises.removeWhere((e) => e.id == routineExerciseId);
-    pauseTimes.remove(routineExerciseId);
-    _recalculateStats();
-    notifyListeners();
-  }
-
-  // Ersetze diese Methode in lib/services/workout_session_manager.dart
-
-  Future<RoutineExercise?> addExercise(Exercise exercise) async {
-    if (_workoutLog == null) return null;
-
-    final newRoutineExercise = RoutineExercise(
-      id: DateTime.now().millisecondsSinceEpoch,
-      exercise: exercise,
-      setTemplates: [
-        SetTemplate(
-          id: DateTime.now().millisecondsSinceEpoch + 1,
-          setType: 'normal',
-        ),
-      ],
-    );
-    _exercises.add(newRoutineExercise);
-    pauseTimes[newRoutineExercise.id!] = null;
-
-    final newTemplate = newRoutineExercise.setTemplates.first;
-    final db = WorkoutDatabaseHelper.instance;
-    final placeholder = SetLog(
-      workoutLogId: _workoutLog!.id!,
-      exerciseName: exercise.nameEn,
-      setType: newTemplate.setType,
-      isCompleted: false,
-      log_order: _exercises.length - 1,
-    );
-    final newId = await db.insertSetLog(placeholder);
-    _setLogs[newTemplate.id!] = placeholder.copyWith(id: newId);
-
-    notifyListeners();
-    return newRoutineExercise;
-  }
-
-  Future<SetTemplate?> addSetToExercise(int routineExerciseId) async {
-    final exerciseIndex = _exercises.indexWhere(
-      (e) => e.id == routineExerciseId,
-    );
-    if (exerciseIndex == -1) return null;
-
-    final newTemplate = SetTemplate(
-      id: DateTime.now().millisecondsSinceEpoch,
-      setType: 'normal',
-    );
-    _exercises[exerciseIndex].setTemplates.add(newTemplate);
-
-    final db = WorkoutDatabaseHelper.instance;
-    final placeholder = SetLog(
-      workoutLogId: _workoutLog!.id!,
-      exerciseName: _exercises[exerciseIndex].exercise.nameEn,
-      setType: newTemplate.setType,
-      isCompleted: false,
-      log_order: exerciseIndex,
-    );
-    final newId = await db.insertSetLog(placeholder);
-    _setLogs[newTemplate.id!] = placeholder.copyWith(id: newId);
-
-    notifyListeners();
-    return newTemplate;
-  }
-
-  Future<void> removeSet(int templateId) async {
-    final existing = _setLogs[templateId];
-    if (existing?.id != null) {
-      await WorkoutDatabaseHelper.instance.deleteSetLogs([existing!.id!]);
-    }
-    for (final re in _exercises) {
-      re.setTemplates.removeWhere((t) => t.id == templateId);
-    }
-    _setLogs.remove(templateId);
-    _recalculateStats();
-    notifyListeners();
-  }
-
-  Future<void> finishWorkout() async {
-    if (_workoutLog == null) return;
-    final db = WorkoutDatabaseHelper.instance;
-    final emptySetIds = _setLogs.values
-        .where((sl) => sl.isCompleted != true && sl.id != null)
-        .map((sl) => sl.id!)
-        .toList();
-
-    if (emptySetIds.isNotEmpty) {
-      await db.deleteSetLogs(emptySetIds);
-    }
-    await db.finishWorkout(_workoutLog!.id!);
-    _stopWorkoutTimer();
-    _restTimer?.cancel();
-    _workoutLog = null;
-    _exercises = [];
-    _setLogs.clear();
-    _recalculateStats();
-    notifyListeners();
-  }
-
-  void _recalculateStats() {
-    double newVolume = 0.0;
-    int newSets = 0;
-    for (final setLog in _setLogs.values) {
-      if (setLog.isCompleted == true) {
-        newVolume += (setLog.weightKg ?? 0.0) * (setLog.reps ?? 0);
-        newSets++;
-      }
-    }
-    _totalVolume = newVolume;
-    _totalSets = newSets;
-    notifyListeners();
-  }
-
-  void cancelRest() {
-    _restTimer?.cancel();
-    _restDoneBannerTimer?.cancel();
-    _remainingRestSeconds = 0;
-    _showRestDone = false;
     notifyListeners();
   }
 
   void _startRestTimer(int seconds) {
     _restTimer?.cancel();
     _restDoneBannerTimer?.cancel();
-    _remainingRestSeconds = seconds;
     _showRestDone = false;
-    notifyListeners();
+    _remainingRestSeconds = seconds;
+
     _restTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_remainingRestSeconds > 0) {
         _remainingRestSeconds--;
+        if (_remainingRestSeconds == 0) {
+          Vibration.vibrate(duration: 500);
+        }
         notifyListeners();
       } else {
         timer.cancel();
-        Vibration.vibrate(duration: 500);
         _showRestDone = true;
         notifyListeners();
         _restDoneBannerTimer = Timer(const Duration(seconds: 10), () {
@@ -381,11 +527,14 @@ class WorkoutSessionManager extends ChangeNotifier {
         });
       }
     });
+    notifyListeners();
   }
 
-  void skipRestTimer() {
+  /// Cancels any active rest timer and hides the notification banner.
+  void cancelRest() {
     _restTimer?.cancel();
     _remainingRestSeconds = 0;
+    _showRestDone = false;
     notifyListeners();
   }
 
@@ -405,22 +554,61 @@ class WorkoutSessionManager extends ChangeNotifier {
     });
   }
 
-  void _stopWorkoutTimer() {
+  /// Finalizes the current workout session.
+  ///
+  /// Deletes incomplete sets, reorders completed sets for chronological consistency,
+  /// marks the workout as finished in the database, and clears the manager's state.
+  Future<void> finishWorkout() async {
     _workoutDurationTimer?.cancel();
-  }
+    _restTimer?.cancel();
 
-  Future<void> tryRestoreSession() async {
-    final db = WorkoutDatabaseHelper.instance;
-    final WorkoutLog? ongoingWorkout = await db.getOngoingWorkout();
+    if (_workoutLog != null) {
+      final db = WorkoutDatabaseHelper.instance;
+      final logId = _workoutLog!.id!;
 
-    if (ongoingWorkout != null) {
-      print(
-        "Laufendes Workout gefunden (ID: ${ongoingWorkout.id}). Stelle Session wieder her...",
-      );
-      await restoreWorkoutSession(ongoingWorkout);
-      print("Session erfolgreich wiederhergestellt.");
-    } else {
-      print("Kein laufendes Workout gefunden. Starte normal.");
+      // 1. Unvollständige Sets identifizieren und löschen
+      // Wir filtern lokal, welche IDs gelöscht werden müssen
+      final incompleteSetIds = _setLogs.values
+          .where((s) => s.isCompleted == false && s.id != null)
+          .map((s) => s.id!)
+          .toList();
+
+      if (incompleteSetIds.isNotEmpty) {
+        await db.deleteSetLogs(incompleteSetIds);
+      }
+
+      // 2. Reihenfolge aktualisieren (Reordering Fix)
+      // Wir iterieren durch die aktuelle Übungsliste (die vom User ggf. umsortiert wurde)
+      // und vergeben neue logOrder-Indizes für die verbleibenden (completed) Sets.
+      int globalOrderCounter = 0;
+      final List<SetLog> setsToUpdate = [];
+
+      for (final routineExercise in _exercises) {
+        for (final template in routineExercise.setTemplates) {
+          final setLog = _setLogs[template.id];
+          // Nur completed Sets werden behalten und neu sortiert
+          if (setLog != null && setLog.isCompleted == true) {
+            setsToUpdate.add(setLog.copyWith(log_order: globalOrderCounter));
+            globalOrderCounter++;
+          }
+        }
+      }
+
+      // Batch-Update der Reihenfolge in der DB
+      if (setsToUpdate.isNotEmpty) {
+        await db.updateSetLogs(setsToUpdate);
+      }
+
+      // 3. Workout abschließen
+      await db.finishWorkout(logId);
+
+      // Cleanup
+      _workoutLog = null;
+      _setLogs.clear();
+      pauseTimes.clear();
+      _exercises.clear();
+
+      notifyListeners();
     }
   }
 }

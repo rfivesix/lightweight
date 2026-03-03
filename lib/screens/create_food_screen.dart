@@ -1,13 +1,18 @@
 // lib/screens/create_food_screen.dart (Final & De-Materialisiert)
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/data/product_database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/food_item.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
+import '../data/product_database_helper.dart';
+import '../generated/app_localizations.dart';
+import '../models/food_item.dart';
+import '../util/design_constants.dart';
+import '../widgets/global_app_bar.dart';
 
+/// A screen providing a form to create a new custom [FoodItem] or edit an existing one.
+///
+/// Users can input nutrient values (calories, protein, carbs, fat, etc.)
+/// and basic information like name and brand.
 class CreateFoodScreen extends StatefulWidget {
+  /// Optional existing [FoodItem] to populate the form for editing.
   final FoodItem? foodItemToEdit;
   const CreateFoodScreen({super.key, this.foodItemToEdit});
 

@@ -1,12 +1,15 @@
 // lib/dialogs/log_supplement_menu.dart
 import 'package:flutter/material.dart';
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/dialogs/log_supplement_dialog_content.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/supplement.dart';
-import 'package:lightweight/util/supplement_l10n.dart';
+import '../data/database_helper.dart';
+import 'log_supplement_dialog_content.dart';
+import '../generated/app_localizations.dart';
+import '../models/supplement.dart';
+import '../util/supplement_l10n.dart';
 
 /// Ein Menü, das eine Liste von Supplements zur Auswahl anzeigt.
+/// A selection menu for choosing a supplement to log.
+///
+/// Displays a list of all available supplements from the database.
 class LogSupplementMenu extends StatefulWidget {
   const LogSupplementMenu({super.key, required this.close});
 

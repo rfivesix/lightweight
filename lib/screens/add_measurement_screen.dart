@@ -2,15 +2,20 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/measurement.dart';
-import 'package:lightweight/models/measurement_session.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
-import 'package:lightweight/widgets/summary_card.dart'; // HINZUGEFÜGT
+import '../data/database_helper.dart';
+import '../generated/app_localizations.dart';
+import '../models/measurement.dart';
+import '../models/measurement_session.dart';
+import '../util/design_constants.dart';
+import '../widgets/global_app_bar.dart';
+import '../widgets/summary_card.dart'; // HINZUGEFÜGT
 
+/// A screen for recording new body measurements.
+///
+/// Provides input fields for various metrics (weight, fat percentage, circumferences)
+/// and allows users to set the specific date and time for the measurement session.
 class AddMeasurementScreen extends StatefulWidget {
+  /// The initial date to be selected in the picker.
   final DateTime? initialDate;
   const AddMeasurementScreen({super.key, this.initialDate});
 

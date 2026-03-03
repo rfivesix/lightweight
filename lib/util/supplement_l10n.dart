@@ -1,7 +1,8 @@
 // lib/util/supplement_l10n.dart
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/supplement.dart';
+import '../generated/app_localizations.dart';
+import '../models/supplement.dart';
 
+/// Localizes the name of a [Supplement] using its internal code.
 String localizeSupplementName(Supplement s, AppLocalizations l10n) {
   switch (s.code) {
     case 'caffeine':

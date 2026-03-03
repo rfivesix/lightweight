@@ -2,7 +2,17 @@
 
 **The modern, privacy-first fitness & nutrition tracker.**
 
-Hypertrack (formerly *Lightweight*) is an open-source, offline-first application built with Flutter. It aims to replace fragmented fitness tools by combining advanced workout logging, nutrition tracking, and body metrics into a single, cohesive ecosystem—without compromising your data privacy.
+Hypertrack (formerly *Hypertrack*) is an open-source, offline-first application built with Flutter. It aims to replace fragmented fitness tools by combining advanced workout logging, nutrition tracking, and body metrics into a single, cohesive ecosystem—without compromising your data privacy.
+
+---
+
+### 📖 **Documentation**
+Learn more about the project: **[Hypertrack Project Overview](documentation/overview.md)**
+- [System Architecture](documentation/architecture.md)
+- [Data Models & Storage](documentation/data_models_and_storage.md)
+- [UI & Widgets](documentation/ui_and_widgets.md)
+
+---
 
 > **Note:** This project is currently in **Active Beta**.
 
@@ -40,7 +50,7 @@ Hypertrack is already a fully functional daily driver for fitness enthusiasts.
 ### 📈 Body Metrics & Health
 * **Measurements:** Track weight, body fat percentage, and tape measurements (biceps, waist, etc.).
 * **Charts:** Visualize your progress over time.
-* **Supplements:** Manage your inventory and track daily intake of supplements like Creatine or Vitamins.
+* **Supplements:** Manage your inventory and track daily intake of supplements like Creatine or Hypertrackmins.
 
 ### 🛡️ Privacy & Tech
 * **Offline-First:** All data stays on your device by default. No account required.

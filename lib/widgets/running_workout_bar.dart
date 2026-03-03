@@ -2,9 +2,16 @@
 
 import 'package:flutter/material.dart';
 
+/// A compact status bar displayed during an active workout session.
+///
+/// Shows the current [timeText] and provides actions to [onResume] or [onDiscard].
 class RunningWorkoutBar extends StatelessWidget {
+  /// The formatted duration of the current workout (e.g., "12:34").
   final String timeText; // z.B. "13:12"
+  /// Callback to resume/open the full workout screen.
   final VoidCallback onResume;
+
+  /// Callback to discard the active workout session.
   final VoidCallback onDiscard;
 
   const RunningWorkoutBar({

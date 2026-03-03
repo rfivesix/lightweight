@@ -1,15 +1,25 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lightweight/services/theme_service.dart';
-import 'package:lightweight/theme/color_constants.dart';
+import '../services/theme_service.dart';
+import '../theme/color_constants.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:provider/provider.dart';
 
+/// A premium glass-styled navigation bar with haptic feedback and fluid animations.
+///
+/// Supports standard [items] and a custom [onFabTap] for a central action button.
 class GlassBottomNavBar extends StatelessWidget {
+  /// The index of the currently active tab.
   final int currentIndex;
+
+  /// Callback when a tab is tapped.
   final ValueChanged<int> onTap;
+
+  /// Callback when the floating action area is tapped.
   final VoidCallback onFabTap;
+
+  /// The list of navigation items to display.
   final List<BottomNavigationBarItem> items;
 
   const GlassBottomNavBar({
@@ -69,13 +79,6 @@ class GlassBottomNavBar extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  /// Berechnet die Align-X-Position (-1..1) für den selektierten Bubble-Hintergrund.
-  double _alignmentXForIndex(int index, int count) {
-    if (count <= 0) return 0;
-    final centerFrac = (index + 0.5) / count; // 0..1
-    return centerFrac * 2 - 1; // -1..1
   }
 
   /// Mappt eine lokale X-Position (0..width) auf den Tab-Index.

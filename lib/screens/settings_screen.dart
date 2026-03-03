@@ -1,14 +1,18 @@
 // lib/screens/settings_screen.dart
 import 'package:flutter/material.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/screens/data_management_screen.dart';
-import 'package:lightweight/services/theme_service.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/summary_card.dart';
+import '../generated/app_localizations.dart';
+import 'data_management_screen.dart';
+import '../services/theme_service.dart';
+import '../util/design_constants.dart';
+import '../widgets/summary_card.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
+import '../widgets/global_app_bar.dart';
 
+/// A screen for configuring application-wide preferences.
+///
+/// Includes theme selection (light/dark/system), visual style toggles,
+/// and navigation to data management (backup/import) and legal information.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 

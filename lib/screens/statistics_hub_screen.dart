@@ -1,17 +1,18 @@
 // lib/screens/statistics_hub_screen.dart
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/data/product_database_helper.dart';
-import 'package:lightweight/data/workout_database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/screens/measurements_screen.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/bottom_content_spacer.dart';
-import 'package:lightweight/widgets/summary_card.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../data/database_helper.dart';
+import '../data/workout_database_helper.dart';
+import '../generated/app_localizations.dart';
+import 'measurements_screen.dart';
+import '../util/design_constants.dart';
+import '../widgets/bottom_content_spacer.dart';
+import '../widgets/summary_card.dart';
 import 'package:table_calendar/table_calendar.dart';
 
+/// A screen providing a calendar-based overview of user consistency.
+///
+/// Visualizes workout, nutrition, and supplement logging frequency
+/// through interactive markers on a monthly calendar scaffold.
 class StatisticsHubScreen extends StatefulWidget {
   const StatisticsHubScreen({super.key});
 
@@ -24,7 +25,6 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   bool _isLoading = true;
-  String _recommendationText = '';
 
   Set<int> _workoutDays = {};
   Set<int> _nutritionLogDays = {};
@@ -42,11 +42,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     setState(() => _isLoading = true);
 
     await _loadMonthData(_focusedDay);
-    final recommendation = await _getRecommendation();
 
     if (mounted) {
       setState(() {
-        _recommendationText = recommendation;
         _isLoading = false;
       });
     }
@@ -66,57 +64,6 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         _nutritionLogDays = nutritionDays;
         _supplementDays = supplementDays;
       });
-    }
-  }
-
-  Future<String> _getRecommendation() async {
-    final prefs = await SharedPreferences.getInstance();
-    final targetCalories = prefs.getInt('targetCalories') ?? 2500;
-    final today = DateTime.now();
-    final sevenDaysAgo = today.subtract(const Duration(days: 6));
-    final recentEntries = await DatabaseHelper.instance.getEntriesForDateRange(
-      sevenDaysAgo,
-      today,
-    );
-
-    if (recentEntries.isEmpty) {
-      return l10n.recommendationDefault;
-    }
-
-    final uniqueDaysTracked =
-        recentEntries.map((e) => DateFormat.yMd().format(e.timestamp)).toSet();
-    final numberOfTrackedDays = uniqueDaysTracked.length;
-    int totalRecentCalories = 0;
-    for (final entry in recentEntries) {
-      final foodItem = await ProductDatabaseHelper.instance.getProductByBarcode(
-        entry.barcode,
-      );
-      if (foodItem != null) {
-        totalRecentCalories +=
-            (foodItem.calories / 100 * entry.quantityInGrams).round();
-      }
-    }
-
-    final totalTargetCalories = targetCalories * numberOfTrackedDays;
-    final difference = totalRecentCalories - totalTargetCalories;
-    final tolerance = totalTargetCalories * 0.05;
-
-    if (numberOfTrackedDays > 1) {
-      if (difference > tolerance) {
-        return l10n.recommendationOverTarget(
-          numberOfTrackedDays,
-          difference.round(),
-        );
-      } else if (difference < -tolerance) {
-        return l10n.recommendationUnderTarget(
-          numberOfTrackedDays,
-          (-difference).round(),
-        );
-      } else {
-        return l10n.recommendationOnTarget(numberOfTrackedDays);
-      }
-    } else {
-      return l10n.recommendationFirstEntry;
     }
   }
 
@@ -291,24 +238,6 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
               ],
             ),
           );
-  }
-
-  Widget _buildBannerCard(AppLocalizations l10n) {
-    return SummaryCard(
-      child: Container(
-        height: 100,
-        alignment: Alignment.center,
-        child: Text(
-          _recommendationText.isEmpty ? l10n.load_dots : _recommendationText,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-            fontSize: 22,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ),
-    );
   }
 
   Widget _buildSectionTitle(BuildContext context, String title) {

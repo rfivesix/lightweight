@@ -1,18 +1,21 @@
 // lib/screens/nutrition_hub_screen.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/data/product_database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/screens/add_food_screen.dart';
-import 'package:lightweight/screens/meal_screen.dart';
-import 'package:lightweight/screens/goals_screen.dart';
-import 'package:lightweight/screens/supplement_track_screen.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/bottom_content_spacer.dart';
-import 'package:lightweight/widgets/summary_card.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../data/database_helper.dart';
+import '../data/product_database_helper.dart';
+import '../generated/app_localizations.dart';
+import 'add_food_screen.dart';
+import 'meal_screen.dart';
+import 'goals_screen.dart';
+import 'supplement_track_screen.dart';
+import '../util/design_constants.dart';
+import '../widgets/bottom_content_spacer.dart';
+import '../widgets/summary_card.dart';
 
+/// A portal for overviewing nutrition and meal planning.
+///
+/// Displays general targets, recommendations based on recent logs,
+/// and quick access to meal management and supplement tracking.
 class NutritionHubScreen extends StatefulWidget {
   const NutritionHubScreen({super.key});
 
@@ -39,10 +42,9 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
 
   Future<Map<String, dynamic>> _loadHubData() async {
     final l10n = AppLocalizations.of(context)!;
-    final prefs = await SharedPreferences.getInstance();
-
+    final settings = await DatabaseHelper.instance.getAppSettings();
+    final targetCalories = settings?.targetCalories ?? 2500;
     final meals = await DatabaseHelper.instance.getMeals();
-    final targetCalories = prefs.getInt('targetCalories') ?? 2500;
     final today = DateTime.now();
     final sevenDaysAgo = today.subtract(const Duration(days: 6));
     final recentEntries = await DatabaseHelper.instance.getEntriesForDateRange(

@@ -2,14 +2,17 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:lightweight/services/workout_session_manager.dart';
+import '../services/workout_session_manager.dart';
 
 /// Visual overlay heights (your glass bar + detached FAB)
 const double kOverlayBaseHeight = 120.0; // bottom bar + FAB + margins
 const double kOverlayRunningExtra = 68.0; // extra when workout bar is shown
 
-/// Use in ListView/Column: adds a scrollable spacer at the end.
+/// A scrollable spacer to avoid content being hidden behind floating UI elements.
+///
+/// Accounts for the height of the bottom navigation bar, FAB, and running workout bar.
 class BottomContentSpacer extends StatelessWidget {
+  /// Optional [extra] padding to add beyond the standard overlay heights.
   final double extra; // if a screen needs a bit more room
   const BottomContentSpacer({super.key, this.extra = 0});
 

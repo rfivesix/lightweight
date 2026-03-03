@@ -1,22 +1,29 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/data/product_database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/food_entry.dart';
-import 'package:lightweight/models/food_item.dart';
-import 'package:lightweight/models/supplement.dart';
-import 'package:lightweight/models/supplement_log.dart';
-import 'package:lightweight/screens/food_detail_screen.dart';
-import 'package:lightweight/widgets/glass_bottom_menu.dart';
-import 'package:lightweight/widgets/glass_fab.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
-import 'package:lightweight/widgets/summary_card.dart';
-import 'package:lightweight/widgets/swipe_action_background.dart';
+import '../data/database_helper.dart';
+import '../data/product_database_helper.dart';
+import '../generated/app_localizations.dart';
+import '../models/food_entry.dart';
+import '../models/food_item.dart';
+import '../models/supplement.dart';
+import '../models/supplement_log.dart';
+import 'food_detail_screen.dart';
+import '../widgets/glass_bottom_menu.dart';
+import '../widgets/glass_fab.dart';
+import '../widgets/global_app_bar.dart';
+import '../widgets/summary_card.dart';
+import '../widgets/swipe_action_background.dart';
 
+/// A comprehensive screen for viewing and editing a meal and its ingredients.
+///
+/// Displays nutritional totals for the meal and allows users to add, remove,
+/// or adjust quantities of individual ingredients. Meals can be added directly
+/// to the daily diary from this screen.
 class MealScreen extends StatefulWidget {
+  /// The meal data as a map containing 'id', 'name', and 'notes'.
   final Map<String, dynamic> meal; // erwartet: {id, name, notes}
+  /// Whether to open the screen in edit mode initially.
   final bool startInEdit;
 
   const MealScreen({super.key, required this.meal, this.startInEdit = false});
@@ -79,10 +86,10 @@ class _MealScreenState extends State<MealScreen> {
       if (fi == null) continue;
 
       final factor = qty / 100.0;
-      final itemKcal = (fi.calories ?? 0) * factor;
-      final itemC = (fi.carbs ?? 0) * factor;
-      final itemF = (fi.fat ?? 0) * factor;
-      final itemP = (fi.protein ?? 0) * factor;
+      final itemKcal = (fi.calories) * factor;
+      final itemC = (fi.carbs) * factor;
+      final itemF = (fi.fat) * factor;
+      final itemP = (fi.protein) * factor;
 
       kcal += itemKcal.round();
       c += itemC;
@@ -837,10 +844,10 @@ class _IngredientCard extends StatelessWidget {
       double c = 0, f = 0, p = 0;
       if (fi != null) {
         final factor = qty / 100.0;
-        kcal = ((fi.calories ?? 0) * factor).round();
-        c = (fi.carbs ?? 0) * factor;
-        f = (fi.fat ?? 0) * factor;
-        p = (fi.protein ?? 0) * factor;
+        kcal = ((fi.calories) * factor).round();
+        c = (fi.carbs) * factor;
+        f = (fi.fat) * factor;
+        p = (fi.protein) * factor;
       }
 
       final title = InkWell(

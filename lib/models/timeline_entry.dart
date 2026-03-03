@@ -1,27 +1,37 @@
 // lib/models/timeline_entry.dart
 
-import 'package:lightweight/models/tracked_food_item.dart';
-import 'package:lightweight/models/water_entry.dart';
+import 'tracked_food_item.dart';
+import 'water_entry.dart';
 
 // DOC: Dies ist eine "abstrakte" Klasse. Sie dient als gemeinsame
 // Schablone für alle Arten von Einträgen in unserem Tagebuch.
 // Jedes Timeline-Item MUSS einen Zeitstempel haben, damit wir es sortieren können.
+/// Base class for all entries displayed in the daily timeline.
+///
+/// Ensures every timeline item has a [timestamp] for chronological sorting.
 abstract class TimelineEntry {
+  /// The time associated with this timeline entry.
   DateTime get timestamp;
 }
 
-// Ein Eintrag für ein Lebensmittel
+/// A timeline entry representing a food intake event.
 class FoodTimelineEntry extends TimelineEntry {
+  /// The [TrackedFoodItem] containing the food and entry details.
   final TrackedFoodItem trackedItem;
+
+  /// Creates a new [FoodTimelineEntry] instance.
   FoodTimelineEntry(this.trackedItem);
 
   @override
   DateTime get timestamp => trackedItem.entry.timestamp;
 }
 
-// Ein Eintrag für Wasser
+/// A timeline entry representing a water intake event.
 class WaterTimelineEntry extends TimelineEntry {
+  /// The [WaterEntry] containing the intake details.
   final WaterEntry waterEntry;
+
+  /// Creates a new [WaterTimelineEntry] instance.
   WaterTimelineEntry(this.waterEntry);
 
   @override

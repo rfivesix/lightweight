@@ -1,16 +1,15 @@
 // lib/screens/food_detail_screen.dart (Final & De-Materialisiert - OLED Ready)
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/data/product_database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/food_item.dart';
-import 'package:lightweight/models/tracked_food_item.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/glass_fab.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
-import 'package:lightweight/widgets/off_attribution_widget.dart';
-import 'package:lightweight/widgets/summary_card.dart';
+import '../data/database_helper.dart';
+import '../generated/app_localizations.dart';
+import '../models/food_item.dart';
+import '../models/tracked_food_item.dart';
+import '../util/design_constants.dart';
+import '../widgets/glass_fab.dart';
+import '../widgets/global_app_bar.dart';
+import '../widgets/off_attribution_widget.dart';
+import '../widgets/summary_card.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
@@ -18,8 +17,15 @@ import 'package:share_plus/share_plus.dart';
 // Dev-Flag: später einfach auf false setzen oder die Dev-Blöcke entfernen.
 const bool kDevEditEnabled = false;
 
+/// A detailed view for a [FoodItem], showing its full nutritional profile.
+///
+/// Supports toggling between 100g values and portion-based values if a portion
+/// is provided via [trackedItem]. Includes favorite management and source attribution.
 class FoodDetailScreen extends StatefulWidget {
+  /// Optional tracked entry to show portion-specific values.
   final TrackedFoodItem? trackedItem;
+
+  /// The food item to display if not provided by [trackedItem].
   final FoodItem? foodItem;
 
   const FoodDetailScreen({super.key, this.trackedItem, this.foodItem})
@@ -54,23 +60,6 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
   final _saltCtrl = TextEditingController();
   final _sodCtrl = TextEditingController();
   final _calciumCtrl = TextEditingController();
-
-  void _fillControllers(FoodItem item, {Map<String, dynamic>? rawRow}) {
-    _deCtrl.text = (rawRow?['name_de'] as String?) ?? item.name;
-    _enCtrl.text = (rawRow?['name_en'] as String?) ?? '';
-    _catCtrl.text = (rawRow?['category_key'] as String?) ?? '';
-
-    _calCtrl.text = (item.calories).toString();
-    _proCtrl.text = (item.protein).toString();
-    _carbCtrl.text = (item.carbs).toString();
-    _fatCtrl.text = (item.fat).toString();
-    _kjCtrl.text = (rawRow?['kj_100g'] as num?)?.toString() ?? '';
-    _fibCtrl.text = (rawRow?['fiber_100g'] as num?)?.toString() ?? '';
-    _sugCtrl.text = (rawRow?['sugar_100g'] as num?)?.toString() ?? '';
-    _saltCtrl.text = (rawRow?['salt_100g'] as num?)?.toString() ?? '';
-    _sodCtrl.text = (rawRow?['sodium_100g'] as num?)?.toString() ?? '';
-    _calciumCtrl.text = (rawRow?['calcium_100g'] as num?)?.toString() ?? '';
-  }
 
   @override
   void initState() {
@@ -109,27 +98,12 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
   Future<String> _getBaseDbPath() async {
     // Versuche erst den bekannten Namen der Base-DB im App-DB-Verzeichnis
     final dbDir = await getDatabasesPath();
-    return p.join(dbDir, 'vita_base_foods.db');
+    return p.join(dbDir, 'hypertrack_base_foods.db');
   }
 
   Future<Database> _openBaseDb({bool readOnly = false}) async {
     final path = await _getBaseDbPath();
     return openDatabase(path, readOnly: readOnly);
-  }
-
-  Future<Map<String, dynamic>?> _loadRawRow(String barcode) async {
-    final base = await _openBaseDb(readOnly: true);
-    try {
-      final rows = await base.query(
-        'products',
-        where: 'barcode = ?',
-        whereArgs: [barcode],
-        limit: 1,
-      );
-      return rows.isNotEmpty ? rows.first : null;
-    } finally {
-      await base.close();
-    }
   }
 
   Future<void> _saveDevEdits() async {
@@ -170,7 +144,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
       } finally {
         await db.close();
       }
-      await ProductDatabaseHelper.instance.reloadBaseDb();
+      // await ProductDatabaseHelper.instance.reloadBaseDb();
 
       // Für sichtbares Refresh: Eintrag neu aus Base-DB laden
       final baseDb = await _openBaseDb(readOnly: true);
@@ -208,7 +182,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
     try {
       final path = await _getBaseDbPath();
       final file = XFile(path, name: p.basename(path));
-      await Share.shareXFiles([file], subject: 'Export: vita_base_foods.db');
+      await Share.shareXFiles([file],
+          subject: 'Export: hypertrack_base_foods.db');
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(

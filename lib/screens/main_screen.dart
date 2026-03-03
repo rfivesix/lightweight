@@ -1,47 +1,47 @@
 import 'dart:io';
 import 'dart:ui';
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/data/workout_database_helper.dart';
-import 'package:lightweight/dialogs/log_supplement_dialog_content.dart';
-import 'package:lightweight/dialogs/fluid_dialog_content.dart';
-import 'package:lightweight/dialogs/log_supplement_menu.dart';
-import 'package:lightweight/dialogs/quantity_dialog_content.dart';
-import 'package:lightweight/dialogs/water_dialog_content.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/food_entry.dart';
-import 'package:lightweight/models/fluid_entry.dart';
-import 'package:lightweight/models/food_item.dart';
-import 'package:lightweight/models/routine.dart';
-import 'package:lightweight/models/supplement.dart';
-import 'package:lightweight/models/supplement_log.dart';
-import 'package:lightweight/models/workout_log.dart';
-import 'package:lightweight/screens/add_food_screen.dart';
-import 'package:lightweight/screens/add_measurement_screen.dart';
-import 'package:lightweight/screens/diary_screen.dart';
-import 'package:lightweight/screens/edit_routine_screen.dart';
-import 'package:lightweight/screens/live_workout_screen.dart';
-import 'package:lightweight/screens/nutrition_hub_screen.dart';
-import 'package:lightweight/screens/profile_screen.dart';
-import 'package:lightweight/screens/statistics_hub_screen.dart';
-import 'package:lightweight/screens/workout_hub_screen.dart';
-import 'package:lightweight/services/profile_service.dart';
-import 'package:lightweight/services/theme_service.dart';
-import 'package:lightweight/services/workout_session_manager.dart';
-import 'package:lightweight/theme/color_constants.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/glass_bottom_menu.dart';
-import 'package:lightweight/widgets/glass_bottom_nav_bar.dart';
-import 'package:lightweight/widgets/glass_fab.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
-import 'package:lightweight/widgets/keep_alive_page.dart';
+import '../data/database_helper.dart';
+import '../data/workout_database_helper.dart';
+import '../dialogs/fluid_dialog_content.dart';
+import '../dialogs/log_supplement_menu.dart';
+import '../dialogs/quantity_dialog_content.dart';
+import '../generated/app_localizations.dart';
+import '../models/food_entry.dart';
+import '../models/fluid_entry.dart';
+import '../models/food_item.dart';
+import '../models/routine.dart';
+import '../models/supplement.dart';
+import '../models/supplement_log.dart';
+import '../models/workout_log.dart';
+import 'add_food_screen.dart';
+import 'add_measurement_screen.dart';
+import 'diary_screen.dart';
+import 'edit_routine_screen.dart';
+import 'live_workout_screen.dart';
+import 'nutrition_hub_screen.dart';
+import 'profile_screen.dart';
+import 'statistics_hub_screen.dart';
+import 'workout_hub_screen.dart';
+import '../services/profile_service.dart';
+import '../services/theme_service.dart';
+import '../services/workout_session_manager.dart';
+import '../theme/color_constants.dart';
+import '../util/design_constants.dart';
+import '../widgets/glass_bottom_menu.dart';
+import '../widgets/glass_bottom_nav_bar.dart';
+import '../widgets/glass_fab.dart';
+import '../widgets/global_app_bar.dart';
+import '../widgets/keep_alive_page.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:provider/provider.dart';
 
+/// The root scaffold containing the main navigation structure.
+///
+/// Hosts the bottom navigation bar and manages switching between primary tabs:
+/// Diary, Workout, Statistics, and Nutrition Hub. Also provides the global Speed Dial.
 class MainScreen extends StatefulWidget {
+  /// The optional index of the tab to be displayed initially.
   final int? initialTabIndex;
   const MainScreen({super.key, this.initialTabIndex});
   @override
@@ -79,70 +79,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     _menuController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
-    ); // In lib/screens/main_screen.dart
-
-    Future<void> handleAddFood() async {
-      final FoodItem? selectedFoodItem =
-          await Navigator.of(context).push<FoodItem>(
-        MaterialPageRoute(builder: (context) => const AddFoodScreen()),
-      );
-
-      if (selectedFoodItem == null || !mounted) return;
-
-      // FIX: Datum holen
-      final targetDate = _currentActiveDate;
-
-      // FIX: Datum übergeben (Signatur unten anpassen!)
-      final result =
-          await _showQuantityMenu(selectedFoodItem, initialDate: targetDate);
-
-      if (result == null || !mounted) return;
-
-      final int quantity = result.quantity;
-      final DateTime timestamp =
-          result.timestamp; // Das kommt jetzt korrekt aus dem Dialog
-      final String mealType = result.mealType;
-      final bool isLiquid = result.isLiquid;
-      final double? caffeinePer100 = result.caffeinePer100ml;
-
-      // ... (Restliche Logik: insertFoodEntry, insertFluidEntry etc. bleibt gleich) ...
-      // Der timestamp hier ist bereits korrekt, weil er aus dem Dialog kommt,
-      // der mit targetDate initialisiert wurde.
-
-      final newFoodEntry = FoodEntry(
-        barcode: selectedFoodItem.barcode,
-        timestamp: timestamp,
-        quantityInGrams: quantity,
-        mealType: mealType,
-      );
-
-      final newFoodEntryId =
-          await DatabaseHelper.instance.insertFoodEntry(newFoodEntry);
-
-      if (isLiquid) {
-        // ... insertFluidEntry mit timestamp ...
-        final newFluidEntry = FluidEntry(
-          timestamp: timestamp,
-          quantityInMl: quantity,
-          name: selectedFoodItem.name,
-          kcal: null,
-          sugarPer100ml: null,
-          carbsPer100ml: null,
-          caffeinePer100ml: null,
-          linked_food_entry_id: newFoodEntryId,
-        );
-        await DatabaseHelper.instance.insertFluidEntry(newFluidEntry);
-      }
-
-      if (isLiquid && caffeinePer100 != null && caffeinePer100 > 0) {
-        // ... logCaffeineDose ...
-        final totalCaffeine = (caffeinePer100 / 100.0) * quantity;
-        await _logCaffeineDose(totalCaffeine, timestamp,
-            foodEntryId: newFoodEntryId);
-      }
-
-      _refreshHomeScreen();
-    }
+    );
   }
 
   @override
@@ -159,9 +96,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     setState(() => _currentIndex = index);
   }
 
-  final _pvBoundaryKey = GlobalKey();
   final bool _isWarping = false;
-  ui.Image? _pvSnapshot;
 
   void _onNavigationTapped(int index) {
     if (!_pageController.hasClients) return;
@@ -180,7 +115,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   }
 
   void _executeAddMenuAction(String action) async {
-    final l10n = AppLocalizations.of(context)!;
     switch (action) {
       case 'start_workout':
         _showStartWorkoutMenu();
@@ -693,49 +627,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     );
   }
 
-  void _handleCreateRoutine() {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (context) => const EditRoutineScreen()));
-  }
-
-  Future<(int, DateTime)?> _openWaterDialog({
-    int? initialQuantity,
-    DateTime? initialTimestamp,
-  }) async {
-    final l10n = AppLocalizations.of(context)!;
-    final key = GlobalKey<WaterDialogContentState>();
-
-    return showDialog<(int, DateTime)?>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.add_liquid_title),
-        content: WaterDialogContent(
-          key: key,
-          initialQuantity: initialQuantity,
-          initialTimestamp: initialTimestamp,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(null),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () {
-              final s = key.currentState;
-              if (s == null) return;
-              final qty = int.tryParse(s.quantityText);
-              if (qty != null && qty > 0) {
-                Navigator.of(ctx).pop((qty, s.selectedDateTime));
-              }
-            },
-            child: Text(l10n.add_button),
-          ),
-        ],
-      ),
-    );
-  }
-
   String localizeSupplementName(Supplement s, AppLocalizations l10n) {
     switch (s.code) {
       case 'caffeine':
@@ -745,151 +636,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       default:
         return s.name;
     }
-  }
-
-  Future<void> _handleSupplementAdd() async {
-    final allSupplements = await DatabaseHelper.instance.getAllSupplements();
-    if (!mounted || allSupplements.isEmpty) return;
-    final l10n = AppLocalizations.of(context)!;
-
-    final Supplement? selectedSupplement = await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.logIntakeTitle),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: allSupplements.length,
-            itemBuilder: (context, index) {
-              final supplement = allSupplements[index];
-              return ListTile(
-                title: Text(localizeSupplementName(supplement, l10n)),
-                onTap: () => Navigator.of(context).pop(supplement),
-              );
-            },
-          ),
-        ),
-      ),
-    );
-
-    if (selectedSupplement != null && mounted) {
-      _logSupplement(selectedSupplement);
-    }
-  }
-
-  Future<void> _logSupplement(Supplement supplement) async {
-    final l10n = AppLocalizations.of(context)!;
-    final GlobalKey<LogSupplementDialogContentState> dialogStateKey =
-        GlobalKey();
-    final result = await showDialog<(double, DateTime)?>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(localizeSupplementName(supplement, l10n)),
-          content: LogSupplementDialogContent(
-            key: dialogStateKey,
-            supplement: supplement,
-          ),
-          actions: [
-            TextButton(
-              child: Text(l10n.cancel),
-              onPressed: () => Navigator.of(context).pop(null),
-            ),
-            FilledButton(
-              child: Text(l10n.add_button),
-              onPressed: () {
-                final state = dialogStateKey.currentState;
-                if (state != null) {
-                  final dose = double.tryParse(
-                    state.doseText.replaceAll(',', '.'),
-                  );
-                  if (dose != null && dose > 0) {
-                    Navigator.of(context).pop((dose, state.selectedDateTime));
-                  }
-                }
-              },
-            ),
-          ],
-        );
-      },
-    );
-    if (result != null) {
-      final newLog = SupplementLog(
-        supplementId: supplement.id!,
-        dose: result.$1,
-        unit: supplement.unit,
-        timestamp: result.$2,
-      );
-      await DatabaseHelper.instance.insertSupplementLog(newLog);
-      _refreshHomeScreen();
-    }
-  }
-
-  Future<(int, DateTime)?> _showWaterDialog() async {
-    final l10n = AppLocalizations.of(context)!;
-    final GlobalKey<WaterDialogContentState> dialogStateKey = GlobalKey();
-    return showDialog<(int, DateTime)?>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(l10n.add_liquid_title),
-          content: WaterDialogContent(key: dialogStateKey),
-          actions: [
-            TextButton(
-              child: Text(l10n.cancel),
-              onPressed: () => Navigator.of(context).pop(null),
-            ),
-            FilledButton(
-              child: Text(l10n.add_button),
-              onPressed: () {
-                final state = dialogStateKey.currentState;
-                if (state != null) {
-                  final quantity = int.tryParse(state.quantityText);
-                  if (quantity != null && quantity > 0) {
-                    Navigator.of(
-                      context,
-                    ).pop((quantity, state.selectedDateTime));
-                  }
-                }
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _captureSnapshot() async {
-    try {
-      final boundary = _pvBoundaryKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
-      if (boundary == null) return;
-      final img = await boundary.toImage(
-        pixelRatio: MediaQuery.of(context).devicePixelRatio,
-      );
-      setState(() => _pvSnapshot = img);
-    } catch (_) {
-      // fail silently
-    }
-  }
-
-  void _clearSnapshot() {
-    setState(() => _pvSnapshot = null);
-  }
-
-  // Top-Inset für Content, damit er direkt unterhalb der GlobalAppBar startet.
-  double _topContentInset(BuildContext context) {
-    // Content soll unterhalb der Toolbar starten; der Fade-Bereich darf darüberliegen.
-    final paddingTop = MediaQuery.of(context).padding.top;
-    return paddingTop + kToolbarHeight;
-  }
-
-  Widget _withTopSpacer(BuildContext context, Widget child) {
-    return Padding(
-      padding: EdgeInsets.only(top: _topContentInset(context)),
-      child: child,
-    );
   }
 
   // ERSETZE DIESE METHODE
@@ -985,31 +731,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
-  Widget _pillIcon({
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      customBorder: const CircleBorder(),
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Icon(
-          icon,
-          size: 18,
-          color: Theme.of(context).colorScheme.onSurface,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final profileService = Provider.of<ProfileService>(context);
 
     final manager = context.watch<WorkoutSessionManager>();
     final bool isWorkoutRunning = manager.isActive;
@@ -1018,8 +742,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     // Parameter für Animation
     // const basePad = 120.0; // Unused locally
     // final runningPad = manager.isActive ? 68.0 : 0.0; // Unused locally
-
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     // final bg = isDark ? summary_card_dark_mode : summary_card_white_mode; // Unused locally in build, used in GlassNavBar logic internal
 
     // Radius für Liquid Animation (falls aktiv)

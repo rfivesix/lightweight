@@ -3,8 +3,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/util/design_constants.dart';
+import '../generated/app_localizations.dart';
+import '../util/design_constants.dart';
 
 // ===== App-wide modal helpers (temporary location — can be moved to a shared file) =====
 
@@ -99,6 +99,10 @@ class AppSheetScaffold extends StatelessWidget {
   }
 }
 
+/// A specialized dialog content widget for water logging.
+///
+/// Focuses specifically on hydration tracking with a simplified UI
+/// for entering milliliters and timestamp.
 class WaterDialogContent extends StatefulWidget {
   final int? initialQuantity;
   final DateTime? initialTimestamp;

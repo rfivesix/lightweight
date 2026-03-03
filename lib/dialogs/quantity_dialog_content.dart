@@ -2,10 +2,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/food_item.dart';
-import 'package:lightweight/util/design_constants.dart';
+import '../generated/app_localizations.dart';
+import '../models/food_item.dart';
+import '../util/design_constants.dart';
 
+/// A dialog content widget for logging food and liquid quantities.
+///
+/// Provides fields for quantity (grams or milliliters), meal type,
+/// and optional nutrient overrides for liquids.
 class QuantityDialogContent extends StatefulWidget {
   final FoodItem item;
   final int? initialQuantity;

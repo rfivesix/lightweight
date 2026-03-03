@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/supplement.dart';
-import 'package:lightweight/models/tracked_supplement.dart';
-import 'package:lightweight/widgets/glass_progress_bar.dart';
-import 'package:lightweight/theme/color_constants.dart';
+import '../generated/app_localizations.dart';
+import '../models/supplement.dart';
+import '../models/tracked_supplement.dart';
+import 'glass_progress_bar.dart';
+import '../theme/color_constants.dart';
 
+/// A widget that displays a list of tracked supplements for the current day.
+///
+/// Groups supplements into those with daily goals (checkmarks) and those with
+/// daily limits (progress bars).
 class SupplementSummaryWidget extends StatelessWidget {
+  /// The list of supplement tracking data.
   final List<TrackedSupplement> trackedSupplements;
+
+  /// Callback when the widget is tapped, usually opens tracking management.
   final VoidCallback onTap;
 
   const SupplementSummaryWidget({

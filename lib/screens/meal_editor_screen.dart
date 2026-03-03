@@ -2,8 +2,14 @@ import 'package:flutter/material.dart';
 
 enum MealType { breakfast, lunch, dinner, snack }
 
+/// A screen for creating or editing the basic metadata of a meal.
+///
+/// Allows users to specify a name and categorise the meal by [MealType].
 class MealEditorScreen extends StatefulWidget {
+  /// Initial name for the meal if editing.
   final String? initialName;
+
+  /// The type of meal (e.g., breakfast, lunch).
   final MealType initialType;
 
   const MealEditorScreen({

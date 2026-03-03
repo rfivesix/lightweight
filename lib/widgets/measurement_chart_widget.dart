@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:lightweight/data/database_helper.dart';
-import 'package:lightweight/models/chart_data_point.dart';
+import '../data/database_helper.dart';
+import '../models/chart_data_point.dart';
 import 'package:intl/intl.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/util/design_constants.dart';
+import '../generated/app_localizations.dart';
+import '../util/design_constants.dart';
 import 'package:flutter/services.dart';
 
+/// A widget for visualizing body measurement data in a line chart.
+///
+/// Fetches and displays historical data for a specific [chartType] and [dateRange].
 class MeasurementChartWidget extends StatefulWidget {
+  /// The type of measurement (e.g., 'weight', 'fat_percent').
   final String chartType;
+
+  /// The time period to display in the chart.
   final DateTimeRange dateRange;
+
+  /// The unit of measurement for axis labeling.
   final String unit;
 
   const MeasurementChartWidget({
@@ -115,13 +123,6 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
     final String displayValue =
         '${displayPoint.value.toStringAsFixed(1)} ${widget.unit}';
     final String displayDate = DateFormat.yMMMd().format(displayPoint.date);
-
-    final Color lineColor = Theme.of(context).colorScheme.primary;
-    final DateTime baseDate = _dataPoints.first.date;
-    final int totalDays = widget.dateRange.end
-        .difference(widget.dateRange.start)
-        .inDays
-        .clamp(1, 100000); // Schutz
 
     // 1) Basisdaten: auf Tagesgrenzen normalisieren und SPAN berechnen
     final DateTime firstDate = DateTime(

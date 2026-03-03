@@ -1,19 +1,24 @@
 // lib/screens/exercise_catalog_screen.dart (Final & De-Materialisiert)
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/data/workout_database_helper.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/exercise.dart';
-import 'package:lightweight/screens/exercise_detail_screen.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/glass_bottom_menu.dart';
-import 'package:lightweight/widgets/global_app_bar.dart';
-import 'package:lightweight/widgets/summary_card.dart';
-import 'package:lightweight/widgets/wger_attribution_widget.dart';
-import 'package:lightweight/screens/create_exercise_screen.dart';
-import 'package:lightweight/widgets/glass_fab.dart';
+import '../data/workout_database_helper.dart';
+import '../generated/app_localizations.dart';
+import '../models/exercise.dart';
+import 'exercise_detail_screen.dart';
+import '../util/design_constants.dart';
+import '../widgets/glass_bottom_menu.dart';
+import '../widgets/global_app_bar.dart';
+import '../widgets/summary_card.dart';
+import '../widgets/wger_attribution_widget.dart';
+import 'create_exercise_screen.dart';
+import '../widgets/glass_fab.dart';
 
+/// A searchable list of all available exercises in the database.
+///
+/// Can be used for purely browsing exercises or in [isSelectionMode] to pick
+/// an exercise for a [Routine] or [WorkoutLog].
 class ExerciseCatalogScreen extends StatefulWidget {
+  /// Whether the screen is used to select an exercise to return to a caller.
   final bool isSelectionMode;
   const ExerciseCatalogScreen({super.key, this.isSelectionMode = false});
 

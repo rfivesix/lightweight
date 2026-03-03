@@ -1,10 +1,10 @@
 /*// lib/widgets/nutrition_summary_widget.dart
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/daily_nutrition.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'package:lightweight/widgets/summary_card.dart';
+import '../generated/app_localizations.dart';
+import '../models/daily_nutrition.dart';
+import '../util/design_constants.dart';
+import 'summary_card.dart';
 import 'dart:ui'; // Für den ImageFilter.blur
 
 class _NutrientSpec {
@@ -238,32 +238,24 @@ class _InfoBox extends StatelessWidget {
 // lib/widgets/nutrition_summary_widget.dart
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/generated/app_localizations.dart';
-import 'package:lightweight/models/daily_nutrition.dart';
-import 'package:lightweight/util/design_constants.dart';
-import 'dart:ui';
+import '../generated/app_localizations.dart';
+import '../models/daily_nutrition.dart';
+import '../util/design_constants.dart';
 
-import 'package:lightweight/widgets/glass_progress_bar.dart'; // Für den ImageFilter.blur
+import 'glass_progress_bar.dart'; // Für den ImageFilter.blur
 
-class _NutrientSpec {
-  final String label;
-  final String unit;
-  final double value;
-  final double target;
-  final Color color;
-
-  _NutrientSpec({
-    required this.label,
-    required this.unit,
-    required this.value,
-    required this.target,
-    required this.color,
-  });
-}
-
+/// A comprehensive summary widget for daily nutrition and macro tracking.
+///
+/// Displays multiple [GlassProgressBar]s in a grid-like layout for calories,
+/// water, protein, carbs, and fats. Can be expanded to show sub-macros like sugar.
 class NutritionSummaryWidget extends StatelessWidget {
+  /// The daily nutrition data to display.
   final DailyNutrition nutritionData;
+
+  /// Whether to show the expanded set of macros (e.g., sugar, fiber, salt, caffeine).
   final bool isExpandedView;
+
+  /// Localization instance for labels.
   final AppLocalizations l10n;
 
   const NutritionSummaryWidget({
@@ -392,94 +384,6 @@ class NutritionSummaryWidget extends StatelessWidget {
             ),
           ],
         ],
-      ),
-    );
-  }
-}
-
-class _InfoBox extends StatelessWidget {
-  final _NutrientSpec spec;
-  const _InfoBox({required this.spec});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final brightness = theme.brightness;
-    final colorScheme = theme.colorScheme;
-
-    final hasTarget = spec.target > 0;
-    final rawProgress = hasTarget ? (spec.value / spec.target) : 0.0;
-    final progress = rawProgress.clamp(0.0, 1.0);
-
-    final backgroundColor = brightness == Brightness.dark
-        ? Colors.white.withOpacity(0.10)
-        : Colors.white.withOpacity(0.65);
-
-    final borderColor = brightness == Brightness.dark
-        ? Colors.white.withOpacity(0.20)
-        : Colors.black.withOpacity(0.12);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(9),
-        border: Border.all(color: borderColor, width: 1.0),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(9),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: progress),
-                  duration: const Duration(milliseconds: 350),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, p, child) =>
-                      FractionallySizedBox(widthFactor: p, child: child),
-                  child: Container(color: spec.color),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10.0,
-                  vertical: 4.0,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        spec.label,
-                        maxLines: 1,
-                        style: TextStyle(
-                          color: colorScheme.onSurface,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      hasTarget
-                          ? '${spec.value.toStringAsFixed(1)} / ${spec.target.toStringAsFixed(0)} ${spec.unit}'
-                          : '${spec.value.toStringAsFixed(1)} ${spec.unit}',
-                      style: TextStyle(
-                        color: colorScheme.onSurface.withOpacity(0.8),
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

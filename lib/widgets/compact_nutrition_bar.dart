@@ -1,10 +1,14 @@
 // lib/widgets/compact_nutrition_bar.dart
 
 import 'package:flutter/material.dart';
-import 'package:lightweight/models/daily_nutrition.dart';
-import 'package:lightweight/util/design_constants.dart';
+import '../models/daily_nutrition.dart';
+import '../util/design_constants.dart';
 
+/// A compact visual overview of daily nutrition and hydration progress.
+///
+/// Displays progress bars for calories, protein, and water intake.
 class CompactNutritionBar extends StatelessWidget {
+  /// The [nutritionData] to visualize in this bar.
   final DailyNutrition nutritionData;
   const CompactNutritionBar({super.key, required this.nutritionData});
 
