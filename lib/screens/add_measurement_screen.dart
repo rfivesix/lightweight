@@ -10,7 +10,12 @@ import '../util/design_constants.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart'; // HINZUGEFÜGT
 
+/// A screen for recording new body measurements.
+///
+/// Provides input fields for various metrics (weight, fat percentage, circumferences)
+/// and allows users to set the specific date and time for the measurement session.
 class AddMeasurementScreen extends StatefulWidget {
+  /// The initial date to be selected in the picker.
   final DateTime? initialDate;
   const AddMeasurementScreen({super.key, this.initialDate});
 

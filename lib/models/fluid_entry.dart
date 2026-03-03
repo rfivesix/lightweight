@@ -1,16 +1,37 @@
 // lib/models/fluid_entry.dart
 
+/// Represents a record of a fluid (beverage) consumption.
+///
+/// Contains information about the type of fluid, quantity, and its nutritional content.
 class FluidEntry {
+  /// Unique identifier for the fluid entry.
   final int? id;
+
+  /// The exact time when the fluid was consumed.
   final DateTime timestamp;
+
+  /// The quantity consumed in milliliters.
   final int quantityInMl;
+
+  /// The name of the beverage.
   final String name;
+
+  /// Calories per 100ml.
   final int? kcal;
+
+  /// Sugar in grams per 100ml.
   final double? sugarPer100ml;
+
+  /// Carbohydrates in grams per 100ml.
   final double? carbsPer100ml;
+
+  /// Caffeine in milligrams per 100ml.
   final double? caffeinePer100ml;
+
+  /// Optional identifier linking this fluid entry to a food entry.
   final int? linked_food_entry_id; // *** NEU ***
 
+  /// Creates a new [FluidEntry] instance.
   FluidEntry({
     this.id,
     required this.timestamp,
@@ -23,6 +44,7 @@ class FluidEntry {
     this.linked_food_entry_id, // *** NEU ***
   });
 
+  /// Converts the [FluidEntry] instance to a Map for database storage.
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -37,6 +59,7 @@ class FluidEntry {
     };
   }
 
+  /// Creates a [FluidEntry] instance from a Map, typically from a database row.
   static FluidEntry fromMap(Map<String, dynamic> map) {
     return FluidEntry(
       id: map['id'],

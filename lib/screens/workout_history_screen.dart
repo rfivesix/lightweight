@@ -13,6 +13,10 @@ import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/swipe_action_background.dart';
 
+/// A screen displaying a list of all previously completed workout sessions.
+///
+/// Allows users to view high-level summaries of past workouts, delete entries,
+/// and navigate to detailed logs via [WorkoutLogDetailScreen].
 class WorkoutHistoryScreen extends StatefulWidget {
   const WorkoutHistoryScreen({super.key});
   @override

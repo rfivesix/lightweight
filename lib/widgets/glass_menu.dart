@@ -2,16 +2,26 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../util/design_constants.dart';
 
+/// Model for an item within the [GlassMenu].
 class GlassMenuItem {
+  /// The icon representing the menu item.
   final IconData icon;
+
+  /// The text label for the menu item.
   final String label;
+
+  /// Callback when the menu item is tapped.
   final VoidCallback onTap;
 
   GlassMenuItem({required this.icon, required this.label, required this.onTap});
 }
 
+/// A full-screen glass-styled menu overlay with animating items.
 class GlassMenu extends StatefulWidget {
+  /// The list of items to display in the menu.
   final List<GlassMenuItem> items;
+
+  /// Callback triggered when the menu should be dismissed.
   final VoidCallback onDismiss;
 
   const GlassMenu({super.key, required this.items, required this.onDismiss});

@@ -1,6 +1,6 @@
 // lib/util/time_util.dart
 
-/// Formatiert eine Duration in einen String wie "HH:MM:SS" oder "MM:SS".
+/// Formats a [Duration] into a string like "HH:MM:SS" or "MM:SS".
 String formatDuration(Duration d) {
   // .abs() stellt sicher, dass wir keine negativen Werte anzeigen,
   // falls es zu kleinen Zeit-Inkonsistenzen kommt.

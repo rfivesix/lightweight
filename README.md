@@ -4,6 +4,16 @@
 
 Hypertrack (formerly *Hypertrack*) is an open-source, offline-first application built with Flutter. It aims to replace fragmented fitness tools by combining advanced workout logging, nutrition tracking, and body metrics into a single, cohesive ecosystem—without compromising your data privacy.
 
+---
+
+### 📖 **Documentation**
+Learn more about the project: **[Hypertrack Project Overview](documentation/overview.md)**
+- [System Architecture](documentation/architecture.md)
+- [Data Models & Storage](documentation/data_models_and_storage.md)
+- [UI & Widgets](documentation/ui_and_widgets.md)
+
+---
+
 > **Note:** This project is currently in **Active Beta**.
 
 ---

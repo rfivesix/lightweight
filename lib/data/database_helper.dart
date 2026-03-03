@@ -15,13 +15,19 @@ import '../models/measurement_session.dart';
 import '../models/supplement.dart';
 import '../models/supplement_log.dart';
 
+/// Main helper for general application data persistence using the Drift database.
+///
+/// Manages user favorites, nutrition logs, fluid intake, body measurements,
+/// supplements, and meal templates.
 class DatabaseHelper {
+  /// Singleton instance of [DatabaseHelper].
   static final DatabaseHelper instance = DatabaseHelper._init();
 
   static db.AppDatabase? _driftDb;
 
   DatabaseHelper._init();
 
+  /// Returns the underlying [db.AppDatabase] instance.
   Future<db.AppDatabase> get database async {
     if (_driftDb != null) return _driftDb!;
     _driftDb = db.AppDatabase();
@@ -53,8 +59,10 @@ class DatabaseHelper {
   }
 
   // ===========================================================================
-  // 1. CLEAR & IMPORT (DIE FEHLENDEN TEILE!)
+  // 1. DATA MAINTENANCE
   // ===========================================================================
+
+  /// Deletes all user-specific data from the database, excluding base products.
   Future<void> clearAllUserData() async {
     final dbInstance = await database;
 
@@ -198,9 +206,10 @@ class DatabaseHelper {
     });
   }
   // ===========================================================================
-  // NUTRITION LOGS (FoodEntry)
+  // NUTRITION LOGS
   // ===========================================================================
 
+  /// Records a new [FoodEntry] in the nutrition logs.
   Future<int> insertFoodEntry(FoodEntry entry) async {
     final dbInstance = await database;
 
@@ -304,6 +313,7 @@ class DatabaseHelper {
   // FLUID LOGS
   // ===========================================================================
 
+  /// Records a new [FluidEntry] and automatically logs caffeine if applicable.
   Future<int> insertFluidEntry(FluidEntry entry) async {
     final dbInstance = await database;
 

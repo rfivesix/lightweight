@@ -7,7 +7,12 @@ import '../util/design_constants.dart';
 import '../util/util_convert.dart';
 import '../widgets/global_app_bar.dart';
 
+/// A screen for creating or editing a supplement definition.
+///
+/// Allows configuring the supplement's name, default dose, unit,
+/// daily goals/limits, and personal notes.
 class CreateSupplementScreen extends StatefulWidget {
+  /// The supplement to edit, or null if creating a new one.
   final Supplement? supplementToEdit;
   const CreateSupplementScreen({super.key, this.supplementToEdit});
 

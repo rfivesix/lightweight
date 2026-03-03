@@ -2,10 +2,13 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Utility for managing exercise name mappings between external apps and Hypertrack.
+///
+/// Persists user-defined mappings in [SharedPreferences] to handle CSV imports.
 class MappingPrefs {
   static const _kKey = 'exercise_name_mappings_v1';
 
-  // Lädt Map<externalName, targetName> (case-insensitive Lookup via normalize).
+  /// Loads all current name mappings from persistence.
   static Future<Map<String, String>> load() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_kKey);

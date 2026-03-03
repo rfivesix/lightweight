@@ -12,6 +12,10 @@ import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/swipe_action_background.dart';
 
+/// A screen for managing the catalog of available supplements.
+///
+/// Users can view, edit, and delete custom supplements, while built-in
+/// supplements remain protected from deletion.
 class ManageSupplementsScreen extends StatefulWidget {
   const ManageSupplementsScreen({super.key});
 

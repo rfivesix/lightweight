@@ -24,6 +24,10 @@ import '../widgets/summary_card.dart';
 import './food_detail_screen.dart';
 import '../util/date_util.dart';
 
+/// A screen for detailed nutrition logging and daily summaries.
+///
+/// Shows a breakdown of macronutrient and micronutrient intake,
+/// water consumption, and caffeine logs over various time ranges.
 class NutritionScreen extends StatefulWidget {
   const NutritionScreen({super.key});
 

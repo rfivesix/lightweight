@@ -15,8 +15,15 @@ import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/swipe_action_background.dart';
 
+/// A comprehensive screen for viewing and editing a meal and its ingredients.
+///
+/// Displays nutritional totals for the meal and allows users to add, remove,
+/// or adjust quantities of individual ingredients. Meals can be added directly
+/// to the daily diary from this screen.
 class MealScreen extends StatefulWidget {
+  /// The meal data as a map containing 'id', 'name', and 'notes'.
   final Map<String, dynamic> meal; // erwartet: {id, name, notes}
+  /// Whether to open the screen in edit mode initially.
   final bool startInEdit;
 
   const MealScreen({super.key, required this.meal, this.startInEdit = false});

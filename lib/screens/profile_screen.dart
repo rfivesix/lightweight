@@ -4,8 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../data/database_helper.dart';
-import '../data/drift_database.dart'
-    as db; // Zugriff auf Profile-Klasse
+import '../data/drift_database.dart' as db; // Zugriff auf Profile-Klasse
 import '../generated/app_localizations.dart';
 import 'goals_screen.dart';
 import 'onboarding_screen.dart';
@@ -18,6 +17,10 @@ import '../widgets/summary_card.dart';
 import 'package:provider/provider.dart';
 import '../widgets/global_app_bar.dart';
 
+/// A screen for managing user-specific identity and data.
+///
+/// Allows editing the user profile (name, gender, age), managing the profile picture,
+/// and provides entry points to app settings and goals.
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 

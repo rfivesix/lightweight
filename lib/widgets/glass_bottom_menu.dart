@@ -7,11 +7,19 @@ import '../services/theme_service.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:provider/provider.dart';
 
+/// Represents an action item within a [showGlassBottomMenu].
 class GlassMenuAction {
+  /// Optional standard material icon.
   final IconData? icon; // Jetzt nullable
+  /// Optional custom widget for the icon area (e.g., initials or custom shape).
   final Widget? customIcon; // NEU: Für deine Buchstaben
+  /// The main text label for the action.
   final String label;
+
+  /// Optional secondary text providing more context.
   final String? subtitle;
+
+  /// Callback triggered when the action is selected.
   final VoidCallback onTap;
 
   GlassMenuAction({
@@ -27,6 +35,9 @@ class GlassMenuAction {
 // ... (showGlassBottomMenu und _GlassBottomMenuSheet bleiben unverändert) ...
 // ... BITTE DEN CODE DAZWISCHEN NICHT LÖSCHEN, NUR ÜBERSPRINGEN ...
 
+/// Shows a premium glass-styled modal bottom sheet.
+///
+/// Can display either a list of [actions] or custom [contentBuilder] content.
 Future<T?> showGlassBottomMenu<T>({
   required BuildContext context,
   String? title,

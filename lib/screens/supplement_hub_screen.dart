@@ -15,6 +15,10 @@ import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/swipe_action_background.dart';
 
+/// A central dashboard for tracking supplement intake and progress.
+///
+/// Provides a date-based view of supplement logs, visualizes progress towards
+/// daily goals, and allows quick logging of doses.
 class SupplementHubScreen extends StatefulWidget {
   const SupplementHubScreen({super.key});
   @override

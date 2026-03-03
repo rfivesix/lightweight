@@ -18,7 +18,12 @@ import '../widgets/set_type_chip.dart';
 import '../widgets/wger_attribution_widget.dart';
 import '../widgets/workout_card.dart';
 
+/// A screen for creating or modifying a [Routine].
+///
+/// Allows users to name their routine and manage a list of [RoutineExercise] items.
+/// Each exercise can have multiple sets with target reps, weight, and RIR.
 class EditRoutineScreen extends StatefulWidget {
+  /// The [Routine] to be edited. If null, a new routine is created.
   final Routine? routine;
   const EditRoutineScreen({super.key, this.routine});
 
@@ -141,7 +146,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         for (var st in newRoutineExercise.setTemplates) {
           // FIX: Leere Reps für Cardio
           final defaultReps = isCardio ? '' : st.targetReps;
-          
+
           _repsControllers[st.id!] = TextEditingController(text: defaultReps);
           _weightControllers[st.id!] = TextEditingController(
             text: st.targetWeight?.toString() ?? '',
@@ -425,8 +430,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     final confirmed = await showDeleteConfirmation(
       context,
       title: l10n.deleteExerciseConfirmTitle,
-      content: l10n.deleteExerciseConfirmContent(
-          ex.exercise.getLocalizedName(context)),
+      content: l10n
+          .deleteExerciseConfirmContent(ex.exercise.getLocalizedName(context)),
     );
 
     if (confirmed && _routineId != null) {
@@ -515,8 +520,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                     : ReorderableListView.builder(
                         padding: EdgeInsets.zero,
                         itemCount: _routineExercises.length,
-                        proxyDecorator: (Widget child, int index,
-                            Animation<double> anim) {
+                        proxyDecorator:
+                            (Widget child, int index, Animation<double> anim) {
                           return Material(
                             elevation: 4.0,
                             color: Theme.of(context).scaffoldBackgroundColor,
@@ -576,8 +581,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                                           ),
                                           child: Text(
                                             "${routineExercise.pauseSeconds}s",
-                                            style: textTheme.bodyMedium
-                                                ?.copyWith(
+                                            style:
+                                                textTheme.bodyMedium?.copyWith(
                                               color: colorScheme.primary,
                                               fontWeight: FontWeight.bold,
                                             ),
@@ -743,7 +748,6 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                 ),
               ),
             ),
-            
             if (isCardio) ...[
               // CARDIO FIELDS
               Expanded(
@@ -751,7 +755,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                 child: TextFormField(
                   controller: _weightControllers[template.id!],
                   textAlign: TextAlign.center,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(
                     border: InputBorder.none,
                     isDense: true,
@@ -839,7 +844,6 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                 ),
               ),
             ],
-
             Padding(
               padding: const EdgeInsets.only(right: 8.0),
               child: SizedBox(

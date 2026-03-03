@@ -5,6 +5,10 @@ import '../generated/app_localizations.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../widgets/global_app_bar.dart';
 
+/// A screen that utilizes the device camera to scan barcodes for product identification.
+///
+/// Uses the `mobile_scanner` package to detect barcodes and returns the first
+/// successfully scanned code to the calling screen.
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
 

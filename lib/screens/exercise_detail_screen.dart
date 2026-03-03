@@ -6,7 +6,11 @@ import '../widgets/summary_card.dart';
 import '../widgets/wger_attribution_widget.dart';
 import '../widgets/global_app_bar.dart';
 
+/// A screen displaying detailed information about a specific [Exercise].
+///
+/// Shows descriptions, involved muscles, and instructional images if available.
 class ExerciseDetailScreen extends StatelessWidget {
+  /// The [Exercise] whose details are to be displayed.
   final Exercise exercise;
   const ExerciseDetailScreen({super.key, required this.exercise});
 

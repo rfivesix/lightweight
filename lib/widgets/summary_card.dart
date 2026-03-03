@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import '../theme/color_constants.dart';
 
+/// A standardized card for displaying summary information with a glass aesthetic.
+///
+/// Automatically adapts its background color and transparency to the current theme.
 class SummaryCard extends StatelessWidget {
+  /// The main content to display inside the card.
   final Widget child;
+
+  /// Internal padding for the [child].
   final EdgeInsetsGeometry padding;
 
   const SummaryCard({

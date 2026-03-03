@@ -4,7 +4,11 @@ import 'package:flutter/material.dart';
 import '../generated/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+/// A small widget to display source attribution for Open Food Facts.
+///
+/// Provides a clickable link to their website.
 class OffAttributionWidget extends StatelessWidget {
+  /// Optional style for the attribution text.
   final TextStyle? textStyle;
 
   const OffAttributionWidget({super.key, this.textStyle});

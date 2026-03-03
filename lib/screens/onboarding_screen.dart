@@ -7,6 +7,10 @@ import 'main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 
+/// The initial setup flow for new users.
+///
+/// Collects user profile data (name, DOB, anthropometrics) and initial
+/// nutrition/health goals to populate the database and preferences.
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 

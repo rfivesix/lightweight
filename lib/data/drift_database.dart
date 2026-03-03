@@ -28,6 +28,7 @@ mixin MetaColumns on Table {
 // --- TABELLEN DEFINITIONEN ---
 
 // 1. Profiles
+/// Table definition for user profiles.
 class Profiles extends Table with HybridId, MetaColumns {
   TextColumn get username => text().nullable()();
   BoolColumn get isCoach => boolean().withDefault(const Constant(false))();
@@ -55,6 +56,7 @@ class AppSettings extends Table with HybridId, MetaColumns {
 }
 
 // 3. Exercises
+/// Table definition for exercises.
 class Exercises extends Table with HybridId, MetaColumns {
   TextColumn get createdBy => text().nullable()(); // Nullable wenn System-Übung
   TextColumn get nameDe => text()();
@@ -104,6 +106,7 @@ class RoutineSetTemplates extends Table with HybridId, MetaColumns {
 }
 
 // 7. WorkoutLogs
+/// Table definition for historical workout logs.
 class WorkoutLogs extends Table with HybridId, MetaColumns {
   TextColumn get userId => text().nullable()();
   TextColumn get routineId => text().nullable().references(Routines, #id)();
@@ -163,6 +166,7 @@ class CardioSamples extends Table with HybridId, MetaColumns {
 }
 
 // 11. Products (Ersetzt Teile von food_entries / FoodItem)
+/// Table definition for food products.
 class Products extends Table with HybridId, MetaColumns {
   TextColumn get barcode => text().unique()(); // Eindeutiger Identifier
   TextColumn get name => text()();
@@ -188,6 +192,7 @@ class Products extends Table with HybridId, MetaColumns {
 }
 
 // 12. NutritionLogs (Ersetzt food_entries)
+/// Table definition for nutrition consumption logs.
 class NutritionLogs extends Table with HybridId, MetaColumns {
   TextColumn get userId => text().nullable()();
   TextColumn get productId => text().nullable().references(Products, #id)();
@@ -338,6 +343,8 @@ class Favorites extends Table with MetaColumns {
   FoodCategories,
   Favorites
 ])
+
+/// The central Drift database class for the application.
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 

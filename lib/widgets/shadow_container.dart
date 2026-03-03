@@ -2,10 +2,18 @@
 
 import 'package:flutter/material.dart';
 
+/// A container utility that adds a soft shadow and corner clipping to its [child].
 class ShadowContainer extends StatelessWidget {
+  /// The content to display inside the container.
   final Widget child;
+
+  /// The corner radius for the container and its content.
   final BorderRadiusGeometry borderRadius;
+
+  /// Optional list of [boxShadow] objects; defaults to a soft standard shadow.
   final List<BoxShadow>? boxShadow;
+
+  /// Optional external margin around the container.
   final EdgeInsetsGeometry? margin; // Optionaler externer Margin
 
   const ShadowContainer({

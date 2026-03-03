@@ -6,20 +6,30 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Service responsible for managing user profile information, such as the profile picture.
+///
+/// Implements [ChangeNotifier] to allow UI components to react to profile changes.
 class ProfileService extends ChangeNotifier {
   static final ProfileService _instance = ProfileService._internal();
+
+  /// Returns the singleton instance of [ProfileService].
   factory ProfileService() => _instance;
   ProfileService._internal();
 
   String? _profileImagePath;
+
+  /// The local file path to the user's profile image.
   String? get profileImagePath => _profileImagePath;
 
-  // CacheBuster hilft dem Widget, aber wir brauchen auch evict() für den ImageProvider
+  /// A counter that increments whenever the profile image is updated.
+  ///
+  /// Used to force image providers to bypass cache and redraw the image.
   int cacheBuster = 0;
 
   bool _isPickerActive = false;
   static const String _profileImageKey = 'profileImagePath';
 
+  /// Initializes the service by loading the saved profile image path from storage.
   Future<void> initialize() async {
     final prefs = await SharedPreferences.getInstance();
     _profileImagePath = prefs.getString(_profileImageKey);
@@ -35,6 +45,9 @@ class ProfileService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Opens the gallery to pick a new profile image and saves it locally.
+  ///
+  /// Copy the image to the application's document directory to ensure it persists.
   Future<void> pickAndSaveProfileImage() async {
     if (_isPickerActive) return;
     _isPickerActive = true;
@@ -75,6 +88,7 @@ class ProfileService extends ChangeNotifier {
     }
   }
 
+  /// Deletes the current profile image from both storage and disk.
   Future<void> deleteProfileImage() async {
     final prefs = await SharedPreferences.getInstance();
     final currentPath = prefs.getString(_profileImageKey);

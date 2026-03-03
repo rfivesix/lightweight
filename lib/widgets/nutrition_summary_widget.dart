@@ -244,9 +244,18 @@ import '../util/design_constants.dart';
 
 import 'glass_progress_bar.dart'; // Für den ImageFilter.blur
 
+/// A comprehensive summary widget for daily nutrition and macro tracking.
+///
+/// Displays multiple [GlassProgressBar]s in a grid-like layout for calories,
+/// water, protein, carbs, and fats. Can be expanded to show sub-macros like sugar.
 class NutritionSummaryWidget extends StatelessWidget {
+  /// The daily nutrition data to display.
   final DailyNutrition nutritionData;
+
+  /// Whether to show the expanded set of macros (e.g., sugar, fiber, salt, caffeine).
   final bool isExpandedView;
+
+  /// Localization instance for labels.
   final AppLocalizations l10n;
 
   const NutritionSummaryWidget({

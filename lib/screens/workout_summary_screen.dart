@@ -9,7 +9,12 @@ import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/workout_summary_bar.dart';
 
+/// A screen providing a summary of a recently finished workout session.
+///
+/// Typically shown after [LiveWorkoutScreen] ends, it highlights key metrics
+/// like total volume, duration, and exercise-specific results.
 class WorkoutSummaryScreen extends StatefulWidget {
+  /// The unique identifier of the summarized workout log.
   final int logId;
 
   const WorkoutSummaryScreen({super.key, required this.logId});
@@ -21,8 +26,8 @@ class WorkoutSummaryScreen extends StatefulWidget {
 class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
   bool _isLoading = true;
   WorkoutLog? _log;
-  
-  // Wir speichern jetzt einen formatierten String pro Übung, 
+
+  // Wir speichern jetzt einen formatierten String pro Übung,
   // da Cardio und Kraft unterschiedliche Einheiten haben.
   Map<String, String> _summaryPerExercise = {};
 
@@ -32,15 +37,16 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
     _loadWorkoutDetails();
   }
 
-Future<void> _loadWorkoutDetails() async {
+  Future<void> _loadWorkoutDetails() async {
     final db = WorkoutDatabaseHelper.instance;
     final data = await db.getWorkoutLogById(widget.logId);
 
     if (data != null) {
       final Map<String, String> summaryMap = {};
-      
+
       // FIX: Typ-Sicherheit erhöhen: List<SetLog> statt dynamic
-      final groupedSets = <String, List<dynamic>>{}; // Bleibt dynamisch wegen Initialisierung
+      final groupedSets =
+          <String, List<dynamic>>{}; // Bleibt dynamisch wegen Initialisierung
       for (var set in data.sets) {
         groupedSets.putIfAbsent(set.exerciseName, () => []).add(set);
       }
@@ -62,12 +68,13 @@ Future<void> _loadWorkoutDetails() async {
             // Der Analyzer ist bei dynamic manchmal streng oder verwirrt bei +=.
             final dist = (s.distanceKm as num?)?.toDouble() ?? 0.0;
             final dur = (s.durationSeconds as num?)?.toInt() ?? 0;
-            
+
             totalDist += dist;
-            totalSeconds += dur; 
+            totalSeconds += dur;
           }
           final int minutes = (totalSeconds / 60).round();
-          summaryMap[name] = "${totalDist.toStringAsFixed(1)} km | $minutes min";
+          summaryMap[name] =
+              "${totalDist.toStringAsFixed(1)} km | $minutes min";
         } else {
           double totalVol = 0;
           for (var s in sets) {

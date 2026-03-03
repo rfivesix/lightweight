@@ -1,12 +1,25 @@
 // lib/models/measurement.dart
 
+/// Represents a single body measurement.
+///
+/// Contains information about the measurement type (e.g., "Weight"), value, and unit.
 class Measurement {
+  /// Unique identifier for the measurement.
   final int? id;
+
+  /// The identifier of the [MeasurementSession] this measurement belongs to.
   final int sessionId;
+
+  /// The type of measurement (e.g., "Weight", "Body Fat", "Biceps").
   final String type;
+
+  /// The numeric value of the measurement.
   final double value;
+
+  /// The unit of measurement (e.g., "kg", "%", "cm").
   final String unit;
 
+  /// Creates a new [Measurement] instance.
   Measurement({
     this.id,
     required this.sessionId,
@@ -15,6 +28,7 @@ class Measurement {
     required this.unit,
   });
 
+  /// Creates a [Measurement] instance from a Map, typically from a database row.
   factory Measurement.fromMap(Map<String, dynamic> map) {
     return Measurement(
       id: map['id'],
@@ -25,6 +39,7 @@ class Measurement {
     );
   }
 
+  /// Converts the [Measurement] instance to a Map for database storage.
   Map<String, dynamic> toMap() {
     return {
       'id': id,

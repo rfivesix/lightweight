@@ -7,9 +7,17 @@ import '../generated/app_localizations.dart';
 import '../util/design_constants.dart';
 import 'package:flutter/services.dart';
 
+/// A widget for visualizing body measurement data in a line chart.
+///
+/// Fetches and displays historical data for a specific [chartType] and [dateRange].
 class MeasurementChartWidget extends StatefulWidget {
+  /// The type of measurement (e.g., 'weight', 'fat_percent').
   final String chartType;
+
+  /// The time period to display in the chart.
   final DateTimeRange dateRange;
+
+  /// The unit of measurement for axis labeling.
   final String unit;
 
   const MeasurementChartWidget({

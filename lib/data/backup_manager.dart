@@ -20,8 +20,13 @@ import '../models/food_item.dart';
 import '../models/hypertrack_backup.dart';
 import '../util/encryption_util.dart';
 
+/// Manager responsible for application backup, restoration, and data export.
+///
+/// Supports full JSON backups with optional encryption and CSV exports for
+/// nutrition, workouts, and measurements.
 class BackupManager {
   // Singleton Pattern
+  /// Singleton instance of [BackupManager].
   static final BackupManager instance = BackupManager._init();
   BackupManager._init();
 
@@ -35,6 +40,7 @@ class BackupManager {
   // EXPORT (JSON / FULL BACKUP)
   // ---------------------------------------------------------------------------
 
+  /// Exports a complete application backup as an unencrypted JSON file and shares it.
   Future<bool> exportFullBackup() async {
     try {
       final jsonString = await _generateBackupJson();
@@ -45,6 +51,9 @@ class BackupManager {
     }
   }
 
+  /// Exports a complete application backup as an encrypted JSON file and shares it.
+  ///
+  /// Uses [passphrase] for AES-256 encryption.
   Future<bool> exportFullBackupEncrypted(String passphrase) async {
     try {
       final jsonString = await _generateBackupJson();
@@ -146,10 +155,14 @@ class BackupManager {
   // IMPORT
   // ---------------------------------------------------------------------------
 
+  /// Imports a full application backup from the provided [filePath].
   Future<bool> importFullBackup(String filePath) async {
     return importFullBackupAuto(filePath, passphrase: null);
   }
 
+  /// Imports a full application backup from [filePath], auto-detecting encryption.
+  ///
+  /// If the backup is encrypted, [passphrase] must be provided.
   Future<bool> importFullBackupAuto(String filePath,
       {String? passphrase}) async {
     try {
@@ -261,6 +274,9 @@ class BackupManager {
   // AUTO BACKUP
   // ---------------------------------------------------------------------------
 
+  /// Runs an automatic backup if the specified [interval] has passed since the last backup.
+  ///
+  /// Supports encryption via [passphrase] and keeps [retention] number of old backups.
   Future<bool> runAutoBackupIfDue({
     Duration interval = const Duration(days: 1),
     bool encrypted = false,
@@ -342,6 +358,7 @@ class BackupManager {
   // CSV EXPORT
   // ---------------------------------------------------------------------------
 
+  /// Exports all nutrition logs as a CSV file and shares it.
   Future<bool> exportNutritionAsCsv() async {
     try {
       final entries = await _userDb.getAllFoodEntries();
@@ -392,6 +409,7 @@ class BackupManager {
     }
   }
 
+  /// Exports all workout logs as a CSV file and shares it.
   Future<bool> exportWorkoutsAsCsv() async {
     try {
       final logs = await _workoutDb.getFullWorkoutLogs();
@@ -435,6 +453,7 @@ class BackupManager {
     }
   }
 
+  /// Exports all body measurements as a CSV file and shares it.
   Future<bool> exportMeasurementsAsCsv() async {
     try {
       final sessions = await _userDb.getMeasurementSessions();

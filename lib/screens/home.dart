@@ -20,6 +20,10 @@ import '../widgets/nutrition_summary_widget.dart';
 import '../widgets/summary_card.dart';
 import '../util/date_util.dart';
 
+/// The primary dashboard of the application.
+///
+/// Aggregates data from nutrition logs, supplement tracking, workout history,
+/// and body measurements into a high-level summary for the user.
 class Home extends StatefulWidget {
   const Home({super.key});
 

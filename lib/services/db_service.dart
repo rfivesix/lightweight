@@ -3,17 +3,25 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
+/// Service responsible for managing the local SQLite database.
+///
+/// Handles database initialization, asset copying for pre-populated data,
+/// and providing access to the database instance.
 class DbService {
   static Database? _db;
+
+  /// Singleton instance of [DbService].
   static final DbService I = DbService._();
   DbService._();
 
+  /// Returns the [Database] instance, initializing it if necessary.
   Future<Database> get database async {
     if (_db != null) return _db!;
     _db = await _init();
     return _db!;
   }
 
+  /// Initializes the database by copying it from assets if it doesn't already exist.
   Future<Database> _init() async {
     final dbDir = await getDatabasesPath();
     final dbPath = p.join(dbDir, 'hypertrack_training.db');

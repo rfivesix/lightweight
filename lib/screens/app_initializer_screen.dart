@@ -8,6 +8,10 @@ import 'main_screen.dart';
 import 'onboarding_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// A splash screen responsible for app-wide initialization.
+///
+/// It handles database updates, auto-backup checks, and determines
+/// whether to navigate to [OnboardingScreen] or [MainScreen].
 class AppInitializerScreen extends StatefulWidget {
   const AppInitializerScreen({super.key});
 

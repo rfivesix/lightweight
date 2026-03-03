@@ -11,6 +11,10 @@ import '../widgets/glass_fab.dart';
 import '../widgets/off_attribution_widget.dart';
 import '../widgets/summary_card.dart'; // HINZUGEFÜGT
 
+/// A screen for exploring and managing the food database independently of tracking.
+///
+/// Allows searching for products and managing favorites without requiring
+/// a target date or meal context.
 class FoodExplorerScreen extends StatefulWidget {
   const FoodExplorerScreen({super.key});
 

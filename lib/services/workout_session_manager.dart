@@ -10,9 +10,15 @@ import '../models/workout_log.dart';
 import '../data/workout_database_helper.dart';
 import '../models/set_template.dart';
 
+/// Manager responsible for the lifecycle and state of an active workout session.
+///
+/// Handles session timing, set tracking, rest periods, and data persistence
+/// between the UI and the database.
 class WorkoutSessionManager extends ChangeNotifier {
   static final WorkoutSessionManager _instance =
       WorkoutSessionManager._internal();
+
+  /// Returns the singleton instance of [WorkoutSessionManager].
   factory WorkoutSessionManager() => _instance;
   WorkoutSessionManager._internal();
 
@@ -30,24 +36,47 @@ class WorkoutSessionManager extends ChangeNotifier {
 
   Timer? _workoutDurationTimer;
   Duration _elapsedDuration = Duration.zero;
+
+  /// The total weight lifted across all completed sets in the current session.
   double _totalVolume = 0.0;
+
+  /// The total number of sets recorded in the current session.
   int _totalSets = 0;
 
+  /// Returns the total volume lifted.
   double get totalVolume => _totalVolume;
+
+  /// Returns the total number of sets.
   int get totalSets => _totalSets;
+
+  /// The active [WorkoutLog] being recorded.
   WorkoutLog? get workoutLog => _workoutLog;
+
+  /// The list of [RoutineExercise]s included in the current workout.
   List<RoutineExercise> get exercises => _exercises;
+
+  /// The number of seconds remaining in the current rest period.
   int get remainingRestSeconds => _remainingRestSeconds;
+
+  /// Whether the "Rest Done" notification banner should be displayed.
   bool get showRestDone => _showRestDone;
+
+  /// The duration since the start of the workout.
   Duration get elapsedDuration => _elapsedDuration;
+
+  /// A map of [SetLog]s indexed by their corresponding [SetTemplate] ID.
   Map<int, SetLog> get setLogs => _setLogs;
 
+  /// Whether a workout session is currently in progress.
   bool get isActive => _workoutLog != null && _workoutLog!.endTime == null;
 
   // ===========================================================================
   // INIT & RESTORE
   // ===========================================================================
 
+  /// Starts a new workout session with the given [log] and [routineExercises].
+  ///
+  /// Initializes the session state, creates initial [SetLog]s, and starts the timer.
   Future<void> startWorkout(
       WorkoutLog log, List<RoutineExercise> routineExercises) async {
     _workoutLog = log;
@@ -69,6 +98,9 @@ class WorkoutSessionManager extends ChangeNotifier {
 
   /// Versucht, ein laufendes Workout aus der Datenbank wiederherzustellen.
   /// Wird in main.dart aufgerufen.
+  /// Attempts to restore an ongoing workout session from the database.
+  ///
+  /// This should be called during application initialization to resume an interrupted workout.
   Future<void> tryRestoreSession() async {
     final db = WorkoutDatabaseHelper.instance;
     final ongoingWorkout = await db.getOngoingWorkout();
@@ -156,6 +188,10 @@ class WorkoutSessionManager extends ChangeNotifier {
   // ACTIONS
   // ===========================================================================
 
+  /// Updates a specific set identified by [templateId] with new data.
+  ///
+  /// Handles fallback logic for empty inputs when a set is completed and
+  /// triggers the rest timer if a set is newly marked as finished.
   Future<void> updateSet(
     int templateId, {
     double? weight,
@@ -263,6 +299,9 @@ class WorkoutSessionManager extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Adds a new set to the exercise identified by [routineExerciseId].
+  ///
+  /// Creates a new [SetTemplate] and [SetLog], copying the weight/reps from the last set if available.
   Future<void> addSetToExercise(int routineExerciseId) async {
     final db = WorkoutDatabaseHelper.instance;
 
@@ -313,6 +352,7 @@ class WorkoutSessionManager extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Removes a specific set identified by [templateId] from the current workout.
   Future<void> removeSet(int templateId) async {
     if (!_setLogs.containsKey(templateId)) return;
 
@@ -349,6 +389,9 @@ class WorkoutSessionManager extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Adds a new [exercise] to the current workout session.
+  ///
+  /// Automatically generates initial set templates and logs based on the exercise category.
   Future<void> addExercise(Exercise exercise) async {
     final tempReId = DateTime.now().millisecondsSinceEpoch;
 
@@ -398,6 +441,7 @@ class WorkoutSessionManager extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Removes an exercise and all its associated sets from the session.
   Future<void> removeExercise(int routineExerciseId) async {
     final reIndex = _exercises.indexWhere((e) => e.id == routineExerciseId);
     if (reIndex == -1) return;
@@ -423,6 +467,7 @@ class WorkoutSessionManager extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Changes the order of an exercise in the session.
   void reorderExercise(int oldIndex, int newIndex) {
     if (oldIndex < newIndex) {
       newIndex -= 1;
@@ -436,6 +481,7 @@ class WorkoutSessionManager extends ChangeNotifier {
   // TIMER LOGIC
   // ===========================================================================
 
+  /// Updates the rest duration for a specific exercise and its pending sets.
   void updatePauseTime(int routineExerciseId, int seconds) {
     pauseTimes[routineExerciseId] = seconds;
     WorkoutDatabaseHelper.instance.updatePauseTime(routineExerciseId, seconds);
@@ -484,6 +530,7 @@ class WorkoutSessionManager extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Cancels any active rest timer and hides the notification banner.
   void cancelRest() {
     _restTimer?.cancel();
     _remainingRestSeconds = 0;
@@ -507,6 +554,10 @@ class WorkoutSessionManager extends ChangeNotifier {
     });
   }
 
+  /// Finalizes the current workout session.
+  ///
+  /// Deletes incomplete sets, reorders completed sets for chronological consistency,
+  /// marks the workout as finished in the database, and clears the manager's state.
   Future<void> finishWorkout() async {
     _workoutDurationTimer?.cancel();
     _restTimer?.cancel();

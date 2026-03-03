@@ -10,7 +10,12 @@ import 'workout_database_helper.dart';
 import 'drift_database.dart' as db;
 import '../models/set_log.dart';
 
+/// Manager responsible for importing workout data from external sources.
 class ImportManager {
+  /// Imports workout data from a Hevy CSV file.
+  ///
+  /// Opens a file picker, parses the CSV content, and inserts the workouts and sets
+  /// into the local database. Returns the number of imported workouts, or -1 on error.
   Future<int> importHevyCsv() async {
     try {
       // 1. Datei auswählen

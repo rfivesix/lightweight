@@ -16,6 +16,10 @@ import '../widgets/summary_card.dart';
 import '../util/l10n_ext.dart';
 import '../widgets/swipe_action_background.dart';
 
+/// A screen for viewing and analyzing body measurement history.
+///
+/// Features a graphical representation of measurement trends over time
+/// and a list of all recorded measurement sessions with deletion support.
 class MeasurementsScreen extends StatefulWidget {
   const MeasurementsScreen({super.key});
 

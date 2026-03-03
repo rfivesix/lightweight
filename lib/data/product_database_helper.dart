@@ -6,7 +6,12 @@ import 'drift_database.dart' as db;
 import 'drift_database.dart';
 import '../models/food_item.dart';
 
+/// Helper class for managing food product data in the Drift database.
+///
+/// Provides methods for searching products, managing favorites, and retrieving
+/// base foods from the katalog.
 class ProductDatabaseHelper {
+  /// Singleton instance of [ProductDatabaseHelper].
   static final ProductDatabaseHelper instance = ProductDatabaseHelper._init();
 
   ProductDatabaseHelper._init();
@@ -87,6 +92,7 @@ class ProductDatabaseHelper {
 
   // --- PUBLIC API ---
 
+  /// Inserts a new product into the database or replaces an existing one with the same barcode.
   Future<void> insertProduct(FoodItem item) async {
     final dbInstance = await database;
     await dbInstance.into(dbInstance.products).insert(
@@ -95,6 +101,7 @@ class ProductDatabaseHelper {
         );
   }
 
+  /// Updates an existing product's information in the database.
   Future<void> updateProduct(FoodItem item) async {
     // In Drift ist insertOrReplace (siehe oben) oft ausreichend,
     // aber hier explizit Update:
@@ -104,6 +111,7 @@ class ProductDatabaseHelper {
         .write(_mapModelToCompanion(item));
   }
 
+  /// Retrieves a list of [FoodItem]s matching the provided [barcodes].
   Future<List<FoodItem>> getProductsByBarcodes(List<String> barcodes) async {
     if (barcodes.isEmpty) return [];
     final dbInstance = await database;
@@ -115,6 +123,7 @@ class ProductDatabaseHelper {
     return rows.map(_mapRowToModel).toList();
   }
 
+  /// Retrieves recently used products based on the user's consumption history.
   Future<List<FoodItem>> getRecentProducts() async {
     final recentBarcodes =
         await DatabaseHelper.instance.getRecentlyUsedBarcodes();
@@ -122,6 +131,7 @@ class ProductDatabaseHelper {
   }
 
   // === Grundnahrungsmittel (Base Foods) ===
+  /// Retrieves all food categories from the database.
   Future<List<Map<String, dynamic>>> getBaseCategories() async {
     final db = await database;
 
@@ -143,6 +153,7 @@ class ProductDatabaseHelper {
 
   // --- 2. BASE-FOODS LADEN (Katalog & Base-Suche) ---
   // FIX: categoryKey ist jetzt optional (String?)
+  /// Retrieves base foods from the katalog, optionally filtered by [categoryKey] or [search] term.
   Future<List<FoodItem>> getBaseFoods({
     String? categoryKey, // <--- NICHT MEHR REQUIRED
     int limit = 100,
@@ -166,7 +177,9 @@ class ProductDatabaseHelper {
     final rows = await query.get();
     return rows.map((row) => _mapRowToFoodItem(row)).toList();
   }
+
 // --- 3. GLOBALE SUCHE (Base + OFF + User) ---
+  /// Performs a global search across user-created, base, and Open Food Facts products.
   Future<List<FoodItem>> searchProducts(String keyword) async {
     final term = keyword.trim();
     if (term.isEmpty) return [];
@@ -181,7 +194,8 @@ class ProductDatabaseHelper {
               t.source.isIn(['user', 'base']))
           ..orderBy([
             // Kürzere Namen zuerst (Exakte Treffer nach oben)
-            (t) => OrderingTerm(expression: t.name.length, mode: OrderingMode.asc),
+            (t) =>
+                OrderingTerm(expression: t.name.length, mode: OrderingMode.asc),
           ])
           ..limit(limit))
         .get();
@@ -196,7 +210,8 @@ class ProductDatabaseHelper {
                 (t.name.like('%$term%') | t.brand.like('%$term%')) &
                 t.source.equals('off'))
             ..orderBy([
-              (t) => OrderingTerm(expression: t.name.length, mode: OrderingMode.asc),
+              (t) => OrderingTerm(
+                  expression: t.name.length, mode: OrderingMode.asc),
             ])
             ..limit(remaining))
           .get();
@@ -208,6 +223,7 @@ class ProductDatabaseHelper {
   }
 
   // --- 4. SCANNER ---
+  /// Retrieves a single product by its [barcode].
   Future<FoodItem?> getProductByBarcode(String barcode) async {
     final db = await database;
     final row = await (db.select(db.products)
@@ -220,6 +236,7 @@ class ProductDatabaseHelper {
   }
 
   // --- 5. FAVORITEN ---
+  /// Retrieves all products marked as favorites by the user.
   Future<List<FoodItem>> getFavoriteProducts() async {
     final db = await database;
 

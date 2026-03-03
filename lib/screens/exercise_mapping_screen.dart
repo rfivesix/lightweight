@@ -7,7 +7,11 @@ import 'exercise_catalog_screen.dart';
 import '../util/design_constants.dart';
 import '../widgets/global_app_bar.dart';
 
+/// A screen for mapping unknown exercise names to known database [Exercise] objects.
+///
+/// Typically used after importing workout data where some items don't have direct matches.
 class ExerciseMappingScreen extends StatefulWidget {
+  /// A list of exercise names that could not be matched automatically.
   final List<String> unknownNames;
   const ExerciseMappingScreen({super.key, required this.unknownNames});
 

@@ -50,7 +50,12 @@ void main() async {
   // FIX: Keine Hintergrund-Updates mehr hier! Das übernimmt jetzt der AppInitializerScreen.
 }
 
+/// The entry point of the Hypertrack application.
+///
+/// This application is a fitness tracker that allows users to log workouts,
+/// manage supplements, and track body measurements.
 class MyApp extends StatelessWidget {
+  /// Creates the root widget for the application.
   const MyApp({super.key});
 
   @override

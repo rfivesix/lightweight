@@ -7,6 +7,10 @@ import '../generated/app_localizations.dart';
 import '../widgets/global_app_bar.dart';
 import '../data/database_helper.dart';
 
+/// A screen for defining daily health and nutrition targets.
+///
+/// Users can set goals for calories, macronutrients (protein, carbs, fat),
+/// water intake, and other detailed metrics like sugar or fiber.
 class GoalsScreen extends StatefulWidget {
   const GoalsScreen({super.key});
 

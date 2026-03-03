@@ -99,6 +99,10 @@ class AppSheetScaffold extends StatelessWidget {
   }
 }
 
+/// A specialized dialog content widget for water logging.
+///
+/// Focuses specifically on hydration tracking with a simplified UI
+/// for entering milliliters and timestamp.
 class WaterDialogContent extends StatefulWidget {
   final int? initialQuantity;
   final DateTime? initialTimestamp;

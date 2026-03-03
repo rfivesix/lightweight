@@ -17,8 +17,15 @@ import 'package:share_plus/share_plus.dart';
 // Dev-Flag: später einfach auf false setzen oder die Dev-Blöcke entfernen.
 const bool kDevEditEnabled = false;
 
+/// A detailed view for a [FoodItem], showing its full nutritional profile.
+///
+/// Supports toggling between 100g values and portion-based values if a portion
+/// is provided via [trackedItem]. Includes favorite management and source attribution.
 class FoodDetailScreen extends StatefulWidget {
+  /// Optional tracked entry to show portion-specific values.
   final TrackedFoodItem? trackedItem;
+
+  /// The food item to display if not provided by [trackedItem].
   final FoodItem? foodItem;
 
   const FoodDetailScreen({super.key, this.trackedItem, this.foodItem})

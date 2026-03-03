@@ -11,7 +11,11 @@ import '../models/set_log.dart';
 import '../models/set_template.dart';
 import '../models/workout_log.dart';
 
+/// Helper class for managing workout-specific data in the Drift database.
+///
+/// Handles routines, exercises, set templates, and historical workout logs.
 class WorkoutDatabaseHelper {
+  /// Singleton instance of [WorkoutDatabaseHelper].
   static final WorkoutDatabaseHelper instance = WorkoutDatabaseHelper._init();
 
   WorkoutDatabaseHelper._init();
@@ -82,6 +86,7 @@ class WorkoutDatabaseHelper {
   // EXERCISES
   // ===========================================================================
 
+  /// Retrieves all unique exercise categories present in the database.
   Future<List<String>> getAllCategories() async {
     final dbInstance = await database;
     final query = dbInstance.selectOnly(dbInstance.exercises, distinct: true)
@@ -109,6 +114,7 @@ class WorkoutDatabaseHelper {
     return muscles.toList()..sort();
   }
 
+  /// Searches for exercises matching the [query] and [selectedCategories].
   Future<List<Exercise>> searchExercises({
     String query = '',
     List<String> selectedCategories = const [],
@@ -219,7 +225,6 @@ class WorkoutDatabaseHelper {
     return detailed;
   }
 
-
   Future<Routine> createRoutine(String name) async {
     final dbInstance = await database;
     final row = await dbInstance.into(dbInstance.routines).insertReturning(
@@ -236,8 +241,8 @@ class WorkoutDatabaseHelper {
   }
 
   // FIX: Parameter initialSetCount hinzugefügt
-  Future<RoutineExercise?> addExerciseToRoutine(
-      int routineId, int exerciseId, {int initialSetCount = 3}) async {
+  Future<RoutineExercise?> addExerciseToRoutine(int routineId, int exerciseId,
+      {int initialSetCount = 3}) async {
     final dbInstance = await database;
 
     // UUIDs holen
@@ -292,6 +297,7 @@ class WorkoutDatabaseHelper {
       setTemplates: templates,
     );
   }
+
   Future<void> removeExerciseFromRoutine(int routineExerciseId) async {
     final dbInstance = await database;
     // OnDelete Cascade in DB Definition sollte Kinder löschen
@@ -315,6 +321,7 @@ class WorkoutDatabaseHelper {
     });
   }
 
+  /// Retrieves a detailed [Routine] including all exercises and set templates.
   Future<Routine?> getRoutineById(int id) async {
     final dbInstance = await database;
 
@@ -349,9 +356,7 @@ class WorkoutDatabaseHelper {
       // 3. SetTemplates laden
       final templates = await (dbInstance.select(dbInstance.routineSetTemplates)
             ..where((tbl) => tbl.routineExerciseId.equals(reData.id))
-            ..orderBy([
-              (t) => drift.OrderingTerm(expression: t.localId)
-            ]))
+            ..orderBy([(t) => drift.OrderingTerm(expression: t.localId)]))
           .get();
 
       final setTemplates = templates
@@ -473,6 +478,7 @@ class WorkoutDatabaseHelper {
   // WORKOUT LOGGING
   // ===========================================================================
 
+  /// Creates a new [WorkoutLog] and marks it as "ongoing".
   Future<WorkoutLog> startWorkout({String? routineName}) async {
     final dbInstance = await database;
     final now = DateTime.now();
@@ -506,7 +512,6 @@ class WorkoutDatabaseHelper {
     );
   }
 
-
   Future<void> finishWorkout(int workoutLogId) async {
     final dbInstance = await database;
     await (dbInstance.update(dbInstance.workoutLogs)
@@ -516,7 +521,8 @@ class WorkoutDatabaseHelper {
       status: const drift.Value('completed'),
     ));
   }
-Future<int> insertSetLog(SetLog setLog) async {
+
+  Future<int> insertSetLog(SetLog setLog) async {
     final dbInstance = await database;
     final workoutLogUuid =
         await _getUuidFromLocalId(dbInstance.workoutLogs, setLog.workoutLogId);
@@ -566,7 +572,7 @@ Future<int> insertSetLog(SetLog setLog) async {
       return row.localId;
     }
   }
-  
+
   Future<WorkoutLog?> getWorkoutLogById(int id) async {
     final dbInstance = await database;
     final logRow = await (dbInstance.select(dbInstance.workoutLogs)
@@ -608,6 +614,7 @@ Future<int> insertSetLog(SetLog setLog) async {
       sets: sets,
     );
   }
+
   Future<void> updateSetLogs(List<SetLog> updatedSets) async {
     if (updatedSets.isEmpty) return;
     final dbInstance = await database;
@@ -631,7 +638,7 @@ Future<int> insertSetLog(SetLog setLog) async {
       }
     });
   }
-  
+
   Future<SetLog?> getLastPerformance(String exerciseName) async {
     final dbInstance = await database;
     final query = dbInstance.select(dbInstance.setLogs)
@@ -708,6 +715,7 @@ Future<int> insertSetLog(SetLog setLog) async {
     }
     return fullLogs;
   }
+
   Future<WorkoutLog?> getLatestWorkoutLog() async {
     final dbInstance = await database;
     final row = await (dbInstance.select(dbInstance.workoutLogs)
@@ -759,7 +767,6 @@ Future<int> insertSetLog(SetLog setLog) async {
       notes: drift.Value(notes),
     ));
   }
-
 
   Future<void> deleteSetLogs(List<int> idsToDelete) async {
     final dbInstance = await database;

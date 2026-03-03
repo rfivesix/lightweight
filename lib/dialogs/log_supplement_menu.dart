@@ -7,6 +7,9 @@ import '../models/supplement.dart';
 import '../util/supplement_l10n.dart';
 
 /// Ein Menü, das eine Liste von Supplements zur Auswahl anzeigt.
+/// A selection menu for choosing a supplement to log.
+///
+/// Displays a list of all available supplements from the database.
 class LogSupplementMenu extends StatefulWidget {
   const LogSupplementMenu({super.key, required this.close});
 

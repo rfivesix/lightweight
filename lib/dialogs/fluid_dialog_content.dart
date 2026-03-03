@@ -5,6 +5,9 @@ import 'package:intl/intl.dart';
 import '../generated/app_localizations.dart';
 import '../util/design_constants.dart';
 
+/// A dialog content widget for logging fluid intake (water, coffee, etc.).
+///
+/// Allows users to specify name, quantity, timestamp, sugar, and caffeine content.
 class FluidDialogContent extends StatefulWidget {
   final int? initialQuantity;
   final DateTime? initialTimestamp;

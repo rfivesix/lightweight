@@ -24,8 +24,15 @@ import 'workout_summary_screen.dart';
 import '../widgets/workout_card.dart';
 // Falls Vibration genutzt wird
 
+/// The active workout tracking screen, managing the real-time session state.
+///
+/// Handles input for sets, reps, weight, RPE/RIR, and cardio metrics. Coordinates
+/// with [WorkoutSessionManager] to persist progress and provide rest timers.
 class LiveWorkoutScreen extends StatefulWidget {
+  /// Optional [Routine] used to initialize the workout exercises.
   final Routine? routine;
+
+  /// The [WorkoutLog] representing the current active session.
   final WorkoutLog workoutLog;
 
   const LiveWorkoutScreen({super.key, this.routine, required this.workoutLog});

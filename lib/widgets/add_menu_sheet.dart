@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import '../generated/app_localizations.dart';
 import '../util/design_constants.dart';
 
+/// A bottom sheet menu providing quick access to common entry actions.
+///
+/// Allows users to start a workout, add a measurement, log food, or log liquids.
 class AddMenuSheet extends StatelessWidget {
   const AddMenuSheet({super.key});
 

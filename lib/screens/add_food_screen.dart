@@ -25,9 +25,17 @@ import '../widgets/summary_card.dart';
 
 // lib/screens/add_food_screen.dart
 
+/// A comprehensive screen for searching and adding food items to the nutrition diary.
+///
+/// Features multiple tabs for catalog search, recently used items, favorites,
+/// and pre-defined meals. Supports barcode scanning and creating custom food items.
 class AddFoodScreen extends StatefulWidget {
+  /// The index of the tab to display initially.
   final int initialTab;
+
+  /// Optional initial date for the tracked entry.
   final DateTime? initialDate; // <--- NEU
+  /// Optional category or meal type identifier for the entry.
   final String? initialMealType; // <--- NEU
   const AddFoodScreen({
     super.key,

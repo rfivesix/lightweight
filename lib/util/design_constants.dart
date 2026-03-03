@@ -1,6 +1,9 @@
 // lib/util/design_constants.dart
 import 'package:flutter/material.dart';
 
+/// Central source of truth for design tokens including spacing, radii, and padding.
+///
+/// Ensures visual consistency across the application by providing standardized constants.
 class DesignConstants {
   // === SPACING ===
   // Card Padding

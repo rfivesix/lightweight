@@ -6,6 +6,10 @@ import '../generated/app_localizations.dart';
 import '../util/design_constants.dart';
 import '../widgets/global_app_bar.dart';
 
+/// A screen for creating custom exercises.
+///
+/// Users can define exercise name, category, description, and involved muscle groups.
+/// These custom exercises are stored in the local database.
 class CreateExerciseScreen extends StatefulWidget {
   const CreateExerciseScreen({super.key});
   @override

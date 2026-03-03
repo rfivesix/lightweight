@@ -1,4 +1,5 @@
 // lib/util/unit_convert.dart
+/// Converts a [value] between different units like 'g' to 'mg' or 'ml' to 'l'.
 double convert(double value, String from, String to) {
   if (from == to) return value;
   if (from == 'g' && to == 'mg') return value * 1000.0;

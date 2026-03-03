@@ -15,7 +15,12 @@ import 'package:drift/drift.dart' as drift;
 typedef ProgressCallback = void Function(
     String task, String detail, double progress);
 
+/// Manager responsible for initializing and updating the application's base data.
+///
+/// Handles importing exercises, food products, and categories from asset databases
+/// into the main application database.
 class BasisDataManager {
+  /// Singleton instance of [BasisDataManager].
   static final BasisDataManager instance = BasisDataManager._init();
   BasisDataManager._init();
 
@@ -28,6 +33,10 @@ class BasisDataManager {
   double _parseDouble(dynamic value) => (value as num?)?.toDouble() ?? 0.0;
   String _parseString(dynamic value) => value?.toString() ?? '';
 
+  /// Checks for updates to the basis data and performs an import if necessary.
+  ///
+  /// The [force] parameter triggers a re-import regardless of version mismatch.
+  /// The [onProgress] callback reports the ongoing task, details, and percentage.
   Future<void> checkForBasisDataUpdate({
     bool force = false,
     ProgressCallback? onProgress, // NEU: Callback

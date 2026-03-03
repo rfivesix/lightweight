@@ -9,6 +9,10 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import '../widgets/global_app_bar.dart';
 
+/// A screen for configuring application-wide preferences.
+///
+/// Includes theme selection (light/dark/system), visual style toggles,
+/// and navigation to data management (backup/import) and legal information.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 

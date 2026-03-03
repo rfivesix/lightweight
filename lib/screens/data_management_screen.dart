@@ -14,6 +14,10 @@ import 'package:shared_preferences/shared_preferences.dart'; // NEU
 import 'package:flutter/services.dart'; // NEU (Clipboard)
 import '../widgets/glass_bottom_menu.dart';
 
+/// A screen for managing application data and backups.
+///
+/// Provides tools for manual and automated backups (JSON), CSV exports for
+/// nutrition and workouts, and importing data from third-party services like Hevy.
 class DataManagementScreen extends StatefulWidget {
   const DataManagementScreen({super.key});
 

@@ -13,7 +13,12 @@ import '../widgets/wger_attribution_widget.dart';
 import 'create_exercise_screen.dart';
 import '../widgets/glass_fab.dart';
 
+/// A searchable list of all available exercises in the database.
+///
+/// Can be used for purely browsing exercises or in [isSelectionMode] to pick
+/// an exercise for a [Routine] or [WorkoutLog].
 class ExerciseCatalogScreen extends StatefulWidget {
+  /// Whether the screen is used to select an exercise to return to a caller.
   final bool isSelectionMode;
   const ExerciseCatalogScreen({super.key, this.isSelectionMode = false});
 

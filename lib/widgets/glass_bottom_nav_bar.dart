@@ -6,10 +6,20 @@ import '../theme/color_constants.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:provider/provider.dart';
 
+/// A premium glass-styled navigation bar with haptic feedback and fluid animations.
+///
+/// Supports standard [items] and a custom [onFabTap] for a central action button.
 class GlassBottomNavBar extends StatelessWidget {
+  /// The index of the currently active tab.
   final int currentIndex;
+
+  /// Callback when a tab is tapped.
   final ValueChanged<int> onTap;
+
+  /// Callback when the floating action area is tapped.
   final VoidCallback onFabTap;
+
+  /// The list of navigation items to display.
   final List<BottomNavigationBarItem> items;
 
   const GlassBottomNavBar({

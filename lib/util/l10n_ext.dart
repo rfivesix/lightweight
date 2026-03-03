@@ -3,11 +3,14 @@ import 'package:flutter/widgets.dart';
 import '../generated/app_localizations.dart';
 
 // Bestehende Extension für den BuildContext
+/// Convenience extension for accessing [AppLocalizations] from [BuildContext].
 extension L10nX on BuildContext {
+  /// Returns the [AppLocalizations] instance for the current context.
   AppLocalizations get l10n => AppLocalizations.of(this)!;
 }
 
 // NEU: Extension für die AppLocalizations-Klasse
+/// Extension for [AppLocalizations] to provide dynamic lookup for localized names.
 extension AppLocalizationsX on AppLocalizations {
   String getLocalizedMeasurementName(String key) {
     switch (key) {

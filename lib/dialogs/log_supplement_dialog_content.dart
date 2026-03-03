@@ -5,6 +5,10 @@ import '../generated/app_localizations.dart';
 import '../models/supplement.dart';
 import '../util/design_constants.dart';
 
+/// A dialog content widget for logging supplement intake.
+///
+/// Specifically designed for standalone supplement logging, allowing
+/// manual entry of the dose and timestamp.
 class LogSupplementDialogContent extends StatefulWidget {
   final Supplement supplement;
   final double? initialDose;

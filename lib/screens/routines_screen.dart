@@ -13,7 +13,12 @@ import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/swipe_action_background.dart';
 
+/// A screen that displays a list of all saved [Routine] templates.
+///
+/// Users can start a workout from a routine, duplicate existing ones,
+/// or navigate to [EditRoutineScreen] to create or edit routines.
 class RoutinesScreen extends StatefulWidget {
+  /// Optional ID to automatically open the editor for a specific routine.
   final int? initialRoutineId;
   const RoutinesScreen({super.key, this.initialRoutineId});
   @override

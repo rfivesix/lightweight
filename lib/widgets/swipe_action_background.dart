@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 
+/// A background widget used for [Dismissible] swipe actions.
+///
+/// Provides a consistent look with rounded corners and an icon aligned to the swipe direction.
 class SwipeActionBackground extends StatelessWidget {
+  /// The background color (e.g., [Colors.red] for delete).
   final Color color;
+
+  /// The icon representing the action.
   final IconData icon;
+
+  /// Anchors the icon to a side (e.g., [Alignment.centerLeft]).
   final Alignment alignment;
 
   const SwipeActionBackground({

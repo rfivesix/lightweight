@@ -3,12 +3,26 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
+/// A standardized AppBar for the application with a frosted glass background.
+///
+/// Implements [PreferredSizeWidget] and provides a consistent look across screens.
 class GlobalAppBar extends StatelessWidget implements PreferredSizeWidget {
+  /// Simple text title.
   final String? title;
+
+  /// Custom widget for the title area; takes precedence over [title].
   final Widget? titleWidget;
+
+  /// List of actions to display at the end of the bar.
   final List<Widget>? actions;
+
+  /// Custom leading widget; usually a back button or menu icon.
   final Widget? leading;
+
+  /// Whether to automatically show a back button if the route allows it.
   final bool automaticallyImplyLeading;
+
+  /// Space between the leading widget and the title.
   final double? titleSpacing;
 
   const GlobalAppBar({

@@ -9,6 +9,10 @@ import '../widgets/bottom_content_spacer.dart';
 import '../widgets/summary_card.dart';
 import 'package:table_calendar/table_calendar.dart';
 
+/// A screen providing a calendar-based overview of user consistency.
+///
+/// Visualizes workout, nutrition, and supplement logging frequency
+/// through interactive markers on a monthly calendar scaffold.
 class StatisticsHubScreen extends StatefulWidget {
   const StatisticsHubScreen({super.key});
 

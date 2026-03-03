@@ -30,6 +30,11 @@ import '../data/workout_database_helper.dart';
 import 'workout_history_screen.dart';
 import '../widgets/todays_workout_summary_card.dart';
 
+/// The central hub for tracking and viewing daily nutritional and activity data.
+///
+/// Displays a comprehensive overview of calories, macros, supplements, and workouts
+/// for a selected date. Allows users to manage food entries, fluid intake, and
+/// view historical measurements like weight.
 class DiaryScreen extends StatefulWidget {
   const DiaryScreen({super.key});
 

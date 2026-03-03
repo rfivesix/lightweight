@@ -12,6 +12,10 @@ import '../util/design_constants.dart';
 import '../widgets/bottom_content_spacer.dart';
 import '../widgets/summary_card.dart';
 
+/// A portal for overviewing nutrition and meal planning.
+///
+/// Displays general targets, recommendations based on recent logs,
+/// and quick access to meal management and supplement tracking.
 class NutritionHubScreen extends StatefulWidget {
   const NutritionHubScreen({super.key});
 

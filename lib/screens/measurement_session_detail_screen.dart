@@ -7,7 +7,11 @@ import '../models/measurement_session.dart';
 import '../util/design_constants.dart';
 import '../widgets/global_app_bar.dart';
 
+/// A screen displaying the details of a specific measurement session.
+///
+/// Shows a list of all individual measurements recorded at a particular point in time.
 class MeasurementSessionDetailScreen extends StatelessWidget {
+  /// The measurement session to display.
   final MeasurementSession session;
 
   const MeasurementSessionDetailScreen({super.key, required this.session});

@@ -16,7 +16,12 @@ import '../widgets/wger_attribution_widget.dart';
 import '../widgets/workout_summary_bar.dart';
 import '../widgets/workout_card.dart';
 
+/// A detailed view for a single completed [WorkoutLog].
+///
+/// Displays the full set log for each exercise performed during the session.
+/// Supports an edit mode to adjust notes, start times, and set-level data.
 class WorkoutLogDetailScreen extends StatefulWidget {
+  /// The unique identifier of the workout log to display.
   final int logId;
   const WorkoutLogDetailScreen({super.key, required this.logId});
 

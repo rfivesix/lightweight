@@ -18,8 +18,13 @@ import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/swipe_action_background.dart';
 
+/// A screen for tracking daily supplement intake.
+///
+/// Similar to [SupplementHubScreen], it focuses on logging and monitoring
+/// supplement consumption on a per-day basis with navigation between days.
 class SupplementTrackScreen extends StatefulWidget {
-  final DateTime? initialDate; // NEU: Optionales Startdatum
+  /// The initial date to be displayed in the tracker.
+  final DateTime? initialDate;
 
   const SupplementTrackScreen({super.key, this.initialDate});
 

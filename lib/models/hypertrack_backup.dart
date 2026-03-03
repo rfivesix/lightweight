@@ -14,21 +14,48 @@ import 'workout_log.dart';
 import 'supplement.dart';
 import 'supplement_log.dart';
 
+/// Represents a complete backup of the Hypertrack application data.
+///
+/// Contains all user-generated data, including food logs, workouts, routines,
+/// measurements, supplements, and preferences.
 class HypertrackBackup {
+  /// The version of the database schema when the backup was created.
   final int schemaVersion;
+
+  /// A list of all recorded food intake events.
   final List<FoodEntry> foodEntries;
+
+  /// A list of all recorded fluid intake events.
   final List<FluidEntry> fluidEntries;
+
+  /// A list of barcodes for food items marked as favorites by the user.
   final List<String> favoriteBarcodes;
+
+  /// A list of food items created or modified by the user.
   final List<FoodItem> customFoodItems;
+
+  /// A list of all body measurement sessions.
   final List<MeasurementSession> measurementSessions;
+
+  /// A list of all user-defined workout routines.
   final List<Routine> routines;
+
+  /// A list of all completed workout logs.
   final List<WorkoutLog> workoutLogs;
-  // HINZUGEFÜGT: Ein Feld für die Benutzereinstellungen
+
+  /// A map containing various user settings and preferences.
   final Map<String, dynamic> userPreferences;
+
+  /// A list of all supplements defined in the system.
   final List<Supplement> supplements;
+
+  /// A list of all recorded supplement intake events.
   final List<SupplementLog> supplementLogs;
+
+  /// A list of exercises created or modified by the user.
   final List<Exercise> customExercises;
 
+  /// Creates a new [HypertrackBackup] instance.
   HypertrackBackup({
     required this.schemaVersion,
     required this.foodEntries,
@@ -45,6 +72,9 @@ class HypertrackBackup {
   });
 
   // KORRIGIERTE VERSION
+  /// Creates a [HypertrackBackup] instance from a JSON map.
+  ///
+  /// This factory method handles complex nested deserialization for all data types.
   factory HypertrackBackup.fromJson(Map<String, dynamic> json) {
     return HypertrackBackup(
       schemaVersion: json['schemaVersion'] as int? ?? 1,
@@ -145,6 +175,7 @@ class HypertrackBackup {
   }
 
   // Diese Methode nutzt jetzt die .toMap() Methoden deiner Modelle
+  /// Converts the [HypertrackBackup] instance to a JSON map for storage or export.
   Map<String, dynamic> toJson() {
     return {
       'schemaVersion': schemaVersion,

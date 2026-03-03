@@ -7,7 +7,12 @@ import '../models/food_item.dart';
 import '../util/design_constants.dart';
 import '../widgets/global_app_bar.dart';
 
+/// A screen providing a form to create a new custom [FoodItem] or edit an existing one.
+///
+/// Users can input nutrient values (calories, protein, carbs, fat, etc.)
+/// and basic information like name and brand.
 class CreateFoodScreen extends StatefulWidget {
+  /// Optional existing [FoodItem] to populate the form for editing.
   final FoodItem? foodItemToEdit;
   const CreateFoodScreen({super.key, this.foodItemToEdit});
 

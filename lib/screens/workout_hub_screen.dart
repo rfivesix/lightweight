@@ -13,6 +13,10 @@ import '../util/design_constants.dart';
 import '../widgets/bottom_content_spacer.dart';
 import '../widgets/summary_card.dart';
 
+/// The central management screen for all workout-related activities.
+///
+/// Provides quick actions to start an empty workout, launch saved routines,
+/// and navigate to workout history, routine management, and the exercise catalog.
 class WorkoutHubScreen extends StatefulWidget {
   const WorkoutHubScreen({super.key});
 

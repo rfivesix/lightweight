@@ -3,10 +3,18 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:cryptography/cryptography.dart';
 
+/// Utility for performing secure data encryption and decryption.
+///
+/// Uses AES-GCM 256-bit encryption with PBKDF2 key derivation for strong security.
 class EncryptionUtil {
   static final _algo = AesGcm.with256bits();
+
+  /// Current version of the encryption wrapper format.
   static const wrapperVersion = 'LWENC-1';
 
+  /// Encrypts [plaintext] using a [passphrase].
+  ///
+  /// Returns a map containing the version, salt, nonce, cipher text, and MAC.
   static Future<Map<String, dynamic>> encryptString(
     String plaintext,
     String passphrase,

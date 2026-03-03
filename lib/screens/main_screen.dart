@@ -36,7 +36,12 @@ import '../widgets/keep_alive_page.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:provider/provider.dart';
 
+/// The root scaffold containing the main navigation structure.
+///
+/// Hosts the bottom navigation bar and manages switching between primary tabs:
+/// Diary, Workout, Statistics, and Nutrition Hub. Also provides the global Speed Dial.
 class MainScreen extends StatefulWidget {
+  /// The optional index of the tab to be displayed initially.
   final int? initialTabIndex;
   const MainScreen({super.key, this.initialTabIndex});
   @override
