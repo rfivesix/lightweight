@@ -56,13 +56,14 @@ class SetTemplate {
     String? targetReps,
     double? targetWeight,
     int? targetRir,
+    bool clearTargetRir = false,
   }) {
     return SetTemplate(
       id: id ?? this.id,
       setType: setType ?? this.setType,
       targetReps: targetReps ?? this.targetReps,
       targetWeight: targetWeight ?? this.targetWeight,
-      targetRir: targetRir ?? this.targetRir,
+      targetRir: clearTargetRir ? null : (targetRir ?? this.targetRir),
     );
   }
 }

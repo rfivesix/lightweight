@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.5.1] - 2026-03-04
+
+### 🐛 Bug Fixes
+
+- **RIR Field Validation (#83)**: Fixed the RIR (Reps in Reserve) field not correctly accepting and persisting values.
+  - The field now defaults to empty/null instead of being hardcoded to 2.
+  - Clearing the field correctly persists as null (previously reverted to the old value).
+  - Target RIR values from routines now appear as placeholder hints in the Live Workout screen.
+  - Non-numeric and negative input is now rejected via input validation.
+
 ## [0.5.0] - 2026-03-03
 
 ### 🚀 Major Release: The "Foundation Overhaul"

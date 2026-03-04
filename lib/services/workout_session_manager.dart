@@ -316,7 +316,7 @@ class WorkoutSessionManager extends ChangeNotifier {
       setType: 'normal',
       targetReps: '0',
       targetWeight: 0.0,
-      targetRir: 2,
+      targetRir: null,
     );
 
     // KORREKTUR: Manuelle Erstellung statt copyWith

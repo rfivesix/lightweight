@@ -3,6 +3,7 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../util/design_constants.dart';
 import '../widgets/glass_bottom_menu.dart';
 import '../widgets/glass_fab.dart';
@@ -498,6 +499,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     // Hint Logic
     String weightHint = '0';
     String repHint = '0';
+    String rirHint =
+        template.targetRir != null ? template.targetRir.toString() : '-';
 
     if (isCardio) {
       weightHint = "-"; // Distance Hint
@@ -592,12 +595,13 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
             controller: _rirControllers[templateId],
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: InputDecoration(
               border: InputBorder.none,
               isDense: true,
               fillColor: Colors.transparent,
-              hintText: "-",
-              hintStyle: TextStyle(color: Colors.black12),
+              hintText: rirHint,
+              hintStyle: TextStyle(color: Colors.grey.withOpacity(0.5)),
             ),
             enabled: !isCompleted,
           ),
