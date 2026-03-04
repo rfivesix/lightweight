@@ -1,6 +1,7 @@
 // lib/screens/workout_log_detail_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../data/workout_database_helper.dart';
 import '../generated/app_localizations.dart';
@@ -842,6 +843,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                       controller: _rirControllers[setLog.id!],
                       textAlign: TextAlign.center,
                       keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       decoration: const InputDecoration(
                         border: InputBorder.none,
                         isDense: true,

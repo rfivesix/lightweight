@@ -2,6 +2,7 @@
 // FINAL: Cardio Clean-Up (1 Set, Cleaner Layout, Empty Defaults)
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../data/workout_database_helper.dart';
 import '../generated/app_localizations.dart';
 import '../models/exercise.dart';
@@ -206,13 +207,15 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     for (var re in _routineExercises) {
       final List<SetTemplate> currentTemplates = [];
       for (var set in re.setTemplates) {
+        final rirText = _rirControllers[set.id!]?.text ?? '';
         currentTemplates.add(
           set.copyWith(
             targetReps: _repsControllers[set.id!]?.text,
             targetWeight: double.tryParse(
               _weightControllers[set.id!]!.text.replaceAll(',', '.'),
             ),
-            targetRir: int.tryParse(_rirControllers[set.id!]?.text ?? ''),
+            targetRir: int.tryParse(rirText),
+            clearTargetRir: rirText.isEmpty,
           ),
         );
       }
@@ -787,6 +790,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                   controller: _rirControllers[template.id!],
                   textAlign: TextAlign.center,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: const InputDecoration(
                     border: InputBorder.none,
                     isDense: true,
@@ -835,6 +839,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                   controller: _rirControllers[template.id!],
                   textAlign: TextAlign.center,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: const InputDecoration(
                     border: InputBorder.none,
                     isDense: true,
