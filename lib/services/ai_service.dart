@@ -108,9 +108,15 @@ class AiService {
   static const _keyPrefix = 'ai_api_key_';
   static const _providerKey = 'ai_selected_provider';
 
-  /// The system prompt instructs the AI to decompose every meal into atomic
-  /// food components and return strict JSON.
-  static const _systemPrompt = '''
+  /// Builds the system prompt, optionally localised to [languageCode].
+  static String _buildSystemPrompt({String? languageCode}) {
+    final langRule = (languageCode != null && languageCode.isNotEmpty)
+        ? '\n5. IMPORTANT: All food "name" values MUST be in the "$languageCode" language '
+            '(e.g. use "Apfel" instead of "Apple" when language is "de"). '
+            'Never mix languages.'
+        : '';
+
+    return '''
 You are a nutrition analysis assistant. Analyze the provided meal image(s) or description.
 
 CRITICAL RULES:
@@ -119,16 +125,20 @@ CRITICAL RULES:
 2. Do NOT return composite meal names. Always decompose into individual ingredients.
 3. Estimate weights in grams as accurately as possible based on visual cues or typical serving sizes.
 4. Set confidence between 0.0 and 1.0 based on how certain you are about each item and its quantity.
+5. CONSOLIDATE duplicate items: if the user mentions or you detect multiple quantities of the same food (e.g. "4 eggs"), return ONE single entry with the total combined weight. Never return duplicate rows for the same food item.
+6. Do NOT estimate, guess, or return any nutritional data (calories, protein, fat, carbs, etc.). Your job is ONLY to identify the food name and estimate the realistic total portion weight in grams. The app will look up nutritional values from its own database.
+7. Use SIMPLE, SHORT base food names only. For example, use "Banane" not "Reife Banane", "Ei" not "Gekochtes Ei", "Apfel" not "Grüner Apfel". Keep names as generic and simple as possible to maximize database matching.$langRule
 
 Respond ONLY with a valid JSON array. No markdown, no explanation, no extra text.
 Each element must have exactly these fields:
-- "name": string (individual food component name, in the user's language if identifiable)
+- "name": string (individual food component name)
 - "estimatedGrams": integer (estimated weight in grams)
 - "confidence": number (0.0 to 1.0)
 
 Example response:
-[{"name": "Beef Patty", "estimatedGrams": 150, "confidence": 0.85}, {"name": "Burger Bun", "estimatedGrams": 60, "confidence": 0.9}]
+[{"name": "Egg", "estimatedGrams": 240, "confidence": 0.9}, {"name": "Butter", "estimatedGrams": 10, "confidence": 0.7}]
 ''';
+  }
 
   // ---------------------------------------------------------------------------
   // Key Management
@@ -168,9 +178,11 @@ Example response:
   /// Analyzes one or more meal images and returns suggested food items.
   ///
   /// Optionally accepts a [textHint] describing the meal for better accuracy.
+  /// Pass [languageCode] (e.g. 'de') to get food names in that language.
   Future<List<AiSuggestedItem>> analyzeImages(
     List<File> images, {
     String? textHint,
+    String? languageCode,
   }) async {
     final provider = await getSelectedProvider();
     final apiKey = await getApiKey(provider);
@@ -185,34 +197,44 @@ Example response:
 
     final userContent =
         textHint ?? 'Analyze this meal and identify all food components.';
+    final prompt = _buildSystemPrompt(languageCode: languageCode);
 
     switch (provider) {
       case AiProvider.openai:
-        return _callOpenAi(apiKey, userContent, imageDataList);
+        return _callOpenAi(apiKey, userContent, imageDataList,
+            systemPrompt: prompt);
       case AiProvider.gemini:
-        return _callGemini(apiKey, userContent, imageDataList);
+        return _callGemini(apiKey, userContent, imageDataList,
+            systemPrompt: prompt);
     }
   }
 
   /// Analyzes a text-only meal description and returns suggested food items.
-  Future<List<AiSuggestedItem>> analyzeText(String description) async {
+  ///
+  /// Pass [languageCode] (e.g. 'de') to get food names in that language.
+  Future<List<AiSuggestedItem>> analyzeText(String description,
+      {String? languageCode}) async {
     final provider = await getSelectedProvider();
     final apiKey = await getApiKey(provider);
     if (apiKey == null || apiKey.isEmpty) throw const AiKeyMissingException();
+    final prompt = _buildSystemPrompt(languageCode: languageCode);
 
     switch (provider) {
       case AiProvider.openai:
-        return _callOpenAi(apiKey, description, []);
+        return _callOpenAi(apiKey, description, [], systemPrompt: prompt);
       case AiProvider.gemini:
-        return _callGemini(apiKey, description, []);
+        return _callGemini(apiKey, description, [], systemPrompt: prompt);
     }
   }
 
   /// Retries analysis with user feedback to refine the results.
+  ///
+  /// Pass [languageCode] (e.g. 'de') to get food names in that language.
   Future<List<AiSuggestedItem>> retry({
     required List<AiSuggestedItem> previousResults,
     required String feedback,
     List<File>? images,
+    String? languageCode,
   }) async {
     final provider = await getSelectedProvider();
     final apiKey = await getApiKey(provider);
@@ -236,12 +258,15 @@ Please provide an updated analysis incorporating the user's feedback. Return the
         imageDataList.add(base64Encode(bytes));
       }
     }
+    final prompt = _buildSystemPrompt(languageCode: languageCode);
 
     switch (provider) {
       case AiProvider.openai:
-        return _callOpenAi(apiKey, userContent, imageDataList);
+        return _callOpenAi(apiKey, userContent, imageDataList,
+            systemPrompt: prompt);
       case AiProvider.gemini:
-        return _callGemini(apiKey, userContent, imageDataList);
+        return _callGemini(apiKey, userContent, imageDataList,
+            systemPrompt: prompt);
     }
   }
 
@@ -265,8 +290,9 @@ Please provide an updated analysis incorporating the user's feedback. Return the
   Future<List<AiSuggestedItem>> _callOpenAi(
     String apiKey,
     String userContent,
-    List<String> imagesBase64,
-  ) async {
+    List<String> imagesBase64, {
+    required String systemPrompt,
+  }) async {
     final contentParts = <Map<String, dynamic>>[];
 
     // Add image parts
@@ -289,7 +315,7 @@ Please provide an updated analysis incorporating the user's feedback. Return the
     final body = jsonEncode({
       'model': 'gpt-4o',
       'messages': [
-        {'role': 'system', 'content': _systemPrompt},
+        {'role': 'system', 'content': systemPrompt},
         {'role': 'user', 'content': contentParts},
       ],
       'max_tokens': 2000,
@@ -340,8 +366,9 @@ Please provide an updated analysis incorporating the user's feedback. Return the
   Future<List<AiSuggestedItem>> _callGemini(
     String apiKey,
     String userContent,
-    List<String> imagesBase64,
-  ) async {
+    List<String> imagesBase64, {
+    required String systemPrompt,
+  }) async {
     final parts = <Map<String, dynamic>>[];
 
     // Add image parts
@@ -355,7 +382,7 @@ Please provide an updated analysis incorporating the user's feedback. Return the
     }
 
     // Add text parts (system prompt + user content combined)
-    parts.add({'text': '$_systemPrompt\n\n$userContent'});
+    parts.add({'text': '$systemPrompt\n\n$userContent'});
 
     final body = jsonEncode({
       'contents': [

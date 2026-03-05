@@ -729,6 +729,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         'icon': Icons.auto_awesome,
         'label': l10n.aiMealCapture,
         'action': 'ai_meal_capture',
+        'gradient': true,
       },
     ];
   }
@@ -1019,13 +1020,39 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                     ),
                                                   ),
                                                   alignment: Alignment.center,
-                                                  child: Icon(
-                                                    action['icon'],
-                                                    size: 28,
-                                                    color: isDarkLocal
-                                                        ? Colors.white
-                                                        : Colors.black,
-                                                  ),
+                                                  child: action['gradient'] ==
+                                                          true
+                                                      ? ShaderMask(
+                                                          blendMode:
+                                                              BlendMode.srcIn,
+                                                          shaderCallback:
+                                                              (bounds) =>
+                                                                  const LinearGradient(
+                                                            colors: [
+                                                              Color(0xFFE88DCC),
+                                                              Color(0xFFF4A77A),
+                                                              Color(0xFFF7D06B),
+                                                              Color(0xFF7DDEAE),
+                                                              Color(0xFF6DC8D9),
+                                                            ],
+                                                            begin: Alignment
+                                                                .topLeft,
+                                                            end: Alignment
+                                                                .bottomRight,
+                                                          ).createShader(
+                                                                      bounds),
+                                                          child: Icon(
+                                                            action['icon'],
+                                                            size: 28,
+                                                          ),
+                                                        )
+                                                      : Icon(
+                                                          action['icon'],
+                                                          size: 28,
+                                                          color: isDarkLocal
+                                                              ? Colors.white
+                                                              : Colors.black,
+                                                        ),
                                                 ),
                                               )
                                             : ClipRRect(
@@ -1065,13 +1092,44 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                       ],
                                                     ),
                                                     alignment: Alignment.center,
-                                                    child: Icon(
-                                                      action['icon'],
-                                                      size: 28,
-                                                      color: isDarkLocal
-                                                          ? Colors.white
-                                                          : Colors.black,
-                                                    ),
+                                                    child: action['gradient'] ==
+                                                            true
+                                                        ? ShaderMask(
+                                                            blendMode:
+                                                                BlendMode.srcIn,
+                                                            shaderCallback:
+                                                                (bounds) =>
+                                                                    const LinearGradient(
+                                                              colors: [
+                                                                Color(
+                                                                    0xFFE88DCC),
+                                                                Color(
+                                                                    0xFFF4A77A),
+                                                                Color(
+                                                                    0xFFF7D06B),
+                                                                Color(
+                                                                    0xFF7DDEAE),
+                                                                Color(
+                                                                    0xFF6DC8D9),
+                                                              ],
+                                                              begin: Alignment
+                                                                  .topLeft,
+                                                              end: Alignment
+                                                                  .bottomRight,
+                                                            ).createShader(
+                                                                        bounds),
+                                                            child: Icon(
+                                                              action['icon'],
+                                                              size: 28,
+                                                            ),
+                                                          )
+                                                        : Icon(
+                                                            action['icon'],
+                                                            size: 28,
+                                                            color: isDarkLocal
+                                                                ? Colors.white
+                                                                : Colors.black,
+                                                          ),
                                                   ),
                                                 ),
                                               ),

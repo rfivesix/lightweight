@@ -146,6 +146,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             icon: Icons.auto_awesome,
             title: l10n.aiSettingsTitle,
             subtitle: l10n.aiSettingsDescription,
+            useGradientIcon: true,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -208,24 +209,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// AI gradient colours for the entry-point icon accent.
+  static const _aiGradientColors = [
+    Color(0xFFE88DCC),
+    Color(0xFFF4A77A),
+    Color(0xFFF7D06B),
+    Color(0xFF7DDEAE),
+    Color(0xFF6DC8D9),
+  ];
+
   Widget _buildNavigationCard({
     required BuildContext context,
     required IconData icon,
     required String title,
     required String subtitle,
     required VoidCallback onTap,
+    bool useGradientIcon = false,
   }) {
+    Widget iconWidget = Icon(
+      icon,
+      size: 36,
+      color: Theme.of(context).colorScheme.primary,
+    );
+
+    if (useGradientIcon) {
+      iconWidget = ShaderMask(
+        blendMode: BlendMode.srcIn,
+        shaderCallback: (bounds) => const LinearGradient(
+          colors: _aiGradientColors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ).createShader(bounds),
+        child: Icon(icon, size: 36),
+      );
+    }
+
     return SummaryCard(
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(
           vertical: 8.0,
           horizontal: 16.0,
         ),
-        leading: Icon(
-          icon,
-          size: 36,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+        leading: iconWidget,
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(subtitle),
         trailing: const Icon(Icons.chevron_right),

@@ -1,8 +1,6 @@
 // lib/screens/ai_meal_capture_screen.dart
 
 import 'dart:io';
-import 'dart:math' as math;
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,7 +14,8 @@ import 'ai_settings_screen.dart';
 
 /// Screen for capturing meal input via photo(s), voice, or text before AI analysis.
 ///
-/// Features an animated AI-themed background and glassmorphic input toggle.
+/// Minimalist design — AI gradient is concentrated only on the primary
+/// "Analyze" CTA button. All other UI elements use standard theme colours.
 class AiMealCaptureScreen extends StatefulWidget {
   const AiMealCaptureScreen({super.key});
 
@@ -25,7 +24,7 @@ class AiMealCaptureScreen extends StatefulWidget {
 }
 
 class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
-    with TickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   final _textController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
 
@@ -45,31 +44,16 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
   // Analysis state
   bool _isAnalyzing = false;
 
-  // Animation controllers — coprime durations avoid visible reset
-  late AnimationController _aura1Controller; // orbs 1 & 2
-  late AnimationController _aura2Controller; // orbs 3 & 4
-  late AnimationController _aura3Controller; // orb 5
+  // Single animation controller for pulse (mic) and shimmer (button loading)
   late AnimationController _pulseController;
 
   @override
   void initState() {
     super.initState();
-    _aura1Controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 13),
-    )..repeat();
-    _aura2Controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 17),
-    )..repeat();
-    _aura3Controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 23),
-    )..repeat();
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3),
-    )..repeat(reverse: true);
+      duration: const Duration(milliseconds: 1500),
+    )..repeat();
     _initSpeech();
   }
 
@@ -88,9 +72,6 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
 
   @override
   void dispose() {
-    _aura1Controller.dispose();
-    _aura2Controller.dispose();
-    _aura3Controller.dispose();
     _pulseController.dispose();
     _textController.dispose();
     _speech.stop();
@@ -188,6 +169,9 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
     if (!_hasInput) return;
     setState(() => _isAnalyzing = true);
 
+    // Pass the current app language so the AI returns localised food names
+    final languageCode = Localizations.localeOf(context).languageCode;
+
     try {
       List<AiSuggestedItem> results;
 
@@ -198,14 +182,17 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
             textHint: _textController.text.trim().isNotEmpty
                 ? _textController.text.trim()
                 : null,
+            languageCode: languageCode,
           );
           break;
         case 1: // Voice
-          results = await AiService.instance.analyzeText(_voiceText);
+          results = await AiService.instance
+              .analyzeText(_voiceText, languageCode: languageCode);
           break;
         case 2: // Text
           results = await AiService.instance.analyzeText(
             _textController.text.trim(),
+            languageCode: languageCode,
           );
           break;
         default:
@@ -277,89 +264,61 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
       appBar: GlobalAppBar(title: l10n.aiCaptureTitle),
-      body: Stack(
+      body: Column(
         children: [
-          // Animated AI aura background
-          _AnimatedAuraBackground(
-            aura1Controller: _aura1Controller,
-            aura2Controller: _aura2Controller,
-            aura3Controller: _aura3Controller,
-            pulseController: _pulseController,
-            isDark: isDark,
-            isAnalyzing: _isAnalyzing,
-          ),
+          const SizedBox(height: 8),
 
-          // Main content
-          Column(
-            children: [
-              SizedBox(height: topPadding + 8),
-
-              // Glassmorphic input toggle
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: _GlassSegmentedToggle(
-                  selectedIndex: _selectedMode,
-                  labels: [
-                    l10n.aiCaptureTabPhoto,
-                    l10n.aiCaptureTabVoice,
-                    l10n.aiCaptureTabText,
-                  ],
-                  icons: const [
-                    Icons.camera_alt_rounded,
-                    Icons.mic_rounded,
-                    Icons.edit_rounded,
-                  ],
-                  onChanged: (i) => setState(() => _selectedMode = i),
-                  isDark: isDark,
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Tab content
-              Expanded(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  switchInCurve: Curves.easeOut,
-                  switchOutCurve: Curves.easeIn,
-                  child: KeyedSubtree(
-                    key: ValueKey(_selectedMode),
-                    child: _selectedMode == 0
-                        ? _buildPhotoContent(l10n, theme, isDark)
-                        : _selectedMode == 1
-                            ? _buildVoiceContent(l10n, theme, isDark)
-                            : _buildTextContent(l10n, theme, isDark),
-                  ),
-                ),
-              ),
-
-              // Analyze button
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
-                child: _GlassAnalyzeButton(
-                  onPressed: (_hasInput && !_isAnalyzing) ? _analyze : null,
-                  isAnalyzing: _isAnalyzing,
-                  isDark: isDark,
-                  l10n: l10n,
-                ),
-              ),
-            ],
-          ),
-
-          // Loading overlay
-          if (_isAnalyzing)
-            _AnalyzingOverlay(
-              isDark: isDark,
-              l10n: l10n,
-              theme: theme,
-              pulseController: _pulseController,
-              spinController: _aura1Controller,
+          // Segmented input toggle (standard themed)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: _ThemedSegmentedToggle(
+              selectedIndex: _selectedMode,
+              labels: [
+                l10n.aiCaptureTabPhoto,
+                l10n.aiCaptureTabVoice,
+                l10n.aiCaptureTabText,
+              ],
+              icons: const [
+                Icons.camera_alt_rounded,
+                Icons.mic_rounded,
+                Icons.edit_rounded,
+              ],
+              onChanged: (i) => setState(() => _selectedMode = i),
             ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Tab content
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              switchInCurve: Curves.easeOut,
+              switchOutCurve: Curves.easeIn,
+              child: KeyedSubtree(
+                key: ValueKey(_selectedMode),
+                child: _selectedMode == 0
+                    ? _buildPhotoContent(l10n, theme, isDark)
+                    : _selectedMode == 1
+                        ? _buildVoiceContent(l10n, theme, isDark)
+                        : _buildTextContent(l10n, theme, isDark),
+              ),
+            ),
+          ),
+
+          // Analyze button — AI gradient CTA with inline loading
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
+            child: _AiAnalyzeButton(
+              onPressed: (_hasInput && !_isAnalyzing) ? _analyze : null,
+              isAnalyzing: _isAnalyzing,
+              l10n: l10n,
+              pulseController: _pulseController,
+            ),
+          ),
         ],
       ),
     );
@@ -371,86 +330,90 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
 
   Widget _buildPhotoContent(
       AppLocalizations l10n, ThemeData theme, bool isDark) {
+    // Show empty-state placeholder when no images are added
+    if (_images.isEmpty) {
+      return _buildEmptyState(
+        icon: Icons.restaurant_outlined,
+        text: l10n.aiCapturePhotoHint,
+        theme: theme,
+        actionRow: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            OutlinedButton.icon(
+              onPressed: _takePhoto,
+              icon: const Icon(Icons.camera_alt_rounded),
+              label: Text(l10n.aiCaptureTabPhoto),
+            ),
+            const SizedBox(width: 12),
+            OutlinedButton.icon(
+              onPressed: _pickFromGallery,
+              icon: const Icon(Icons.photo_library_rounded),
+              label: Text(l10n.tabFavorites),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         children: [
-          // Hint text
-          _buildHintText(l10n.aiCapturePhotoHint, theme),
-          const SizedBox(height: 16),
-
           // Photo grid
-          if (_images.isNotEmpty)
-            SizedBox(
-              height: 140,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: _images.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 10),
-                itemBuilder: (ctx, i) => _buildPhotoThumbnail(i, isDark),
-              ),
+          SizedBox(
+            height: 140,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _images.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 10),
+              itemBuilder: (ctx, i) => _buildPhotoThumbnail(i, theme),
             ),
-
-          if (_images.isNotEmpty) const SizedBox(height: 16),
+          ),
+          const SizedBox(height: 16),
 
           // Action buttons
           Row(
             children: [
               Expanded(
-                child: _GlassActionButton(
+                child: OutlinedButton.icon(
                   onPressed: _images.length < _maxImages ? _takePhoto : null,
-                  icon: Icons.camera_alt_rounded,
-                  label: l10n.aiCaptureTabPhoto,
-                  isDark: isDark,
+                  icon: const Icon(Icons.camera_alt_rounded),
+                  label: Text(l10n.aiCaptureTabPhoto),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _GlassActionButton(
+                child: OutlinedButton.icon(
                   onPressed:
                       _images.length < _maxImages ? _pickFromGallery : null,
-                  icon: Icons.photo_library_rounded,
-                  label: l10n.tabFavorites,
-                  isDark: isDark,
+                  icon: const Icon(Icons.photo_library_rounded),
+                  label: Text(l10n.tabFavorites),
                 ),
               ),
             ],
           ),
-
-          if (_images.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(
-              '${_images.length} / $_maxImages',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color:
-                    theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-              ),
+          const SizedBox(height: 12),
+          Text(
+            '${_images.length} / $_maxImages',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
             ),
-          ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildPhotoThumbnail(int index, bool isDark) {
+  Widget _buildPhotoThumbnail(int index, ThemeData theme) {
     return Stack(
       children: [
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.15)
-                  : Colors.black.withValues(alpha: 0.08),
+              color: theme.colorScheme.outlineVariant,
               width: 1.5,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFE88DCC).withValues(alpha: 0.15),
-                blurRadius: 12,
-                spreadRadius: 1,
-              ),
-            ],
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
@@ -488,57 +451,61 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
 
   Widget _buildVoiceContent(
       AppLocalizations l10n, ThemeData theme, bool isDark) {
+    // Show empty-state when voice has not been used yet
+    if (_voiceText.isEmpty && !_isListening) {
+      return _buildEmptyState(
+        icon: Icons.mic_none_rounded,
+        text: l10n.aiCaptureVoiceHint,
+        theme: theme,
+        actionRow: ElevatedButton.icon(
+          onPressed: _speechAvailable ? _toggleListening : null,
+          icon: const Icon(Icons.mic_rounded),
+          label: Text(l10n.aiCaptureTabVoice),
+        ),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         children: [
-          _buildHintText(l10n.aiCaptureVoiceHint, theme),
-          const SizedBox(height: 32),
+          const SizedBox(height: 16),
 
-          // Animated microphone button
+          // Standard microphone button
           GestureDetector(
             onTap: _speechAvailable ? _toggleListening : null,
             child: AnimatedBuilder(
               animation: _pulseController,
               builder: (context, child) {
                 final scale =
-                    _isListening ? 1.0 + (_pulseController.value * 0.1) : 1.0;
+                    _isListening ? 1.0 + (_pulseController.value * 0.08) : 1.0;
                 return Transform.scale(
                   scale: scale,
                   child: Container(
-                    width: 96,
-                    height: 96,
+                    width: 80,
+                    height: 80,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: _isListening
-                            ? [const Color(0xFFFF5252), const Color(0xFFD50000)]
-                            : [
-                                const Color(0xFFE88DCC),
-                                const Color(0xFFF4A77A),
-                                const Color(0xFFF7D06B),
-                                const Color(0xFF7DDEAE),
-                                const Color(0xFF6DC8D9),
-                              ],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: (_isListening
-                                  ? const Color(0xFFFF5252)
-                                  : const Color(0xFFE88DCC))
-                              .withValues(
-                                  alpha: 0.4 + (_pulseController.value * 0.2)),
-                          blurRadius: 24 + (_pulseController.value * 16),
-                          spreadRadius: _isListening ? 4 : 1,
-                        ),
-                      ],
+                      color: _isListening
+                          ? theme.colorScheme.error
+                          : theme.colorScheme.primary,
+                      boxShadow: _isListening
+                          ? [
+                              BoxShadow(
+                                color: theme.colorScheme.error
+                                    .withValues(alpha: 0.35),
+                                blurRadius: 20,
+                                spreadRadius: 2,
+                              ),
+                            ]
+                          : [],
                     ),
                     child: Icon(
                       _isListening ? Icons.stop_rounded : Icons.mic_rounded,
-                      size: 42,
-                      color: Colors.white,
+                      size: 36,
+                      color: _isListening
+                          ? theme.colorScheme.onError
+                          : theme.colorScheme.onPrimary,
                     ),
                   ),
                 );
@@ -559,8 +526,15 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
 
           // Transcription display
           if (_voiceText.isNotEmpty)
-            _buildGlassCard(
-              isDark: isDark,
+            Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: theme.colorScheme.outlineVariant,
+                  width: 1,
+                ),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -593,20 +567,32 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         children: [
-          _buildGlassCard(
-            isDark: isDark,
-            child: TextField(
-              controller: _textController,
-              maxLines: 6,
-              onChanged: (_) => setState(() {}),
-              style: theme.textTheme.bodyLarge,
-              decoration: InputDecoration(
-                hintText: l10n.aiCaptureTextHint,
-                hintStyle: TextStyle(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+          TextField(
+            controller: _textController,
+            maxLines: 6,
+            onChanged: (_) => setState(() {}),
+            style: theme.textTheme.bodyLarge,
+            decoration: InputDecoration(
+              hintText: l10n.aiCaptureTextHint,
+              hintStyle: TextStyle(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
+              filled: true,
+              fillColor: theme.colorScheme.surfaceContainerLow,
+              contentPadding: const EdgeInsets.all(16),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(
+                  color: theme.colorScheme.outlineVariant,
+                  width: 1,
                 ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.all(16),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(
+                  color: theme.colorScheme.primary,
+                  width: 1.5,
+                ),
               ),
             ),
           ),
@@ -619,34 +605,40 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
   // Shared widgets
   // ---------------------------------------------------------------------------
 
-  Widget _buildHintText(String text, ThemeData theme) {
-    return Text(
-      text,
-      textAlign: TextAlign.center,
-      style: theme.textTheme.bodyMedium?.copyWith(
-        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-        height: 1.4,
-      ),
-    );
-  }
-
-  Widget _buildGlassCard({required bool isDark, required Widget child}) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Container(
-          decoration: BoxDecoration(
-            color: (isDark ? Colors.white : Colors.black)
-                .withValues(alpha: isDark ? 0.08 : 0.04),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: (isDark ? Colors.white : Colors.black)
-                  .withValues(alpha: isDark ? 0.12 : 0.06),
-              width: 1.2,
+  /// Builds a centered empty-state placeholder with a faded icon, helper text,
+  /// and an optional action row (e.g. buttons to take photo / start recording).
+  Widget _buildEmptyState({
+    required IconData icon,
+    required String text,
+    required ThemeData theme,
+    Widget? actionRow,
+  }) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 72,
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.18),
             ),
-          ),
-          child: child,
+            const SizedBox(height: 20),
+            Text(
+              text,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color:
+                    theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                height: 1.5,
+              ),
+            ),
+            if (actionRow != null) ...[
+              const SizedBox(height: 24),
+              actionRow,
+            ],
+          ],
         ),
       ),
     );
@@ -654,610 +646,230 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
 }
 
 // =============================================================================
-// Animated AI aura background
+// Standard themed segmented toggle (no gradient)
 // =============================================================================
 
-class _AnimatedAuraBackground extends StatelessWidget {
-  final AnimationController aura1Controller;
-  final AnimationController aura2Controller;
-  final AnimationController aura3Controller;
-  final AnimationController pulseController;
-  final bool isDark;
-  final bool isAnalyzing;
-
-  const _AnimatedAuraBackground({
-    required this.aura1Controller,
-    required this.aura2Controller,
-    required this.aura3Controller,
-    required this.pulseController,
-    required this.isDark,
-    required this.isAnalyzing,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: Listenable.merge([
-        aura1Controller,
-        aura2Controller,
-        aura3Controller,
-        pulseController,
-      ]),
-      builder: (context, _) {
-        // Each controller completes exactly one full circle → seamless loop
-        // Combined pattern repeats after 13*17*23 = 5083 seconds ≈ 85 minutes
-        final a1 = aura1Controller.value * 2 * math.pi;
-        final a2 = aura2Controller.value * 2 * math.pi;
-        final a3 = aura3Controller.value * 2 * math.pi;
-        final pulse = 0.85 + (pulseController.value * 0.3);
-        final baseAlpha = isAnalyzing ? 0.50 : 0.35;
-
-        return Stack(
-          children: [
-            // Orb 1: Hot pink / magenta (top-right) — a1 (13s)
-            Positioned(
-              top: -40 + math.sin(a1) * 40,
-              right: -100 + math.cos(a1) * 30,
-              child: Container(
-                width: 420 * pulse,
-                height: 420 * pulse,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      const Color(0xFFFF6EC7).withValues(alpha: baseAlpha),
-                      const Color(0xFFD946EF)
-                          .withValues(alpha: baseAlpha * 0.5),
-                      const Color(0xFFD946EF).withValues(alpha: 0),
-                    ],
-                    stops: const [0.0, 0.45, 1.0],
-                  ),
-                ),
-              ),
-            ),
-            // Orb 2: Cyan / turquoise (bottom-left) — a1 reversed (13s)
-            Positioned(
-              bottom: 80 + math.cos(a1) * 50,
-              left: -80 + math.sin(a1) * 35,
-              child: Container(
-                width: 400 * pulse,
-                height: 400 * pulse,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      const Color(0xFF22D3EE).withValues(alpha: baseAlpha),
-                      const Color(0xFF06B6D4)
-                          .withValues(alpha: baseAlpha * 0.5),
-                      const Color(0xFF06B6D4).withValues(alpha: 0),
-                    ],
-                    stops: const [0.0, 0.45, 1.0],
-                  ),
-                ),
-              ),
-            ),
-            // Orb 3: Warm orange / yellow (center) — a2 (17s)
-            Positioned(
-              top: 200 + math.sin(a2) * 60,
-              right: -30 + math.cos(a2) * 45,
-              child: Container(
-                width: 350 * pulse,
-                height: 350 * pulse,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      const Color(0xFFFBBF24)
-                          .withValues(alpha: baseAlpha * 0.9),
-                      const Color(0xFFF97316)
-                          .withValues(alpha: baseAlpha * 0.4),
-                      const Color(0xFFF97316).withValues(alpha: 0),
-                    ],
-                    stops: const [0.0, 0.45, 1.0],
-                  ),
-                ),
-              ),
-            ),
-            // Orb 4: Deep purple (bottom-right) — a2 reversed (17s)
-            Positioned(
-              bottom: -30 + math.cos(a2) * 35,
-              right: -60 + math.sin(a2) * 45,
-              child: Container(
-                width: 320 * pulse,
-                height: 320 * pulse,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      const Color(0xFFA855F7)
-                          .withValues(alpha: baseAlpha * 0.7),
-                      const Color(0xFF7C3AED).withValues(alpha: 0),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            // Orb 5: Emerald green (mid-left) — a3 (23s)
-            Positioned(
-              top: 400 + math.cos(a3) * 40,
-              left: -60 + math.sin(a3) * 50,
-              child: Container(
-                width: 280 * pulse,
-                height: 280 * pulse,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      const Color(0xFF34D399)
-                          .withValues(alpha: baseAlpha * 0.7),
-                      const Color(0xFF10B981)
-                          .withValues(alpha: baseAlpha * 0.3),
-                      const Color(0xFF10B981).withValues(alpha: 0),
-                    ],
-                    stops: const [0.0, 0.45, 1.0],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-// =============================================================================
-// Glassmorphic segmented toggle
-// =============================================================================
-
-class _GlassSegmentedToggle extends StatelessWidget {
+class _ThemedSegmentedToggle extends StatelessWidget {
   final int selectedIndex;
   final List<String> labels;
   final List<IconData> icons;
   final ValueChanged<int> onChanged;
-  final bool isDark;
 
-  const _GlassSegmentedToggle({
+  const _ThemedSegmentedToggle({
     required this.selectedIndex,
     required this.labels,
     required this.icons,
     required this.onChanged,
-    required this.isDark,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          height: 64,
-          padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            color: (isDark ? Colors.white : Colors.black)
-                .withValues(alpha: isDark ? 0.08 : 0.04),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: (isDark ? Colors.white : Colors.black)
-                  .withValues(alpha: isDark ? 0.12 : 0.06),
-              width: 1.2,
-            ),
-          ),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final segmentWidth = constraints.maxWidth / labels.length;
-              return Stack(
-                children: [
-                  // Animated selection indicator
-                  AnimatedPositioned(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOutCubic,
-                    left: selectedIndex * segmentWidth,
-                    top: 0,
-                    bottom: 0,
-                    width: segmentWidth,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        gradient: const LinearGradient(
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                          colors: [
-                            Color(0xFFE88DCC),
-                            Color(0xFFF4A77A),
-                            Color(0xFFF7D06B),
-                            Color(0xFF7DDEAE),
-                            Color(0xFF6DC8D9),
-                          ],
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color:
-                                const Color(0xFFE88DCC).withValues(alpha: 0.25),
-                            blurRadius: 14,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  // Tap targets
-                  Row(
-                    children: List.generate(labels.length, (i) {
-                      final isSelected = i == selectedIndex;
-                      return Expanded(
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            onChanged(i);
-                          },
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                icons[i],
-                                size: 20,
-                                color: isSelected
-                                    ? Colors.white
-                                    : (isDark
-                                        ? Colors.white60
-                                        : Colors.black45),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                labels[i],
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w700
-                                      : FontWeight.w500,
-                                  color: isSelected
-                                      ? Colors.white
-                                      : (isDark
-                                          ? Colors.white60
-                                          : Colors.black45),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
+    final theme = Theme.of(context);
+
+    return Container(
+      height: 56,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(16),
       ),
-    );
-  }
-}
-
-// =============================================================================
-// Glassmorphic analyze button (with sparkle)
-// =============================================================================
-
-class _GlassAnalyzeButton extends StatelessWidget {
-  final VoidCallback? onPressed;
-  final bool isAnalyzing;
-  final bool isDark;
-  final AppLocalizations l10n;
-
-  const _GlassAnalyzeButton({
-    required this.onPressed,
-    required this.isAnalyzing,
-    required this.isDark,
-    required this.l10n,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final enabled = onPressed != null;
-
-    return GestureDetector(
-      onTap: onPressed,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        height: 60,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: enabled
-              ? const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFFE88DCC),
-                    Color(0xFFF4A77A),
-                    Color(0xFFF7D06B),
-                    Color(0xFF7DDEAE),
-                    Color(0xFF6DC8D9),
-                  ],
-                )
-              : null,
-          color: enabled ? null : (isDark ? Colors.white12 : Colors.black12),
-          boxShadow: enabled
-              ? [
-                  BoxShadow(
-                    color: const Color(0xFFE88DCC).withValues(alpha: 0.30),
-                    blurRadius: 20,
-                    spreadRadius: 2,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : [],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (isAnalyzing)
-              const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  color: Colors.white,
-                ),
-              )
-            else
-              Icon(
-                Icons.auto_awesome_rounded,
-                size: 24,
-                color: enabled ? Colors.white : Colors.white38,
-              ),
-            const SizedBox(width: 10),
-            Text(
-              isAnalyzing ? l10n.aiAnalyzing : l10n.aiAnalyzeButton,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: enabled ? Colors.white : Colors.white38,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// =============================================================================
-// Glassmorphic action button (camera / gallery)
-// =============================================================================
-
-class _GlassActionButton extends StatelessWidget {
-  final VoidCallback? onPressed;
-  final IconData icon;
-  final String label;
-  final bool isDark;
-
-  const _GlassActionButton({
-    required this.onPressed,
-    required this.icon,
-    required this.label,
-    required this.isDark,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final enabled = onPressed != null;
-
-    return GestureDetector(
-      onTap: onPressed,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Container(
-            height: 50,
-            decoration: BoxDecoration(
-              color: (isDark ? Colors.white : Colors.black)
-                  .withValues(alpha: isDark ? 0.10 : 0.05),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: (isDark ? Colors.white : Colors.black)
-                    .withValues(alpha: isDark ? 0.15 : 0.08),
-                width: 1.2,
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  icon,
-                  size: 20,
-                  color: enabled
-                      ? (isDark ? Colors.white70 : Colors.black54)
-                      : Colors.white24,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: enabled
-                        ? (isDark ? Colors.white70 : Colors.black54)
-                        : Colors.white24,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// =============================================================================
-// Analysis loading overlay
-// =============================================================================
-
-class _AnalyzingOverlay extends StatelessWidget {
-  final bool isDark;
-  final AppLocalizations l10n;
-  final ThemeData theme;
-  final AnimationController pulseController;
-  final AnimationController spinController;
-
-  const _AnalyzingOverlay({
-    required this.isDark,
-    required this.l10n,
-    required this.theme,
-    required this.pulseController,
-    required this.spinController,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: Listenable.merge([pulseController, spinController]),
-      builder: (context, _) {
-        final spin = spinController.value * 2 * math.pi;
-        final pulse = pulseController.value;
-
-        // Cycle through pastel rainbow for the icon
-        final iconColor = HSLColor.fromAHSL(
-          1.0,
-          (spinController.value * 360) % 360,
-          0.55,
-          0.70,
-        ).toColor();
-
-        return Container(
-          color: Colors.black.withValues(alpha: 0.5),
-          child: Center(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(28),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final segmentWidth = constraints.maxWidth / labels.length;
+          return Stack(
+            children: [
+              // Animated selection indicator
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOutCubic,
+                left: selectedIndex * segmentWidth,
+                top: 0,
+                bottom: 0,
+                width: segmentWidth,
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 44, vertical: 40),
                   decoration: BoxDecoration(
-                    color: (isDark ? Colors.white : Colors.black)
-                        .withValues(alpha: isDark ? 0.12 : 0.06),
-                    borderRadius: BorderRadius.circular(28),
-                    border: Border.all(
-                      color: (isDark ? Colors.white : Colors.black)
-                          .withValues(alpha: isDark ? 0.15 : 0.08),
-                      width: 1.2,
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Rotating gradient ring + pulsing icon
-                      SizedBox(
-                        width: 80,
-                        height: 80,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            // Rotating ring
-                            Transform.rotate(
-                              angle: spin,
-                              child: Container(
-                                width: 80,
-                                height: 80,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: SweepGradient(
-                                    colors: [
-                                      const Color(0xFFE88DCC)
-                                          .withValues(alpha: 0.8),
-                                      const Color(0xFFF4A77A)
-                                          .withValues(alpha: 0.6),
-                                      const Color(0xFFF7D06B)
-                                          .withValues(alpha: 0.8),
-                                      const Color(0xFF7DDEAE)
-                                          .withValues(alpha: 0.6),
-                                      const Color(0xFF6DC8D9)
-                                          .withValues(alpha: 0.8),
-                                      const Color(0xFFE88DCC)
-                                          .withValues(alpha: 0.8),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            // Inner cutout (makes it a ring)
-                            Container(
-                              width: 62,
-                              height: 62,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: isDark
-                                    ? const Color(0xFF1A1A2E)
-                                    : const Color(0xFFF5F5FA),
-                              ),
-                            ),
-                            // Sparkle icon
-                            Icon(
-                              Icons.auto_awesome_rounded,
-                              size: 32 + (pulse * 4),
-                              color: iconColor,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        l10n.aiAnalyzing,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Animated gradient progress bar
-                      SizedBox(
-                        width: 140,
-                        height: 4,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(2),
-                          child: Stack(
-                            children: [
-                              Container(
-                                color: (isDark ? Colors.white : Colors.black)
-                                    .withValues(alpha: 0.08),
-                              ),
-                              AnimatedBuilder(
-                                animation: spinController,
-                                builder: (context, _) {
-                                  return FractionallySizedBox(
-                                    alignment: Alignment.centerLeft,
-                                    widthFactor:
-                                        0.3 + (math.sin(spin * 2).abs() * 0.5),
-                                    child: Container(
-                                      decoration: const BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            Color(0xFFE88DCC),
-                                            Color(0xFFF7D06B),
-                                            Color(0xFF6DC8D9),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
+                    borderRadius: BorderRadius.circular(12),
+                    color: theme.colorScheme.primary,
+                    boxShadow: [
+                      BoxShadow(
+                        color:
+                            theme.colorScheme.primary.withValues(alpha: 0.25),
+                        blurRadius: 8,
+                        spreadRadius: 1,
                       ),
                     ],
                   ),
                 ),
               ),
+              // Tap targets
+              Row(
+                children: List.generate(labels.length, (i) {
+                  final isSelected = i == selectedIndex;
+                  return Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        onChanged(i);
+                      },
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            icons[i],
+                            size: 18,
+                            color: isSelected
+                                ? theme.colorScheme.onPrimary
+                                : theme.colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            labels[i],
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                              color: isSelected
+                                  ? theme.colorScheme.onPrimary
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// AI Analyze button — gradient CTA with inline animated shimmer loading
+// =============================================================================
+
+/// The AI gradient colours used for the analyze button and entry-point accents.
+const _aiGradientColors = [
+  Color(0xFFE88DCC),
+  Color(0xFFF4A77A),
+  Color(0xFFF7D06B),
+  Color(0xFF7DDEAE),
+  Color(0xFF6DC8D9),
+];
+
+class _AiAnalyzeButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+  final bool isAnalyzing;
+  final AppLocalizations l10n;
+  final AnimationController pulseController;
+
+  const _AiAnalyzeButton({
+    required this.onPressed,
+    required this.isAnalyzing,
+    required this.l10n,
+    required this.pulseController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null || isAnalyzing;
+    final theme = Theme.of(context);
+
+    // Base button content (icon + text)
+    final buttonContent = Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        if (isAnalyzing)
+          const SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              color: Colors.white,
             ),
+          )
+        else
+          Icon(
+            Icons.auto_awesome_rounded,
+            size: 24,
+            color: enabled ? Colors.white : theme.colorScheme.onSurfaceVariant,
           ),
-        );
-      },
+        const SizedBox(width: 10),
+        Text(
+          isAnalyzing ? l10n.aiAnalyzing : l10n.aiAnalyzeButton,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: enabled ? Colors.white : theme.colorScheme.onSurfaceVariant,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ],
+    );
+
+    if (!enabled) {
+      // Disabled state — flat, no gradient
+      return GestureDetector(
+        child: Container(
+          height: 60,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: theme.colorScheme.surfaceContainerHighest,
+          ),
+          child: buttonContent,
+        ),
+      );
+    }
+
+    // Enabled / analysing — gradient background with text on top via Stack
+    return GestureDetector(
+      onTap: onPressed,
+      child: AnimatedBuilder(
+        animation: pulseController,
+        builder: (context, _) {
+          final t = pulseController.value;
+
+          return Container(
+            height: 60,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: isAnalyzing
+                  ? LinearGradient(
+                      begin: Alignment(-1.0 + (t * 4.0), 0),
+                      end: Alignment(1.0 + (t * 4.0), 0),
+                      colors: const [
+                        Color(0xFFE88DCC),
+                        Color(0xFFF4A77A),
+                        Color(0xFFF7D06B),
+                        Color(0xFF7DDEAE),
+                        Color(0xFF6DC8D9),
+                        Color(0xFFE88DCC),
+                      ],
+                      tileMode: TileMode.repeated,
+                    )
+                  : const LinearGradient(
+                      colors: _aiGradientColors,
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFE88DCC).withValues(alpha: 0.30),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: buttonContent,
+          );
+        },
+      ),
     );
   }
 }

@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.6.0-alpha.2] - 2026-03-05
+
+### 🎨 UI Redesign: Minimalist AI Interface (#84)
+
+- **Removed gradient overload**: Stripped animated aura background, glassmorphic segmented toggle, gradient mic button, and glassmorphic action buttons from the AI Meal Capture screen.
+- **AI gradient now accents entry points only**: Speed-dial icon, Settings entry icon, and Nutrition Explorer search bar icon use a `ShaderMask` rainbow gradient.
+- **Analyze button**: Remains the sole gradient CTA with a smooth, deterministic shimmer animation during loading. Text and spinner are rendered above the gradient background.
+- **Inline loading**: Replaced the modal `_AnalyzingOverlay` popup with an in-button animated gradient + spinner.
+- **Empty states**: Photo, Voice, and Text tabs now show a centered placeholder with a faded icon and helper text when no input is present.
+- **Text field fix**: Replaced broken Container+InputBorder.none with proper `OutlineInputBorder` for clean border radius on the text input tab.
+- **New entry point**: Added AI icon with gradient accent next to the barcode scanner in the Nutrition Explorer search bar.
+
+### 🧠 AI Logic Improvements
+
+- **Locale-aware prompts**: `AiService` now accepts `languageCode` — the system prompt explicitly instructs the AI to return food names in the user's app language (e.g., "Apfel" not "Apple" when language is "de").
+- **Item consolidation**: System prompt rule prevents duplicate entries — "4 eggs" returns one "Egg" entry with combined weight (240g).
+- **No nutritional hallucination**: AI is instructed to return only food names and estimated gram weights. Calorie/macro values are looked up from the local database.
+- **Simple base names**: AI returns short, generic food names (e.g., "Banane" not "Reife Banane") to maximize database match rates.
+
+### 🔍 Improved Fuzzy Matching
+
+- **Dart-side re-ranking**: `fuzzyMatchForAi` now fetches 20 candidates from SQL, then re-ranks in Dart with priority: exact match → starts-with → shortest partial match.
+- **Source priority preserved**: Base foods still rank above user and Open Food Facts entries within each match tier.
+- **Accuracy**: Searching for "Apfel" now correctly returns "Apfel" instead of "Erdapfel" or compound dishes.
+
+### 📦 Code Reduction
+
+- `ai_meal_capture_screen.dart`: ~1264 → ~870 lines (−31%), removed 3 animation controllers, 5 glassmorphic widgets, and the modal overlay.
+
 ## [0.6.0-alpha.1] - 2026-03-05
 
 ### 🚀 New Feature: AI Meal Capture (#81)
