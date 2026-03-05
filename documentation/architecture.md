@@ -109,8 +109,9 @@ lib/
 │   ├── app_de.arb           # German translations
 │   └── app_en.arb           # English translations
 ├── models/                  # Data entity definitions (20 files)
-├── screens/                 # Full-page route widgets (38 files)
-├── services/                # Application services (5 files)
+├── screens/                 # Full-page route widgets (41 files)
+├── services/                # Application services (6 files)
+│   └── ai_service.dart      # Multi-provider AI service (OpenAI + Gemini)
 ├── theme/                   # Custom theme extensions
 │   ├── app_colors.dart      # AppSurfaces ThemeExtension
 │   └── color_constants.dart # Light/dark mode color tokens
@@ -138,6 +139,7 @@ main.dart (MaterialApp / ChangeNotifierProvider)
                           │   └── NutritionHubScreen
                           ├── GlassFab (Quick Actions)
                           │   ├── → AddFoodScreen
+                          │   ├── → AiMealCaptureScreen (NEW)
                           │   ├── → ScannerScreen
                           │   └── → LogSupplementMenu
                           └── RunningWorkoutBar (overlay)
@@ -181,10 +183,11 @@ The app supports **German** and **English** using Flutter's `flutter_localizatio
 | :--- | :--- |
 | **Framework** | [Flutter](https://flutter.dev) |
 | **Language** | Dart |
-| **Local Database** | [SQLite](https://sqlite.org) via `sqflite` |
-| **Future ORM** | [Drift](https://drift.simonbinder.eu/) (prepared, not yet active) |
+| **Local Database** | [SQLite](https://sqlite.org) via [Drift](https://drift.simonbinder.eu/) ORM |
 | **State Management** | `Provider` + `StatefulWidget` |
 | **Localization** | `flutter_localizations` (ARB files) |
+| **AI Integration** | `speech_to_text`, REST APIs (OpenAI, Gemini) |
+| **Secure Storage** | `flutter_secure_storage` (API keys) |
 | **Charts** | `fl_chart` |
 | **Calendar** | `table_calendar` |
 | **Barcode Scanning** | `mobile_scanner` |

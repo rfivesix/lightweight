@@ -4,6 +4,47 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.6.0-alpha.1] - 2026-03-05
+
+### 🚀 New Feature: AI Meal Capture (#81)
+
+Capture meals faster using photos, voice, or text — powered by AI. Users provide their own API key (stored securely via `flutter_secure_storage`), and the app detects foods with estimated quantities, then lets users review and edit before saving.
+
+### ✨ New Features
+
+- **AI Meal Capture Screen**: New screen accessible from the diary FAB for logging meals via:
+  - **Photo input**: Take a photo or pick from gallery (up to 4 images for multi-angle accuracy).
+  - **Voice input**: Describe your meal by speaking — speech-to-text with on-device recognition.
+  - **Text input**: Type a free-form meal description.
+- **AI Meal Review Screen**: Review AI-detected foods before saving — edit quantities, swap items, add/remove entries.
+- **AI Settings Screen**: Configure API provider (OpenAI GPT-4o or Google Gemini), enter API key, and test connectivity.
+- **Multi-Provider AI Service**: Supports both OpenAI and Gemini APIs with dynamic payload formatting and structured JSON response parsing.
+- **Complex Meal Handling**: AI system prompt forces decomposition of composite meals into individual ingredients (e.g., "Burger" → bun, patty, lettuce, cheese, sauce).
+
+### 🎨 UI/UX: "Magical" AI Interface
+
+- **Animated Aura Background**: 5 floating gradient orbs (pink, cyan, orange, purple, emerald) on independent coprime animation cycles (13s / 17s / 23s) — the combined pattern repeats only after ~85 minutes, creating truly organic, non-deterministic motion.
+- **Glassmorphic Controls**: Custom frosted-glass segmented toggle for input modes with pastel rainbow gradient indicator.
+- **Pastel Rainbow Buttons**: Analyze button and microphone button use a washed-out 5-color spectrum (pink → peach → gold → mint → cyan).
+- **Enhanced Analyzing Overlay**: Rotating SweepGradient ring, hue-cycling sparkle icon, and animated gradient progress bar during AI processing.
+
+### 🐛 Bug Fixes
+
+- **Diary Bug (Critical)**: Fixed AI-detected foods not appearing in the diary. Root cause was mismatched meal type keys — the AI review screen used bare values (`'lunch'`) while the diary expected prefixed keys (`'mealtypeLunch'`).
+- **Database Prioritization**: `fuzzyMatchForAi` now strictly orders results: base foods first (priority 0), then user foods (1), then Open Food Facts entries (2), followed by name length.
+
+### 🔧 Permissions & Configuration
+
+- **Android**: Added `RECORD_AUDIO` permission to `AndroidManifest.xml` for voice input.
+- **iOS**: Fixed `NSMicrophoneUsageDescription` (previously stated "no mic access needed") and added missing `NSSpeechRecognitionUsageDescription`.
+- **Speech Recognition**: Configured `speech_to_text` with dictation mode, 60s listen duration, 10s pause tolerance, partial results, locale auto-detection, and `cancelOnError: false`.
+
+### 📦 Dependencies
+
+- `speech_to_text: ^7.0.0`
+- `flutter_secure_storage` (for API key storage)
+- `image_picker` (for photo capture)
+
 ## [0.5.1] - 2026-03-04
 
 ### 🐛 Bug Fixes

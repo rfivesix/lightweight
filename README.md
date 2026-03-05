@@ -43,6 +43,7 @@ Hypertrack is already a fully functional daily driver for fitness enthusiasts.
 ### 🍎 Nutrition & Hydration
 * **Food Database:** Integrated with **Open Food Facts** for barcode scanning and product search.
 * **Meals:** Group foods into meals (Breakfast, Lunch, etc.) or create custom reusable recipes.
+* **🤖 AI Meal Capture (NEW):** Log meals instantly via photo, voice, or text description. AI detects individual foods with estimated quantities — review and edit before saving. Supports OpenAI GPT-4o and Google Gemini (BYOK — bring your own key).
 * **Fluid Tracking:** dedicated logging for water, coffee, and sugary drinks.
 * **Smart Analysis:** Automatically tracks caffeine intake based on logged beverages.
 * **Macro Goals:** Set daily targets for Calories, Protein, Carbs, Fats, Fiber, Sugar, and Salt.
@@ -68,8 +69,8 @@ We are building a platform that gives you the convenience of cloud-based apps wi
 * **Cloud-Ready Foundation:** The data layer is now stable and prepared for conflict-free synchronization.
 
 ### 🚧 Current: v0.6 (Health & Input)
-* **Apple HealthKit Integration:** Syncing workouts and weight with Apple Health.
-* **AI Meal Capture:** Advanced input methods (e.g., AI-powered meal recognition) to speed up daily nutrition tracking — *in development*.
+* **✅ AI Meal Capture:** Capture meals via photo, voice, or text — AI detects foods and quantities with multi-provider support (OpenAI + Gemini). Shipped in v0.6.0-alpha.1.
+* **Apple HealthKit Integration:** Syncing workouts and weight with Apple Health — *planned*.
 * **Core Tracking Stability:** Continued refinements and bug fixes across workout and nutrition logging.
 
 ### ☁️ Planned: v1.0 (MVP & Store Release)

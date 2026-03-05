@@ -2,7 +2,7 @@
 
 Hypertrack is a comprehensive, **offline-first** health and fitness tracking application built with [Flutter](https://flutter.dev). It centralizes nutrition logging, workout management, body measurements, and supplement tracking into a single, privacy-focused platform.
 
-> **Status:** Active Beta (v0.4+). The project is preparing for a major architectural migration to v0.5.
+> **Status:** Active Beta (v0.5 stable, v0.6 in development). The core architecture (Drift + UUIDs) is solidified.
 
 ---
 
@@ -25,6 +25,7 @@ Manage daily food and fluid intake with a searchable product database powered by
 - **Meal Templates:** Create reusable meals from frequently eaten food combinations.
 - **Macro & Micro Targets:** Track daily goals for Calories, Protein, Carbs, Fat, Fiber, Sugar, Salt, and Water.
 - **Nutrition Analysis:** Time-range based reports (1 day, 7 days, 30 days, all time) with expandable/collapsible summaries.
+- **🤖 AI Meal Capture (v0.6):** Log meals instantly via photo, voice, or text description. AI detects individual foods with estimated quantities — review and edit before saving. Supports OpenAI GPT-4o and Google Gemini (BYOK — bring your own key).
 
 *Data model details → [Data Models: Nutrition & Foods](data_models_and_storage.md#1-nutrition--foods)*
 
@@ -84,7 +85,7 @@ The `MainScreen` uses a `PageView` with a `BottomNavigationBar` to switch betwee
 
 ## Screens Reference
 
-The application contains **38 screens** in `lib/screens/`. Here is a categorized breakdown:
+The application contains **41 screens** in `lib/screens/`. Here is a categorized breakdown:
 
 ### App Shell & Navigation
 | Screen | File | Purpose |
@@ -111,6 +112,13 @@ The application contains **38 screens** in `lib/screens/`. Here is a categorized
 | Meals | `meals_screen.dart` | List of saved meal templates |
 | Meal Screen | `meal_screen.dart` | Detailed meal view and editor |
 | Meal Editor | `meal_editor_screen.dart` | Create/edit meal compositions |
+
+### AI (v0.6+)
+| Screen | File | Purpose |
+| :--- | :--- | :--- |
+| AI Meal Capture | `ai_meal_capture_screen.dart` | Photo/voice/text meal input with animated AI UI |
+| AI Meal Review | `ai_meal_review_screen.dart` | Review & edit AI-detected foods before saving |
+| AI Settings | `ai_settings_screen.dart` | API provider selection, key management, connectivity test |
 
 ### Workouts
 | Screen | File | Purpose |

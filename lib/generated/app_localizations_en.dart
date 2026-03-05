@@ -1567,4 +1567,123 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get genderDiverse => 'Diverse';
+
+  @override
+  String get aiSettingsTitle => 'AI Meal Capture';
+
+  @override
+  String get aiSettingsDescription => 'Configure AI-powered meal recognition.';
+
+  @override
+  String get aiProviderSection => 'AI Provider';
+
+  @override
+  String get aiProviderLabel => 'Provider';
+
+  @override
+  String get aiApiKeySection => 'API Key';
+
+  @override
+  String get aiApiKeyLabel => 'API Key';
+
+  @override
+  String get aiApiKeyHint => 'Paste your API key here';
+
+  @override
+  String get aiSaveKey => 'Save Key';
+
+  @override
+  String get aiTestConnection => 'Test';
+
+  @override
+  String get aiTestSuccess => 'Connection successful!';
+
+  @override
+  String get aiKeySaved => 'API key saved securely.';
+
+  @override
+  String get aiPrivacySection => 'Privacy';
+
+  @override
+  String get aiPrivacyDisclosure =>
+      'Your images and text are sent to the selected AI provider only when you tap Analyze. Data is never stored on external servers beyond processing your request. Your API key is stored encrypted on this device only.';
+
+  @override
+  String get aiMealCapture => 'AI Meal';
+
+  @override
+  String get aiCaptureTitle => 'AI Meal Capture';
+
+  @override
+  String get aiCaptureTabPhoto => 'Photo';
+
+  @override
+  String get aiCaptureTabVoice => 'Voice';
+
+  @override
+  String get aiCaptureTabText => 'Text';
+
+  @override
+  String get aiCapturePhotoHint =>
+      'Take or select up to 4 photos of your meal.';
+
+  @override
+  String get aiCaptureVoiceHint => 'Tap the microphone and describe your meal.';
+
+  @override
+  String get aiCaptureTextHint =>
+      'Describe your meal (e.g. \"Grilled chicken with rice and salad\")...';
+
+  @override
+  String get aiAnalyzeButton => 'Analyze';
+
+  @override
+  String get aiAnalyzing => 'Analyzing your meal...';
+
+  @override
+  String get aiReviewTitle => 'Review Suggestions';
+
+  @override
+  String aiReviewFoundItems(int count) {
+    return 'AI found $count items';
+  }
+
+  @override
+  String get aiReviewNoMatch => 'No match — tap to search';
+
+  @override
+  String get aiReviewConfidence => 'Confidence';
+
+  @override
+  String get aiReviewAddItem => 'Add item manually';
+
+  @override
+  String get aiReviewSaveToDiary => 'Save to Diary';
+
+  @override
+  String get aiReviewFeedbackHint => 'Describe what the AI got wrong...';
+
+  @override
+  String get aiReviewRetryButton => 'Retry with Feedback';
+
+  @override
+  String get aiReviewFeedbackSection => 'Correction';
+
+  @override
+  String get aiErrorNoKey =>
+      'No API key configured. Please set one in Settings → AI Meal Capture.';
+
+  @override
+  String get aiErrorNetwork =>
+      'Network error. Please check your connection and try again.';
+
+  @override
+  String get aiErrorAuth => 'Authentication failed. Please check your API key.';
+
+  @override
+  String get aiErrorParse =>
+      'Could not understand the AI response. Please try again.';
+
+  @override
+  String get aiErrorRateLimit => 'Too many requests. Please wait a moment.';
 }

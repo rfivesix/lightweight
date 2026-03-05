@@ -1,6 +1,7 @@
 // lib/screens/settings_screen.dart
 import 'package:flutter/material.dart';
 import '../generated/app_localizations.dart';
+import 'ai_settings_screen.dart';
 import 'data_management_screen.dart';
 import '../services/theme_service.dart';
 import '../util/design_constants.dart';
@@ -134,6 +135,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => const DataManagementScreen(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: DesignConstants.spacingXL),
+          _buildSectionTitle(context, l10n.aiSettingsTitle),
+          _buildNavigationCard(
+            context: context,
+            icon: Icons.auto_awesome,
+            title: l10n.aiSettingsTitle,
+            subtitle: l10n.aiSettingsDescription,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const AiSettingsScreen(),
                 ),
               );
             },

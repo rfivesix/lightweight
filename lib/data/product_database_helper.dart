@@ -285,6 +285,68 @@ class ProductDatabaseHelper {
     }
   }
 
+  /// Fuzzy-matches an AI-detected food name against the products table.
+  ///
+  /// Splits [aiName] into tokens and requires all tokens to match via
+  /// `LIKE '%token%'`. Falls back to single-token search if multi-token
+  /// finds nothing. Returns up to 5 matches, prioritized by source
+  /// (base → user → off) then shortest name (most specific first).
+  Future<List<FoodItem>> fuzzyMatchForAi(String aiName) async {
+    final tokens = aiName
+        .trim()
+        .toLowerCase()
+        .split(RegExp(r'\s+'))
+        .where((t) => t.length > 1)
+        .toList();
+    if (tokens.isEmpty) return [];
+
+    final dbInstance = await database;
+    const int limit = 5;
+
+    // Source priority expression: base=0 (highest), user=1, off=2
+    Expression<int> sourcePriority(GeneratedColumn<String> source) {
+      return CaseWhenExpression<int>(cases: [
+        CaseWhen(source.equals('base'), then: const Constant(0)),
+        CaseWhen(source.equals('user'), then: const Constant(1)),
+      ], orElse: const Constant(2));
+    }
+
+    // Attempt multi-token search: all tokens must appear in the name
+    if (tokens.length > 1) {
+      var query = dbInstance.select(dbInstance.products)
+        ..limit(limit)
+        ..orderBy([
+          (t) => OrderingTerm(
+              expression: sourcePriority(t.source), mode: OrderingMode.asc),
+          (t) =>
+              OrderingTerm(expression: t.name.length, mode: OrderingMode.asc),
+        ]);
+      for (final token in tokens) {
+        query = query..where((t) => t.name.like('%$token%'));
+      }
+      final rows = await query.get();
+      if (rows.isNotEmpty) {
+        return rows.map(_mapRowToFoodItem).toList();
+      }
+    }
+
+    // Fallback: single-token search with longest token
+    tokens.sort((a, b) => b.length.compareTo(a.length));
+    final bestToken = tokens.first;
+    final rows = await (dbInstance.select(dbInstance.products)
+          ..where((t) => t.name.like('%$bestToken%'))
+          ..orderBy([
+            (t) => OrderingTerm(
+                expression: sourcePriority(t.source), mode: OrderingMode.asc),
+            (t) =>
+                OrderingTerm(expression: t.name.length, mode: OrderingMode.asc),
+          ])
+          ..limit(limit))
+        .get();
+
+    return rows.map(_mapRowToFoodItem).toList();
+  }
+
   // === Legacy / Compatibility Getter ===
 
   // Für den BackupManager, falls er direkten Zugriff benötigt (deprecated).

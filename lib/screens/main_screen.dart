@@ -15,6 +15,7 @@ import '../models/supplement.dart';
 import '../models/supplement_log.dart';
 import '../models/workout_log.dart';
 import 'add_food_screen.dart';
+import 'ai_meal_capture_screen.dart';
 import 'add_measurement_screen.dart';
 import 'diary_screen.dart';
 import 'edit_routine_screen.dart';
@@ -140,6 +141,12 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         break;
       case 'log_supplement':
         _showLogSupplementMenu();
+        break;
+      case 'ai_meal_capture':
+        final result = await Navigator.of(context).push<bool>(
+          MaterialPageRoute(builder: (_) => const AiMealCaptureScreen()),
+        );
+        if (result == true) _refreshHomeScreen();
         break;
     }
   }
@@ -717,6 +724,11 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         'icon': Icons.medication_outlined,
         'label': l10n.logIntakeTitle,
         'action': 'log_supplement',
+      },
+      {
+        'icon': Icons.auto_awesome,
+        'label': l10n.aiMealCapture,
+        'action': 'ai_meal_capture',
       },
     ];
   }

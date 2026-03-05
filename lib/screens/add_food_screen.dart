@@ -37,11 +37,16 @@ class AddFoodScreen extends StatefulWidget {
   final DateTime? initialDate; // <--- NEU
   /// Optional category or meal type identifier for the entry.
   final String? initialMealType; // <--- NEU
+
+  /// When true, the screen acts as a food picker — tapping an item pops it
+  /// back to the caller instead of logging it. Used by AI meal review.
+  final bool selectionMode;
   const AddFoodScreen({
     super.key,
     this.initialTab = 0,
     this.initialDate, // <--- NEU
     this.initialMealType, // <--- NEU
+    this.selectionMode = false,
   });
 
   @override

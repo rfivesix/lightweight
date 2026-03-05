@@ -1575,4 +1575,127 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get genderDiverse => 'Divers';
+
+  @override
+  String get aiSettingsTitle => 'KI-Mahlzeitenerkennung';
+
+  @override
+  String get aiSettingsDescription =>
+      'KI-basierte Mahlzeitenerkennung konfigurieren.';
+
+  @override
+  String get aiProviderSection => 'KI-Anbieter';
+
+  @override
+  String get aiProviderLabel => 'Anbieter';
+
+  @override
+  String get aiApiKeySection => 'API-Schlüssel';
+
+  @override
+  String get aiApiKeyLabel => 'API-Schlüssel';
+
+  @override
+  String get aiApiKeyHint => 'API-Schlüssel hier einfügen';
+
+  @override
+  String get aiSaveKey => 'Speichern';
+
+  @override
+  String get aiTestConnection => 'Test';
+
+  @override
+  String get aiTestSuccess => 'Verbindung erfolgreich!';
+
+  @override
+  String get aiKeySaved => 'API-Schlüssel sicher gespeichert.';
+
+  @override
+  String get aiPrivacySection => 'Datenschutz';
+
+  @override
+  String get aiPrivacyDisclosure =>
+      'Deine Bilder und Texte werden nur an den gewählten KI-Anbieter gesendet, wenn du auf Analysieren tippst. Daten werden über die Verarbeitung hinaus nicht auf externen Servern gespeichert. Dein API-Schlüssel wird verschlüsselt nur auf diesem Gerät gespeichert.';
+
+  @override
+  String get aiMealCapture => 'KI-Mahlzeit';
+
+  @override
+  String get aiCaptureTitle => 'KI-Mahlzeitenerkennung';
+
+  @override
+  String get aiCaptureTabPhoto => 'Foto';
+
+  @override
+  String get aiCaptureTabVoice => 'Sprache';
+
+  @override
+  String get aiCaptureTabText => 'Text';
+
+  @override
+  String get aiCapturePhotoHint =>
+      'Mache oder wähle bis zu 4 Fotos deiner Mahlzeit.';
+
+  @override
+  String get aiCaptureVoiceHint =>
+      'Tippe auf das Mikrofon und beschreibe deine Mahlzeit.';
+
+  @override
+  String get aiCaptureTextHint =>
+      'Beschreibe deine Mahlzeit (z.B. \"Gegrilltes Hähnchen mit Reis und Salat\")...';
+
+  @override
+  String get aiAnalyzeButton => 'Analysieren';
+
+  @override
+  String get aiAnalyzing => 'Mahlzeit wird analysiert...';
+
+  @override
+  String get aiReviewTitle => 'Vorschläge prüfen';
+
+  @override
+  String aiReviewFoundItems(int count) {
+    return 'KI hat $count Zutaten erkannt';
+  }
+
+  @override
+  String get aiReviewNoMatch => 'Kein Treffer — tippe zum Suchen';
+
+  @override
+  String get aiReviewConfidence => 'Konfidenz';
+
+  @override
+  String get aiReviewAddItem => 'Zutat manuell hinzufügen';
+
+  @override
+  String get aiReviewSaveToDiary => 'Ins Tagebuch speichern';
+
+  @override
+  String get aiReviewFeedbackHint =>
+      'Beschreibe, was die KI falsch erkannt hat...';
+
+  @override
+  String get aiReviewRetryButton => 'Mit Korrektur erneut versuchen';
+
+  @override
+  String get aiReviewFeedbackSection => 'Korrektur';
+
+  @override
+  String get aiErrorNoKey =>
+      'Kein API-Schlüssel konfiguriert. Bitte unter Einstellungen → KI-Mahlzeitenerkennung eingeben.';
+
+  @override
+  String get aiErrorNetwork =>
+      'Netzwerkfehler. Bitte Verbindung prüfen und erneut versuchen.';
+
+  @override
+  String get aiErrorAuth =>
+      'Authentifizierung fehlgeschlagen. Bitte API-Schlüssel prüfen.';
+
+  @override
+  String get aiErrorParse =>
+      'KI-Antwort konnte nicht verarbeitet werden. Bitte erneut versuchen.';
+
+  @override
+  String get aiErrorRateLimit => 'Zu viele Anfragen. Bitte kurz warten.';
 }
