@@ -704,5 +704,8 @@
   "aiErrorNetwork": "Network error. Please check your connection and try again.",
   "aiErrorAuth": "Authentication failed. Please check your API key.",
   "aiErrorParse": "Could not understand the AI response. Please try again.",
-  "aiErrorRateLimit": "Too many requests. Please wait a moment."
+  "aiErrorRateLimit": "Too many requests. Please wait a moment.",
+
+  "aiEnableTitle": "Enable AI Features",
+  "aiEnableSubtitle": "Allows the use of AI for meal recognition. Disabling this hides all AI buttons in the app."
 }

@@ -6,23 +6,27 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Persists the user's preference for light/dark mode and visual presets.
 class ThemeService extends ChangeNotifier {
   static const _themeKey = 'theme_mode';
-  static const _styleKey = 'visual_style'; // NEU
+  static const _styleKey = 'visual_style';
+  static const _aiEnabledKey = 'ai_enabled';
   ThemeMode _themeMode = ThemeMode.system;
-  int _visualStyle = 0; // NEU: 0 = Standard, 1 = Liquid
+  int _visualStyle = 0; // 0 = Standard, 1 = Liquid
+  bool _isAiEnabled = true;
 
   /// The current theme mode (light, dark, or system).
   ThemeMode get themeMode => _themeMode;
 
   /// The current visual style index.
-  int get visualStyle => _visualStyle; // NEU
+  int get visualStyle => _visualStyle;
+
+  /// Whether AI features are enabled globally.
+  bool get isAiEnabled => _isAiEnabled;
 
   /// Creates a [ThemeService] and loads saved preferences.
   ThemeService() {
     _loadThemeMode();
-    _loadVisualStyle(); // NEU
+    _loadVisualStyle();
+    _loadAiEnabled();
   }
-  // Im Konstruktor aufrufen:
-  //_loadVisualStyle();
 
   Future<void> _loadThemeMode() async {
     final prefs = await SharedPreferences.getInstance();
@@ -54,5 +58,20 @@ class ThemeService extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_themeKey, mode.index);
+  }
+
+  Future<void> _loadAiEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    _isAiEnabled = prefs.getBool(_aiEnabledKey) ?? true;
+    notifyListeners();
+  }
+
+  /// Sets whether AI features are enabled and persists it to storage.
+  Future<void> setAiEnabled(bool enabled) async {
+    if (enabled == _isAiEnabled) return;
+    _isAiEnabled = enabled;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_aiEnabledKey, enabled);
   }
 }

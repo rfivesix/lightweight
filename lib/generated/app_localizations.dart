@@ -3247,6 +3247,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Too many requests. Please wait a moment.'**
   String get aiErrorRateLimit;
+
+  /// No description provided for @aiEnableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable AI Features'**
+  String get aiEnableTitle;
+
+  /// No description provided for @aiEnableSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allows the use of AI for meal recognition. Disabling this hides all AI buttons in the app.'**
+  String get aiEnableSubtitle;
 }
 
 class _AppLocalizationsDelegate

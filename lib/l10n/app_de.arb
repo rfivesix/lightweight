@@ -709,5 +709,8 @@
   "aiErrorNetwork": "Netzwerkfehler. Bitte Verbindung prüfen und erneut versuchen.",
   "aiErrorAuth": "Authentifizierung fehlgeschlagen. Bitte API-Schlüssel prüfen.",
   "aiErrorParse": "KI-Antwort konnte nicht verarbeitet werden. Bitte erneut versuchen.",
-  "aiErrorRateLimit": "Zu viele Anfragen. Bitte kurz warten."
+  "aiErrorRateLimit": "Zu viele Anfragen. Bitte kurz warten.",
+
+  "aiEnableTitle": "KI-Funktionen aktivieren",
+  "aiEnableSubtitle": "Ermöglicht die Nutzung von KI zur Mahlzeitenerkennung. Bei Deaktivierung werden alle KI-Buttons in der App ausgeblendet."
 }

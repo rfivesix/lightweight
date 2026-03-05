@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.6.0-alpha.3] - 2026-03-05
+
+### ✨ New Feature: AI Kill-Switch (#85)
+
+- **Global toggle**: Added "Enable AI Features" switch in Settings → AI Meal Capture. Defaults to enabled; persisted via SharedPreferences.
+- **Conditional UI**: When disabled, all AI entry points disappear without layout gaps:
+  - Speed Dial: "AI Meal" action removed from the action list.
+  - Nutrition Explorer: Gradient AI button next to barcode scanner hidden.
+  - Settings: AI Settings navigation card conditionally shown only when AI is enabled.
+- **Localization**: Added `aiEnableTitle` and `aiEnableSubtitle` strings in both English and German.
+
+### 🎨 UI Improvements
+
+- **AI Review Screen**: Replaced plain `AlertDialog` for quantity editing with the app's custom `showGlassBottomMenu` widget, ensuring visual consistency with the rest of the app (glass styling, keyboard-aware padding, visual style adaptation).
+
+### 🐛 Bug Fixes
+
+- **AI Review Quantity Editor**: Fixed `_dependents.isEmpty` assertion crash when closing the quantity editor. Root cause was disposing a `TextEditingController` while the glass bottom menu's exit animation was still playing.
+
 ## [0.6.0-alpha.2] - 2026-03-05
 
 ### 🎨 UI Redesign: Minimalist AI Interface (#84)

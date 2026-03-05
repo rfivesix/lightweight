@@ -12,6 +12,7 @@ import '../services/ai_service.dart';
 import '../util/design_constants.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
+import '../widgets/glass_bottom_menu.dart';
 import 'add_food_screen.dart';
 
 /// Review screen for AI-suggested food items.
@@ -86,43 +87,61 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
 
   void _editQuantity(int index) async {
     final item = _items[index];
+    final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController(
       text: item.suggestion.estimatedGrams.toString(),
     );
-    final result = await showDialog<int>(
+
+    final result = await showGlassBottomMenu<int?>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(item.suggestion.name),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            labelText: 'Grams',
-            suffixText: 'g',
-            border: OutlineInputBorder(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(AppLocalizations.of(context)!.cancel),
-          ),
-          FilledButton(
-            onPressed: () {
-              final val = int.tryParse(controller.text);
-              if (val != null && val > 0) {
-                Navigator.of(ctx).pop(val);
-              }
-            },
-            child: Text(AppLocalizations.of(context)!.save),
-          ),
-        ],
-      ),
+      title: item.suggestion.name,
+      contentBuilder: (ctx, close) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: l10n.amount_in_grams,
+                suffixText: 'g',
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      close();
+                      Navigator.of(ctx).pop(null);
+                    },
+                    child: Text(l10n.cancel),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      final val = int.tryParse(controller.text);
+                      if (val != null && val > 0) {
+                        close();
+                        Navigator.of(ctx).pop(val);
+                      }
+                    },
+                    child: Text(l10n.save),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
     );
-    if (result != null) {
+
+    if (result != null && mounted) {
       setState(() => item.suggestion.estimatedGrams = result);
     }
-    controller.dispose();
   }
 
   Future<void> _replaceWithFood(int index) async {

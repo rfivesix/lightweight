@@ -1698,4 +1698,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get aiErrorRateLimit => 'Zu viele Anfragen. Bitte kurz warten.';
+
+  @override
+  String get aiEnableTitle => 'KI-Funktionen aktivieren';
+
+  @override
+  String get aiEnableSubtitle =>
+      'Ermöglicht die Nutzung von KI zur Mahlzeitenerkennung. Bei Deaktivierung werden alle KI-Buttons in der App ausgeblendet.';
 }

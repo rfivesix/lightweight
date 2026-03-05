@@ -1686,4 +1686,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiErrorRateLimit => 'Too many requests. Please wait a moment.';
+
+  @override
+  String get aiEnableTitle => 'Enable AI Features';
+
+  @override
+  String get aiEnableSubtitle =>
+      'Allows the use of AI for meal recognition. Disabling this hides all AI buttons in the app.';
 }

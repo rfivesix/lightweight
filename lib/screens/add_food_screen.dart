@@ -23,6 +23,8 @@ import '../widgets/glass_fab.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/off_attribution_widget.dart';
 import '../widgets/summary_card.dart';
+import 'package:provider/provider.dart';
+import '../services/theme_service.dart';
 
 // lib/screens/add_food_screen.dart
 
@@ -589,41 +591,43 @@ class _AddFoodScreenState extends State<AddFoodScreen>
             ),
           ),
           const SizedBox(width: 8),
-          // AI gradient entry point
-          IconButton(
-            style: IconButton.styleFrom(
-              backgroundColor: colorScheme.surfaceContainerHighest,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            icon: ShaderMask(
-              blendMode: BlendMode.srcIn,
-              shaderCallback: (bounds) => const LinearGradient(
-                colors: [
-                  Color(0xFFE88DCC),
-                  Color(0xFFF4A77A),
-                  Color(0xFFF7D06B),
-                  Color(0xFF7DDEAE),
-                  Color(0xFF6DC8D9),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ).createShader(bounds),
-              child: const Icon(Icons.auto_awesome),
-            ),
-            onPressed: () async {
-              final result = await Navigator.of(context).push<bool>(
-                MaterialPageRoute(
-                  builder: (_) => const AiMealCaptureScreen(),
+          // AI gradient entry point – only visible when AI is enabled
+          if (Provider.of<ThemeService>(context).isAiEnabled) ...[
+            IconButton(
+              style: IconButton.styleFrom(
+                backgroundColor: colorScheme.surfaceContainerHighest,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              );
-              if (result == true && mounted) {
-                Navigator.of(context).pop();
-              }
-            },
-          ),
-          const SizedBox(width: 4),
+              ),
+              icon: ShaderMask(
+                blendMode: BlendMode.srcIn,
+                shaderCallback: (bounds) => const LinearGradient(
+                  colors: [
+                    Color(0xFFE88DCC),
+                    Color(0xFFF4A77A),
+                    Color(0xFFF7D06B),
+                    Color(0xFF7DDEAE),
+                    Color(0xFF6DC8D9),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ).createShader(bounds),
+                child: const Icon(Icons.auto_awesome),
+              ),
+              onPressed: () async {
+                final result = await Navigator.of(context).push<bool>(
+                  MaterialPageRoute(
+                    builder: (_) => const AiMealCaptureScreen(),
+                  ),
+                );
+                if (result == true && mounted) {
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+            const SizedBox(width: 4),
+          ],
           IconButton(
             style: IconButton.styleFrom(
               backgroundColor: colorScheme.surfaceContainerHighest,

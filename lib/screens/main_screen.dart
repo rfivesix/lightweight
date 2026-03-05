@@ -725,12 +725,13 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         'label': l10n.logIntakeTitle,
         'action': 'log_supplement',
       },
-      {
-        'icon': Icons.auto_awesome,
-        'label': l10n.aiMealCapture,
-        'action': 'ai_meal_capture',
-        'gradient': true,
-      },
+      if (themeService.isAiEnabled)
+        {
+          'icon': Icons.auto_awesome,
+          'label': l10n.aiMealCapture,
+          'action': 'ai_meal_capture',
+          'gradient': true,
+        },
     ];
   }
 
