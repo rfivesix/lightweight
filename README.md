@@ -18,15 +18,15 @@ Learn more about the project: **[Hypertrack Project Overview](documentation/over
 
 ---
 
-## ⚠️ **Important Disclaimer: Early Access**
+## ⚠️ **Important Disclaimer: Active Beta**
 
 **Please read before using:**
 
-Hypertrack is currently undergoing a massive architectural refactoring (moving from v0.4 to v0.5). We are transitioning the database foundation from integer-based IDs to UUIDs and changing the local storage engine to prepare for cloud synchronization.
+Hypertrack has completed its **v0.5 Architecture Update**. The database has been entirely rewritten using **Drift** (SQLite ORM) and all identifiers have been migrated to **UUIDs (v4)**. The core data foundation is now stable and cloud-ready.
 
-* **Data Compatibility:** While we strive to provide migration tools, **breaking changes to the database structure are expected** in the upcoming updates.
-* **Data Safety:** There is a non-zero risk that local data created with current versions might need to be manually exported/imported or could be lost during the transition to v1.0.
-* **Recommendation:** Please use the built-in **Backup (JSON)** feature regularly if you use the app for daily tracking.
+* **Stable Foundation:** The database structure is solidified and no further breaking schema changes are expected.
+* **Active Beta:** The app is under active development—new features and refinements are being added regularly. Minor bugs may still occur.
+* **Recommendation:** We still recommend using the built-in **Backup (JSON)** feature regularly, as best practice for any app in active development.
 
 ---
 
@@ -43,6 +43,7 @@ Hypertrack is already a fully functional daily driver for fitness enthusiasts.
 ### 🍎 Nutrition & Hydration
 * **Food Database:** Integrated with **Open Food Facts** for barcode scanning and product search.
 * **Meals:** Group foods into meals (Breakfast, Lunch, etc.) or create custom reusable recipes.
+* **🤖 AI Meal Capture & Recommendations (v0.6+):** Log meals instantly via photo, voice, or text description. Get personalized meal suggestions based on your remaining daily macros. AI detects individual foods with estimated quantities — review and edit before saving. Supports OpenAI GPT-4o and Google Gemini (BYOK — bring your own key).
 * **Fluid Tracking:** dedicated logging for water, coffee, and sugary drinks.
 * **Smart Analysis:** Automatically tracks caffeine intake based on logged beverages.
 * **Macro Goals:** Set daily targets for Calories, Protein, Carbs, Fats, Fiber, Sugar, and Salt.
@@ -63,15 +64,24 @@ Hypertrack is already a fully functional daily driver for fitness enthusiasts.
 
 We are building a platform that gives you the convenience of cloud-based apps with the freedom of open source.
 
-### 🚧 Upcoming: v0.5 (The Architecture Update)
-* **Database Rewrite:** Migration to **Drift** (SQLite ORM) and **UUIDs** to enable conflict-free synchronization.
-* **HealthKit Integration:** Syncing workouts and weight with Apple Health.
-* **Preparation:** Laying the groundwork for optional cloud features.
+### ✅ Completed: v0.5 (The Architecture Update)
+* **Database Rewrite:** Full migration to **Drift** (SQLite ORM) and **UUIDs (v4)** — completed.
+* **Cloud-Ready Foundation:** The data layer is now stable and prepared for conflict-free synchronization.
 
-### ☁️ Planned: v1.0 (The Silent Launch)
-* **Hybrid Cloud:** Optional, encrypted cloud backup running in the background.
-* **Cross-Device:** Seamlessly switch between devices without manual exports.
+### ✅ Completed: v0.6 (The AI Nutrition Update)
+* **AI Meal Capture & Recommendations:** Capture meals via photo, voice, or text, and receive personalized meal suggestions based on remaining macros. Full support for OpenAI & Gemini.
+* **Smart Matching:** AI intelligently matches against the local, language-aware product database.
+* **Privacy Controls:** Global AI Kill-Switch added. API keys natively encrypted at rest.
+
+### 🚧 Current: v0.7 (Health & Connectivity)
+* **Apple HealthKit Integration:** Syncing workouts and weight with Apple Health — *planned*.
+* **Core Tracking Stability:** Continued refinements and bug fixes across workout and nutrition logging.
+
+### ☁️ Planned: v1.0 (MVP & Store Release)
+* **Silent Cloud Backup:** Hybrid self-host / managed encrypted backup running seamlessly in the background.
+* **Cross-Device Sync:** Seamlessly switch between devices without manual exports.
 * **Self-Hosting:** Official Docker support for users who want to host their own backend (BYOB - Bring Your Own Backend).
+* **Core-Tracking Stability:** Polished, production-ready workout and nutrition experience.
 
 ### 🤝 Vision: v2.0 (Social & Connectivity)
 * **Social Feed:** Share workouts, PRs, and streaks with friends.
@@ -83,14 +93,14 @@ We are building a platform that gives you the convenience of cloud-based apps wi
 ## 🛠️ Tech Stack
 
 * **Framework:** Flutter
-* **Local Database:** SQLite (migrating to Drift)
+* **Local Database:** Drift (SQLite ORM)
 * **State Management:** Provider
 * **Backend (Future):** Supabase (PostgreSQL)
 
 ## ❤️ Contributing
 
 Contributions, issues, and feature requests are welcome!
-Since we are currently in a heavy refactoring phase (v0.5), please open an issue to discuss major changes before submitting a PR.
+The v0.5 architecture refactoring is complete. Feel free to open an issue to discuss ideas or submit a PR—we'd love your help!
 
 ## 📄 License
 

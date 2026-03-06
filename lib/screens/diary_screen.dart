@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../data/database_helper.dart';
 import '../data/product_database_helper.dart';
@@ -27,6 +28,8 @@ import '../widgets/summary_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/tracked_supplement.dart';
 import '../data/workout_database_helper.dart';
+import '../services/theme_service.dart';
+import 'ai_recommendation_screen.dart';
 import 'workout_history_screen.dart';
 import '../widgets/todays_workout_summary_card.dart';
 
@@ -773,6 +776,24 @@ class DiaryScreenState extends State<DiaryScreen> {
                 Expanded(child: Text(title, style: titleStyle)),
                 Icon(isOpen ? Icons.expand_less : Icons.expand_more),
                 const SizedBox(width: 4),
+                if (Provider.of<ThemeService>(context).isAiEnabled)
+                  IconButton(
+                    icon: const Icon(Icons.auto_awesome_rounded),
+                    color: theme.colorScheme.tertiary,
+                    iconSize: 20,
+                    onPressed: () async {
+                      final result = await Navigator.of(context).push<bool>(
+                        MaterialPageRoute(
+                          builder: (_) => AiRecommendationScreen(
+                            mealType: mealKey,
+                            date: _selectedDate,
+                          ),
+                        ),
+                      );
+                      if (result == true) loadDataForDate(_selectedDate);
+                    },
+                    tooltip: 'AI Recommend',
+                  ),
                 IconButton(
                   icon: const Icon(Icons.add_circle),
                   color: theme.colorScheme.primary,

@@ -285,6 +285,113 @@ class ProductDatabaseHelper {
     }
   }
 
+  /// Fuzzy-matches an AI-detected food name against the products table.
+  ///
+  /// Splits [aiName] into tokens and requires all tokens to match via
+  /// `LIKE '%token%'`. Falls back to single-token search if multi-token
+  /// finds nothing. Returns up to 5 matches, re-ranked in Dart:
+  ///   1. Exact match (case-insensitive)
+  ///   2. Name starts with the search term
+  ///   3. Other partial matches (shortest name first = most specific)
+  Future<List<FoodItem>> fuzzyMatchForAi(String aiName) async {
+    final tokens = aiName
+        .trim()
+        .toLowerCase()
+        .split(RegExp(r'\s+'))
+        .where((t) => t.length > 1)
+        .toList();
+    if (tokens.isEmpty) return [];
+
+    final dbInstance = await database;
+    // Fetch more candidates so we can re-rank properly in Dart
+    const int fetchLimit = 20;
+    const int returnLimit = 5;
+    final searchTerm = aiName.trim().toLowerCase();
+
+    // Source priority expression: base=0 (highest), user=1, off=2
+    Expression<int> sourcePriority(GeneratedColumn<String> source) {
+      return CaseWhenExpression<int>(cases: [
+        CaseWhen(source.equals('base'), then: const Constant(0)),
+        CaseWhen(source.equals('user'), then: const Constant(1)),
+      ], orElse: const Constant(2));
+    }
+
+    List<Product> rows = [];
+
+    // Attempt multi-token search: all tokens must appear in the name
+    if (tokens.length > 1) {
+      var query = dbInstance.select(dbInstance.products)
+        ..limit(fetchLimit)
+        ..orderBy([
+          (t) => OrderingTerm(
+              expression: sourcePriority(t.source), mode: OrderingMode.asc),
+          (t) =>
+              OrderingTerm(expression: t.name.length, mode: OrderingMode.asc),
+        ]);
+      for (final token in tokens) {
+        query = query..where((t) => t.name.like('%$token%'));
+      }
+      rows = await query.get();
+    }
+
+    // Fallback: single-token search with longest token
+    if (rows.isEmpty) {
+      tokens.sort((a, b) => b.length.compareTo(a.length));
+      final bestToken = tokens.first;
+      rows = await (dbInstance.select(dbInstance.products)
+            ..where((t) => t.name.like('%$bestToken%'))
+            ..orderBy([
+              (t) => OrderingTerm(
+                  expression: sourcePriority(t.source), mode: OrderingMode.asc),
+              (t) => OrderingTerm(
+                  expression: t.name.length, mode: OrderingMode.asc),
+            ])
+            ..limit(fetchLimit))
+          .get();
+    }
+
+    if (rows.isEmpty) return [];
+
+    // Re-rank in Dart for best accuracy
+    final items = rows.map(_mapRowToFoodItem).toList();
+    items.sort((a, b) {
+      final aName = a.name.toLowerCase();
+      final bName = b.name.toLowerCase();
+
+      // Score: 0 = exact match, 1 = starts with, 2 = partial
+      int score(String name) {
+        if (name == searchTerm) return 0;
+        if (name.startsWith(searchTerm)) return 1;
+        return 2;
+      }
+
+      final sa = score(aName);
+      final sb = score(bName);
+      if (sa != sb) return sa.compareTo(sb);
+
+      // Same score tier → prefer base source
+      int srcPri(FoodItemSource s) {
+        switch (s) {
+          case FoodItemSource.base:
+            return 0;
+          case FoodItemSource.user:
+            return 1;
+          case FoodItemSource.off:
+            return 2;
+        }
+      }
+
+      final spa = srcPri(a.source);
+      final spb = srcPri(b.source);
+      if (spa != spb) return spa.compareTo(spb);
+
+      // Same source → shorter name is more specific
+      return aName.length.compareTo(bName.length);
+    });
+
+    return items.take(returnLimit).toList();
+  }
+
   // === Legacy / Compatibility Getter ===
 
   // Für den BackupManager, falls er direkten Zugriff benötigt (deprecated).

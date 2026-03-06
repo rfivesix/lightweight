@@ -1,7 +1,7 @@
 name: hypertrack
 description: "A modern, privacy-first fitness and nutrition tracking app. Offline-first, no cloud dependency, built with Flutter."
 publish_to: 'none' 
-version: 0.5.1+50011
+version: 0.6.0+60004
 
 environment:
   sdk: '>=3.0.0 <4.0.0' # Angepasst für moderne SDKs
@@ -43,6 +43,11 @@ dependencies:
   rename_app: ^1.6.5
   liquid_glass_renderer: ^0.2.0-dev.3
   soft_edge_blur: ^0.1.3
+
+  # AI Meal Capture (#81)
+  http: ^1.2.0
+  flutter_secure_storage: ^9.2.4
+  speech_to_text: ^7.0.0
 
   drift: ^2.20.0
   sqlite3_flutter_libs: ^0.5.20

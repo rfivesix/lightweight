@@ -15,6 +15,7 @@ import '../models/supplement.dart';
 import '../models/supplement_log.dart';
 import '../models/workout_log.dart';
 import 'add_food_screen.dart';
+import 'ai_meal_capture_screen.dart';
 import 'add_measurement_screen.dart';
 import 'diary_screen.dart';
 import 'edit_routine_screen.dart';
@@ -140,6 +141,12 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         break;
       case 'log_supplement':
         _showLogSupplementMenu();
+        break;
+      case 'ai_meal_capture':
+        final result = await Navigator.of(context).push<bool>(
+          MaterialPageRoute(builder: (_) => const AiMealCaptureScreen()),
+        );
+        if (result == true) _refreshHomeScreen();
         break;
     }
   }
@@ -718,6 +725,13 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         'label': l10n.logIntakeTitle,
         'action': 'log_supplement',
       },
+      if (themeService.isAiEnabled)
+        {
+          'icon': Icons.auto_awesome,
+          'label': l10n.aiMealCapture,
+          'action': 'ai_meal_capture',
+          'gradient': true,
+        },
     ];
   }
 
@@ -1007,13 +1021,39 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                     ),
                                                   ),
                                                   alignment: Alignment.center,
-                                                  child: Icon(
-                                                    action['icon'],
-                                                    size: 28,
-                                                    color: isDarkLocal
-                                                        ? Colors.white
-                                                        : Colors.black,
-                                                  ),
+                                                  child: action['gradient'] ==
+                                                          true
+                                                      ? ShaderMask(
+                                                          blendMode:
+                                                              BlendMode.srcIn,
+                                                          shaderCallback:
+                                                              (bounds) =>
+                                                                  const LinearGradient(
+                                                            colors: [
+                                                              Color(0xFFE88DCC),
+                                                              Color(0xFFF4A77A),
+                                                              Color(0xFFF7D06B),
+                                                              Color(0xFF7DDEAE),
+                                                              Color(0xFF6DC8D9),
+                                                            ],
+                                                            begin: Alignment
+                                                                .topLeft,
+                                                            end: Alignment
+                                                                .bottomRight,
+                                                          ).createShader(
+                                                                      bounds),
+                                                          child: Icon(
+                                                            action['icon'],
+                                                            size: 28,
+                                                          ),
+                                                        )
+                                                      : Icon(
+                                                          action['icon'],
+                                                          size: 28,
+                                                          color: isDarkLocal
+                                                              ? Colors.white
+                                                              : Colors.black,
+                                                        ),
                                                 ),
                                               )
                                             : ClipRRect(
@@ -1053,13 +1093,44 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                       ],
                                                     ),
                                                     alignment: Alignment.center,
-                                                    child: Icon(
-                                                      action['icon'],
-                                                      size: 28,
-                                                      color: isDarkLocal
-                                                          ? Colors.white
-                                                          : Colors.black,
-                                                    ),
+                                                    child: action['gradient'] ==
+                                                            true
+                                                        ? ShaderMask(
+                                                            blendMode:
+                                                                BlendMode.srcIn,
+                                                            shaderCallback:
+                                                                (bounds) =>
+                                                                    const LinearGradient(
+                                                              colors: [
+                                                                Color(
+                                                                    0xFFE88DCC),
+                                                                Color(
+                                                                    0xFFF4A77A),
+                                                                Color(
+                                                                    0xFFF7D06B),
+                                                                Color(
+                                                                    0xFF7DDEAE),
+                                                                Color(
+                                                                    0xFF6DC8D9),
+                                                              ],
+                                                              begin: Alignment
+                                                                  .topLeft,
+                                                              end: Alignment
+                                                                  .bottomRight,
+                                                            ).createShader(
+                                                                        bounds),
+                                                            child: Icon(
+                                                              action['icon'],
+                                                              size: 28,
+                                                            ),
+                                                          )
+                                                        : Icon(
+                                                            action['icon'],
+                                                            size: 28,
+                                                            color: isDarkLocal
+                                                                ? Colors.white
+                                                                : Colors.black,
+                                                          ),
                                                   ),
                                                 ),
                                               ),

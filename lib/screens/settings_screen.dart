@@ -1,6 +1,7 @@
 // lib/screens/settings_screen.dart
 import 'package:flutter/material.dart';
 import '../generated/app_localizations.dart';
+import 'ai_settings_screen.dart';
 import 'data_management_screen.dart';
 import '../services/theme_service.dart';
 import '../util/design_constants.dart';
@@ -139,6 +140,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           const SizedBox(height: DesignConstants.spacingXL),
+          _buildSectionTitle(context, l10n.aiSettingsTitle),
+          SummaryCard(
+            child: SwitchListTile(
+              secondary: ShaderMask(
+                blendMode: BlendMode.srcIn,
+                shaderCallback: (bounds) => const LinearGradient(
+                  colors: _aiGradientColors,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ).createShader(bounds),
+                child: const Icon(Icons.auto_awesome, size: 28),
+              ),
+              title: Text(
+                l10n.aiEnableTitle,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(l10n.aiEnableSubtitle),
+              value: themeService.isAiEnabled,
+              onChanged: (value) => themeService.setAiEnabled(value),
+            ),
+          ),
+          if (themeService.isAiEnabled) ...[
+            const SizedBox(height: DesignConstants.spacingM),
+            _buildNavigationCard(
+              context: context,
+              icon: Icons.auto_awesome,
+              title: l10n.aiSettingsTitle,
+              subtitle: l10n.aiSettingsDescription,
+              useGradientIcon: true,
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const AiSettingsScreen(),
+                  ),
+                );
+              },
+            ),
+          ],
+          const SizedBox(height: DesignConstants.spacingXL),
           _buildSectionTitle(context, l10n.about_and_legal_capslock),
           _buildNavigationCard(
             context: context,
@@ -192,24 +232,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// AI gradient colours for the entry-point icon accent.
+  static const _aiGradientColors = [
+    Color(0xFFE88DCC),
+    Color(0xFFF4A77A),
+    Color(0xFFF7D06B),
+    Color(0xFF7DDEAE),
+    Color(0xFF6DC8D9),
+  ];
+
   Widget _buildNavigationCard({
     required BuildContext context,
     required IconData icon,
     required String title,
     required String subtitle,
     required VoidCallback onTap,
+    bool useGradientIcon = false,
   }) {
+    Widget iconWidget = Icon(
+      icon,
+      size: 36,
+      color: Theme.of(context).colorScheme.primary,
+    );
+
+    if (useGradientIcon) {
+      iconWidget = ShaderMask(
+        blendMode: BlendMode.srcIn,
+        shaderCallback: (bounds) => const LinearGradient(
+          colors: _aiGradientColors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ).createShader(bounds),
+        child: Icon(icon, size: 36),
+      );
+    }
+
     return SummaryCard(
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(
           vertical: 8.0,
           horizontal: 16.0,
         ),
-        leading: Icon(
-          icon,
-          size: 36,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+        leading: iconWidget,
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(subtitle),
         trailing: const Icon(Icons.chevron_right),

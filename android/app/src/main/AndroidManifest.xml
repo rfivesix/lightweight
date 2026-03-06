@@ -6,6 +6,7 @@
     <!-- (Optional, aber empfohlen für neuere Android-Versionen für Bildzugriff) -->
     <!-- <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/> -->
     <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 
     <!-- HIER DIE ÄNDERUNG: android:enableOnBackInvokedCallback="true" hinzugefügt -->
     <application

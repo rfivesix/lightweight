@@ -4,6 +4,118 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.6.0] - 2026-03-06
+
+### 🚀 Major Release: The "AI Nutrition Overhaul"
+
+This release fundamentally upgrades how meals can be logged by leveraging on-device and cloud AI, drastically reducing the friction of tracking nutrition. It also adds personalized meal recommendations.
+
+### ✨ Top Features
+- **AI Meal Capture Screen**: You can now log complex meals automatically via a single photo, voice dictation, or a quick text description. 
+- **AI Recommendations**: Receive personalized meal, snack, and drink recommendations directly within the app, specifically tailored to perfectly fill out your remaining daily macronutrients, while respecting your dietary preferences (Vegan, Quick, etc.).
+- **Magical AI Interface**: Brand new, fully animated magical UI for AI features, providing visual feedback during analysis with an elegant gradient design.
+- **Smart Ingredient Matching**: AI identifies local database items based on the language of your device, combining and portioning foods intuitively (like merging multiple eggs).
+- **Privacy Controls**: Added an "AI Kill-Switch" in settings to globally disable all AI interfaces if preferred. API keys are encrypted at rest using native secure storage (`flutter_secure_storage`).
+
+### 🧠 Logic & Database Overhaul
+- **Re-ranked Fuzzy Search**: Implemented dart-side re-ranking to prioritize exact database matches, base foods over user creations, and handle compounding accurately. 
+- **AI System Prompts**: Custom system prompts block nutritional hallucinations, enforcing the AI to strictly identify weights and component names.
+- **No API Lock-in**: Select between OpenAI (GPT-4o) and Google Gemini (Flash) seamlessly depending on your preferred API key.
+
+### 🎨 UI/UX Refinements
+- **Glass Bottom Menus**: Introduced consistent glassmorphism to bottom sheets across the entire app for value editing.
+- **Minimalist Aesthetic**: Removed heavy neon backgrounds in favor of targeted gradient accents on UI entry points, maintaining a clean and beautiful design language.
+
+
+## [0.6.0-alpha.3] - 2026-03-05
+
+### ✨ New Feature: AI Kill-Switch (#85)
+
+- **Global toggle**: Added "Enable AI Features" switch in Settings → AI Meal Capture. Defaults to enabled; persisted via SharedPreferences.
+- **Conditional UI**: When disabled, all AI entry points disappear without layout gaps:
+  - Speed Dial: "AI Meal" action removed from the action list.
+  - Nutrition Explorer: Gradient AI button next to barcode scanner hidden.
+  - Settings: AI Settings navigation card conditionally shown only when AI is enabled.
+- **Localization**: Added `aiEnableTitle` and `aiEnableSubtitle` strings in both English and German.
+
+### 🎨 UI Improvements
+
+- **AI Review Screen**: Replaced plain `AlertDialog` for quantity editing with the app's custom `showGlassBottomMenu` widget, ensuring visual consistency with the rest of the app (glass styling, keyboard-aware padding, visual style adaptation).
+
+### 🐛 Bug Fixes
+
+- **AI Review Quantity Editor**: Fixed `_dependents.isEmpty` assertion crash when closing the quantity editor. Root cause was disposing a `TextEditingController` while the glass bottom menu's exit animation was still playing.
+
+## [0.6.0-alpha.2] - 2026-03-05
+
+### 🎨 UI Redesign: Minimalist AI Interface (#84)
+
+- **Removed gradient overload**: Stripped animated aura background, glassmorphic segmented toggle, gradient mic button, and glassmorphic action buttons from the AI Meal Capture screen.
+- **AI gradient now accents entry points only**: Speed-dial icon, Settings entry icon, and Nutrition Explorer search bar icon use a `ShaderMask` rainbow gradient.
+- **Analyze button**: Remains the sole gradient CTA with a smooth, deterministic shimmer animation during loading. Text and spinner are rendered above the gradient background.
+- **Inline loading**: Replaced the modal `_AnalyzingOverlay` popup with an in-button animated gradient + spinner.
+- **Empty states**: Photo, Voice, and Text tabs now show a centered placeholder with a faded icon and helper text when no input is present.
+- **Text field fix**: Replaced broken Container+InputBorder.none with proper `OutlineInputBorder` for clean border radius on the text input tab.
+- **New entry point**: Added AI icon with gradient accent next to the barcode scanner in the Nutrition Explorer search bar.
+
+### 🧠 AI Logic Improvements
+
+- **Locale-aware prompts**: `AiService` now accepts `languageCode` — the system prompt explicitly instructs the AI to return food names in the user's app language (e.g., "Apfel" not "Apple" when language is "de").
+- **Item consolidation**: System prompt rule prevents duplicate entries — "4 eggs" returns one "Egg" entry with combined weight (240g).
+- **No nutritional hallucination**: AI is instructed to return only food names and estimated gram weights. Calorie/macro values are looked up from the local database.
+- **Simple base names**: AI returns short, generic food names (e.g., "Banane" not "Reife Banane") to maximize database match rates.
+
+### 🔍 Improved Fuzzy Matching
+
+- **Dart-side re-ranking**: `fuzzyMatchForAi` now fetches 20 candidates from SQL, then re-ranks in Dart with priority: exact match → starts-with → shortest partial match.
+- **Source priority preserved**: Base foods still rank above user and Open Food Facts entries within each match tier.
+- **Accuracy**: Searching for "Apfel" now correctly returns "Apfel" instead of "Erdapfel" or compound dishes.
+
+### 📦 Code Reduction
+
+- `ai_meal_capture_screen.dart`: ~1264 → ~870 lines (−31%), removed 3 animation controllers, 5 glassmorphic widgets, and the modal overlay.
+
+## [0.6.0-alpha.1] - 2026-03-05
+
+### 🚀 New Feature: AI Meal Capture (#81)
+
+Capture meals faster using photos, voice, or text — powered by AI. Users provide their own API key (stored securely via `flutter_secure_storage`), and the app detects foods with estimated quantities, then lets users review and edit before saving.
+
+### ✨ New Features
+
+- **AI Meal Capture Screen**: New screen accessible from the diary FAB for logging meals via:
+  - **Photo input**: Take a photo or pick from gallery (up to 4 images for multi-angle accuracy).
+  - **Voice input**: Describe your meal by speaking — speech-to-text with on-device recognition.
+  - **Text input**: Type a free-form meal description.
+- **AI Meal Review Screen**: Review AI-detected foods before saving — edit quantities, swap items, add/remove entries.
+- **AI Settings Screen**: Configure API provider (OpenAI GPT-4o or Google Gemini), enter API key, and test connectivity.
+- **Multi-Provider AI Service**: Supports both OpenAI and Gemini APIs with dynamic payload formatting and structured JSON response parsing.
+- **Complex Meal Handling**: AI system prompt forces decomposition of composite meals into individual ingredients (e.g., "Burger" → bun, patty, lettuce, cheese, sauce).
+
+### 🎨 UI/UX: "Magical" AI Interface
+
+- **Animated Aura Background**: 5 floating gradient orbs (pink, cyan, orange, purple, emerald) on independent coprime animation cycles (13s / 17s / 23s) — the combined pattern repeats only after ~85 minutes, creating truly organic, non-deterministic motion.
+- **Glassmorphic Controls**: Custom frosted-glass segmented toggle for input modes with pastel rainbow gradient indicator.
+- **Pastel Rainbow Buttons**: Analyze button and microphone button use a washed-out 5-color spectrum (pink → peach → gold → mint → cyan).
+- **Enhanced Analyzing Overlay**: Rotating SweepGradient ring, hue-cycling sparkle icon, and animated gradient progress bar during AI processing.
+
+### 🐛 Bug Fixes
+
+- **Diary Bug (Critical)**: Fixed AI-detected foods not appearing in the diary. Root cause was mismatched meal type keys — the AI review screen used bare values (`'lunch'`) while the diary expected prefixed keys (`'mealtypeLunch'`).
+- **Database Prioritization**: `fuzzyMatchForAi` now strictly orders results: base foods first (priority 0), then user foods (1), then Open Food Facts entries (2), followed by name length.
+
+### 🔧 Permissions & Configuration
+
+- **Android**: Added `RECORD_AUDIO` permission to `AndroidManifest.xml` for voice input.
+- **iOS**: Fixed `NSMicrophoneUsageDescription` (previously stated "no mic access needed") and added missing `NSSpeechRecognitionUsageDescription`.
+- **Speech Recognition**: Configured `speech_to_text` with dictation mode, 60s listen duration, 10s pause tolerance, partial results, locale auto-detection, and `cancelOnError: false`.
+
+### 📦 Dependencies
+
+- `speech_to_text: ^7.0.0`
+- `flutter_secure_storage` (for API key storage)
+- `image_picker` (for photo capture)
+
 ## [0.5.1] - 2026-03-04
 
 ### 🐛 Bug Fixes

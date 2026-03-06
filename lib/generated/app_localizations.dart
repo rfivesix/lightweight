@@ -3025,6 +3025,336 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Diverse'**
   String get genderDiverse;
+
+  /// No description provided for @aiSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Meal Capture'**
+  String get aiSettingsTitle;
+
+  /// No description provided for @aiSettingsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure AI-powered meal recognition.'**
+  String get aiSettingsDescription;
+
+  /// No description provided for @aiProviderSection.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Provider'**
+  String get aiProviderSection;
+
+  /// No description provided for @aiProviderLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider'**
+  String get aiProviderLabel;
+
+  /// No description provided for @aiApiKeySection.
+  ///
+  /// In en, this message translates to:
+  /// **'API Key'**
+  String get aiApiKeySection;
+
+  /// No description provided for @aiApiKeyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'API Key'**
+  String get aiApiKeyLabel;
+
+  /// No description provided for @aiApiKeyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste your API key here'**
+  String get aiApiKeyHint;
+
+  /// No description provided for @aiSaveKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Key'**
+  String get aiSaveKey;
+
+  /// No description provided for @aiTestConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Test'**
+  String get aiTestConnection;
+
+  /// No description provided for @aiTestSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection successful!'**
+  String get aiTestSuccess;
+
+  /// No description provided for @aiKeySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'API key saved securely.'**
+  String get aiKeySaved;
+
+  /// No description provided for @aiPrivacySection.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get aiPrivacySection;
+
+  /// No description provided for @aiPrivacyDisclosure.
+  ///
+  /// In en, this message translates to:
+  /// **'Your images and text are sent to the selected AI provider only when you tap Analyze. Data is never stored on external servers beyond processing your request. Your API key is stored encrypted on this device only.'**
+  String get aiPrivacyDisclosure;
+
+  /// No description provided for @aiMealCapture.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Meal'**
+  String get aiMealCapture;
+
+  /// No description provided for @aiCaptureTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Meal Capture'**
+  String get aiCaptureTitle;
+
+  /// No description provided for @aiCaptureTabPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo'**
+  String get aiCaptureTabPhoto;
+
+  /// No description provided for @aiCaptureTabVoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice'**
+  String get aiCaptureTabVoice;
+
+  /// No description provided for @aiCaptureTabText.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get aiCaptureTabText;
+
+  /// No description provided for @aiCapturePhotoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Take or select up to 4 photos of your meal.'**
+  String get aiCapturePhotoHint;
+
+  /// No description provided for @aiCaptureVoiceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the microphone and describe your meal.'**
+  String get aiCaptureVoiceHint;
+
+  /// No description provided for @aiCaptureTextHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe your meal (e.g. \"Grilled chicken with rice and salad\")...'**
+  String get aiCaptureTextHint;
+
+  /// No description provided for @aiAnalyzeButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyze'**
+  String get aiAnalyzeButton;
+
+  /// No description provided for @aiAnalyzing.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyzing your meal...'**
+  String get aiAnalyzing;
+
+  /// No description provided for @aiReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review Suggestions'**
+  String get aiReviewTitle;
+
+  /// No description provided for @aiReviewFoundItems.
+  ///
+  /// In en, this message translates to:
+  /// **'AI found {count} items'**
+  String aiReviewFoundItems(int count);
+
+  /// No description provided for @aiReviewNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No match — tap to search'**
+  String get aiReviewNoMatch;
+
+  /// No description provided for @aiReviewConfidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Confidence'**
+  String get aiReviewConfidence;
+
+  /// No description provided for @aiReviewAddItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Add item manually'**
+  String get aiReviewAddItem;
+
+  /// No description provided for @aiReviewSaveToDiary.
+  ///
+  /// In en, this message translates to:
+  /// **'Save to Diary'**
+  String get aiReviewSaveToDiary;
+
+  /// No description provided for @aiReviewFeedbackHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe what the AI got wrong...'**
+  String get aiReviewFeedbackHint;
+
+  /// No description provided for @aiReviewRetryButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry with Feedback'**
+  String get aiReviewRetryButton;
+
+  /// No description provided for @aiReviewFeedbackSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Correction'**
+  String get aiReviewFeedbackSection;
+
+  /// No description provided for @aiErrorNoKey.
+  ///
+  /// In en, this message translates to:
+  /// **'No API key configured. Please set one in Settings → AI Meal Capture.'**
+  String get aiErrorNoKey;
+
+  /// No description provided for @aiErrorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Network error. Please check your connection and try again.'**
+  String get aiErrorNetwork;
+
+  /// No description provided for @aiErrorAuth.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication failed. Please check your API key.'**
+  String get aiErrorAuth;
+
+  /// No description provided for @aiErrorParse.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not understand the AI response. Please try again.'**
+  String get aiErrorParse;
+
+  /// No description provided for @aiErrorRateLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests. Please wait a moment.'**
+  String get aiErrorRateLimit;
+
+  /// No description provided for @aiEnableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable AI Features'**
+  String get aiEnableTitle;
+
+  /// No description provided for @aiEnableSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allows the use of AI for meal recognition. Disabling this hides all AI buttons in the app.'**
+  String get aiEnableSubtitle;
+
+  /// No description provided for @aiRecommendationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Meal Coach'**
+  String get aiRecommendationTitle;
+
+  /// No description provided for @aiRecommendDietary.
+  ///
+  /// In en, this message translates to:
+  /// **'Dietary'**
+  String get aiRecommendDietary;
+
+  /// No description provided for @aiRecommendSituation.
+  ///
+  /// In en, this message translates to:
+  /// **'Situation'**
+  String get aiRecommendSituation;
+
+  /// No description provided for @aiRecommendVegan.
+  ///
+  /// In en, this message translates to:
+  /// **'Vegan'**
+  String get aiRecommendVegan;
+
+  /// No description provided for @aiRecommendVegetarian.
+  ///
+  /// In en, this message translates to:
+  /// **'Vegetarian'**
+  String get aiRecommendVegetarian;
+
+  /// No description provided for @aiRecommendPescetarian.
+  ///
+  /// In en, this message translates to:
+  /// **'Pescetarian'**
+  String get aiRecommendPescetarian;
+
+  /// No description provided for @aiRecommendOnTheGo.
+  ///
+  /// In en, this message translates to:
+  /// **'On the go'**
+  String get aiRecommendOnTheGo;
+
+  /// No description provided for @aiRecommendNoKitchen.
+  ///
+  /// In en, this message translates to:
+  /// **'No kitchen'**
+  String get aiRecommendNoKitchen;
+
+  /// No description provided for @aiRecommendQuick.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick (<10 min)'**
+  String get aiRecommendQuick;
+
+  /// No description provided for @aiRecommendGenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate'**
+  String get aiRecommendGenerate;
+
+  /// No description provided for @aiRecommendGenerating.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking…'**
+  String get aiRecommendGenerating;
+
+  /// No description provided for @aiRecommendSaveToDiary.
+  ///
+  /// In en, this message translates to:
+  /// **'Save to Diary'**
+  String get aiRecommendSaveToDiary;
+
+  /// No description provided for @aiRecommendNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No database match'**
+  String get aiRecommendNoMatch;
+
+  /// No description provided for @aiRecommendRemainingMacros.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining today'**
+  String get aiRecommendRemainingMacros;
+
+  /// No description provided for @aiRecommendCustomRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom request'**
+  String get aiRecommendCustomRequest;
+
+  /// No description provided for @aiRecommendCustomRequestHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Include leftover rice, high protein, etc.'**
+  String get aiRecommendCustomRequestHint;
 }
 
 class _AppLocalizationsDelegate
