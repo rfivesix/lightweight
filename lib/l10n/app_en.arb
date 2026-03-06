@@ -707,5 +707,22 @@
   "aiErrorRateLimit": "Too many requests. Please wait a moment.",
 
   "aiEnableTitle": "Enable AI Features",
-  "aiEnableSubtitle": "Allows the use of AI for meal recognition. Disabling this hides all AI buttons in the app."
+  "aiEnableSubtitle": "Allows the use of AI for meal recognition. Disabling this hides all AI buttons in the app.",
+
+  "aiRecommendationTitle": "AI Meal Coach",
+  "aiRecommendDietary": "Dietary",
+  "aiRecommendSituation": "Situation",
+  "aiRecommendVegan": "Vegan",
+  "aiRecommendVegetarian": "Vegetarian",
+  "aiRecommendPescetarian": "Pescetarian",
+  "aiRecommendOnTheGo": "On the go",
+  "aiRecommendNoKitchen": "No kitchen",
+  "aiRecommendQuick": "Quick (<10 min)",
+  "aiRecommendGenerate": "Generate",
+  "aiRecommendGenerating": "Thinking…",
+  "aiRecommendSaveToDiary": "Save to Diary",
+  "aiRecommendNoMatch": "No database match",
+  "aiRecommendRemainingMacros": "Remaining today",
+  "aiRecommendCustomRequest": "Custom request",
+  "aiRecommendCustomRequestHint": "e.g. Include leftover rice, high protein, etc."
 }

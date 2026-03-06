@@ -1705,4 +1705,53 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get aiEnableSubtitle =>
       'Ermöglicht die Nutzung von KI zur Mahlzeitenerkennung. Bei Deaktivierung werden alle KI-Buttons in der App ausgeblendet.';
+
+  @override
+  String get aiRecommendationTitle => 'KI-Mahlzeitcoach';
+
+  @override
+  String get aiRecommendDietary => 'Ernährungsweise';
+
+  @override
+  String get aiRecommendSituation => 'Situation';
+
+  @override
+  String get aiRecommendVegan => 'Vegan';
+
+  @override
+  String get aiRecommendVegetarian => 'Vegetarisch';
+
+  @override
+  String get aiRecommendPescetarian => 'Pescetarisch';
+
+  @override
+  String get aiRecommendOnTheGo => 'Unterwegs';
+
+  @override
+  String get aiRecommendNoKitchen => 'Keine Küche';
+
+  @override
+  String get aiRecommendQuick => 'Schnell (<10 Min)';
+
+  @override
+  String get aiRecommendGenerate => 'Generieren';
+
+  @override
+  String get aiRecommendGenerating => 'Denke nach…';
+
+  @override
+  String get aiRecommendSaveToDiary => 'Im Tagebuch speichern';
+
+  @override
+  String get aiRecommendNoMatch => 'Kein Datenbank-Treffer';
+
+  @override
+  String get aiRecommendRemainingMacros => 'Heute noch übrig';
+
+  @override
+  String get aiRecommendCustomRequest => 'Eigener Wunsch';
+
+  @override
+  String get aiRecommendCustomRequestHint =>
+      'z. B. auf restlichen Reis achten, viel Protein, usw.';
 }

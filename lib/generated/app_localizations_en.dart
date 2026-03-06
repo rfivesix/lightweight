@@ -1693,4 +1693,53 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get aiEnableSubtitle =>
       'Allows the use of AI for meal recognition. Disabling this hides all AI buttons in the app.';
+
+  @override
+  String get aiRecommendationTitle => 'AI Meal Coach';
+
+  @override
+  String get aiRecommendDietary => 'Dietary';
+
+  @override
+  String get aiRecommendSituation => 'Situation';
+
+  @override
+  String get aiRecommendVegan => 'Vegan';
+
+  @override
+  String get aiRecommendVegetarian => 'Vegetarian';
+
+  @override
+  String get aiRecommendPescetarian => 'Pescetarian';
+
+  @override
+  String get aiRecommendOnTheGo => 'On the go';
+
+  @override
+  String get aiRecommendNoKitchen => 'No kitchen';
+
+  @override
+  String get aiRecommendQuick => 'Quick (<10 min)';
+
+  @override
+  String get aiRecommendGenerate => 'Generate';
+
+  @override
+  String get aiRecommendGenerating => 'Thinking…';
+
+  @override
+  String get aiRecommendSaveToDiary => 'Save to Diary';
+
+  @override
+  String get aiRecommendNoMatch => 'No database match';
+
+  @override
+  String get aiRecommendRemainingMacros => 'Remaining today';
+
+  @override
+  String get aiRecommendCustomRequest => 'Custom request';
+
+  @override
+  String get aiRecommendCustomRequestHint =>
+      'e.g. Include leftover rice, high protein, etc.';
 }

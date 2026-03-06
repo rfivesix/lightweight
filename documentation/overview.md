@@ -2,7 +2,7 @@
 
 Hypertrack is a comprehensive, **offline-first** health and fitness tracking application built with [Flutter](https://flutter.dev). It centralizes nutrition logging, workout management, body measurements, and supplement tracking into a single, privacy-focused platform.
 
-> **Status:** Active Beta (v0.5 stable, v0.6 in development). The core architecture (Drift + UUIDs) is solidified.
+> **Status:** Active Beta (v0.6 stable). The core architecture (Drift + UUIDs + AI integration) is solidified.
 
 ---
 
@@ -118,6 +118,7 @@ The application contains **41 screens** in `lib/screens/`. Here is a categorized
 | :--- | :--- | :--- |
 | AI Meal Capture | `ai_meal_capture_screen.dart` | Photo/voice/text meal input with animated AI UI |
 | AI Meal Review | `ai_meal_review_screen.dart` | Review & edit AI-detected foods before saving |
+| AI Recommendation | `ai_recommendation_screen.dart` | AI-generated meal suggestions tailored to remaining macros |
 | AI Settings | `ai_settings_screen.dart` | API provider selection, key management, connectivity test |
 
 ### Workouts

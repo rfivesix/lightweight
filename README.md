@@ -43,7 +43,7 @@ Hypertrack is already a fully functional daily driver for fitness enthusiasts.
 ### 🍎 Nutrition & Hydration
 * **Food Database:** Integrated with **Open Food Facts** for barcode scanning and product search.
 * **Meals:** Group foods into meals (Breakfast, Lunch, etc.) or create custom reusable recipes.
-* **🤖 AI Meal Capture (NEW):** Log meals instantly via photo, voice, or text description. AI detects individual foods with estimated quantities — review and edit before saving. Supports OpenAI GPT-4o and Google Gemini (BYOK — bring your own key).
+* **🤖 AI Meal Capture & Recommendations (v0.6+):** Log meals instantly via photo, voice, or text description. Get personalized meal suggestions based on your remaining daily macros. AI detects individual foods with estimated quantities — review and edit before saving. Supports OpenAI GPT-4o and Google Gemini (BYOK — bring your own key).
 * **Fluid Tracking:** dedicated logging for water, coffee, and sugary drinks.
 * **Smart Analysis:** Automatically tracks caffeine intake based on logged beverages.
 * **Macro Goals:** Set daily targets for Calories, Protein, Carbs, Fats, Fiber, Sugar, and Salt.
@@ -68,8 +68,12 @@ We are building a platform that gives you the convenience of cloud-based apps wi
 * **Database Rewrite:** Full migration to **Drift** (SQLite ORM) and **UUIDs (v4)** — completed.
 * **Cloud-Ready Foundation:** The data layer is now stable and prepared for conflict-free synchronization.
 
-### 🚧 Current: v0.6 (Health & Input)
-* **✅ AI Meal Capture:** Capture meals via photo, voice, or text — AI detects foods and quantities with multi-provider support (OpenAI + Gemini). Shipped in v0.6.0-alpha.1.
+### ✅ Completed: v0.6 (The AI Nutrition Update)
+* **AI Meal Capture & Recommendations:** Capture meals via photo, voice, or text, and receive personalized meal suggestions based on remaining macros. Full support for OpenAI & Gemini.
+* **Smart Matching:** AI intelligently matches against the local, language-aware product database.
+* **Privacy Controls:** Global AI Kill-Switch added. API keys natively encrypted at rest.
+
+### 🚧 Current: v0.7 (Health & Connectivity)
 * **Apple HealthKit Integration:** Syncing workouts and weight with Apple Health — *planned*.
 * **Core Tracking Stability:** Continued refinements and bug fixes across workout and nutrition logging.
 

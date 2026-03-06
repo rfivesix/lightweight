@@ -390,7 +390,7 @@ Please provide an updated analysis incorporating the user's feedback. Return the
       ],
       'generationConfig': {
         'temperature': 0.3,
-        'maxOutputTokens': 2000,
+        'maxOutputTokens': 8192,
       },
     });
 
@@ -475,4 +475,320 @@ Please provide an updated analysis incorporating the user's feedback. Return the
         .map((e) => AiSuggestedItem.fromJson(e as Map<String, dynamic>))
         .toList();
   }
+
+  // ---------------------------------------------------------------------------
+  // Meal Recommendation
+  // ---------------------------------------------------------------------------
+
+  /// Generates a personalised meal recommendation based on remaining macros,
+  /// dietary preferences, and recent eating history.
+  Future<AiMealRecommendation> generateMealRecommendation({
+    required Map<String, int> remainingMacros,
+    required List<String> preferences,
+    required String recentHistory,
+    required String mealTypeLabel,
+    String? customRequest,
+    String? languageCode,
+  }) async {
+    final provider = await getSelectedProvider();
+    final apiKey = await getApiKey(provider);
+    if (apiKey == null || apiKey.isEmpty) throw const AiKeyMissingException();
+
+    final systemPrompt = _buildRecommendationPrompt(languageCode: languageCode);
+
+    final userContent = '''
+Target Meal: $mealTypeLabel
+
+Remaining macros for today (across ALL remaining meals):
+- Calories: ${remainingMacros['kcal']} kcal
+- Protein: ${remainingMacros['protein']}g
+- Carbs: ${remainingMacros['carbs']}g
+- Fat: ${remainingMacros['fat']}g
+
+User constraints (Dietary/Situation): ${preferences.isEmpty ? 'None' : preferences.join(', ')}
+
+Custom user request: ${customRequest != null && customRequest.trim().isNotEmpty ? customRequest.trim() : 'None'}
+
+Recent meals (last 7 days): ${recentHistory.isEmpty ? 'No history available' : recentHistory}
+
+Suggest ONE meal for $mealTypeLabel that fits the user constraints and fills the remaining macros as accurately as possible.''';
+
+    String rawContent;
+    switch (provider) {
+      case AiProvider.openai:
+        rawContent = await _callOpenAiRaw(apiKey, userContent, [],
+            systemPrompt: systemPrompt);
+        break;
+      case AiProvider.gemini:
+        rawContent = await _callGeminiRaw(apiKey, userContent, [],
+            systemPrompt: systemPrompt);
+        break;
+    }
+
+    return _parseRecommendationFromContent(rawContent);
+  }
+
+  /// System prompt for meal recommendations.
+  static String _buildRecommendationPrompt({String? languageCode}) {
+    final langRule = (languageCode != null && languageCode.isNotEmpty)
+        ? '\n- IMPORTANT: All food/ingredient names MUST be in the "$languageCode" language.'
+        : '';
+
+    return '''
+You are a personal nutrition coach. The user wants a meal suggestion for a specific meal (Breakfast, Lunch, Dinner, or Snack).
+
+CRITICAL RULES:
+1. PORTION SCALING: The provided macros are exactly what you should aim to fill. Do NOT leave 'space' or hold back calories/macros for future meals or snacks. The user wants a meal that uses up the provided remaining macros as optimally as possible.
+2. USER CONSTRAINTS: You must STRICTLY respect the user's constraints (Dietary/Situation). For example, if they specify "Quick", the meal should take <10 mins. If "No kitchen", suggest cold/pre-made foods. If "Vegan/Vegetarian/Pescetarian", adhere strictly to those diets.
+3. Suggest ONE highly appropriate meal.
+4. Avoid repeating exact meals from the user's recent history.
+5. Use SIMPLE, SHORT base food names for ingredients (e.g. "Reis" not "Langkorn-Basmatireis"), to maximize database matching.
+6. Estimate realistic ingredient amounts in grams.$langRule
+
+Respond ONLY with a valid JSON object. No markdown, no explanation, no extra text.
+The JSON must have exactly these fields:
+- "meal_name": string (short name of the suggested meal)
+- "description": string (1-2 sentences explaining why this meal fits)
+- "ingredients": array of objects, each with:
+  - "name": string (simple ingredient name)
+  - "amount_in_grams": integer (estimated weight in grams)
+
+Example:
+{"meal_name": "Chicken Rice Bowl", "description": "High protein, moderate carbs to meet your remaining goals.", "ingredients": [{"name": "Chicken breast", "amount_in_grams": 200}, {"name": "Rice", "amount_in_grams": 150}, {"name": "Broccoli", "amount_in_grams": 100}]}
+''';
+  }
+
+  /// Calls OpenAI and returns the raw content string (for recommendation parsing).
+  Future<String> _callOpenAiRaw(
+    String apiKey,
+    String userContent,
+    List<String> imagesBase64, {
+    required String systemPrompt,
+  }) async {
+    final contentParts = <Map<String, dynamic>>[];
+    for (final img64 in imagesBase64) {
+      contentParts.add({
+        'type': 'image_url',
+        'image_url': {'url': 'data:image/jpeg;base64,$img64', 'detail': 'low'},
+      });
+    }
+    contentParts.add({'type': 'text', 'text': userContent});
+
+    final body = jsonEncode({
+      'model': 'gpt-4o',
+      'messages': [
+        {'role': 'system', 'content': systemPrompt},
+        {'role': 'user', 'content': contentParts},
+      ],
+      'max_tokens': 2000,
+      'temperature': 0.3,
+    });
+
+    try {
+      final response = await http
+          .post(
+            Uri.parse('https://api.openai.com/v1/chat/completions'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $apiKey',
+            },
+            body: body,
+          )
+          .timeout(const Duration(seconds: 60));
+
+      if (response.statusCode == 401) throw const AiAuthException();
+      if (response.statusCode == 429) throw const AiRateLimitException();
+      if (response.statusCode != 200) {
+        throw AiNetworkException('API returned status ${response.statusCode}');
+      }
+
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final choices = json['choices'] as List<dynamic>?;
+      if (choices == null || choices.isEmpty) throw const AiParseException();
+      return choices[0]['message']['content'] as String? ?? '';
+    } on SocketException {
+      throw const AiNetworkException();
+    } catch (e) {
+      if (e is AiServiceException) rethrow;
+      throw AiNetworkException('Request failed: $e');
+    }
+  }
+
+  /// Calls Gemini and returns the raw content string (for recommendation parsing).
+  Future<String> _callGeminiRaw(
+    String apiKey,
+    String userContent,
+    List<String> imagesBase64, {
+    required String systemPrompt,
+  }) async {
+    final parts = <Map<String, dynamic>>[];
+    for (final img64 in imagesBase64) {
+      parts.add({
+        'inlineData': {'mimeType': 'image/jpeg', 'data': img64},
+      });
+    }
+    parts.add({'text': '$systemPrompt\n\n$userContent'});
+
+    final body = jsonEncode({
+      'contents': [
+        {'parts': parts}
+      ],
+      'generationConfig': {
+        'temperature': 0.3,
+        'maxOutputTokens': 8192,
+      },
+    });
+
+    try {
+      final response = await http
+          .post(
+            Uri.parse(
+              'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey',
+            ),
+            headers: {'Content-Type': 'application/json'},
+            body: body,
+          )
+          .timeout(const Duration(seconds: 60));
+
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        throw const AiAuthException();
+      }
+      if (response.statusCode == 429) throw const AiRateLimitException();
+      if (response.statusCode != 200) {
+        throw AiNetworkException('API returned status ${response.statusCode}');
+      }
+
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+
+      final candidates = json['candidates'] as List<dynamic>?;
+      if (candidates == null || candidates.isEmpty) {
+        throw const AiParseException();
+      }
+      final content = candidates[0]['content'] as Map<String, dynamic>?;
+      final allParts = content?['parts'] as List<dynamic>?;
+      if (allParts == null || allParts.isEmpty) throw const AiParseException();
+
+      // Gemini 2.5 Flash may return thinking/reasoning in separate parts.
+      // Concatenate only text parts (skip thought parts).
+      final buffer = StringBuffer();
+      for (final p in allParts) {
+        final partMap = p as Map<String, dynamic>;
+        // Skip "thought" parts (Gemini thinking mode)
+        if (partMap.containsKey('thought') && partMap['thought'] == true) {
+          continue;
+        }
+        if (partMap.containsKey('text')) {
+          buffer.write(partMap['text'] as String);
+        }
+      }
+      return buffer.toString();
+    } on SocketException {
+      throw const AiNetworkException();
+    } catch (e) {
+      if (e is AiServiceException) rethrow;
+      throw AiNetworkException('Request failed: $e');
+    }
+  }
+
+  /// Parses the AI's JSON object response into an [AiMealRecommendation].
+  AiMealRecommendation _parseRecommendationFromContent(String content) {
+    var cleaned = content.trim();
+
+    // Strip markdown code fences (```json ... ```)
+    final fenceRegex = RegExp(r'```(?:json)?\s*([\s\S]*?)```');
+    final fenceMatch = fenceRegex.firstMatch(cleaned);
+    if (fenceMatch != null) {
+      cleaned = fenceMatch.group(1)?.trim() ?? cleaned;
+    }
+
+    // Find the JSON object that contains "meal_name" to avoid
+    // matching stray braces in thinking/reasoning text.
+    int startIdx = -1;
+    int braceDepth = 0;
+    int? objStart;
+
+    for (int i = 0; i < cleaned.length; i++) {
+      if (cleaned[i] == '{') {
+        if (braceDepth == 0) objStart = i;
+        braceDepth++;
+      } else if (cleaned[i] == '}') {
+        braceDepth--;
+        if (braceDepth == 0 && objStart != null) {
+          final candidate = cleaned.substring(objStart, i + 1);
+          if (candidate.contains('"meal_name"') ||
+              candidate.contains('"ingredients"')) {
+            startIdx = objStart;
+            break;
+          }
+          objStart = null;
+        }
+      }
+    }
+
+    if (startIdx == -1) {
+      // Fallback: try basic indexOf
+      startIdx = cleaned.indexOf('{');
+    }
+    final endIdx = cleaned.lastIndexOf('}');
+    if (startIdx == -1 || endIdx == -1 || endIdx <= startIdx) {
+      throw AiParseException('No JSON object found in response. Raw: $cleaned');
+    }
+
+    final jsonStr = cleaned.substring(startIdx, endIdx + 1);
+    final Map<String, dynamic> json;
+    try {
+      json = jsonDecode(jsonStr) as Map<String, dynamic>;
+    } catch (e) {
+      throw AiParseException('JSON decode failed: $e\nRaw: $cleaned');
+    }
+
+    final mealName = json['meal_name'] as String? ?? 'Meal';
+    final description = json['description'] as String? ?? '';
+    final ingredientsRaw = json['ingredients'] as List<dynamic>? ?? [];
+
+    final ingredients = ingredientsRaw
+        .map((e) => AiRecommendedIngredient(
+              name: (e as Map<String, dynamic>)['name'] as String? ?? '',
+              amountInGrams: (e['amount_in_grams'] as num?)?.toInt() ?? 100,
+            ))
+        .toList();
+
+    if (ingredients.isEmpty) {
+      throw const AiParseException('No ingredients found in recommendation.');
+    }
+
+    return AiMealRecommendation(
+      mealName: mealName,
+      description: description,
+      ingredients: ingredients,
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Meal Recommendation Data Models
+// ---------------------------------------------------------------------------
+
+/// A single ingredient in an AI-recommended meal.
+class AiRecommendedIngredient {
+  final String name;
+  final int amountInGrams;
+
+  const AiRecommendedIngredient({
+    required this.name,
+    required this.amountInGrams,
+  });
+}
+
+/// Complete meal recommendation from the AI.
+class AiMealRecommendation {
+  final String mealName;
+  final String description;
+  final List<AiRecommendedIngredient> ingredients;
+
+  const AiMealRecommendation({
+    required this.mealName,
+    required this.description,
+    required this.ingredients,
+  });
 }

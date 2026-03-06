@@ -712,5 +712,22 @@
   "aiErrorRateLimit": "Zu viele Anfragen. Bitte kurz warten.",
 
   "aiEnableTitle": "KI-Funktionen aktivieren",
-  "aiEnableSubtitle": "Ermöglicht die Nutzung von KI zur Mahlzeitenerkennung. Bei Deaktivierung werden alle KI-Buttons in der App ausgeblendet."
+  "aiEnableSubtitle": "Ermöglicht die Nutzung von KI zur Mahlzeitenerkennung. Bei Deaktivierung werden alle KI-Buttons in der App ausgeblendet.",
+
+  "aiRecommendationTitle": "KI-Mahlzeitcoach",
+  "aiRecommendDietary": "Ernährungsweise",
+  "aiRecommendSituation": "Situation",
+  "aiRecommendVegan": "Vegan",
+  "aiRecommendVegetarian": "Vegetarisch",
+  "aiRecommendPescetarian": "Pescetarisch",
+  "aiRecommendOnTheGo": "Unterwegs",
+  "aiRecommendNoKitchen": "Keine Küche",
+  "aiRecommendQuick": "Schnell (<10 Min)",
+  "aiRecommendGenerate": "Generieren",
+  "aiRecommendGenerating": "Denke nach…",
+  "aiRecommendSaveToDiary": "Im Tagebuch speichern",
+  "aiRecommendNoMatch": "Kein Datenbank-Treffer",
+  "aiRecommendRemainingMacros": "Heute noch übrig",
+  "aiRecommendCustomRequest": "Eigener Wunsch",
+  "aiRecommendCustomRequestHint": "z. B. auf restlichen Reis achten, viel Protein, usw."
 }

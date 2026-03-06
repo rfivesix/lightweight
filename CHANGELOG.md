@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.6.0] - 2026-03-06
+
+### 🚀 Major Release: The "AI Nutrition Overhaul"
+
+This release fundamentally upgrades how meals can be logged by leveraging on-device and cloud AI, drastically reducing the friction of tracking nutrition. It also adds personalized meal recommendations.
+
+### ✨ Top Features
+- **AI Meal Capture Screen**: You can now log complex meals automatically via a single photo, voice dictation, or a quick text description. 
+- **AI Recommendations**: Receive personalized meal, snack, and drink recommendations directly within the app, specifically tailored to perfectly fill out your remaining daily macronutrients, while respecting your dietary preferences (Vegan, Quick, etc.).
+- **Magical AI Interface**: Brand new, fully animated magical UI for AI features, providing visual feedback during analysis with an elegant gradient design.
+- **Smart Ingredient Matching**: AI identifies local database items based on the language of your device, combining and portioning foods intuitively (like merging multiple eggs).
+- **Privacy Controls**: Added an "AI Kill-Switch" in settings to globally disable all AI interfaces if preferred. API keys are encrypted at rest using native secure storage (`flutter_secure_storage`).
+
+### 🧠 Logic & Database Overhaul
+- **Re-ranked Fuzzy Search**: Implemented dart-side re-ranking to prioritize exact database matches, base foods over user creations, and handle compounding accurately. 
+- **AI System Prompts**: Custom system prompts block nutritional hallucinations, enforcing the AI to strictly identify weights and component names.
+- **No API Lock-in**: Select between OpenAI (GPT-4o) and Google Gemini (Flash) seamlessly depending on your preferred API key.
+
+### 🎨 UI/UX Refinements
+- **Glass Bottom Menus**: Introduced consistent glassmorphism to bottom sheets across the entire app for value editing.
+- **Minimalist Aesthetic**: Removed heavy neon backgrounds in favor of targeted gradient accents on UI entry points, maintaining a clean and beautiful design language.
+
+
 ## [0.6.0-alpha.3] - 2026-03-05
 
 ### ✨ New Feature: AI Kill-Switch (#85)

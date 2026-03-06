@@ -3259,6 +3259,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Allows the use of AI for meal recognition. Disabling this hides all AI buttons in the app.'**
   String get aiEnableSubtitle;
+
+  /// No description provided for @aiRecommendationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Meal Coach'**
+  String get aiRecommendationTitle;
+
+  /// No description provided for @aiRecommendDietary.
+  ///
+  /// In en, this message translates to:
+  /// **'Dietary'**
+  String get aiRecommendDietary;
+
+  /// No description provided for @aiRecommendSituation.
+  ///
+  /// In en, this message translates to:
+  /// **'Situation'**
+  String get aiRecommendSituation;
+
+  /// No description provided for @aiRecommendVegan.
+  ///
+  /// In en, this message translates to:
+  /// **'Vegan'**
+  String get aiRecommendVegan;
+
+  /// No description provided for @aiRecommendVegetarian.
+  ///
+  /// In en, this message translates to:
+  /// **'Vegetarian'**
+  String get aiRecommendVegetarian;
+
+  /// No description provided for @aiRecommendPescetarian.
+  ///
+  /// In en, this message translates to:
+  /// **'Pescetarian'**
+  String get aiRecommendPescetarian;
+
+  /// No description provided for @aiRecommendOnTheGo.
+  ///
+  /// In en, this message translates to:
+  /// **'On the go'**
+  String get aiRecommendOnTheGo;
+
+  /// No description provided for @aiRecommendNoKitchen.
+  ///
+  /// In en, this message translates to:
+  /// **'No kitchen'**
+  String get aiRecommendNoKitchen;
+
+  /// No description provided for @aiRecommendQuick.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick (<10 min)'**
+  String get aiRecommendQuick;
+
+  /// No description provided for @aiRecommendGenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate'**
+  String get aiRecommendGenerate;
+
+  /// No description provided for @aiRecommendGenerating.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking…'**
+  String get aiRecommendGenerating;
+
+  /// No description provided for @aiRecommendSaveToDiary.
+  ///
+  /// In en, this message translates to:
+  /// **'Save to Diary'**
+  String get aiRecommendSaveToDiary;
+
+  /// No description provided for @aiRecommendNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No database match'**
+  String get aiRecommendNoMatch;
+
+  /// No description provided for @aiRecommendRemainingMacros.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining today'**
+  String get aiRecommendRemainingMacros;
+
+  /// No description provided for @aiRecommendCustomRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom request'**
+  String get aiRecommendCustomRequest;
+
+  /// No description provided for @aiRecommendCustomRequestHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Include leftover rice, high protein, etc.'**
+  String get aiRecommendCustomRequestHint;
 }
 
 class _AppLocalizationsDelegate

@@ -38,7 +38,7 @@ Responsible for all user-facing elements.
 
 | Directory | Contents | Examples |
 | :--- | :--- | :--- |
-| `lib/screens/` | Full-page route widgets (38 files) | `home.dart`, `live_workout_screen.dart` |
+| `lib/screens/` | Full-page route widgets (42 files) | `home.dart`, `live_workout_screen.dart` |
 | `lib/widgets/` | Reusable atomic components (26 files) | `SummaryCard`, `GlassFab`, `GlobalAppBar` |
 | `lib/dialogs/` | Modal/bottom-sheet content (5 files) | `FluidDialogContent`, `QuantityDialogContent` |
 
@@ -109,7 +109,7 @@ lib/
 │   ├── app_de.arb           # German translations
 │   └── app_en.arb           # English translations
 ├── models/                  # Data entity definitions (20 files)
-├── screens/                 # Full-page route widgets (41 files)
+├── screens/                 # Full-page route widgets (42 files)
 ├── services/                # Application services (6 files)
 │   └── ai_service.dart      # Multi-provider AI service (OpenAI + Gemini)
 ├── theme/                   # Custom theme extensions

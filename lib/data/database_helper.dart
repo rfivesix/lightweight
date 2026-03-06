@@ -14,6 +14,7 @@ import '../models/measurement.dart';
 import '../models/measurement_session.dart';
 import '../models/supplement.dart';
 import '../models/supplement_log.dart';
+import 'product_database_helper.dart';
 
 /// Main helper for general application data persistence using the Drift database.
 ///
@@ -1102,5 +1103,79 @@ class DatabaseHelper {
           unit: const drift.Value('kg'),
           legacySessionId: drift.Value(now.millisecondsSinceEpoch),
         ));
+  }
+
+  // ===========================================================================
+  // AI RECOMMENDATION HELPERS
+  // ===========================================================================
+
+  /// Calculates remaining macros for [date] (target − consumed), clamped to 0.
+  ///
+  /// Returns `{kcal, protein, carbs, fat}`.
+  Future<Map<String, int>> getRemainingMacrosForDate(DateTime date) async {
+    final settings = await getAppSettings();
+    final targetKcal = settings?.targetCalories ?? 2500;
+    final targetProtein = settings?.targetProtein ?? 180;
+    final targetCarbs = settings?.targetCarbs ?? 250;
+    final targetFat = settings?.targetFat ?? 80;
+
+    int consumedKcal = 0;
+    int consumedProtein = 0;
+    int consumedCarbs = 0;
+    int consumedFat = 0;
+
+    final entries = await getEntriesForDate(date);
+    final productDb = ProductDatabaseHelper.instance;
+
+    for (final entry in entries) {
+      final food = await productDb.getProductByBarcode(entry.barcode);
+      if (food != null) {
+        final factor = entry.quantityInGrams / 100.0;
+        consumedKcal += (food.calories * factor).round();
+        consumedProtein += (food.protein * factor).round();
+        consumedCarbs += (food.carbs * factor).round();
+        consumedFat += (food.fat * factor).round();
+      }
+    }
+
+    return {
+      'kcal': (targetKcal - consumedKcal).clamp(0, 99999),
+      'protein': (targetProtein - consumedProtein).clamp(0, 99999),
+      'carbs': (targetCarbs - consumedCarbs).clamp(0, 99999),
+      'fat': (targetFat - consumedFat).clamp(0, 99999),
+    };
+  }
+
+  /// Builds a brief, food-name-only summary of the last [days] days.
+  ///
+  /// Example: `"Mon: Oatmeal, Chicken Rice | Tue: Eggs, Salad"`.
+  /// Keeps token count low for the AI prompt.
+  Future<String> getMealHistorySummary({int days = 7}) async {
+    final now = DateTime.now();
+    final start =
+        DateTime(now.year, now.month, now.day).subtract(Duration(days: days));
+    final entries = await getEntriesForDateRange(start, now);
+
+    if (entries.isEmpty) return '';
+
+    final productDb = ProductDatabaseHelper.instance;
+
+    // Group by day string
+    final Map<String, Set<String>> dayFoods = {};
+    final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+    for (final entry in entries) {
+      final dayKey =
+          weekdays[entry.timestamp.weekday - 1]; // weekday is 1-based
+      final food = await productDb.getProductByBarcode(entry.barcode);
+      if (food != null) {
+        dayFoods.putIfAbsent(dayKey, () => <String>{});
+        dayFoods[dayKey]!.add(food.name);
+      }
+    }
+
+    return dayFoods.entries
+        .map((e) => '${e.key}: ${e.value.join(', ')}')
+        .join(' | ');
   }
 }
