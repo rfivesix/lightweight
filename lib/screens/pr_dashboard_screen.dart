@@ -222,7 +222,7 @@ class _RecentPRsTab extends StatelessWidget {
                   padding: DesignConstants.cardPadding,
                   itemCount: prs.length,
                   itemBuilder: (context, index) =>
-                      _PRTile(pr: prs[index], showDate: true),
+                      _PRTile(pr: prs[index]),
                 ),
         ),
       ],
@@ -328,9 +328,8 @@ class _RepRangeGroup {
 
 class _PRTile extends StatelessWidget {
   final PersonalRecord pr;
-  final bool showDate;
 
-  const _PRTile({required this.pr, this.showDate = true});
+  const _PRTile({required this.pr});
 
   @override
   Widget build(BuildContext context) {
