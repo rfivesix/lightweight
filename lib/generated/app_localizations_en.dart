@@ -1748,4 +1748,130 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get currentlyTrackingDesc => 'Show in daily tracker hub';
+
+  @override
+  String get pr_dashboard => 'PR Dashboard';
+
+  @override
+  String get pr_dashboard_description => 'Personal records and notable improvements';
+
+  @override
+  String get volume_analytics => 'Volume Analytics';
+
+  @override
+  String get volume_analytics_description => 'Track tonnage and work set volume over time';
+
+  @override
+  String get consistency_analytics => 'Consistency';
+
+  @override
+  String get consistency_analytics_description => 'Training frequency, streaks, and adherence';
+
+  @override
+  String get allTimePRs => 'All-Time PRs';
+
+  @override
+  String get recentPRs => 'Recent PRs';
+
+  @override
+  String get prsByRepRange => 'PRs by Rep Range';
+
+  @override
+  String get noPRsFound => 'No personal records found yet.\nLog some workouts to see your PRs.';
+
+  @override
+  String get exerciseLabel => 'Exercise';
+
+  @override
+  String get bestSet => 'Best Set';
+
+  @override
+  String get prImprovedLabel => 'improved';
+
+  @override
+  String get repRangeLabel => 'Rep Range';
+
+  @override
+  String get repRange1to3 => '1–3 Reps (Max Strength)';
+
+  @override
+  String get repRange4to6 => '4–6 Reps (Strength)';
+
+  @override
+  String get repRange7to12 => '7–12 Reps (Hypertrophy)';
+
+  @override
+  String get repRange13plus => '13+ Reps (Endurance)';
+
+  @override
+  String get last30Days => 'Last 30 Days';
+
+  @override
+  String get last90Days => 'Last 90 Days';
+
+  @override
+  String get allTime => 'All Time';
+
+  @override
+  String get tonnage => 'Tonnage';
+
+  @override
+  String get workSets => 'Work Sets';
+
+  @override
+  String get byWeek => 'Week';
+
+  @override
+  String get byMonth => 'Month';
+
+  @override
+  String get byExercise => 'Exercise';
+
+  @override
+  String get byMuscleGroup => 'Muscle Group';
+
+  @override
+  String get noVolumeData => 'No volume data found.\nLog some workouts to see analytics.';
+
+  @override
+  String volumeKg(String value) => '$value kg';
+
+  @override
+  String get totalTonnageLabel => 'Total Tonnage';
+
+  @override
+  String get avgPerWeekLabel => 'Avg / Week';
+
+  @override
+  String get currentStreak => 'Current Streak';
+
+  @override
+  String get longestStreak => 'Longest Streak';
+
+  @override
+  String get weeklyAverage => 'Avg Workouts / Week';
+
+  @override
+  String get trainingDaysLabel => 'Training Days';
+
+  @override
+  String get daysUnit => 'days';
+
+  @override
+  String get weeklyWorkoutCount => 'Workouts per Week';
+
+  @override
+  String get noConsistencyData => 'No workout data found yet.\nStart logging workouts to track consistency.';
+
+  @override
+  String get last8Weeks => 'Last 8 Weeks';
+
+  @override
+  String get last16Weeks => 'Last 16 Weeks';
+
+  @override
+  String get consistencyScore => 'Consistency Score';
+
+  @override
+  String get consistencyScoreDesc => '% of weeks with at least 1 workout';
 }

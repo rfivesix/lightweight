@@ -25,6 +25,9 @@ class GlobalAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// Space between the leading widget and the title.
   final double? titleSpacing;
 
+  /// Optional bottom widget placed below the toolbar (e.g. a [TabBar]).
+  final PreferredSizeWidget? bottom;
+
   const GlobalAppBar({
     super.key,
     this.title,
@@ -33,13 +36,16 @@ class GlobalAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.leading,
     this.automaticallyImplyLeading = true,
     this.titleSpacing,
+    this.bottom,
   }) : assert(
           title == null || titleWidget == null,
           'Cannot provide both a title and a titleWidget',
         );
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => Size.fromHeight(
+        kToolbarHeight + (bottom?.preferredSize.height ?? 0.0),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -64,6 +70,7 @@ class GlobalAppBar extends StatelessWidget implements PreferredSizeWidget {
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
           ),
       actions: actions,
+      bottom: bottom,
     );
 
     // Farbe für das durchscheinende "Glas"
@@ -88,7 +95,7 @@ class GlobalAppBar extends StatelessWidget implements PreferredSizeWidget {
           child: SafeArea(
             bottom: false,
             child: SizedBox(
-              height: kToolbarHeight,
+              height: preferredSize.height,
               child: appBarContent,
             ),
           ),

@@ -3367,6 +3367,258 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show in daily tracker hub'**
   String get currentlyTrackingDesc;
+
+  /// No description provided for @pr_dashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'PR Dashboard'**
+  String get pr_dashboard;
+
+  /// No description provided for @pr_dashboard_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal records and notable improvements'**
+  String get pr_dashboard_description;
+
+  /// No description provided for @volume_analytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume Analytics'**
+  String get volume_analytics;
+
+  /// No description provided for @volume_analytics_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Track tonnage and work set volume over time'**
+  String get volume_analytics_description;
+
+  /// No description provided for @consistency_analytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency'**
+  String get consistency_analytics;
+
+  /// No description provided for @consistency_analytics_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Training frequency, streaks, and adherence'**
+  String get consistency_analytics_description;
+
+  /// No description provided for @allTimePRs.
+  ///
+  /// In en, this message translates to:
+  /// **'All-Time PRs'**
+  String get allTimePRs;
+
+  /// No description provided for @recentPRs.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent PRs'**
+  String get recentPRs;
+
+  /// No description provided for @prsByRepRange.
+  ///
+  /// In en, this message translates to:
+  /// **'PRs by Rep Range'**
+  String get prsByRepRange;
+
+  /// No description provided for @noPRsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No personal records found yet.\nLog some workouts to see your PRs.'**
+  String get noPRsFound;
+
+  /// No description provided for @exerciseLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise'**
+  String get exerciseLabel;
+
+  /// No description provided for @bestSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Best Set'**
+  String get bestSet;
+
+  /// No description provided for @prImprovedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'improved'**
+  String get prImprovedLabel;
+
+  /// No description provided for @repRangeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rep Range'**
+  String get repRangeLabel;
+
+  /// No description provided for @repRange1to3.
+  ///
+  /// In en, this message translates to:
+  /// **'1–3 Reps (Max Strength)'**
+  String get repRange1to3;
+
+  /// No description provided for @repRange4to6.
+  ///
+  /// In en, this message translates to:
+  /// **'4–6 Reps (Strength)'**
+  String get repRange4to6;
+
+  /// No description provided for @repRange7to12.
+  ///
+  /// In en, this message translates to:
+  /// **'7–12 Reps (Hypertrophy)'**
+  String get repRange7to12;
+
+  /// No description provided for @repRange13plus.
+  ///
+  /// In en, this message translates to:
+  /// **'13+ Reps (Endurance)'**
+  String get repRange13plus;
+
+  /// No description provided for @last30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 Days'**
+  String get last30Days;
+
+  /// No description provided for @last90Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 90 Days'**
+  String get last90Days;
+
+  /// No description provided for @allTime.
+  ///
+  /// In en, this message translates to:
+  /// **'All Time'**
+  String get allTime;
+
+  /// No description provided for @tonnage.
+  ///
+  /// In en, this message translates to:
+  /// **'Tonnage'**
+  String get tonnage;
+
+  /// No description provided for @workSets.
+  ///
+  /// In en, this message translates to:
+  /// **'Work Sets'**
+  String get workSets;
+
+  /// No description provided for @byWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get byWeek;
+
+  /// No description provided for @byMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get byMonth;
+
+  /// No description provided for @byExercise.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise'**
+  String get byExercise;
+
+  /// No description provided for @byMuscleGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscle Group'**
+  String get byMuscleGroup;
+
+  /// No description provided for @noVolumeData.
+  ///
+  /// In en, this message translates to:
+  /// **'No volume data found.\nLog some workouts to see analytics.'**
+  String get noVolumeData;
+
+  /// No description provided for @volumeKg.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} kg'**
+  String volumeKg(String value);
+
+  /// No description provided for @totalTonnageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Tonnage'**
+  String get totalTonnageLabel;
+
+  /// No description provided for @avgPerWeekLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg / Week'**
+  String get avgPerWeekLabel;
+
+  /// No description provided for @currentStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Streak'**
+  String get currentStreak;
+
+  /// No description provided for @longestStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Longest Streak'**
+  String get longestStreak;
+
+  /// No description provided for @weeklyAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg Workouts / Week'**
+  String get weeklyAverage;
+
+  /// No description provided for @trainingDaysLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Training Days'**
+  String get trainingDaysLabel;
+
+  /// No description provided for @daysUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'days'**
+  String get daysUnit;
+
+  /// No description provided for @weeklyWorkoutCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts per Week'**
+  String get weeklyWorkoutCount;
+
+  /// No description provided for @noConsistencyData.
+  ///
+  /// In en, this message translates to:
+  /// **'No workout data found yet.\nStart logging workouts to track consistency.'**
+  String get noConsistencyData;
+
+  /// No description provided for @last8Weeks.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 8 Weeks'**
+  String get last8Weeks;
+
+  /// No description provided for @last16Weeks.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 16 Weeks'**
+  String get last16Weeks;
+
+  /// No description provided for @consistencyScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency Score'**
+  String get consistencyScore;
+
+  /// No description provided for @consistencyScoreDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'% of weeks with at least 1 workout'**
+  String get consistencyScoreDesc;
 }
 
 class _AppLocalizationsDelegate

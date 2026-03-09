@@ -999,4 +999,475 @@ class WorkoutDatabaseHelper {
     }
     return null;
   }
+
+  // ===========================================================================
+  // ANALYTICS: Personal Records
+  // ===========================================================================
+
+  /// Returns all-time personal records (best sets) keyed by exercise name.
+  ///
+  /// For each exercise, the best set is the one with the highest weight.
+  /// If weights are equal, the set with more reps wins.
+  Future<Map<String, PersonalRecord>> getPersonalRecords() async {
+    final dbInstance = await database;
+
+    // Fetch all completed set logs joined with workout logs
+    final query = dbInstance.select(dbInstance.setLogs).join([
+      drift.innerJoin(
+        dbInstance.workoutLogs,
+        dbInstance.workoutLogs.id
+            .equalsExp(dbInstance.setLogs.workoutLogId),
+      ),
+    ])
+      ..where(
+        dbInstance.workoutLogs.status.equals('completed') &
+            dbInstance.setLogs.isCompleted.equals(true) &
+            dbInstance.setLogs.weight.isNotNull() &
+            dbInstance.setLogs.reps.isNotNull(),
+      );
+
+    final rows = await query.get();
+
+    final Map<String, PersonalRecord> records = {};
+
+    for (final row in rows) {
+      final setRow = row.readTable(dbInstance.setLogs);
+      final workoutRow = row.readTable(dbInstance.workoutLogs);
+      final name = setRow.exerciseNameSnapshot ?? '';
+      if (name.isEmpty) continue;
+
+      final weight = setRow.weight ?? 0.0;
+      final reps = setRow.reps ?? 0;
+      final date = workoutRow.startTime;
+
+      final existing = records[name];
+      if (existing == null ||
+          weight > existing.weightKg ||
+          (weight == existing.weightKg && reps > existing.reps)) {
+        records[name] = PersonalRecord(
+          exerciseName: name,
+          weightKg: weight,
+          reps: reps,
+          date: date,
+        );
+      }
+    }
+
+    return records;
+  }
+
+  /// Returns personal records achieved within the given [since] date.
+  ///
+  /// A "recent PR" is a set that equals or exceeds the all-time best for its
+  /// exercise and was performed on or after [since].
+  Future<List<PersonalRecord>> getRecentPersonalRecords(DateTime since) async {
+    final allTime = await getPersonalRecords();
+    final dbInstance = await database;
+
+    final query = dbInstance.select(dbInstance.setLogs).join([
+      drift.innerJoin(
+        dbInstance.workoutLogs,
+        dbInstance.workoutLogs.id
+            .equalsExp(dbInstance.setLogs.workoutLogId),
+      ),
+    ])
+      ..where(
+        dbInstance.workoutLogs.status.equals('completed') &
+            dbInstance.workoutLogs.startTime
+                .isBiggerOrEqualValue(since) &
+            dbInstance.setLogs.isCompleted.equals(true) &
+            dbInstance.setLogs.weight.isNotNull() &
+            dbInstance.setLogs.reps.isNotNull(),
+      )
+      ..orderBy([
+        drift.OrderingTerm(
+          expression: dbInstance.workoutLogs.startTime,
+          mode: drift.OrderingMode.desc,
+        ),
+      ]);
+
+    final rows = await query.get();
+    final List<PersonalRecord> recent = [];
+
+    for (final row in rows) {
+      final setRow = row.readTable(dbInstance.setLogs);
+      final workoutRow = row.readTable(dbInstance.workoutLogs);
+      final name = setRow.exerciseNameSnapshot ?? '';
+      if (name.isEmpty) continue;
+
+      final weight = setRow.weight ?? 0.0;
+      final reps = setRow.reps ?? 0;
+      final allTimeBest = allTime[name];
+
+      // It's a recent PR if weight matches or exceeds the all-time best weight
+      if (allTimeBest != null && weight >= allTimeBest.weightKg) {
+        recent.add(PersonalRecord(
+          exerciseName: name,
+          weightKg: weight,
+          reps: reps,
+          date: workoutRow.startTime,
+        ));
+      }
+    }
+
+    // Remove duplicates (keep first occurrence per exercise = most recent)
+    final seen = <String>{};
+    return recent.where((r) => seen.add(r.exerciseName)).toList();
+  }
+
+  // ===========================================================================
+  // ANALYTICS: Volume
+  // ===========================================================================
+
+  /// Returns weekly tonnage (weight × reps) and set counts for the given range.
+  ///
+  /// Returns a list of [VolumeDataPoint] ordered by week start (ascending).
+  Future<List<VolumeDataPoint>> getWeeklyVolume(
+    DateTime start,
+    DateTime end,
+  ) async {
+    final logs = await getWorkoutLogsForDateRange(start, end);
+
+    // Group by ISO week start (Monday)
+    final Map<DateTime, _VolumeBucket> buckets = {};
+
+    for (final log in logs) {
+      final weekStart = _isoWeekStart(log.startTime);
+      final bucket = buckets.putIfAbsent(weekStart, () => _VolumeBucket());
+
+      for (final set in log.sets) {
+        if (set.isCompleted != true) continue;
+        final w = set.weightKg ?? 0.0;
+        final r = set.reps ?? 0;
+        bucket.tonnage += w * r;
+        if (set.setType != 'warmup') {
+          bucket.workSets++;
+        }
+      }
+    }
+
+    final sorted = buckets.keys.toList()..sort();
+    return sorted
+        .map((d) => VolumeDataPoint(
+              date: d,
+              tonnage: buckets[d]!.tonnage,
+              workSets: buckets[d]!.workSets,
+            ))
+        .toList();
+  }
+
+  /// Returns monthly tonnage and set counts for the given range.
+  Future<List<VolumeDataPoint>> getMonthlyVolume(
+    DateTime start,
+    DateTime end,
+  ) async {
+    final logs = await getWorkoutLogsForDateRange(start, end);
+
+    final Map<DateTime, _VolumeBucket> buckets = {};
+
+    for (final log in logs) {
+      final monthStart =
+          DateTime(log.startTime.year, log.startTime.month, 1);
+      final bucket = buckets.putIfAbsent(monthStart, () => _VolumeBucket());
+
+      for (final set in log.sets) {
+        if (set.isCompleted != true) continue;
+        final w = set.weightKg ?? 0.0;
+        final r = set.reps ?? 0;
+        bucket.tonnage += w * r;
+        if (set.setType != 'warmup') {
+          bucket.workSets++;
+        }
+      }
+    }
+
+    final sorted = buckets.keys.toList()..sort();
+    return sorted
+        .map((d) => VolumeDataPoint(
+              date: d,
+              tonnage: buckets[d]!.tonnage,
+              workSets: buckets[d]!.workSets,
+            ))
+        .toList();
+  }
+
+  /// Returns volume aggregated by exercise for the given date range.
+  Future<List<ExerciseVolumeEntry>> getVolumeByExercise(
+    DateTime start,
+    DateTime end,
+  ) async {
+    final logs = await getWorkoutLogsForDateRange(start, end);
+    final Map<String, _VolumeBucket> buckets = {};
+
+    for (final log in logs) {
+      for (final set in log.sets) {
+        if (set.isCompleted != true) continue;
+        final name = set.exerciseName;
+        final bucket = buckets.putIfAbsent(name, () => _VolumeBucket());
+        final w = set.weightKg ?? 0.0;
+        final r = set.reps ?? 0;
+        bucket.tonnage += w * r;
+        if (set.setType != 'warmup') bucket.workSets++;
+      }
+    }
+
+    final entries = buckets.entries
+        .map((e) => ExerciseVolumeEntry(
+              name: e.key,
+              tonnage: e.value.tonnage,
+              workSets: e.value.workSets,
+            ))
+        .toList()
+      ..sort((a, b) => b.tonnage.compareTo(a.tonnage));
+
+    return entries;
+  }
+
+  /// Returns volume aggregated by muscle group for the given date range.
+  Future<List<ExerciseVolumeEntry>> getVolumeByMuscleGroup(
+    DateTime start,
+    DateTime end,
+  ) async {
+    final logs = await getWorkoutLogsForDateRange(start, end);
+    final dbInstance = await database;
+    final Map<String, _VolumeBucket> buckets = {};
+
+    for (final log in logs) {
+      for (final set in log.sets) {
+        if (set.isCompleted != true) continue;
+        final w = set.weightKg ?? 0.0;
+        final r = set.reps ?? 0;
+
+        // Look up exercise to get muscle groups
+        final exRows = await (dbInstance.select(dbInstance.exercises)
+              ..where((tbl) =>
+                  tbl.nameEn.equals(set.exerciseName) |
+                  tbl.nameDe.equals(set.exerciseName))
+              ..limit(1))
+            .get();
+
+        List<String> muscles = [];
+        if (exRows.isNotEmpty) {
+          muscles.addAll(_parseMuscleList(exRows.first.musclesPrimary));
+        }
+        if (muscles.isEmpty) muscles = ['Other'];
+
+        for (final muscle in muscles) {
+          final bucket =
+              buckets.putIfAbsent(muscle, () => _VolumeBucket());
+          bucket.tonnage += w * r;
+          if (set.setType != 'warmup') bucket.workSets++;
+        }
+      }
+    }
+
+    final entries = buckets.entries
+        .map((e) => ExerciseVolumeEntry(
+              name: e.key,
+              tonnage: e.value.tonnage,
+              workSets: e.value.workSets,
+            ))
+        .toList()
+      ..sort((a, b) => b.tonnage.compareTo(a.tonnage));
+
+    return entries;
+  }
+
+  // ===========================================================================
+  // ANALYTICS: Consistency
+  // ===========================================================================
+
+  /// Returns consistency statistics for all completed workouts.
+  Future<ConsistencyStats> getConsistencyStats() async {
+    final dbInstance = await database;
+
+    final rows = await (dbInstance.select(dbInstance.workoutLogs)
+          ..where((tbl) => tbl.status.equals('completed'))
+          ..orderBy([
+            (t) => drift.OrderingTerm(
+                expression: t.startTime, mode: drift.OrderingMode.asc),
+          ]))
+        .get();
+
+    if (rows.isEmpty) {
+      return ConsistencyStats(
+        totalWorkouts: 0,
+        currentStreakWeeks: 0,
+        longestStreakWeeks: 0,
+        avgWorkoutsPerWeek: 0.0,
+        weeklyWorkoutCounts: [],
+        workoutDates: [],
+      );
+    }
+
+    // Collect unique workout dates (day granularity)
+    final Set<DateTime> workoutDays = {};
+    for (final row in rows) {
+      final d = row.startTime;
+      workoutDays.add(DateTime(d.year, d.month, d.day));
+    }
+
+    // Group by ISO week
+    final Map<DateTime, int> weekCounts = {};
+    for (final day in workoutDays) {
+      final weekStart = _isoWeekStart(day);
+      weekCounts[weekStart] = (weekCounts[weekStart] ?? 0) + 1;
+    }
+
+    // Compute weekly workout counts for the last 16 weeks
+    final now = DateTime.now();
+    final List<WeeklyWorkoutEntry> weeklyEntries = [];
+    for (int i = 15; i >= 0; i--) {
+      final weekStart = _isoWeekStart(now.subtract(Duration(days: i * 7)));
+      weeklyEntries.add(WeeklyWorkoutEntry(
+        weekStart: weekStart,
+        count: weekCounts[weekStart] ?? 0,
+      ));
+    }
+
+    // Compute streaks (consecutive weeks with at least 1 workout)
+    final allWeeks = weekCounts.keys.toList()..sort();
+    int currentStreak = 0;
+    int longestStreak = 0;
+    int tempStreak = 0;
+
+    final currentWeekStart = _isoWeekStart(now);
+
+    for (int i = 0; i < allWeeks.length; i++) {
+      if (i == 0) {
+        tempStreak = 1;
+      } else {
+        final prev = allWeeks[i - 1];
+        final curr = allWeeks[i];
+        final diff = curr.difference(prev).inDays;
+        if (diff <= 7) {
+          tempStreak++;
+        } else {
+          tempStreak = 1;
+        }
+      }
+      if (tempStreak > longestStreak) longestStreak = tempStreak;
+    }
+
+    // Current streak: weeks counting back from current/most recent week
+    if (allWeeks.isNotEmpty) {
+      final lastWeek = allWeeks.last;
+      final diff = currentWeekStart.difference(lastWeek).inDays;
+      if (diff <= 7) {
+        // The most recent logged week is current or last week — count back
+        currentStreak = 1;
+        for (int i = allWeeks.length - 2; i >= 0; i--) {
+          final curr = allWeeks[i + 1];
+          final prev = allWeeks[i];
+          if (curr.difference(prev).inDays <= 7) {
+            currentStreak++;
+          } else {
+            break;
+          }
+        }
+      } else {
+        currentStreak = 0;
+      }
+    }
+
+    // Total spans for avg calculation
+    final firstWorkoutWeek = allWeeks.first;
+    final totalWeeks = currentWeekStart.difference(firstWorkoutWeek).inDays / 7;
+    final avgPerWeek = totalWeeks > 0
+        ? workoutDays.length / (totalWeeks + 1)
+        : workoutDays.length.toDouble();
+
+    return ConsistencyStats(
+      totalWorkouts: workoutDays.length,
+      currentStreakWeeks: currentStreak,
+      longestStreakWeeks: longestStreak,
+      avgWorkoutsPerWeek: double.parse(avgPerWeek.toStringAsFixed(1)),
+      weeklyWorkoutCounts: weeklyEntries,
+      workoutDates: workoutDays.toList(),
+    );
+  }
+
+  /// Returns the Monday of the ISO week containing [date].
+  static DateTime _isoWeekStart(DateTime date) {
+    final weekday = date.weekday; // 1=Mon, 7=Sun
+    return DateTime(date.year, date.month, date.day - (weekday - 1));
+  }
+}
+
+// ===========================================================================
+// ANALYTICS DATA MODELS
+// ===========================================================================
+
+/// A personal record for a single exercise.
+class PersonalRecord {
+  final String exerciseName;
+  final double weightKg;
+  final int reps;
+  final DateTime date;
+
+  const PersonalRecord({
+    required this.exerciseName,
+    required this.weightKg,
+    required this.reps,
+    required this.date,
+  });
+}
+
+/// A single period's volume data point.
+class VolumeDataPoint {
+  final DateTime date;
+  final double tonnage;
+  final int workSets;
+
+  const VolumeDataPoint({
+    required this.date,
+    required this.tonnage,
+    required this.workSets,
+  });
+}
+
+/// Volume broken down by exercise or muscle group.
+class ExerciseVolumeEntry {
+  final String name;
+  final double tonnage;
+  final int workSets;
+
+  const ExerciseVolumeEntry({
+    required this.name,
+    required this.tonnage,
+    required this.workSets,
+  });
+}
+
+/// Workout count for a single ISO week.
+class WeeklyWorkoutEntry {
+  final DateTime weekStart;
+  final int count;
+
+  const WeeklyWorkoutEntry({required this.weekStart, required this.count});
+}
+
+/// Aggregated consistency statistics.
+class ConsistencyStats {
+  final int totalWorkouts;
+  final int currentStreakWeeks;
+  final int longestStreakWeeks;
+  final double avgWorkoutsPerWeek;
+  final List<WeeklyWorkoutEntry> weeklyWorkoutCounts;
+  final List<DateTime> workoutDates;
+
+  const ConsistencyStats({
+    required this.totalWorkouts,
+    required this.currentStreakWeeks,
+    required this.longestStreakWeeks,
+    required this.avgWorkoutsPerWeek,
+    required this.weeklyWorkoutCounts,
+    required this.workoutDates,
+  });
+}
+
+/// Internal mutable bucket used during volume aggregation.
+class _VolumeBucket {
+  double tonnage = 0.0;
+  int workSets = 0;
 }

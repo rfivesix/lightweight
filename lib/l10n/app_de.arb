@@ -731,5 +731,56 @@
   "aiRecommendCustomRequest": "Eigener Wunsch",
   "aiRecommendCustomRequestHint": "z. B. auf restlichen Reis achten, viel Protein, usw.",
   "currentlyTracking": "Aktuell tracken",
-  "currentlyTrackingDesc": "In der täglichen Übersicht anzeigen"
+  "currentlyTrackingDesc": "In der täglichen Übersicht anzeigen",
+
+  "pr_dashboard": "PR-Dashboard",
+  "pr_dashboard_description": "Persönliche Bestleistungen und Fortschritte",
+  "volume_analytics": "Volumen-Analyse",
+  "volume_analytics_description": "Tonnage und Arbeitssätze im Zeitverlauf",
+  "consistency_analytics": "Konsistenz",
+  "consistency_analytics_description": "Trainingsfrequenz, Serien und Regelmäßigkeit",
+
+  "allTimePRs": "Alle PRs",
+  "recentPRs": "Aktuelle PRs",
+  "prsByRepRange": "PRs nach Wiederholungsbereich",
+  "noPRsFound": "Noch keine persönlichen Bestleistungen.\nLogge einige Workouts, um deine PRs zu sehen.",
+  "exerciseLabel": "Übung",
+  "bestSet": "Bester Satz",
+  "prImprovedLabel": "verbessert",
+  "repRangeLabel": "Wiederholungsbereich",
+  "repRange1to3": "1–3 Wdh (Maximalkraft)",
+  "repRange4to6": "4–6 Wdh (Kraft)",
+  "repRange7to12": "7–12 Wdh (Hypertrophie)",
+  "repRange13plus": "13+ Wdh (Ausdauer)",
+  "last30Days": "Letzte 30 Tage",
+  "last90Days": "Letzte 90 Tage",
+  "allTime": "Gesamt",
+
+  "tonnage": "Tonnage",
+  "workSets": "Arbeitssätze",
+  "byWeek": "Woche",
+  "byMonth": "Monat",
+  "byExercise": "Übung",
+  "byMuscleGroup": "Muskelgruppe",
+  "noVolumeData": "Keine Volumendaten gefunden.\nLogge Workouts, um die Analyse zu sehen.",
+  "volumeKg": "{value} kg",
+  "@volumeKg": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "totalTonnageLabel": "Gesamttonnage",
+  "avgPerWeekLabel": "Durchschn. / Woche",
+
+  "currentStreak": "Aktuelle Serie",
+  "longestStreak": "Längste Serie",
+  "weeklyAverage": "Ø Workouts / Woche",
+  "trainingDaysLabel": "Trainingstage",
+  "daysUnit": "Tage",
+  "weeklyWorkoutCount": "Workouts pro Woche",
+  "noConsistencyData": "Noch keine Workout-Daten.\nStarte mit dem Loggen, um deine Konsistenz zu tracken.",
+  "last8Weeks": "Letzte 8 Wochen",
+  "last16Weeks": "Letzte 16 Wochen",
+  "consistencyScore": "Konsistenz-Score",
+  "consistencyScoreDesc": "% Wochen mit mindestens 1 Workout"
 }

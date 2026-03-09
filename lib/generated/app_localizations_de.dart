@@ -1760,4 +1760,130 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get currentlyTrackingDesc => 'In der täglichen Übersicht anzeigen';
+
+  @override
+  String get pr_dashboard => 'PR-Dashboard';
+
+  @override
+  String get pr_dashboard_description => 'Persönliche Bestleistungen und Fortschritte';
+
+  @override
+  String get volume_analytics => 'Volumen-Analyse';
+
+  @override
+  String get volume_analytics_description => 'Tonnage und Arbeitssätze im Zeitverlauf';
+
+  @override
+  String get consistency_analytics => 'Konsistenz';
+
+  @override
+  String get consistency_analytics_description => 'Trainingsfrequenz, Serien und Regelmäßigkeit';
+
+  @override
+  String get allTimePRs => 'Alle PRs';
+
+  @override
+  String get recentPRs => 'Aktuelle PRs';
+
+  @override
+  String get prsByRepRange => 'PRs nach Wiederholungsbereich';
+
+  @override
+  String get noPRsFound => 'Noch keine persönlichen Bestleistungen.\nLogge einige Workouts, um deine PRs zu sehen.';
+
+  @override
+  String get exerciseLabel => 'Übung';
+
+  @override
+  String get bestSet => 'Bester Satz';
+
+  @override
+  String get prImprovedLabel => 'verbessert';
+
+  @override
+  String get repRangeLabel => 'Wiederholungsbereich';
+
+  @override
+  String get repRange1to3 => '1–3 Wdh (Maximalkraft)';
+
+  @override
+  String get repRange4to6 => '4–6 Wdh (Kraft)';
+
+  @override
+  String get repRange7to12 => '7–12 Wdh (Hypertrophie)';
+
+  @override
+  String get repRange13plus => '13+ Wdh (Ausdauer)';
+
+  @override
+  String get last30Days => 'Letzte 30 Tage';
+
+  @override
+  String get last90Days => 'Letzte 90 Tage';
+
+  @override
+  String get allTime => 'Gesamt';
+
+  @override
+  String get tonnage => 'Tonnage';
+
+  @override
+  String get workSets => 'Arbeitssätze';
+
+  @override
+  String get byWeek => 'Woche';
+
+  @override
+  String get byMonth => 'Monat';
+
+  @override
+  String get byExercise => 'Übung';
+
+  @override
+  String get byMuscleGroup => 'Muskelgruppe';
+
+  @override
+  String get noVolumeData => 'Keine Volumendaten gefunden.\nLogge Workouts, um die Analyse zu sehen.';
+
+  @override
+  String volumeKg(String value) => '$value kg';
+
+  @override
+  String get totalTonnageLabel => 'Gesamttonnage';
+
+  @override
+  String get avgPerWeekLabel => 'Durchschn. / Woche';
+
+  @override
+  String get currentStreak => 'Aktuelle Serie';
+
+  @override
+  String get longestStreak => 'Längste Serie';
+
+  @override
+  String get weeklyAverage => 'Ø Workouts / Woche';
+
+  @override
+  String get trainingDaysLabel => 'Trainingstage';
+
+  @override
+  String get daysUnit => 'Tage';
+
+  @override
+  String get weeklyWorkoutCount => 'Workouts pro Woche';
+
+  @override
+  String get noConsistencyData => 'Noch keine Workout-Daten.\nStarte mit dem Loggen, um deine Konsistenz zu tracken.';
+
+  @override
+  String get last8Weeks => 'Letzte 8 Wochen';
+
+  @override
+  String get last16Weeks => 'Letzte 16 Wochen';
+
+  @override
+  String get consistencyScore => 'Konsistenz-Score';
+
+  @override
+  String get consistencyScoreDesc => '% Wochen mit mindestens 1 Workout';
 }
