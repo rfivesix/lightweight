@@ -52,12 +52,21 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
   Future<void> _loadData(DateTime date) async {
     setState(() => _isLoading = true);
     final db = DatabaseHelper.instance;
-    final allSupplements = await db.getAllSupplements();
+    final supplementsForDate = await db.getSupplementsForDate(date);
     final logsForDate = await db.getSupplementLogsForDate(date);
+
     final Map<int, Supplement> byId = {
-      for (final s in allSupplements)
+      for (final s in supplementsForDate)
         if (s.id != null) s.id!: s,
     };
+
+    final allSupplements = await db.getAllSupplements();
+    for (final s in allSupplements) {
+      if (s.id != null && !byId.containsKey(s.id!)) {
+        byId[s.id!] = s;
+      }
+    }
+
     final Map<int, double> todaysDoses = {};
     for (final log in logsForDate) {
       todaysDoses.update(
@@ -66,12 +75,29 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
         ifAbsent: () => log.dose,
       );
     }
-    final tracked = allSupplements.map((s) {
-      return TrackedSupplement(
-        supplement: s,
-        totalDosedToday: todaysDoses[s.id] ?? 0.0,
-      );
-    }).toList();
+
+    final List<TrackedSupplement> tracked = [];
+    for (final s in supplementsForDate) {
+      final hasLog = todaysDoses.containsKey(s.id);
+      if (s.isTracked || hasLog) {
+        tracked.add(TrackedSupplement(
+          supplement: s,
+          totalDosedToday: todaysDoses[s.id] ?? 0.0,
+        ));
+      }
+    }
+
+    for (final id in todaysDoses.keys) {
+      if (!tracked.any((ts) => ts.supplement.id == id)) {
+        if (byId.containsKey(id)) {
+          tracked.add(TrackedSupplement(
+            supplement: byId[id]!,
+            totalDosedToday: todaysDoses[id]!,
+          ));
+        }
+      }
+    }
+
     if (!mounted) return;
     setState(() {
       _supplementsById

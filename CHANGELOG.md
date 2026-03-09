@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.6.1] - 2026-03-09
+
+### ✨ New Features & Improvements
+- **Supplement Tracking History**: Implemented historical tracking for supplement settings (goals, limits, and doses) for accurate long-term analysis and charting.
+- **Refined AI Meal Recommendations**: Adjusted macro calculations so meal suggestions dynamically portion out the remaining daily targets based on the specific meal type (Breakfast, Lunch, Dinner, Snack). Added a text box for custom wishes and dietary limitations.
+- **Enhanced AI Context**: The AI now correctly utilizes real historical daily goals instead of default app settings when generating recommendations.
+- **Performance Boost (Isolates)**: Offloaded AI image processing to a background isolate, significantly improving UI responsiveness and overall performance during photo analysis.
+
+### 🔐 Security & Maintenance
+- **Enhanced Encryption**: Updated encryption iterations for improved data-at-rest security while maintaining backward compatibility with older backups.
+- **Codebase Polish**: Translated remaining German comments and strings in the database layer to English to maintain codebase consistency.
+
 ## [0.6.0] - 2026-03-06
 
 ### 🚀 Major Release: The "AI Nutrition Overhaul"

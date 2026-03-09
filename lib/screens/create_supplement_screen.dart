@@ -32,7 +32,8 @@ class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
 
   bool get _isEditing => widget.supplementToEdit != null;
 
-  late String _unit; // NEU
+  late String _unit;
+  late bool _isTracked;
 
   @override
   void initState() {
@@ -44,9 +45,11 @@ class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
       _goalController.text = s.dailyGoal?.toString() ?? '';
       _limitController.text = s.dailyLimit?.toString() ?? '';
       _notesController.text = s.notes ?? '';
-      _unit = s.unit; // NEU: verlässlich aus dem Datensatz
+      _unit = s.unit;
+      _isTracked = s.isTracked;
     } else {
       _unit = 'mg'; // Default bei Neuanlage
+      _isTracked = true; // Default to tracked
     }
   }
 
@@ -77,6 +80,7 @@ class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
           ? null
           : _notesController.text.trim(),
       isBuiltin: editing?.isBuiltin ?? false,
+      isTracked: _isTracked,
     );
 
     if (_isEditing) {
@@ -194,6 +198,18 @@ class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
               ),
               const SizedBox(height: DesignConstants.spacingL),
               _buildTextField(_notesController, l10n.notesLabel, maxLines: 3),
+              const SizedBox(height: DesignConstants.spacingXL),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.currentlyTracking),
+                subtitle: Text(l10n.currentlyTrackingDesc),
+                value: _isTracked,
+                onChanged: (val) {
+                  setState(() {
+                    _isTracked = val;
+                  });
+                },
+              ),
             ],
           ),
         ),

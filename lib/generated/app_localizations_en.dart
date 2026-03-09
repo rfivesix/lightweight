@@ -1299,7 +1299,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteSupplementConfirm =>
-      'Are you sure you want to delete this supplement? All related entries will be removed.';
+      'Are you sure you want to delete this supplement? All historical data will be lost.\n\nTip: You can simply untrack it by editing the supplement instead.';
 
   @override
   String get fieldRequired => 'Required';
@@ -1713,13 +1713,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiRecommendPescetarian => 'Pescetarian';
 
   @override
-  String get aiRecommendOnTheGo => 'On the go';
+  String get aiRecommendOnTheGo => 'On the go (No utensils)';
 
   @override
-  String get aiRecommendNoKitchen => 'No kitchen';
+  String get aiRecommendNoKitchen => 'No cooking (Cold meal)';
 
   @override
-  String get aiRecommendQuick => 'Quick (<10 min)';
+  String get aiRecommendWithCooking => 'Cooking allowed';
 
   @override
   String get aiRecommendGenerate => 'Generate';
@@ -1742,4 +1742,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get aiRecommendCustomRequestHint =>
       'e.g. Include leftover rice, high protein, etc.';
+
+  @override
+  String get currentlyTracking => 'Currently tracking';
+
+  @override
+  String get currentlyTrackingDesc => 'Show in daily tracker hub';
 }

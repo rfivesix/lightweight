@@ -7360,6 +7360,16 @@ class $SupplementsTable extends Supplements
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("is_builtin" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _isTrackedMeta =
+      const VerificationMeta('isTracked');
+  @override
+  late final GeneratedColumn<bool> isTracked = GeneratedColumn<bool>(
+      'is_tracked', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_tracked" IN (0, 1))'),
+      defaultValue: const Constant(true));
   @override
   List<GeneratedColumn> get $columns => [
         localId,
@@ -7374,7 +7384,8 @@ class $SupplementsTable extends Supplements
         dailyGoal,
         dailyLimit,
         notes,
-        isBuiltin
+        isBuiltin,
+        isTracked
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -7445,6 +7456,10 @@ class $SupplementsTable extends Supplements
       context.handle(_isBuiltinMeta,
           isBuiltin.isAcceptableOrUnknown(data['is_builtin']!, _isBuiltinMeta));
     }
+    if (data.containsKey('is_tracked')) {
+      context.handle(_isTrackedMeta,
+          isTracked.isAcceptableOrUnknown(data['is_tracked']!, _isTrackedMeta));
+    }
     return context;
   }
 
@@ -7480,6 +7495,8 @@ class $SupplementsTable extends Supplements
           .read(DriftSqlType.string, data['${effectivePrefix}notes']),
       isBuiltin: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_builtin'])!,
+      isTracked: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_tracked'])!,
     );
   }
 
@@ -7503,6 +7520,7 @@ class Supplement extends DataClass implements Insertable<Supplement> {
   final double? dailyLimit;
   final String? notes;
   final bool isBuiltin;
+  final bool isTracked;
   const Supplement(
       {required this.localId,
       required this.id,
@@ -7516,7 +7534,8 @@ class Supplement extends DataClass implements Insertable<Supplement> {
       this.dailyGoal,
       this.dailyLimit,
       this.notes,
-      required this.isBuiltin});
+      required this.isBuiltin,
+      required this.isTracked});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -7543,6 +7562,7 @@ class Supplement extends DataClass implements Insertable<Supplement> {
       map['notes'] = Variable<String>(notes);
     }
     map['is_builtin'] = Variable<bool>(isBuiltin);
+    map['is_tracked'] = Variable<bool>(isTracked);
     return map;
   }
 
@@ -7568,6 +7588,7 @@ class Supplement extends DataClass implements Insertable<Supplement> {
       notes:
           notes == null && nullToAbsent ? const Value.absent() : Value(notes),
       isBuiltin: Value(isBuiltin),
+      isTracked: Value(isTracked),
     );
   }
 
@@ -7588,6 +7609,7 @@ class Supplement extends DataClass implements Insertable<Supplement> {
       dailyLimit: serializer.fromJson<double?>(json['dailyLimit']),
       notes: serializer.fromJson<String?>(json['notes']),
       isBuiltin: serializer.fromJson<bool>(json['isBuiltin']),
+      isTracked: serializer.fromJson<bool>(json['isTracked']),
     );
   }
   @override
@@ -7607,6 +7629,7 @@ class Supplement extends DataClass implements Insertable<Supplement> {
       'dailyLimit': serializer.toJson<double?>(dailyLimit),
       'notes': serializer.toJson<String?>(notes),
       'isBuiltin': serializer.toJson<bool>(isBuiltin),
+      'isTracked': serializer.toJson<bool>(isTracked),
     };
   }
 
@@ -7623,7 +7646,8 @@ class Supplement extends DataClass implements Insertable<Supplement> {
           Value<double?> dailyGoal = const Value.absent(),
           Value<double?> dailyLimit = const Value.absent(),
           Value<String?> notes = const Value.absent(),
-          bool? isBuiltin}) =>
+          bool? isBuiltin,
+          bool? isTracked}) =>
       Supplement(
         localId: localId ?? this.localId,
         id: id ?? this.id,
@@ -7638,6 +7662,7 @@ class Supplement extends DataClass implements Insertable<Supplement> {
         dailyLimit: dailyLimit.present ? dailyLimit.value : this.dailyLimit,
         notes: notes.present ? notes.value : this.notes,
         isBuiltin: isBuiltin ?? this.isBuiltin,
+        isTracked: isTracked ?? this.isTracked,
       );
   Supplement copyWithCompanion(SupplementsCompanion data) {
     return Supplement(
@@ -7655,6 +7680,7 @@ class Supplement extends DataClass implements Insertable<Supplement> {
           data.dailyLimit.present ? data.dailyLimit.value : this.dailyLimit,
       notes: data.notes.present ? data.notes.value : this.notes,
       isBuiltin: data.isBuiltin.present ? data.isBuiltin.value : this.isBuiltin,
+      isTracked: data.isTracked.present ? data.isTracked.value : this.isTracked,
     );
   }
 
@@ -7673,14 +7699,28 @@ class Supplement extends DataClass implements Insertable<Supplement> {
           ..write('dailyGoal: $dailyGoal, ')
           ..write('dailyLimit: $dailyLimit, ')
           ..write('notes: $notes, ')
-          ..write('isBuiltin: $isBuiltin')
+          ..write('isBuiltin: $isBuiltin, ')
+          ..write('isTracked: $isTracked')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(localId, id, createdAt, updatedAt, deletedAt,
-      code, name, dose, unit, dailyGoal, dailyLimit, notes, isBuiltin);
+  int get hashCode => Object.hash(
+      localId,
+      id,
+      createdAt,
+      updatedAt,
+      deletedAt,
+      code,
+      name,
+      dose,
+      unit,
+      dailyGoal,
+      dailyLimit,
+      notes,
+      isBuiltin,
+      isTracked);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -7697,7 +7737,8 @@ class Supplement extends DataClass implements Insertable<Supplement> {
           other.dailyGoal == this.dailyGoal &&
           other.dailyLimit == this.dailyLimit &&
           other.notes == this.notes &&
-          other.isBuiltin == this.isBuiltin);
+          other.isBuiltin == this.isBuiltin &&
+          other.isTracked == this.isTracked);
 }
 
 class SupplementsCompanion extends UpdateCompanion<Supplement> {
@@ -7714,6 +7755,7 @@ class SupplementsCompanion extends UpdateCompanion<Supplement> {
   final Value<double?> dailyLimit;
   final Value<String?> notes;
   final Value<bool> isBuiltin;
+  final Value<bool> isTracked;
   const SupplementsCompanion({
     this.localId = const Value.absent(),
     this.id = const Value.absent(),
@@ -7728,6 +7770,7 @@ class SupplementsCompanion extends UpdateCompanion<Supplement> {
     this.dailyLimit = const Value.absent(),
     this.notes = const Value.absent(),
     this.isBuiltin = const Value.absent(),
+    this.isTracked = const Value.absent(),
   });
   SupplementsCompanion.insert({
     this.localId = const Value.absent(),
@@ -7743,6 +7786,7 @@ class SupplementsCompanion extends UpdateCompanion<Supplement> {
     this.dailyLimit = const Value.absent(),
     this.notes = const Value.absent(),
     this.isBuiltin = const Value.absent(),
+    this.isTracked = const Value.absent(),
   })  : name = Value(name),
         dose = Value(dose),
         unit = Value(unit);
@@ -7760,6 +7804,7 @@ class SupplementsCompanion extends UpdateCompanion<Supplement> {
     Expression<double>? dailyLimit,
     Expression<String>? notes,
     Expression<bool>? isBuiltin,
+    Expression<bool>? isTracked,
   }) {
     return RawValuesInsertable({
       if (localId != null) 'local_id': localId,
@@ -7775,6 +7820,7 @@ class SupplementsCompanion extends UpdateCompanion<Supplement> {
       if (dailyLimit != null) 'daily_limit': dailyLimit,
       if (notes != null) 'notes': notes,
       if (isBuiltin != null) 'is_builtin': isBuiltin,
+      if (isTracked != null) 'is_tracked': isTracked,
     });
   }
 
@@ -7791,7 +7837,8 @@ class SupplementsCompanion extends UpdateCompanion<Supplement> {
       Value<double?>? dailyGoal,
       Value<double?>? dailyLimit,
       Value<String?>? notes,
-      Value<bool>? isBuiltin}) {
+      Value<bool>? isBuiltin,
+      Value<bool>? isTracked}) {
     return SupplementsCompanion(
       localId: localId ?? this.localId,
       id: id ?? this.id,
@@ -7806,6 +7853,7 @@ class SupplementsCompanion extends UpdateCompanion<Supplement> {
       dailyLimit: dailyLimit ?? this.dailyLimit,
       notes: notes ?? this.notes,
       isBuiltin: isBuiltin ?? this.isBuiltin,
+      isTracked: isTracked ?? this.isTracked,
     );
   }
 
@@ -7851,6 +7899,9 @@ class SupplementsCompanion extends UpdateCompanion<Supplement> {
     if (isBuiltin.present) {
       map['is_builtin'] = Variable<bool>(isBuiltin.value);
     }
+    if (isTracked.present) {
+      map['is_tracked'] = Variable<bool>(isTracked.value);
+    }
     return map;
   }
 
@@ -7869,7 +7920,8 @@ class SupplementsCompanion extends UpdateCompanion<Supplement> {
           ..write('dailyGoal: $dailyGoal, ')
           ..write('dailyLimit: $dailyLimit, ')
           ..write('notes: $notes, ')
-          ..write('isBuiltin: $isBuiltin')
+          ..write('isBuiltin: $isBuiltin, ')
+          ..write('isTracked: $isTracked')
           ..write(')'))
         .toString();
   }
@@ -11866,6 +11918,1030 @@ class FavoritesCompanion extends UpdateCompanion<Favorite> {
   }
 }
 
+class $DailyGoalsHistoryTable extends DailyGoalsHistory
+    with TableInfo<$DailyGoalsHistoryTable, DailyGoalsHistoryData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DailyGoalsHistoryTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _localIdMeta =
+      const VerificationMeta('localId');
+  @override
+  late final GeneratedColumn<int> localId = GeneratedColumn<int>(
+      'local_id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+      clientDefault: () => const Uuid().v4());
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _deletedAtMeta =
+      const VerificationMeta('deletedAt');
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+      'deleted_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _targetCaloriesMeta =
+      const VerificationMeta('targetCalories');
+  @override
+  late final GeneratedColumn<int> targetCalories = GeneratedColumn<int>(
+      'target_calories', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _targetProteinMeta =
+      const VerificationMeta('targetProtein');
+  @override
+  late final GeneratedColumn<int> targetProtein = GeneratedColumn<int>(
+      'target_protein', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _targetCarbsMeta =
+      const VerificationMeta('targetCarbs');
+  @override
+  late final GeneratedColumn<int> targetCarbs = GeneratedColumn<int>(
+      'target_carbs', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _targetFatMeta =
+      const VerificationMeta('targetFat');
+  @override
+  late final GeneratedColumn<int> targetFat = GeneratedColumn<int>(
+      'target_fat', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _targetWaterMeta =
+      const VerificationMeta('targetWater');
+  @override
+  late final GeneratedColumn<int> targetWater = GeneratedColumn<int>(
+      'target_water', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        localId,
+        id,
+        createdAt,
+        updatedAt,
+        deletedAt,
+        targetCalories,
+        targetProtein,
+        targetCarbs,
+        targetFat,
+        targetWater
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'daily_goals_history';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<DailyGoalsHistoryData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('local_id')) {
+      context.handle(_localIdMeta,
+          localId.isAcceptableOrUnknown(data['local_id']!, _localIdMeta));
+    }
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(_deletedAtMeta,
+          deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta));
+    }
+    if (data.containsKey('target_calories')) {
+      context.handle(
+          _targetCaloriesMeta,
+          targetCalories.isAcceptableOrUnknown(
+              data['target_calories']!, _targetCaloriesMeta));
+    } else if (isInserting) {
+      context.missing(_targetCaloriesMeta);
+    }
+    if (data.containsKey('target_protein')) {
+      context.handle(
+          _targetProteinMeta,
+          targetProtein.isAcceptableOrUnknown(
+              data['target_protein']!, _targetProteinMeta));
+    } else if (isInserting) {
+      context.missing(_targetProteinMeta);
+    }
+    if (data.containsKey('target_carbs')) {
+      context.handle(
+          _targetCarbsMeta,
+          targetCarbs.isAcceptableOrUnknown(
+              data['target_carbs']!, _targetCarbsMeta));
+    } else if (isInserting) {
+      context.missing(_targetCarbsMeta);
+    }
+    if (data.containsKey('target_fat')) {
+      context.handle(_targetFatMeta,
+          targetFat.isAcceptableOrUnknown(data['target_fat']!, _targetFatMeta));
+    } else if (isInserting) {
+      context.missing(_targetFatMeta);
+    }
+    if (data.containsKey('target_water')) {
+      context.handle(
+          _targetWaterMeta,
+          targetWater.isAcceptableOrUnknown(
+              data['target_water']!, _targetWaterMeta));
+    } else if (isInserting) {
+      context.missing(_targetWaterMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {localId};
+  @override
+  DailyGoalsHistoryData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DailyGoalsHistoryData(
+      localId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}local_id'])!,
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      deletedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}deleted_at']),
+      targetCalories: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}target_calories'])!,
+      targetProtein: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}target_protein'])!,
+      targetCarbs: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}target_carbs'])!,
+      targetFat: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}target_fat'])!,
+      targetWater: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}target_water'])!,
+    );
+  }
+
+  @override
+  $DailyGoalsHistoryTable createAlias(String alias) {
+    return $DailyGoalsHistoryTable(attachedDatabase, alias);
+  }
+}
+
+class DailyGoalsHistoryData extends DataClass
+    implements Insertable<DailyGoalsHistoryData> {
+  final int localId;
+  final String id;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final int targetCalories;
+  final int targetProtein;
+  final int targetCarbs;
+  final int targetFat;
+  final int targetWater;
+  const DailyGoalsHistoryData(
+      {required this.localId,
+      required this.id,
+      required this.createdAt,
+      required this.updatedAt,
+      this.deletedAt,
+      required this.targetCalories,
+      required this.targetProtein,
+      required this.targetCarbs,
+      required this.targetFat,
+      required this.targetWater});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['local_id'] = Variable<int>(localId);
+    map['id'] = Variable<String>(id);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['target_calories'] = Variable<int>(targetCalories);
+    map['target_protein'] = Variable<int>(targetProtein);
+    map['target_carbs'] = Variable<int>(targetCarbs);
+    map['target_fat'] = Variable<int>(targetFat);
+    map['target_water'] = Variable<int>(targetWater);
+    return map;
+  }
+
+  DailyGoalsHistoryCompanion toCompanion(bool nullToAbsent) {
+    return DailyGoalsHistoryCompanion(
+      localId: Value(localId),
+      id: Value(id),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      targetCalories: Value(targetCalories),
+      targetProtein: Value(targetProtein),
+      targetCarbs: Value(targetCarbs),
+      targetFat: Value(targetFat),
+      targetWater: Value(targetWater),
+    );
+  }
+
+  factory DailyGoalsHistoryData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DailyGoalsHistoryData(
+      localId: serializer.fromJson<int>(json['localId']),
+      id: serializer.fromJson<String>(json['id']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      targetCalories: serializer.fromJson<int>(json['targetCalories']),
+      targetProtein: serializer.fromJson<int>(json['targetProtein']),
+      targetCarbs: serializer.fromJson<int>(json['targetCarbs']),
+      targetFat: serializer.fromJson<int>(json['targetFat']),
+      targetWater: serializer.fromJson<int>(json['targetWater']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'localId': serializer.toJson<int>(localId),
+      'id': serializer.toJson<String>(id),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'targetCalories': serializer.toJson<int>(targetCalories),
+      'targetProtein': serializer.toJson<int>(targetProtein),
+      'targetCarbs': serializer.toJson<int>(targetCarbs),
+      'targetFat': serializer.toJson<int>(targetFat),
+      'targetWater': serializer.toJson<int>(targetWater),
+    };
+  }
+
+  DailyGoalsHistoryData copyWith(
+          {int? localId,
+          String? id,
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          Value<DateTime?> deletedAt = const Value.absent(),
+          int? targetCalories,
+          int? targetProtein,
+          int? targetCarbs,
+          int? targetFat,
+          int? targetWater}) =>
+      DailyGoalsHistoryData(
+        localId: localId ?? this.localId,
+        id: id ?? this.id,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+        targetCalories: targetCalories ?? this.targetCalories,
+        targetProtein: targetProtein ?? this.targetProtein,
+        targetCarbs: targetCarbs ?? this.targetCarbs,
+        targetFat: targetFat ?? this.targetFat,
+        targetWater: targetWater ?? this.targetWater,
+      );
+  DailyGoalsHistoryData copyWithCompanion(DailyGoalsHistoryCompanion data) {
+    return DailyGoalsHistoryData(
+      localId: data.localId.present ? data.localId.value : this.localId,
+      id: data.id.present ? data.id.value : this.id,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      targetCalories: data.targetCalories.present
+          ? data.targetCalories.value
+          : this.targetCalories,
+      targetProtein: data.targetProtein.present
+          ? data.targetProtein.value
+          : this.targetProtein,
+      targetCarbs:
+          data.targetCarbs.present ? data.targetCarbs.value : this.targetCarbs,
+      targetFat: data.targetFat.present ? data.targetFat.value : this.targetFat,
+      targetWater:
+          data.targetWater.present ? data.targetWater.value : this.targetWater,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyGoalsHistoryData(')
+          ..write('localId: $localId, ')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('targetCalories: $targetCalories, ')
+          ..write('targetProtein: $targetProtein, ')
+          ..write('targetCarbs: $targetCarbs, ')
+          ..write('targetFat: $targetFat, ')
+          ..write('targetWater: $targetWater')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(localId, id, createdAt, updatedAt, deletedAt,
+      targetCalories, targetProtein, targetCarbs, targetFat, targetWater);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DailyGoalsHistoryData &&
+          other.localId == this.localId &&
+          other.id == this.id &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.targetCalories == this.targetCalories &&
+          other.targetProtein == this.targetProtein &&
+          other.targetCarbs == this.targetCarbs &&
+          other.targetFat == this.targetFat &&
+          other.targetWater == this.targetWater);
+}
+
+class DailyGoalsHistoryCompanion
+    extends UpdateCompanion<DailyGoalsHistoryData> {
+  final Value<int> localId;
+  final Value<String> id;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> targetCalories;
+  final Value<int> targetProtein;
+  final Value<int> targetCarbs;
+  final Value<int> targetFat;
+  final Value<int> targetWater;
+  const DailyGoalsHistoryCompanion({
+    this.localId = const Value.absent(),
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.targetCalories = const Value.absent(),
+    this.targetProtein = const Value.absent(),
+    this.targetCarbs = const Value.absent(),
+    this.targetFat = const Value.absent(),
+    this.targetWater = const Value.absent(),
+  });
+  DailyGoalsHistoryCompanion.insert({
+    this.localId = const Value.absent(),
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    required int targetCalories,
+    required int targetProtein,
+    required int targetCarbs,
+    required int targetFat,
+    required int targetWater,
+  })  : targetCalories = Value(targetCalories),
+        targetProtein = Value(targetProtein),
+        targetCarbs = Value(targetCarbs),
+        targetFat = Value(targetFat),
+        targetWater = Value(targetWater);
+  static Insertable<DailyGoalsHistoryData> custom({
+    Expression<int>? localId,
+    Expression<String>? id,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? targetCalories,
+    Expression<int>? targetProtein,
+    Expression<int>? targetCarbs,
+    Expression<int>? targetFat,
+    Expression<int>? targetWater,
+  }) {
+    return RawValuesInsertable({
+      if (localId != null) 'local_id': localId,
+      if (id != null) 'id': id,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (targetCalories != null) 'target_calories': targetCalories,
+      if (targetProtein != null) 'target_protein': targetProtein,
+      if (targetCarbs != null) 'target_carbs': targetCarbs,
+      if (targetFat != null) 'target_fat': targetFat,
+      if (targetWater != null) 'target_water': targetWater,
+    });
+  }
+
+  DailyGoalsHistoryCompanion copyWith(
+      {Value<int>? localId,
+      Value<String>? id,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<DateTime?>? deletedAt,
+      Value<int>? targetCalories,
+      Value<int>? targetProtein,
+      Value<int>? targetCarbs,
+      Value<int>? targetFat,
+      Value<int>? targetWater}) {
+    return DailyGoalsHistoryCompanion(
+      localId: localId ?? this.localId,
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      targetCalories: targetCalories ?? this.targetCalories,
+      targetProtein: targetProtein ?? this.targetProtein,
+      targetCarbs: targetCarbs ?? this.targetCarbs,
+      targetFat: targetFat ?? this.targetFat,
+      targetWater: targetWater ?? this.targetWater,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (localId.present) {
+      map['local_id'] = Variable<int>(localId.value);
+    }
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (targetCalories.present) {
+      map['target_calories'] = Variable<int>(targetCalories.value);
+    }
+    if (targetProtein.present) {
+      map['target_protein'] = Variable<int>(targetProtein.value);
+    }
+    if (targetCarbs.present) {
+      map['target_carbs'] = Variable<int>(targetCarbs.value);
+    }
+    if (targetFat.present) {
+      map['target_fat'] = Variable<int>(targetFat.value);
+    }
+    if (targetWater.present) {
+      map['target_water'] = Variable<int>(targetWater.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyGoalsHistoryCompanion(')
+          ..write('localId: $localId, ')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('targetCalories: $targetCalories, ')
+          ..write('targetProtein: $targetProtein, ')
+          ..write('targetCarbs: $targetCarbs, ')
+          ..write('targetFat: $targetFat, ')
+          ..write('targetWater: $targetWater')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SupplementSettingsHistoryTable extends SupplementSettingsHistory
+    with
+        TableInfo<$SupplementSettingsHistoryTable,
+            SupplementSettingsHistoryData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SupplementSettingsHistoryTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _localIdMeta =
+      const VerificationMeta('localId');
+  @override
+  late final GeneratedColumn<int> localId = GeneratedColumn<int>(
+      'local_id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+      clientDefault: () => const Uuid().v4());
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _deletedAtMeta =
+      const VerificationMeta('deletedAt');
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+      'deleted_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _supplementIdMeta =
+      const VerificationMeta('supplementId');
+  @override
+  late final GeneratedColumn<String> supplementId = GeneratedColumn<String>(
+      'supplement_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES supplements (id) ON DELETE CASCADE'));
+  static const VerificationMeta _isTrackedMeta =
+      const VerificationMeta('isTracked');
+  @override
+  late final GeneratedColumn<bool> isTracked = GeneratedColumn<bool>(
+      'is_tracked', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_tracked" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _doseMeta = const VerificationMeta('dose');
+  @override
+  late final GeneratedColumn<double> dose = GeneratedColumn<double>(
+      'dose', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _dailyGoalMeta =
+      const VerificationMeta('dailyGoal');
+  @override
+  late final GeneratedColumn<double> dailyGoal = GeneratedColumn<double>(
+      'daily_goal', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _dailyLimitMeta =
+      const VerificationMeta('dailyLimit');
+  @override
+  late final GeneratedColumn<double> dailyLimit = GeneratedColumn<double>(
+      'daily_limit', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        localId,
+        id,
+        createdAt,
+        updatedAt,
+        deletedAt,
+        supplementId,
+        isTracked,
+        dose,
+        dailyGoal,
+        dailyLimit
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'supplement_settings_history';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<SupplementSettingsHistoryData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('local_id')) {
+      context.handle(_localIdMeta,
+          localId.isAcceptableOrUnknown(data['local_id']!, _localIdMeta));
+    }
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(_deletedAtMeta,
+          deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta));
+    }
+    if (data.containsKey('supplement_id')) {
+      context.handle(
+          _supplementIdMeta,
+          supplementId.isAcceptableOrUnknown(
+              data['supplement_id']!, _supplementIdMeta));
+    } else if (isInserting) {
+      context.missing(_supplementIdMeta);
+    }
+    if (data.containsKey('is_tracked')) {
+      context.handle(_isTrackedMeta,
+          isTracked.isAcceptableOrUnknown(data['is_tracked']!, _isTrackedMeta));
+    }
+    if (data.containsKey('dose')) {
+      context.handle(
+          _doseMeta, dose.isAcceptableOrUnknown(data['dose']!, _doseMeta));
+    } else if (isInserting) {
+      context.missing(_doseMeta);
+    }
+    if (data.containsKey('daily_goal')) {
+      context.handle(_dailyGoalMeta,
+          dailyGoal.isAcceptableOrUnknown(data['daily_goal']!, _dailyGoalMeta));
+    }
+    if (data.containsKey('daily_limit')) {
+      context.handle(
+          _dailyLimitMeta,
+          dailyLimit.isAcceptableOrUnknown(
+              data['daily_limit']!, _dailyLimitMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {localId};
+  @override
+  SupplementSettingsHistoryData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SupplementSettingsHistoryData(
+      localId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}local_id'])!,
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      deletedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}deleted_at']),
+      supplementId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}supplement_id'])!,
+      isTracked: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_tracked'])!,
+      dose: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}dose'])!,
+      dailyGoal: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}daily_goal']),
+      dailyLimit: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}daily_limit']),
+    );
+  }
+
+  @override
+  $SupplementSettingsHistoryTable createAlias(String alias) {
+    return $SupplementSettingsHistoryTable(attachedDatabase, alias);
+  }
+}
+
+class SupplementSettingsHistoryData extends DataClass
+    implements Insertable<SupplementSettingsHistoryData> {
+  final int localId;
+  final String id;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String supplementId;
+  final bool isTracked;
+  final double dose;
+  final double? dailyGoal;
+  final double? dailyLimit;
+  const SupplementSettingsHistoryData(
+      {required this.localId,
+      required this.id,
+      required this.createdAt,
+      required this.updatedAt,
+      this.deletedAt,
+      required this.supplementId,
+      required this.isTracked,
+      required this.dose,
+      this.dailyGoal,
+      this.dailyLimit});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['local_id'] = Variable<int>(localId);
+    map['id'] = Variable<String>(id);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['supplement_id'] = Variable<String>(supplementId);
+    map['is_tracked'] = Variable<bool>(isTracked);
+    map['dose'] = Variable<double>(dose);
+    if (!nullToAbsent || dailyGoal != null) {
+      map['daily_goal'] = Variable<double>(dailyGoal);
+    }
+    if (!nullToAbsent || dailyLimit != null) {
+      map['daily_limit'] = Variable<double>(dailyLimit);
+    }
+    return map;
+  }
+
+  SupplementSettingsHistoryCompanion toCompanion(bool nullToAbsent) {
+    return SupplementSettingsHistoryCompanion(
+      localId: Value(localId),
+      id: Value(id),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      supplementId: Value(supplementId),
+      isTracked: Value(isTracked),
+      dose: Value(dose),
+      dailyGoal: dailyGoal == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dailyGoal),
+      dailyLimit: dailyLimit == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dailyLimit),
+    );
+  }
+
+  factory SupplementSettingsHistoryData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SupplementSettingsHistoryData(
+      localId: serializer.fromJson<int>(json['localId']),
+      id: serializer.fromJson<String>(json['id']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      supplementId: serializer.fromJson<String>(json['supplementId']),
+      isTracked: serializer.fromJson<bool>(json['isTracked']),
+      dose: serializer.fromJson<double>(json['dose']),
+      dailyGoal: serializer.fromJson<double?>(json['dailyGoal']),
+      dailyLimit: serializer.fromJson<double?>(json['dailyLimit']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'localId': serializer.toJson<int>(localId),
+      'id': serializer.toJson<String>(id),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'supplementId': serializer.toJson<String>(supplementId),
+      'isTracked': serializer.toJson<bool>(isTracked),
+      'dose': serializer.toJson<double>(dose),
+      'dailyGoal': serializer.toJson<double?>(dailyGoal),
+      'dailyLimit': serializer.toJson<double?>(dailyLimit),
+    };
+  }
+
+  SupplementSettingsHistoryData copyWith(
+          {int? localId,
+          String? id,
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          Value<DateTime?> deletedAt = const Value.absent(),
+          String? supplementId,
+          bool? isTracked,
+          double? dose,
+          Value<double?> dailyGoal = const Value.absent(),
+          Value<double?> dailyLimit = const Value.absent()}) =>
+      SupplementSettingsHistoryData(
+        localId: localId ?? this.localId,
+        id: id ?? this.id,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+        supplementId: supplementId ?? this.supplementId,
+        isTracked: isTracked ?? this.isTracked,
+        dose: dose ?? this.dose,
+        dailyGoal: dailyGoal.present ? dailyGoal.value : this.dailyGoal,
+        dailyLimit: dailyLimit.present ? dailyLimit.value : this.dailyLimit,
+      );
+  SupplementSettingsHistoryData copyWithCompanion(
+      SupplementSettingsHistoryCompanion data) {
+    return SupplementSettingsHistoryData(
+      localId: data.localId.present ? data.localId.value : this.localId,
+      id: data.id.present ? data.id.value : this.id,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      supplementId: data.supplementId.present
+          ? data.supplementId.value
+          : this.supplementId,
+      isTracked: data.isTracked.present ? data.isTracked.value : this.isTracked,
+      dose: data.dose.present ? data.dose.value : this.dose,
+      dailyGoal: data.dailyGoal.present ? data.dailyGoal.value : this.dailyGoal,
+      dailyLimit:
+          data.dailyLimit.present ? data.dailyLimit.value : this.dailyLimit,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SupplementSettingsHistoryData(')
+          ..write('localId: $localId, ')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('supplementId: $supplementId, ')
+          ..write('isTracked: $isTracked, ')
+          ..write('dose: $dose, ')
+          ..write('dailyGoal: $dailyGoal, ')
+          ..write('dailyLimit: $dailyLimit')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(localId, id, createdAt, updatedAt, deletedAt,
+      supplementId, isTracked, dose, dailyGoal, dailyLimit);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SupplementSettingsHistoryData &&
+          other.localId == this.localId &&
+          other.id == this.id &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.supplementId == this.supplementId &&
+          other.isTracked == this.isTracked &&
+          other.dose == this.dose &&
+          other.dailyGoal == this.dailyGoal &&
+          other.dailyLimit == this.dailyLimit);
+}
+
+class SupplementSettingsHistoryCompanion
+    extends UpdateCompanion<SupplementSettingsHistoryData> {
+  final Value<int> localId;
+  final Value<String> id;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String> supplementId;
+  final Value<bool> isTracked;
+  final Value<double> dose;
+  final Value<double?> dailyGoal;
+  final Value<double?> dailyLimit;
+  const SupplementSettingsHistoryCompanion({
+    this.localId = const Value.absent(),
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.supplementId = const Value.absent(),
+    this.isTracked = const Value.absent(),
+    this.dose = const Value.absent(),
+    this.dailyGoal = const Value.absent(),
+    this.dailyLimit = const Value.absent(),
+  });
+  SupplementSettingsHistoryCompanion.insert({
+    this.localId = const Value.absent(),
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    required String supplementId,
+    this.isTracked = const Value.absent(),
+    required double dose,
+    this.dailyGoal = const Value.absent(),
+    this.dailyLimit = const Value.absent(),
+  })  : supplementId = Value(supplementId),
+        dose = Value(dose);
+  static Insertable<SupplementSettingsHistoryData> custom({
+    Expression<int>? localId,
+    Expression<String>? id,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? supplementId,
+    Expression<bool>? isTracked,
+    Expression<double>? dose,
+    Expression<double>? dailyGoal,
+    Expression<double>? dailyLimit,
+  }) {
+    return RawValuesInsertable({
+      if (localId != null) 'local_id': localId,
+      if (id != null) 'id': id,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (supplementId != null) 'supplement_id': supplementId,
+      if (isTracked != null) 'is_tracked': isTracked,
+      if (dose != null) 'dose': dose,
+      if (dailyGoal != null) 'daily_goal': dailyGoal,
+      if (dailyLimit != null) 'daily_limit': dailyLimit,
+    });
+  }
+
+  SupplementSettingsHistoryCompanion copyWith(
+      {Value<int>? localId,
+      Value<String>? id,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<DateTime?>? deletedAt,
+      Value<String>? supplementId,
+      Value<bool>? isTracked,
+      Value<double>? dose,
+      Value<double?>? dailyGoal,
+      Value<double?>? dailyLimit}) {
+    return SupplementSettingsHistoryCompanion(
+      localId: localId ?? this.localId,
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      supplementId: supplementId ?? this.supplementId,
+      isTracked: isTracked ?? this.isTracked,
+      dose: dose ?? this.dose,
+      dailyGoal: dailyGoal ?? this.dailyGoal,
+      dailyLimit: dailyLimit ?? this.dailyLimit,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (localId.present) {
+      map['local_id'] = Variable<int>(localId.value);
+    }
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (supplementId.present) {
+      map['supplement_id'] = Variable<String>(supplementId.value);
+    }
+    if (isTracked.present) {
+      map['is_tracked'] = Variable<bool>(isTracked.value);
+    }
+    if (dose.present) {
+      map['dose'] = Variable<double>(dose.value);
+    }
+    if (dailyGoal.present) {
+      map['daily_goal'] = Variable<double>(dailyGoal.value);
+    }
+    if (dailyLimit.present) {
+      map['daily_limit'] = Variable<double>(dailyLimit.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SupplementSettingsHistoryCompanion(')
+          ..write('localId: $localId, ')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('supplementId: $supplementId, ')
+          ..write('isTracked: $isTracked, ')
+          ..write('dose: $dose, ')
+          ..write('dailyGoal: $dailyGoal, ')
+          ..write('dailyLimit: $dailyLimit')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -11895,6 +12971,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $MealItemsTable mealItems = $MealItemsTable(this);
   late final $FoodCategoriesTable foodCategories = $FoodCategoriesTable(this);
   late final $FavoritesTable favorites = $FavoritesTable(this);
+  late final $DailyGoalsHistoryTable dailyGoalsHistory =
+      $DailyGoalsHistoryTable(this);
+  late final $SupplementSettingsHistoryTable supplementSettingsHistory =
+      $SupplementSettingsHistoryTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -11921,7 +13001,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         meals,
         mealItems,
         foodCategories,
-        favorites
+        favorites,
+        dailyGoalsHistory,
+        supplementSettingsHistory
       ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
@@ -11994,6 +13076,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
                 limitUpdateKind: UpdateKind.delete),
             result: [
               TableUpdate('meal_items', kind: UpdateKind.delete),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('supplements',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('supplement_settings_history',
+                  kind: UpdateKind.delete),
             ],
           ),
         ],
@@ -17360,6 +18450,7 @@ typedef $$SupplementsTableCreateCompanionBuilder = SupplementsCompanion
   Value<double?> dailyLimit,
   Value<String?> notes,
   Value<bool> isBuiltin,
+  Value<bool> isTracked,
 });
 typedef $$SupplementsTableUpdateCompanionBuilder = SupplementsCompanion
     Function({
@@ -17376,6 +18467,7 @@ typedef $$SupplementsTableUpdateCompanionBuilder = SupplementsCompanion
   Value<double?> dailyLimit,
   Value<String?> notes,
   Value<bool> isBuiltin,
+  Value<bool> isTracked,
 });
 
 final class $$SupplementsTableReferences
@@ -17394,6 +18486,26 @@ final class $$SupplementsTableReferences
             (f) => f.supplementId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_supplementLogsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$SupplementSettingsHistoryTable,
+      List<SupplementSettingsHistoryData>> _supplementSettingsHistoryRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.supplementSettingsHistory,
+          aliasName: $_aliasNameGenerator(
+              db.supplements.id, db.supplementSettingsHistory.supplementId));
+
+  $$SupplementSettingsHistoryTableProcessedTableManager
+      get supplementSettingsHistoryRefs {
+    final manager = $$SupplementSettingsHistoryTableTableManager(
+            $_db, $_db.supplementSettingsHistory)
+        .filter(
+            (f) => f.supplementId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult
+        .readTableOrNull(_supplementSettingsHistoryRefsTable($_db));
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
@@ -17447,6 +18559,9 @@ class $$SupplementsTableFilterComposer
   ColumnFilters<bool> get isBuiltin => $composableBuilder(
       column: $table.isBuiltin, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<bool> get isTracked => $composableBuilder(
+      column: $table.isTracked, builder: (column) => ColumnFilters(column));
+
   Expression<bool> supplementLogsRefs(
       Expression<bool> Function($$SupplementLogsTableFilterComposer f) f) {
     final $$SupplementLogsTableFilterComposer composer = $composerBuilder(
@@ -17465,6 +18580,30 @@ class $$SupplementsTableFilterComposer
               $removeJoinBuilderFromRootComposer:
                   $removeJoinBuilderFromRootComposer,
             ));
+    return f(composer);
+  }
+
+  Expression<bool> supplementSettingsHistoryRefs(
+      Expression<bool> Function(
+              $$SupplementSettingsHistoryTableFilterComposer f)
+          f) {
+    final $$SupplementSettingsHistoryTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.supplementSettingsHistory,
+            getReferencedColumn: (t) => t.supplementId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$SupplementSettingsHistoryTableFilterComposer(
+                  $db: $db,
+                  $table: $db.supplementSettingsHistory,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
     return f(composer);
   }
 }
@@ -17516,6 +18655,9 @@ class $$SupplementsTableOrderingComposer
 
   ColumnOrderings<bool> get isBuiltin => $composableBuilder(
       column: $table.isBuiltin, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isTracked => $composableBuilder(
+      column: $table.isTracked, builder: (column) => ColumnOrderings(column));
 }
 
 class $$SupplementsTableAnnotationComposer
@@ -17566,6 +18708,9 @@ class $$SupplementsTableAnnotationComposer
   GeneratedColumn<bool> get isBuiltin =>
       $composableBuilder(column: $table.isBuiltin, builder: (column) => column);
 
+  GeneratedColumn<bool> get isTracked =>
+      $composableBuilder(column: $table.isTracked, builder: (column) => column);
+
   Expression<T> supplementLogsRefs<T extends Object>(
       Expression<T> Function($$SupplementLogsTableAnnotationComposer a) f) {
     final $$SupplementLogsTableAnnotationComposer composer = $composerBuilder(
@@ -17586,6 +18731,30 @@ class $$SupplementsTableAnnotationComposer
             ));
     return f(composer);
   }
+
+  Expression<T> supplementSettingsHistoryRefs<T extends Object>(
+      Expression<T> Function(
+              $$SupplementSettingsHistoryTableAnnotationComposer a)
+          f) {
+    final $$SupplementSettingsHistoryTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.supplementSettingsHistory,
+            getReferencedColumn: (t) => t.supplementId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$SupplementSettingsHistoryTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.supplementSettingsHistory,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
 }
 
 class $$SupplementsTableTableManager extends RootTableManager<
@@ -17599,7 +18768,8 @@ class $$SupplementsTableTableManager extends RootTableManager<
     $$SupplementsTableUpdateCompanionBuilder,
     (Supplement, $$SupplementsTableReferences),
     Supplement,
-    PrefetchHooks Function({bool supplementLogsRefs})> {
+    PrefetchHooks Function(
+        {bool supplementLogsRefs, bool supplementSettingsHistoryRefs})> {
   $$SupplementsTableTableManager(_$AppDatabase db, $SupplementsTable table)
       : super(TableManagerState(
           db: db,
@@ -17624,6 +18794,7 @@ class $$SupplementsTableTableManager extends RootTableManager<
             Value<double?> dailyLimit = const Value.absent(),
             Value<String?> notes = const Value.absent(),
             Value<bool> isBuiltin = const Value.absent(),
+            Value<bool> isTracked = const Value.absent(),
           }) =>
               SupplementsCompanion(
             localId: localId,
@@ -17639,6 +18810,7 @@ class $$SupplementsTableTableManager extends RootTableManager<
             dailyLimit: dailyLimit,
             notes: notes,
             isBuiltin: isBuiltin,
+            isTracked: isTracked,
           ),
           createCompanionCallback: ({
             Value<int> localId = const Value.absent(),
@@ -17654,6 +18826,7 @@ class $$SupplementsTableTableManager extends RootTableManager<
             Value<double?> dailyLimit = const Value.absent(),
             Value<String?> notes = const Value.absent(),
             Value<bool> isBuiltin = const Value.absent(),
+            Value<bool> isTracked = const Value.absent(),
           }) =>
               SupplementsCompanion.insert(
             localId: localId,
@@ -17669,6 +18842,7 @@ class $$SupplementsTableTableManager extends RootTableManager<
             dailyLimit: dailyLimit,
             notes: notes,
             isBuiltin: isBuiltin,
+            isTracked: isTracked,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
@@ -17676,11 +18850,14 @@ class $$SupplementsTableTableManager extends RootTableManager<
                     $$SupplementsTableReferences(db, table, e)
                   ))
               .toList(),
-          prefetchHooksCallback: ({supplementLogsRefs = false}) {
+          prefetchHooksCallback: (
+              {supplementLogsRefs = false,
+              supplementSettingsHistoryRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
-                if (supplementLogsRefs) db.supplementLogs
+                if (supplementLogsRefs) db.supplementLogs,
+                if (supplementSettingsHistoryRefs) db.supplementSettingsHistory
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
@@ -17694,6 +18871,19 @@ class $$SupplementsTableTableManager extends RootTableManager<
                         managerFromTypedResult: (p0) =>
                             $$SupplementsTableReferences(db, table, p0)
                                 .supplementLogsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.supplementId == item.id),
+                        typedResults: items),
+                  if (supplementSettingsHistoryRefs)
+                    await $_getPrefetchedData<Supplement, $SupplementsTable,
+                            SupplementSettingsHistoryData>(
+                        currentTable: table,
+                        referencedTable: $$SupplementsTableReferences
+                            ._supplementSettingsHistoryRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$SupplementsTableReferences(db, table, p0)
+                                .supplementSettingsHistoryRefs,
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.supplementId == item.id),
@@ -17716,7 +18906,8 @@ typedef $$SupplementsTableProcessedTableManager = ProcessedTableManager<
     $$SupplementsTableUpdateCompanionBuilder,
     (Supplement, $$SupplementsTableReferences),
     Supplement,
-    PrefetchHooks Function({bool supplementLogsRefs})>;
+    PrefetchHooks Function(
+        {bool supplementLogsRefs, bool supplementSettingsHistoryRefs})>;
 typedef $$SupplementLogsTableCreateCompanionBuilder = SupplementLogsCompanion
     Function({
   Value<int> localId,
@@ -20420,6 +21611,611 @@ typedef $$FavoritesTableProcessedTableManager = ProcessedTableManager<
     (Favorite, BaseReferences<_$AppDatabase, $FavoritesTable, Favorite>),
     Favorite,
     PrefetchHooks Function()>;
+typedef $$DailyGoalsHistoryTableCreateCompanionBuilder
+    = DailyGoalsHistoryCompanion Function({
+  Value<int> localId,
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  required int targetCalories,
+  required int targetProtein,
+  required int targetCarbs,
+  required int targetFat,
+  required int targetWater,
+});
+typedef $$DailyGoalsHistoryTableUpdateCompanionBuilder
+    = DailyGoalsHistoryCompanion Function({
+  Value<int> localId,
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<int> targetCalories,
+  Value<int> targetProtein,
+  Value<int> targetCarbs,
+  Value<int> targetFat,
+  Value<int> targetWater,
+});
+
+class $$DailyGoalsHistoryTableFilterComposer
+    extends Composer<_$AppDatabase, $DailyGoalsHistoryTable> {
+  $$DailyGoalsHistoryTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get localId => $composableBuilder(
+      column: $table.localId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get targetCalories => $composableBuilder(
+      column: $table.targetCalories,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get targetProtein => $composableBuilder(
+      column: $table.targetProtein, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get targetCarbs => $composableBuilder(
+      column: $table.targetCarbs, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get targetFat => $composableBuilder(
+      column: $table.targetFat, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get targetWater => $composableBuilder(
+      column: $table.targetWater, builder: (column) => ColumnFilters(column));
+}
+
+class $$DailyGoalsHistoryTableOrderingComposer
+    extends Composer<_$AppDatabase, $DailyGoalsHistoryTable> {
+  $$DailyGoalsHistoryTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get localId => $composableBuilder(
+      column: $table.localId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get targetCalories => $composableBuilder(
+      column: $table.targetCalories,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get targetProtein => $composableBuilder(
+      column: $table.targetProtein,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get targetCarbs => $composableBuilder(
+      column: $table.targetCarbs, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get targetFat => $composableBuilder(
+      column: $table.targetFat, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get targetWater => $composableBuilder(
+      column: $table.targetWater, builder: (column) => ColumnOrderings(column));
+}
+
+class $$DailyGoalsHistoryTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DailyGoalsHistoryTable> {
+  $$DailyGoalsHistoryTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get localId =>
+      $composableBuilder(column: $table.localId, builder: (column) => column);
+
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get targetCalories => $composableBuilder(
+      column: $table.targetCalories, builder: (column) => column);
+
+  GeneratedColumn<int> get targetProtein => $composableBuilder(
+      column: $table.targetProtein, builder: (column) => column);
+
+  GeneratedColumn<int> get targetCarbs => $composableBuilder(
+      column: $table.targetCarbs, builder: (column) => column);
+
+  GeneratedColumn<int> get targetFat =>
+      $composableBuilder(column: $table.targetFat, builder: (column) => column);
+
+  GeneratedColumn<int> get targetWater => $composableBuilder(
+      column: $table.targetWater, builder: (column) => column);
+}
+
+class $$DailyGoalsHistoryTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $DailyGoalsHistoryTable,
+    DailyGoalsHistoryData,
+    $$DailyGoalsHistoryTableFilterComposer,
+    $$DailyGoalsHistoryTableOrderingComposer,
+    $$DailyGoalsHistoryTableAnnotationComposer,
+    $$DailyGoalsHistoryTableCreateCompanionBuilder,
+    $$DailyGoalsHistoryTableUpdateCompanionBuilder,
+    (
+      DailyGoalsHistoryData,
+      BaseReferences<_$AppDatabase, $DailyGoalsHistoryTable,
+          DailyGoalsHistoryData>
+    ),
+    DailyGoalsHistoryData,
+    PrefetchHooks Function()> {
+  $$DailyGoalsHistoryTableTableManager(
+      _$AppDatabase db, $DailyGoalsHistoryTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DailyGoalsHistoryTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DailyGoalsHistoryTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DailyGoalsHistoryTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> localId = const Value.absent(),
+            Value<String> id = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<DateTime?> deletedAt = const Value.absent(),
+            Value<int> targetCalories = const Value.absent(),
+            Value<int> targetProtein = const Value.absent(),
+            Value<int> targetCarbs = const Value.absent(),
+            Value<int> targetFat = const Value.absent(),
+            Value<int> targetWater = const Value.absent(),
+          }) =>
+              DailyGoalsHistoryCompanion(
+            localId: localId,
+            id: id,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            deletedAt: deletedAt,
+            targetCalories: targetCalories,
+            targetProtein: targetProtein,
+            targetCarbs: targetCarbs,
+            targetFat: targetFat,
+            targetWater: targetWater,
+          ),
+          createCompanionCallback: ({
+            Value<int> localId = const Value.absent(),
+            Value<String> id = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<DateTime?> deletedAt = const Value.absent(),
+            required int targetCalories,
+            required int targetProtein,
+            required int targetCarbs,
+            required int targetFat,
+            required int targetWater,
+          }) =>
+              DailyGoalsHistoryCompanion.insert(
+            localId: localId,
+            id: id,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            deletedAt: deletedAt,
+            targetCalories: targetCalories,
+            targetProtein: targetProtein,
+            targetCarbs: targetCarbs,
+            targetFat: targetFat,
+            targetWater: targetWater,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$DailyGoalsHistoryTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $DailyGoalsHistoryTable,
+    DailyGoalsHistoryData,
+    $$DailyGoalsHistoryTableFilterComposer,
+    $$DailyGoalsHistoryTableOrderingComposer,
+    $$DailyGoalsHistoryTableAnnotationComposer,
+    $$DailyGoalsHistoryTableCreateCompanionBuilder,
+    $$DailyGoalsHistoryTableUpdateCompanionBuilder,
+    (
+      DailyGoalsHistoryData,
+      BaseReferences<_$AppDatabase, $DailyGoalsHistoryTable,
+          DailyGoalsHistoryData>
+    ),
+    DailyGoalsHistoryData,
+    PrefetchHooks Function()>;
+typedef $$SupplementSettingsHistoryTableCreateCompanionBuilder
+    = SupplementSettingsHistoryCompanion Function({
+  Value<int> localId,
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  required String supplementId,
+  Value<bool> isTracked,
+  required double dose,
+  Value<double?> dailyGoal,
+  Value<double?> dailyLimit,
+});
+typedef $$SupplementSettingsHistoryTableUpdateCompanionBuilder
+    = SupplementSettingsHistoryCompanion Function({
+  Value<int> localId,
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<String> supplementId,
+  Value<bool> isTracked,
+  Value<double> dose,
+  Value<double?> dailyGoal,
+  Value<double?> dailyLimit,
+});
+
+final class $$SupplementSettingsHistoryTableReferences extends BaseReferences<
+    _$AppDatabase,
+    $SupplementSettingsHistoryTable,
+    SupplementSettingsHistoryData> {
+  $$SupplementSettingsHistoryTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $SupplementsTable _supplementIdTable(_$AppDatabase db) =>
+      db.supplements.createAlias($_aliasNameGenerator(
+          db.supplementSettingsHistory.supplementId, db.supplements.id));
+
+  $$SupplementsTableProcessedTableManager get supplementId {
+    final $_column = $_itemColumn<String>('supplement_id')!;
+
+    final manager = $$SupplementsTableTableManager($_db, $_db.supplements)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_supplementIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$SupplementSettingsHistoryTableFilterComposer
+    extends Composer<_$AppDatabase, $SupplementSettingsHistoryTable> {
+  $$SupplementSettingsHistoryTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get localId => $composableBuilder(
+      column: $table.localId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isTracked => $composableBuilder(
+      column: $table.isTracked, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get dose => $composableBuilder(
+      column: $table.dose, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get dailyGoal => $composableBuilder(
+      column: $table.dailyGoal, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get dailyLimit => $composableBuilder(
+      column: $table.dailyLimit, builder: (column) => ColumnFilters(column));
+
+  $$SupplementsTableFilterComposer get supplementId {
+    final $$SupplementsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.supplementId,
+        referencedTable: $db.supplements,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SupplementsTableFilterComposer(
+              $db: $db,
+              $table: $db.supplements,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$SupplementSettingsHistoryTableOrderingComposer
+    extends Composer<_$AppDatabase, $SupplementSettingsHistoryTable> {
+  $$SupplementSettingsHistoryTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get localId => $composableBuilder(
+      column: $table.localId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isTracked => $composableBuilder(
+      column: $table.isTracked, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get dose => $composableBuilder(
+      column: $table.dose, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get dailyGoal => $composableBuilder(
+      column: $table.dailyGoal, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get dailyLimit => $composableBuilder(
+      column: $table.dailyLimit, builder: (column) => ColumnOrderings(column));
+
+  $$SupplementsTableOrderingComposer get supplementId {
+    final $$SupplementsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.supplementId,
+        referencedTable: $db.supplements,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SupplementsTableOrderingComposer(
+              $db: $db,
+              $table: $db.supplements,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$SupplementSettingsHistoryTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SupplementSettingsHistoryTable> {
+  $$SupplementSettingsHistoryTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get localId =>
+      $composableBuilder(column: $table.localId, builder: (column) => column);
+
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isTracked =>
+      $composableBuilder(column: $table.isTracked, builder: (column) => column);
+
+  GeneratedColumn<double> get dose =>
+      $composableBuilder(column: $table.dose, builder: (column) => column);
+
+  GeneratedColumn<double> get dailyGoal =>
+      $composableBuilder(column: $table.dailyGoal, builder: (column) => column);
+
+  GeneratedColumn<double> get dailyLimit => $composableBuilder(
+      column: $table.dailyLimit, builder: (column) => column);
+
+  $$SupplementsTableAnnotationComposer get supplementId {
+    final $$SupplementsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.supplementId,
+        referencedTable: $db.supplements,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SupplementsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.supplements,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$SupplementSettingsHistoryTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $SupplementSettingsHistoryTable,
+    SupplementSettingsHistoryData,
+    $$SupplementSettingsHistoryTableFilterComposer,
+    $$SupplementSettingsHistoryTableOrderingComposer,
+    $$SupplementSettingsHistoryTableAnnotationComposer,
+    $$SupplementSettingsHistoryTableCreateCompanionBuilder,
+    $$SupplementSettingsHistoryTableUpdateCompanionBuilder,
+    (SupplementSettingsHistoryData, $$SupplementSettingsHistoryTableReferences),
+    SupplementSettingsHistoryData,
+    PrefetchHooks Function({bool supplementId})> {
+  $$SupplementSettingsHistoryTableTableManager(
+      _$AppDatabase db, $SupplementSettingsHistoryTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SupplementSettingsHistoryTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SupplementSettingsHistoryTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SupplementSettingsHistoryTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> localId = const Value.absent(),
+            Value<String> id = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<DateTime?> deletedAt = const Value.absent(),
+            Value<String> supplementId = const Value.absent(),
+            Value<bool> isTracked = const Value.absent(),
+            Value<double> dose = const Value.absent(),
+            Value<double?> dailyGoal = const Value.absent(),
+            Value<double?> dailyLimit = const Value.absent(),
+          }) =>
+              SupplementSettingsHistoryCompanion(
+            localId: localId,
+            id: id,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            deletedAt: deletedAt,
+            supplementId: supplementId,
+            isTracked: isTracked,
+            dose: dose,
+            dailyGoal: dailyGoal,
+            dailyLimit: dailyLimit,
+          ),
+          createCompanionCallback: ({
+            Value<int> localId = const Value.absent(),
+            Value<String> id = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<DateTime?> deletedAt = const Value.absent(),
+            required String supplementId,
+            Value<bool> isTracked = const Value.absent(),
+            required double dose,
+            Value<double?> dailyGoal = const Value.absent(),
+            Value<double?> dailyLimit = const Value.absent(),
+          }) =>
+              SupplementSettingsHistoryCompanion.insert(
+            localId: localId,
+            id: id,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            deletedAt: deletedAt,
+            supplementId: supplementId,
+            isTracked: isTracked,
+            dose: dose,
+            dailyGoal: dailyGoal,
+            dailyLimit: dailyLimit,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$SupplementSettingsHistoryTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({supplementId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (supplementId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.supplementId,
+                    referencedTable: $$SupplementSettingsHistoryTableReferences
+                        ._supplementIdTable(db),
+                    referencedColumn: $$SupplementSettingsHistoryTableReferences
+                        ._supplementIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$SupplementSettingsHistoryTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $SupplementSettingsHistoryTable,
+        SupplementSettingsHistoryData,
+        $$SupplementSettingsHistoryTableFilterComposer,
+        $$SupplementSettingsHistoryTableOrderingComposer,
+        $$SupplementSettingsHistoryTableAnnotationComposer,
+        $$SupplementSettingsHistoryTableCreateCompanionBuilder,
+        $$SupplementSettingsHistoryTableUpdateCompanionBuilder,
+        (
+          SupplementSettingsHistoryData,
+          $$SupplementSettingsHistoryTableReferences
+        ),
+        SupplementSettingsHistoryData,
+        PrefetchHooks Function({bool supplementId})>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -20468,4 +22264,9 @@ class $AppDatabaseManager {
       $$FoodCategoriesTableTableManager(_db, _db.foodCategories);
   $$FavoritesTableTableManager get favorites =>
       $$FavoritesTableTableManager(_db, _db.favorites);
+  $$DailyGoalsHistoryTableTableManager get dailyGoalsHistory =>
+      $$DailyGoalsHistoryTableTableManager(_db, _db.dailyGoalsHistory);
+  $$SupplementSettingsHistoryTableTableManager get supplementSettingsHistory =>
+      $$SupplementSettingsHistoryTableTableManager(
+          _db, _db.supplementSettingsHistory);
 }

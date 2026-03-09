@@ -91,18 +91,18 @@ class DiaryScreenState extends State<DiaryScreen> {
 
     final dbHelper = DatabaseHelper.instance;
 
-    // 1. Ziele aus der DB laden (für Sync)
-    final settings = await dbHelper.getAppSettings();
+    // 1. Load goals from DB (historically accurate for the selected date)
+    final goals = await dbHelper.getGoalsForDate(date);
 
-    // 2. Prefs nur noch für "Extra"-Werte, die nicht im DB-Schema sind
+    // 2. Prefs only for "Extra" values not in the DB schema
     final prefs = await SharedPreferences.getInstance();
 
-    // 3. Werte aus DB oder Fallbacks nutzen
-    final targetCalories = settings?.targetCalories ?? 2500;
-    final targetProtein = settings?.targetProtein ?? 180;
-    final targetCarbs = settings?.targetCarbs ?? 250;
-    final targetFat = settings?.targetFat ?? 80;
-    final targetWater = settings?.targetWater ?? 3000;
+    // 3. Use values from DB or fallbacks
+    final targetCalories = goals?.targetCalories ?? 2500;
+    final targetProtein = goals?.targetProtein ?? 180;
+    final targetCarbs = goals?.targetCarbs ?? 250;
+    final targetFat = goals?.targetFat ?? 80;
+    final targetWater = goals?.targetWater ?? 3000;
 
     // Koffein, Zucker etc. bleiben vorerst in Prefs (da nicht in AppSettings Tabelle)
     final targetCaffeine = prefs.getInt('targetCaffeine') ?? 400;
@@ -160,6 +160,8 @@ class DiaryScreenState extends State<DiaryScreen> {
       meal.sort((a, b) => b.entry.timestamp.compareTo(a.entry.timestamp));
     }
 
+    final supplementsForDate =
+        await DatabaseHelper.instance.getSupplementsForDate(date);
     final allSupplements = await DatabaseHelper.instance.getAllSupplements();
     final todaysSupplementLogs =
         await DatabaseHelper.instance.getSupplementLogsForDate(date);
@@ -186,14 +188,31 @@ class DiaryScreenState extends State<DiaryScreen> {
       summary.caffeine = todaysDoses[caffeineSupplement.id] ?? 0.0;
     }
 
-    final trackedSupps = allSupplements
-        .map(
-          (s) => TrackedSupplement(
-            supplement: s,
-            totalDosedToday: todaysDoses[s.id] ?? 0.0,
-          ),
-        )
-        .toList();
+    final Map<int, Supplement> byId = {
+      for (final s in allSupplements)
+        if (s.id != null) s.id!: s,
+    };
+
+    final List<TrackedSupplement> trackedSupps = [];
+    for (final s in supplementsForDate) {
+      final hasLog = todaysDoses.containsKey(s.id);
+      if (s.isTracked || hasLog) {
+        trackedSupps.add(TrackedSupplement(
+          supplement: s,
+          totalDosedToday: todaysDoses[s.id] ?? 0.0,
+        ));
+      }
+    }
+    for (final id in todaysDoses.keys) {
+      if (!trackedSupps.any((ts) => ts.supplement.id == id)) {
+        if (byId.containsKey(id)) {
+          trackedSupps.add(TrackedSupplement(
+            supplement: byId[id]!,
+            totalDosedToday: todaysDoses[id]!,
+          ));
+        }
+      }
+    }
 
     final workoutLogs = await WorkoutDatabaseHelper.instance
         .getWorkoutLogsForDateRange(date, date);

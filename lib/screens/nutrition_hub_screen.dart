@@ -42,10 +42,10 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
 
   Future<Map<String, dynamic>> _loadHubData() async {
     final l10n = AppLocalizations.of(context)!;
-    final settings = await DatabaseHelper.instance.getAppSettings();
-    final targetCalories = settings?.targetCalories ?? 2500;
-    final meals = await DatabaseHelper.instance.getMeals();
     final today = DateTime.now();
+    final goals = await DatabaseHelper.instance.getGoalsForDate(today);
+    final targetCalories = goals?.targetCalories ?? 2500;
+    final meals = await DatabaseHelper.instance.getMeals();
     final sevenDaysAgo = today.subtract(const Duration(days: 6));
     final recentEntries = await DatabaseHelper.instance.getEntriesForDateRange(
       sevenDaysAgo,
@@ -70,7 +70,13 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
         }
       }
 
-      final totalTargetCalories = targetCalories * numberOfTrackedDays;
+      int totalTargetCalories = 0;
+      for (final dateString in uniqueDaysTracked) {
+        final d = DateFormat.yMd().parse(dateString);
+        final dGoals = await DatabaseHelper.instance.getGoalsForDate(d);
+        totalTargetCalories += dGoals?.targetCalories ?? 2500;
+      }
+
       final difference = totalRecentCalories - totalTargetCalories;
       final tolerance = totalTargetCalories * 0.05;
 

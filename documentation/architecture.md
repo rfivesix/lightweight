@@ -197,4 +197,13 @@ The app supports **German** and **English** using Flutter's `flutter_localizatio
 
 ---
 
+## Security & Trust Boundaries
+
+Hypertrack is designed with a strong offline-first security posture. 
+
+1. **API Keys (BYOK):** Keys required for the AI Meal Capture feature (OpenAI / Gemini) are encrypted and isolated in native hardware-backed storage utilizing `FlutterSecureStorage` securely proxying to the iOS Keychain and Android Keystore.
+2. **Local Database Security:** Hypertrack relies entirely on device OS-level encryption (Android File-Based Encryption / iOS Data Protection) to safeguard the `app_hybrid.sqlite` database and health data metrics. We advise users to maintain strong mobile screen locks. SQLCipher and SSL Pinning are explicitly omitted in the current Beta phase to prioritize stability against complex migration and CA rotation risks.
+
+---
+
 [← Return to Overview](overview.md)

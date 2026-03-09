@@ -9,8 +9,11 @@ import 'package:cryptography/cryptography.dart';
 class EncryptionUtil {
   static final _algo = AesGcm.with256bits();
 
-  /// Current version of the encryption wrapper format.
-  static const wrapperVersion = 'LWENC-1';
+  /// Legacy version of the encryption wrapper format (150,000 iterations).
+  static const wrapperVersionV1 = 'LWENC-1';
+
+  /// Current version of the encryption wrapper format (600,000 iterations).
+  static const wrapperVersionV2 = 'LWENC-2';
 
   /// Encrypts [plaintext] using a [passphrase].
   ///
@@ -21,14 +24,15 @@ class EncryptionUtil {
   ) async {
     final salt = _randomBytes(16);
     final nonce = _randomBytes(12);
-    final key = await _deriveKey(passphrase, salt);
+    // Use 600,000 iterations for new encryptions
+    final key = await _deriveKey(passphrase, salt, iterations: 600000);
     final box = await _algo.encrypt(
       utf8.encode(plaintext),
       secretKey: key,
       nonce: nonce,
     );
     return {
-      'enc': wrapperVersion,
+      'enc': wrapperVersionV2, // Use new version format
       'salt': base64Encode(salt),
       'nonce': base64Encode(nonce),
       'cipher': base64Encode(box.cipherText),
@@ -40,14 +44,19 @@ class EncryptionUtil {
     Map<String, dynamic> wrapper,
     String passphrase,
   ) async {
-    if (wrapper['enc'] != wrapperVersion) {
-      throw ArgumentError('Unknown encryption wrapper');
+    final String version = wrapper['enc'] as String? ?? wrapperVersionV1;
+    if (version != wrapperVersionV1 && version != wrapperVersionV2) {
+      throw ArgumentError('Unknown encryption wrapper: $version');
     }
+
+    // Determine the number of iterations based on the wrapper version
+    final int iterations = (version == wrapperVersionV2) ? 600000 : 150000;
+
     final salt = base64Decode(wrapper['salt'] as String);
     final nonce = base64Decode(wrapper['nonce'] as String);
     final cipher = base64Decode(wrapper['cipher'] as String);
     final mac = Mac(base64Decode(wrapper['mac'] as String));
-    final key = await _deriveKey(passphrase, salt);
+    final key = await _deriveKey(passphrase, salt, iterations: iterations);
     final clear = await _algo.decrypt(
       SecretBox(cipher, nonce: nonce, mac: mac),
       secretKey: key,
@@ -55,10 +64,11 @@ class EncryptionUtil {
     return utf8.decode(clear);
   }
 
-  static Future<SecretKey> _deriveKey(String passphrase, List<int> salt) async {
+  static Future<SecretKey> _deriveKey(String passphrase, List<int> salt,
+      {int iterations = 150000}) async {
     final pbkdf2 = Pbkdf2(
       macAlgorithm: Hmac.sha256(),
-      iterations: 150000,
+      iterations: iterations,
       bits: 256,
     );
     return await pbkdf2.deriveKey(

@@ -2519,7 +2519,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteSupplementConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to delete this supplement? All related entries will be removed.'**
+  /// **'Are you sure you want to delete this supplement? All historical data will be lost.\n\nTip: You can simply untrack it by editing the supplement instead.'**
   String get deleteSupplementConfirm;
 
   /// No description provided for @fieldRequired.
@@ -3299,20 +3299,20 @@ abstract class AppLocalizations {
   /// No description provided for @aiRecommendOnTheGo.
   ///
   /// In en, this message translates to:
-  /// **'On the go'**
+  /// **'On the go (No utensils)'**
   String get aiRecommendOnTheGo;
 
   /// No description provided for @aiRecommendNoKitchen.
   ///
   /// In en, this message translates to:
-  /// **'No kitchen'**
+  /// **'No cooking (Cold meal)'**
   String get aiRecommendNoKitchen;
 
-  /// No description provided for @aiRecommendQuick.
+  /// No description provided for @aiRecommendWithCooking.
   ///
   /// In en, this message translates to:
-  /// **'Quick (<10 min)'**
-  String get aiRecommendQuick;
+  /// **'Cooking allowed'**
+  String get aiRecommendWithCooking;
 
   /// No description provided for @aiRecommendGenerate.
   ///
@@ -3355,6 +3355,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'e.g. Include leftover rice, high protein, etc.'**
   String get aiRecommendCustomRequestHint;
+
+  /// No description provided for @currentlyTracking.
+  ///
+  /// In en, this message translates to:
+  /// **'Currently tracking'**
+  String get currentlyTracking;
+
+  /// No description provided for @currentlyTrackingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Show in daily tracker hub'**
+  String get currentlyTrackingDesc;
 }
 
 class _AppLocalizationsDelegate

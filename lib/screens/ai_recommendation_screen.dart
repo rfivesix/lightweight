@@ -84,6 +84,70 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
       // 1. Gather context
       final macros = await db.getRemainingMacrosForDate(widget.date);
       final history = await db.getMealHistorySummary();
+      final goals = await db.getGoalsForDate(widget.date);
+
+      // Ensure we have some safe fallbacks for daily targets
+      final dailyKcal = goals?.targetCalories ?? 2500;
+      final dailyP = goals?.targetProtein ?? 180;
+      final dailyC = goals?.targetCarbs ?? 250;
+      final dailyF = goals?.targetFat ?? 80;
+
+      // 1b. Apportion Macros
+      // Calculate target macros specifically for this meal based on the slot.
+      Map<String, int> targetMacros = {
+        'kcal': macros['kcal'] ?? 0,
+        'protein': macros['protein'] ?? 0,
+        'carbs': macros['carbs'] ?? 0,
+        'fat': macros['fat'] ?? 0,
+      };
+
+      if (widget.mealType == 'mealtypeBreakfast') {
+        // Breakfast: Target 1/3 of daily goals (clamped to remaining)
+        targetMacros['kcal'] =
+            ((dailyKcal / 3.0).round()).clamp(0, targetMacros['kcal']!);
+        targetMacros['protein'] =
+            ((dailyP / 3.0).round()).clamp(0, targetMacros['protein']!);
+        targetMacros['carbs'] =
+            ((dailyC / 3.0).round()).clamp(0, targetMacros['carbs']!);
+        targetMacros['fat'] =
+            ((dailyF / 3.0).round()).clamp(0, targetMacros['fat']!);
+      } else if (widget.mealType == 'mealtypeLunch') {
+        // Lunch: Fill up until 1/3 of daily goals is left for dinner
+        // E.g., target = remaining - (daily / 3)
+        targetMacros['kcal'] =
+            (targetMacros['kcal']! - (dailyKcal / 3.0).round())
+                .clamp(0, targetMacros['kcal']!);
+        targetMacros['protein'] =
+            (targetMacros['protein']! - (dailyP / 3.0).round())
+                .clamp(0, targetMacros['protein']!);
+        targetMacros['carbs'] =
+            (targetMacros['carbs']! - (dailyC / 3.0).round())
+                .clamp(0, targetMacros['carbs']!);
+        targetMacros['fat'] = (targetMacros['fat']! - (dailyF / 3.0).round())
+            .clamp(0, targetMacros['fat']!);
+      } else if (widget.mealType == 'mealtypeDinner') {
+        // Dinner: Eat 100% of whatever is remaining to hit daily goal
+        // Already assigned above. (targetMacros == macros)
+      } else if (widget.mealType == 'mealtypeSnack') {
+        // Snack: Target roughly 10% of daily goals (clamped to remaining)
+        targetMacros['kcal'] =
+            ((dailyKcal * 0.1).round()).clamp(0, targetMacros['kcal']!);
+        targetMacros['protein'] =
+            ((dailyP * 0.1).round()).clamp(0, targetMacros['protein']!);
+        targetMacros['carbs'] =
+            ((dailyC * 0.1).round()).clamp(0, targetMacros['carbs']!);
+        targetMacros['fat'] =
+            ((dailyF * 0.1).round()).clamp(0, targetMacros['fat']!);
+      }
+
+      // If user literally has 0 calories left, provide a tiny hardcoded floor
+      // so the AI still suggests something (like a 100kcal snack).
+      if (targetMacros['kcal']! <= 50) {
+        targetMacros['kcal'] = 150;
+        targetMacros['protein'] = 15;
+        targetMacros['carbs'] = 10;
+        targetMacros['fat'] = 5;
+      }
 
       // 2. Build preference list
       final prefs = <String>[];
@@ -94,7 +158,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
       final l10n = AppLocalizations.of(context)!;
       final languageCode = Localizations.localeOf(context).languageCode;
       final result = await AiService.instance.generateMealRecommendation(
-        remainingMacros: macros,
+        targetMacros: targetMacros,
         preferences: prefs,
         recentHistory: history,
         mealTypeLabel: _getMealLabel(l10n, widget.mealType),
@@ -292,18 +356,16 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                             onSelected: (v) => setState(() =>
                                 _selectedSituation = v ? 'On the go' : null)),
                         _buildFilterChip(
-                            l10n.aiRecommendNoKitchen, 'No kitchen/cold meal',
-                            isSelected:
-                                _selectedSituation == 'No kitchen/cold meal',
+                            l10n.aiRecommendNoKitchen, 'No cooking',
+                            isSelected: _selectedSituation == 'No cooking',
                             onSelected: (v) => setState(() =>
-                                _selectedSituation =
-                                    v ? 'No kitchen/cold meal' : null)),
+                                _selectedSituation = v ? 'No cooking' : null)),
                         _buildFilterChip(
-                            l10n.aiRecommendQuick, 'Quick (<10 min)',
-                            isSelected: _selectedSituation == 'Quick (<10 min)',
+                            l10n.aiRecommendWithCooking, 'Cooking allowed',
+                            isSelected: _selectedSituation == 'Cooking allowed',
                             onSelected: (v) => setState(() =>
                                 _selectedSituation =
-                                    v ? 'Quick (<10 min)' : null)),
+                                    v ? 'Cooking allowed' : null)),
                       ],
                     ),
 

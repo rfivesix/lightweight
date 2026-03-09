@@ -1307,7 +1307,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get deleteSupplementConfirm =>
-      'Supplement wirklich löschen? Alle zugehörigen Einträge werden entfernt.';
+      'Möchtest du dieses Supplement wirklich löschen? Alle historischen Daten gehen verloren.\n\nTipp: Du kannst stattdessen auch einfach das Tracking beenden, indem du das Supplement bearbeitest.';
 
   @override
   String get fieldRequired => 'Pflichtfeld';
@@ -1725,13 +1725,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get aiRecommendPescetarian => 'Pescetarisch';
 
   @override
-  String get aiRecommendOnTheGo => 'Unterwegs';
+  String get aiRecommendOnTheGo => 'Unterwegs (Sofort essbar)';
 
   @override
-  String get aiRecommendNoKitchen => 'Keine Küche';
+  String get aiRecommendNoKitchen => 'Ohne Kochen (Kaltes Gericht)';
 
   @override
-  String get aiRecommendQuick => 'Schnell (<10 Min)';
+  String get aiRecommendWithCooking => 'Mit Kochen (Zubereitung)';
 
   @override
   String get aiRecommendGenerate => 'Generieren';
@@ -1754,4 +1754,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get aiRecommendCustomRequestHint =>
       'z. B. auf restlichen Reis achten, viel Protein, usw.';
+
+  @override
+  String get currentlyTracking => 'Aktuell tracken';
+
+  @override
+  String get currentlyTrackingDesc => 'In der täglichen Übersicht anzeigen';
 }

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/tracked_supplement.dart';
+import '../models/supplement.dart';
 //import 'supplement_hub_screen.dart';
 import 'supplement_track_screen.dart';
 import '../util/design_constants.dart';
@@ -71,20 +72,21 @@ class HomeState extends State<Home> {
   }) async {
     if (!mounted) return;
 
-    // KORREKTUR: Setze _isLoading nur, wenn der Indikator wirklich gezeigt werden soll
+    // FIX: Only set _isLoading if the indicator should actually be shown
     if (showLoadingIndicator) {
       setState(() => _isLoading = true);
     }
 
-    // --- DATEN HIER LADEN ---
+    // --- LOAD DATA HERE ---
     final l10n = AppLocalizations.of(context)!;
     final dbHelper = DatabaseHelper.instance;
-    final settings = await dbHelper.getAppSettings();
-    final targetCalories = settings?.targetCalories ?? 2500;
-    final targetProtein = settings?.targetProtein ?? 180;
-    final targetCarbs = settings?.targetCarbs ?? 250;
-    final targetFat = settings?.targetFat ?? 80;
-    final targetWater = settings?.targetWater ?? 3000;
+    final today = DateTime.now();
+    final goals = await dbHelper.getGoalsForDate(today);
+    final targetCalories = goals?.targetCalories ?? 2500;
+    final targetProtein = goals?.targetProtein ?? 180;
+    final targetCarbs = goals?.targetCarbs ?? 250;
+    final targetFat = goals?.targetFat ?? 80;
+    final targetWater = goals?.targetWater ?? 3000;
 
     final entries = await dbHelper.getEntriesForDate(DateTime.now());
     final fluidEntries = await dbHelper.getFluidEntriesForDate(DateTime.now());
@@ -121,7 +123,6 @@ class HomeState extends State<Home> {
       }
     }
 
-    final today = DateTime.now();
     final sevenDaysAgo = today.subtract(const Duration(days: 6));
     final recentEntries = await dbHelper.getEntriesForDateRange(
       sevenDaysAgo,
@@ -142,7 +143,12 @@ class HomeState extends State<Home> {
               (foodItem.calories / 100 * entry.quantityInGrams).round();
         }
       }
-      final totalTargetCalories = targetCalories * numberOfTrackedDays;
+      int totalTargetCalories = 0;
+      for (final dateString in uniqueDaysTracked) {
+        final d = DateFormat.yMd().parse(dateString);
+        final dGoals = await DatabaseHelper.instance.getGoalsForDate(d);
+        totalTargetCalories += dGoals?.targetCalories ?? 2500;
+      }
       final difference = totalRecentCalories - totalTargetCalories;
       if (numberOfTrackedDays > 1) {
         final tolerance = totalTargetCalories * 0.05;
@@ -165,6 +171,8 @@ class HomeState extends State<Home> {
     }
 
     // NEU: Lade Supplement-Daten
+    final supplementsForDate =
+        await dbHelper.getSupplementsForDate(DateTime.now());
     final allSupplements = await dbHelper.getAllSupplements();
     final todaysSupplementLogs = await dbHelper.getSupplementLogsForDate(
       DateTime.now(),
@@ -177,14 +185,32 @@ class HomeState extends State<Home> {
         ifAbsent: () => log.dose,
       );
     }
-    final trackedSupps = allSupplements
-        .map(
-          (s) => TrackedSupplement(
-            supplement: s,
-            totalDosedToday: todaysDoses[s.id] ?? 0.0,
-          ),
-        )
-        .toList();
+
+    final Map<int, Supplement> byId = {
+      for (final s in allSupplements)
+        if (s.id != null) s.id!: s,
+    };
+
+    final List<TrackedSupplement> trackedSupps = [];
+    for (final s in supplementsForDate) {
+      final hasLog = todaysDoses.containsKey(s.id);
+      if (s.isTracked || hasLog) {
+        trackedSupps.add(TrackedSupplement(
+          supplement: s,
+          totalDosedToday: todaysDoses[s.id] ?? 0.0,
+        ));
+      }
+    }
+    for (final id in todaysDoses.keys) {
+      if (!trackedSupps.any((ts) => ts.supplement.id == id)) {
+        if (byId.containsKey(id)) {
+          trackedSupps.add(TrackedSupplement(
+            supplement: byId[id]!,
+            totalDosedToday: todaysDoses[id]!,
+          ));
+        }
+      }
+    }
 
     // --- DATEN LADEN ENDE ---
 

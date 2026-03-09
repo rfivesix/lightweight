@@ -219,6 +219,7 @@ class Supplements extends Table with HybridId, MetaColumns {
   RealColumn get dailyLimit => real().nullable()();
   TextColumn get notes => text().nullable()();
   BoolColumn get isBuiltin => boolean().withDefault(const Constant(false))();
+  BoolColumn get isTracked => boolean().withDefault(const Constant(true))();
 }
 
 // 14. SupplementLogs
@@ -319,6 +320,27 @@ class Favorites extends Table with MetaColumns {
   Set<Column> get primaryKey => {barcode};
 }
 
+// 18. DailyGoalsHistory (Neu für historische Ziele)
+class DailyGoalsHistory extends Table with HybridId, MetaColumns {
+  IntColumn get targetCalories => integer()();
+  IntColumn get targetProtein => integer()();
+  IntColumn get targetCarbs => integer()();
+  IntColumn get targetFat => integer()();
+  IntColumn get targetWater => integer()();
+  // createdAt dient hier als "gültig ab" Zeitstempel
+}
+
+// 19. SupplementSettingsHistory
+class SupplementSettingsHistory extends Table with HybridId, MetaColumns {
+  TextColumn get supplementId =>
+      text().references(Supplements, #id, onDelete: KeyAction.cascade)();
+  BoolColumn get isTracked => boolean().withDefault(const Constant(true))();
+  RealColumn get dose => real()();
+  RealColumn get dailyGoal => real().nullable()();
+  RealColumn get dailyLimit => real().nullable()();
+  // createdAt dient als "gültig ab" Zeitstempel
+}
+
 @DriftDatabase(tables: [
   Profiles,
   AppSettings,
@@ -341,7 +363,9 @@ class Favorites extends Table with MetaColumns {
   Meals,
   MealItems,
   FoodCategories,
-  Favorites
+  Favorites,
+  DailyGoalsHistory,
+  SupplementSettingsHistory
 ])
 
 /// The central Drift database class for the application.
@@ -349,7 +373,8 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 5; // Version auf 2 erhöhen!
+  int get schemaVersion =>
+      7; // Version auf 7 erhöhen für SupplementSettingsHistory und isTracked
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -380,6 +405,13 @@ class AppDatabase extends _$AppDatabase {
           if (from < 5) {
             await m.addColumn(profiles, profiles.height);
             await m.addColumn(profiles, profiles.gender);
+          }
+          if (from < 6) {
+            await m.createTable(dailyGoalsHistory);
+          }
+          if (from < 7) {
+            await m.addColumn(supplements, supplements.isTracked);
+            await m.createTable(supplementSettingsHistory);
           }
         },
       );
