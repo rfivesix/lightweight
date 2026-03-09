@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import '../models/exercise.dart';
 import 'package:vibration/vibration.dart';
 import '../models/routine_exercise.dart';
@@ -9,18 +10,22 @@ import '../models/set_log.dart';
 import '../models/workout_log.dart';
 import '../data/workout_database_helper.dart';
 import '../models/set_template.dart';
+import 'local_notification_service.dart';
 
 /// Manager responsible for the lifecycle and state of an active workout session.
 ///
 /// Handles session timing, set tracking, rest periods, and data persistence
 /// between the UI and the database.
-class WorkoutSessionManager extends ChangeNotifier {
+class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
   static final WorkoutSessionManager _instance =
       WorkoutSessionManager._internal();
+  AppLifecycleState _appLifecycleState = AppLifecycleState.resumed;
 
   /// Returns the singleton instance of [WorkoutSessionManager].
   factory WorkoutSessionManager() => _instance;
-  WorkoutSessionManager._internal();
+  WorkoutSessionManager._internal() {
+    WidgetsBinding.instance.addObserver(this);
+  }
 
   WorkoutLog? _workoutLog;
   List<RoutineExercise> _exercises = [];
@@ -69,6 +74,23 @@ class WorkoutSessionManager extends ChangeNotifier {
 
   /// Whether a workout session is currently in progress.
   bool get isActive => _workoutLog != null && _workoutLog!.endTime == null;
+  bool get _isAppInForeground =>
+      _appLifecycleState == AppLifecycleState.resumed;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _appLifecycleState = state;
+
+    if (_remainingRestSeconds <= 0) return;
+
+    if (_isAppInForeground) {
+      LocalNotificationService.instance.cancelRestTimerNotification();
+    } else {
+      LocalNotificationService.instance.scheduleRestTimerDoneNotification(
+        secondsFromNow: _remainingRestSeconds,
+      );
+    }
+  }
 
   // ===========================================================================
   // INIT & RESTORE
@@ -507,14 +529,25 @@ class WorkoutSessionManager extends ChangeNotifier {
   void _startRestTimer(int seconds) {
     _restTimer?.cancel();
     _restDoneBannerTimer?.cancel();
+    LocalNotificationService.instance.cancelRestTimerNotification();
     _showRestDone = false;
     _remainingRestSeconds = seconds;
+
+    if (!_isAppInForeground) {
+      LocalNotificationService.instance.scheduleRestTimerDoneNotification(
+        secondsFromNow: seconds,
+      );
+    }
 
     _restTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_remainingRestSeconds > 0) {
         _remainingRestSeconds--;
         if (_remainingRestSeconds == 0) {
-          Vibration.vibrate(duration: 500);
+          if (_isAppInForeground) {
+            LocalNotificationService.instance.cancelRestTimerNotification();
+            FlutterRingtonePlayer().playNotification();
+            Vibration.vibrate(duration: 500);
+          }
         }
         notifyListeners();
       } else {
@@ -533,6 +566,7 @@ class WorkoutSessionManager extends ChangeNotifier {
   /// Cancels any active rest timer and hides the notification banner.
   void cancelRest() {
     _restTimer?.cancel();
+    LocalNotificationService.instance.cancelRestTimerNotification();
     _remainingRestSeconds = 0;
     _showRestDone = false;
     notifyListeners();
@@ -561,6 +595,7 @@ class WorkoutSessionManager extends ChangeNotifier {
   Future<void> finishWorkout() async {
     _workoutDurationTimer?.cancel();
     _restTimer?.cancel();
+    await LocalNotificationService.instance.cancelRestTimerNotification();
 
     if (_workoutLog != null) {
       final db = WorkoutDatabaseHelper.instance;

@@ -1,7 +1,7 @@
 // lib/data/basis_data_manager.dart
 
 import 'dart:io';
-import 'package:flutter/foundation.dart';
+
 import 'package:flutter/services.dart' show rootBundle;
 import 'database_helper.dart';
 import 'drift_database.dart';
@@ -41,7 +41,6 @@ class BasisDataManager {
     bool force = false,
     ProgressCallback? onProgress, // NEU: Callback
   }) async {
-    debugPrint("BasisDataManager: Starte Check (Force: $force)...");
     final prefs = await SharedPreferences.getInstance();
 
     if (force) {
@@ -49,7 +48,6 @@ class BasisDataManager {
       await prefs.remove(_keyVersionFood);
       await prefs.remove(_keyVersionOff);
       await prefs.remove(_keyVersionCats);
-      debugPrint("Cache geleert. Import wird erzwungen.");
     }
 
     // Hilfsfunktion, um den Code lesbarer zu halten
@@ -131,7 +129,6 @@ class BasisDataManager {
         await tempFile.writeAsBytes(byteData.buffer
             .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
       } catch (e) {
-        debugPrint("Asset fehlt: $assetPath");
         return;
       }
 
@@ -146,8 +143,6 @@ class BasisDataManager {
         final tables = await assetDb.rawQuery(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='$tableName'");
         if (tables.isEmpty) {
-          debugPrint(
-              "WARNUNG: Quell-Tabelle '$tableName' nicht in $assetPath gefunden. Überspringe.");
           return;
         }
       }
@@ -166,8 +161,6 @@ class BasisDataManager {
       // Wenn Update nötig ist:
       if (assetVersion.compareTo(installedVersion) > 0 ||
           installedVersion == '0') {
-        debugPrint(">>> IMPORT START: $checkTable (v$assetVersion)...");
-
         onProgress?.call("Update $taskLabel", "Vorbereitung...", 0.05);
 
         await _performBatchImport(
@@ -179,14 +172,11 @@ class BasisDataManager {
         );
 
         await prefs.setString(prefKey, assetVersion);
-        debugPrint(">>> IMPORT FERTIG: $checkTable gespeichert.");
       } else {
-        debugPrint("Aktuell: $checkTable (v$installedVersion).");
         // Falls aktuell, kurz 100% anzeigen, damit es nicht hängt
         onProgress?.call("$taskLabel aktuell", "Bereit", 1.0);
       }
     } catch (e) {
-      debugPrint("!!! FEHLER bei $assetPath ($tableName): $e");
     } finally {
       await assetDb?.close();
       if (tempFile != null && await tempFile.exists()) await tempFile.delete();
@@ -237,9 +227,7 @@ class BasisDataManager {
               batch.insert(mainDb.foodCategories, companion,
                   mode: drift.InsertMode.insertOrReplace);
             }
-          } catch (e) {
-            // debugPrint("Fehler Zeile: $e");
-          }
+          } catch (e) {}
         }
       });
 

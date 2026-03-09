@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.0-alpha] - 2026-03-09
+
+_Note: This is an alpha release, heavily focusing on the new deep-dive Analytics engine. Some areas, UI patterns, and data visualizations may still evolve based on feedback._
+
+### 🚀 Analytics
+- **Data Hub Redesign**: Introduced a comprehensive new Statistics Hub replacing the basic overview.
+- **Deep-Dive Dashboards**: 
+  - **PR Dashboard**: Tracks Personal Records and progressive overload.
+  - **Recovery Tracker**: Assesses muscle fatigue and readiness.
+  - **Consistency Tracker**: Monitors workout adherence over time.
+  - **Muscle Group Analytics**: Visualizes training volume and intensity per body part.
+- **Exercise-Level Analytics**: Integrated workout trends and PR summaries directly into individual `ExerciseDetailScreen` sections.
+- **Advanced Offline Metrics**: Expanded `workout_database_helper` to calculate complex, multi-variable insights entirely on-device without cloud connectivity.
+
+### 🏋️ Live Workout
+- **Background Rest Timers**: Added native local push notifications via `flutter_local_notifications` to reliably alert you when your rest timer is over, even when the app is minimized or the screen is off.
+
+### 🍎 Body / Nutrition
+- **Body & Nutrition Correlation**: Introduced algorithms and a new tracking screen to evaluate how your macro and caloric intake impacts long-term body measurement and weight trends.
+
+### 🌍 Localization / Polish
+- **Extensive Translations**: Added over 1,000 new localization entries across German and English to cover all complex terminology in the new Analytics tools.
+- **UI Refinements**: Polished the Main Screen, Profile Screen, and Add Measurement interfaces to align with the new Data Hub aesthetic.
+
+### 🔧 Stability / Cleanup
+- Swept the codebase to remove testing/debug leftovers prior to Alpha release.
+- Upgraded Android build configurations (`AndroidManifest.xml` / `build.gradle.kts`) to securely manage exact alarm permissions for the new background timer notifications.
+
 ## [0.6.1] - 2026-03-09
 
 ### ✨ New Features & Improvements

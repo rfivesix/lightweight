@@ -10,6 +10,7 @@ import '../models/routine_exercise.dart';
 import '../models/set_log.dart';
 import '../models/set_template.dart';
 import '../models/workout_log.dart';
+import '../util/muscle_analytics_utils.dart';
 
 /// Helper class for managing workout-specific data in the Drift database.
 ///
@@ -1220,8 +1221,7 @@ class WorkoutDatabaseHelper {
   /// that PR weight was achieved, so recently active exercises appear first.
   ///
   /// Each entry contains: 'exerciseName' (String), 'weight' (double), 'reps' (int).
-  Future<List<Map<String, dynamic>>> getRecentGlobalPRs(
-      {int limit = 3}) async {
+  Future<List<Map<String, dynamic>>> getRecentGlobalPRs({int limit = 3}) async {
     final dbInstance = await database;
 
     final rows = await dbInstance.customSelect(
@@ -1284,9 +1284,8 @@ class WorkoutDatabaseHelper {
           dbInstance.workoutLogs.status.equals('completed') &
           dbInstance.workoutLogs.startTime
               .isBetweenValues(since, now.add(const Duration(days: 1))))
-      ..orderBy([
-        drift.OrderingTerm(expression: dbInstance.workoutLogs.startTime)
-      ]);
+      ..orderBy(
+          [drift.OrderingTerm(expression: dbInstance.workoutLogs.startTime)]);
 
     final rows = await query.get();
 
@@ -1297,13 +1296,14 @@ class WorkoutDatabaseHelper {
       final mondayNorm = DateTime(monday.year, monday.month, monday.day);
       final key =
           '${mondayNorm.year}-${mondayNorm.month.toString().padLeft(2, '0')}-${mondayNorm.day.toString().padLeft(2, '0')}';
-      weekMap.putIfAbsent(key, () => {
-            'weekStart': mondayNorm,
-            'weekLabel':
-                '${mondayNorm.day}.${mondayNorm.month}.',
-            'tonnage': 0.0,
-            'setCount': 0,
-          });
+      weekMap.putIfAbsent(
+          key,
+          () => {
+                'weekStart': mondayNorm,
+                'weekLabel': '${mondayNorm.day}.${mondayNorm.month}.',
+                'tonnage': 0.0,
+                'setCount': 0,
+              });
     }
 
     // Pre-fill all weeks so missing weeks show as 0
@@ -1382,8 +1382,306 @@ class WorkoutDatabaseHelper {
     final result = muscleVolume.entries
         .map((e) => {'muscleGroup': e.key, 'tonnage': e.value})
         .toList()
-      ..sort((a, b) => (b['tonnage'] as double).compareTo(a['tonnage'] as double));
+      ..sort(
+          (a, b) => (b['tonnage'] as double).compareTo(a['tonnage'] as double));
     return result;
+  }
+
+  /// Equivalent hard-set analytics for muscle groups.
+  ///
+  /// Uses shared analytics rules:
+  /// - qualifying work sets only
+  /// - primary muscles weighted at 1.0
+  /// - secondary muscles weighted at 0.5
+  /// - frequency day counts when a muscle reaches >= 1.0 equivalent sets
+  ///
+  /// Returns summary map with:
+  /// - `muscles`: per-muscle equivalent sets, trained days, frequency/week, share
+  /// - `weekly`: weekly buckets containing per-muscle equivalent sets
+  /// - `undertrained`: soft guidance candidate list
+  /// - `dataQualityOk`: suppression flag based on shared minimum requirements
+  Future<Map<String, dynamic>> getMuscleGroupAnalytics({
+    int daysBack = 30,
+    int weeksBack = 8,
+  }) async {
+    final now = DateTime.now();
+    final since = now.subtract(Duration(days: daysBack));
+    final dbInstance = await database;
+
+    final query = dbInstance.select(dbInstance.setLogs).join([
+      drift.innerJoin(dbInstance.workoutLogs,
+          dbInstance.workoutLogs.id.equalsExp(dbInstance.setLogs.workoutLogId)),
+      drift.leftOuterJoin(dbInstance.exercises,
+          dbInstance.exercises.id.equalsExp(dbInstance.setLogs.exerciseId)),
+    ])
+      ..where(dbInstance.setLogs.isCompleted.equals(true) &
+          dbInstance.setLogs.setType.isNotIn(['warmup']) &
+          dbInstance.setLogs.weight.isBiggerThanValue(0) &
+          dbInstance.setLogs.reps.isBiggerThanValue(0) &
+          dbInstance.workoutLogs.status.equals('completed') &
+          dbInstance.workoutLogs.startTime
+              .isBetweenValues(since, now.add(const Duration(days: 1))));
+
+    final rows = await query.get();
+
+    final contributions = <Map<String, dynamic>>[];
+
+    for (final row in rows) {
+      final logRow = row.readTable(dbInstance.workoutLogs);
+      final exRow = row.readTableOrNull(dbInstance.exercises);
+
+      final primary = <String>{
+        ..._parseMuscleList(exRow?.musclesPrimary)
+            .map((m) => m.trim())
+            .where((m) => m.isNotEmpty),
+      };
+      final secondary = <String>{
+        ..._parseMuscleList(exRow?.musclesSecondary)
+            .map((m) => m.trim())
+            .where((m) => m.isNotEmpty),
+      }..removeAll(primary);
+
+      if (primary.isEmpty && secondary.isEmpty) {
+        contributions.add({
+          'day': logRow.startTime,
+          'muscleGroup': 'Other',
+          'equivalentSets': 1.0,
+        });
+        continue;
+      }
+
+      for (final muscle in primary) {
+        contributions.add({
+          'day': logRow.startTime,
+          'muscleGroup': muscle,
+          'equivalentSets': 1.0,
+        });
+      }
+
+      for (final muscle in secondary) {
+        contributions.add({
+          'day': logRow.startTime,
+          'muscleGroup': muscle,
+          'equivalentSets': 0.5,
+        });
+      }
+    }
+
+    return MuscleAnalyticsUtils.buildSummary(
+      contributions: contributions,
+      daysBack: daysBack,
+      weeksBack: weeksBack,
+      now: now,
+    );
+  }
+
+  /// Recovery analytics based on shared v1 heuristics.
+  ///
+  /// Rules:
+  /// - Significant loading for a muscle session is >= 1.0 equivalent sets
+  /// - Base thresholds: <48h recovering, 48-72h ready, >72h fresh
+  /// - Modifier: +24h when avg RIR == 0 or avg RPE >= 9 for that muscle session
+  ///
+  /// Returns:
+  /// - `muscles`: per-muscle recovery rows with explainability fields
+  /// - `totals`: aggregate counts for recovering/ready/fresh
+  /// - `overallState`: low-precision overall summary key
+  /// - `hasData`: false when no significant loading exists
+  Future<Map<String, dynamic>> getRecoveryAnalytics() async {
+    final now = DateTime.now();
+    final dbInstance = await database;
+
+    final query = dbInstance.select(dbInstance.setLogs).join([
+      drift.innerJoin(dbInstance.workoutLogs,
+          dbInstance.workoutLogs.id.equalsExp(dbInstance.setLogs.workoutLogId)),
+      drift.leftOuterJoin(dbInstance.exercises,
+          dbInstance.exercises.id.equalsExp(dbInstance.setLogs.exerciseId)),
+    ])
+      ..where(dbInstance.setLogs.isCompleted.equals(true) &
+          dbInstance.setLogs.setType.isNotIn(['warmup']) &
+          dbInstance.setLogs.weight.isBiggerThanValue(0) &
+          dbInstance.setLogs.reps.isBiggerThanValue(0) &
+          dbInstance.workoutLogs.status.equals('completed'));
+
+    final rows = await query.get();
+
+    final Map<String, Map<String, dynamic>> muscleSessionMap = {};
+
+    void addMuscleContribution({
+      required String workoutLogId,
+      required DateTime startTime,
+      required String muscle,
+      required double equivalentSets,
+      required int? rir,
+      required int? rpe,
+    }) {
+      final normalizedMuscle = muscle.trim();
+      if (normalizedMuscle.isEmpty) return;
+
+      final key = '$workoutLogId::$normalizedMuscle';
+      final session = muscleSessionMap.putIfAbsent(
+        key,
+        () => {
+          'muscleGroup': normalizedMuscle,
+          'workoutLogId': workoutLogId,
+          'startTime': startTime,
+          'equivalentSets': 0.0,
+          'rirSum': 0.0,
+          'rirCount': 0,
+          'rpeSum': 0.0,
+          'rpeCount': 0,
+        },
+      );
+
+      session['equivalentSets'] =
+          (session['equivalentSets'] as double) + equivalentSets;
+
+      if (rir != null) {
+        session['rirSum'] = (session['rirSum'] as double) + rir;
+        session['rirCount'] = (session['rirCount'] as int) + 1;
+      }
+
+      if (rpe != null) {
+        session['rpeSum'] = (session['rpeSum'] as double) + rpe;
+        session['rpeCount'] = (session['rpeCount'] as int) + 1;
+      }
+    }
+
+    for (final row in rows) {
+      final logRow = row.readTable(dbInstance.workoutLogs);
+      final setRow = row.readTable(dbInstance.setLogs);
+      final exRow = row.readTableOrNull(dbInstance.exercises);
+
+      final primary = <String>{
+        ..._parseMuscleList(exRow?.musclesPrimary)
+            .map((m) => m.trim())
+            .where((m) => m.isNotEmpty),
+      };
+      final secondary = <String>{
+        ..._parseMuscleList(exRow?.musclesSecondary)
+            .map((m) => m.trim())
+            .where((m) => m.isNotEmpty),
+      }..removeAll(primary);
+
+      for (final muscle in primary) {
+        addMuscleContribution(
+          workoutLogId: logRow.id,
+          startTime: logRow.startTime,
+          muscle: muscle,
+          equivalentSets: 1.0,
+          rir: setRow.rir,
+          rpe: setRow.rpe,
+        );
+      }
+
+      for (final muscle in secondary) {
+        addMuscleContribution(
+          workoutLogId: logRow.id,
+          startTime: logRow.startTime,
+          muscle: muscle,
+          equivalentSets: 0.5,
+          rir: setRow.rir,
+          rpe: setRow.rpe,
+        );
+      }
+    }
+
+    final Map<String, List<Map<String, dynamic>>> significantByMuscle = {};
+
+    for (final session in muscleSessionMap.values) {
+      final eqSets = (session['equivalentSets'] as double);
+      if (eqSets < 1.0) continue;
+
+      final muscle = session['muscleGroup'] as String;
+      significantByMuscle.putIfAbsent(muscle, () => []).add(session);
+    }
+
+    final List<Map<String, dynamic>> muscles = [];
+
+    for (final entry in significantByMuscle.entries) {
+      final muscle = entry.key;
+      final sessions = entry.value;
+      sessions.sort((a, b) =>
+          (b['startTime'] as DateTime).compareTo(a['startTime'] as DateTime));
+
+      final lastSession = sessions.first;
+      final lastTime = lastSession['startTime'] as DateTime;
+      final hoursSince = now.difference(lastTime).inMinutes / 60.0;
+
+      final rirCount = lastSession['rirCount'] as int;
+      final rpeCount = lastSession['rpeCount'] as int;
+
+      final avgRir =
+          rirCount > 0 ? (lastSession['rirSum'] as double) / rirCount : null;
+      final avgRpe =
+          rpeCount > 0 ? (lastSession['rpeSum'] as double) / rpeCount : null;
+
+      final highSessionFatigue =
+          (avgRir != null && avgRir == 0) || (avgRpe != null && avgRpe >= 9);
+
+      final recoveringUpper = 48 + (highSessionFatigue ? 24 : 0);
+      final readyUpper = 72 + (highSessionFatigue ? 24 : 0);
+
+      final String state;
+      if (hoursSince < recoveringUpper) {
+        state = 'recovering';
+      } else if (hoursSince <= readyUpper) {
+        state = 'ready';
+      } else {
+        state = 'fresh';
+      }
+
+      muscles.add({
+        'muscleGroup': muscle,
+        'state': state,
+        'hoursSinceLastSignificantLoad': hoursSince,
+        'lastSignificantLoadAt': lastTime,
+        'lastEquivalentSets': lastSession['equivalentSets'] as double,
+        'avgRir': avgRir,
+        'avgRpe': avgRpe,
+        'highSessionFatigue': highSessionFatigue,
+        'recoveringUpperHours': recoveringUpper,
+        'readyUpperHours': readyUpper,
+      });
+    }
+
+    muscles.sort((a, b) {
+      const stateOrder = {'recovering': 0, 'ready': 1, 'fresh': 2};
+      final stateCmp = (stateOrder[a['state'] as String] ?? 9)
+          .compareTo(stateOrder[b['state'] as String] ?? 9);
+      if (stateCmp != 0) return stateCmp;
+      return ((a['hoursSinceLastSignificantLoad'] as num).toDouble())
+          .compareTo((b['hoursSinceLastSignificantLoad'] as num).toDouble());
+    });
+
+    final recoveringCount =
+        muscles.where((m) => m['state'] == 'recovering').length;
+    final readyCount = muscles.where((m) => m['state'] == 'ready').length;
+    final freshCount = muscles.where((m) => m['state'] == 'fresh').length;
+    final total = muscles.length;
+
+    final String overallState;
+    if (total == 0) {
+      overallState = 'insufficientData';
+    } else if (recoveringCount >= 3 || recoveringCount / total >= 0.4) {
+      overallState = 'severalRecovering';
+    } else if (recoveringCount == 0) {
+      overallState = 'mostlyRecovered';
+    } else {
+      overallState = 'mixedRecovery';
+    }
+
+    return {
+      'hasData': total > 0,
+      'overallState': overallState,
+      'totals': {
+        'recovering': recoveringCount,
+        'ready': readyCount,
+        'fresh': freshCount,
+        'tracked': total,
+      },
+      'muscles': muscles,
+    };
   }
 
   /// Top [limit] exercises by tonnage for the last [daysBack] days.
@@ -1436,8 +1734,7 @@ class WorkoutDatabaseHelper {
               tbl.status.equals('completed') &
               tbl.startTime
                   .isBetweenValues(since, now.add(const Duration(days: 1))))
-          ..orderBy([(t) =>
-              drift.OrderingTerm(expression: t.startTime)]))
+          ..orderBy([(t) => drift.OrderingTerm(expression: t.startTime)]))
         .get();
 
     final Map<String, Map<String, dynamic>> weekMap = {};
@@ -1479,10 +1776,12 @@ class WorkoutDatabaseHelper {
 
     final allLogs = await (dbInstance.select(dbInstance.workoutLogs)
           ..where((tbl) => tbl.status.equals('completed'))
-          ..orderBy([(t) => drift.OrderingTerm(
-                expression: t.startTime,
-                mode: drift.OrderingMode.desc,
-              )]))
+          ..orderBy([
+            (t) => drift.OrderingTerm(
+                  expression: t.startTime,
+                  mode: drift.OrderingMode.desc,
+                )
+          ]))
         .get();
 
     final totalWorkouts = allLogs.length;
@@ -1542,6 +1841,28 @@ class WorkoutDatabaseHelper {
     }).toSet();
   }
 
+  /// Returns workout counts per day (normalized to midnight) for the last [daysBack] days.
+  Future<Map<DateTime, int>> getWorkoutDayCounts({int daysBack = 120}) async {
+    final now = DateTime.now();
+    final since = now.subtract(Duration(days: daysBack));
+    final dbInstance = await database;
+
+    final rows = await (dbInstance.select(dbInstance.workoutLogs)
+          ..where((tbl) =>
+              tbl.status.equals('completed') &
+              tbl.startTime
+                  .isBetweenValues(since, now.add(const Duration(days: 1)))))
+        .get();
+
+    final Map<DateTime, int> counts = {};
+    for (final row in rows) {
+      final d = row.startTime;
+      final day = DateTime(d.year, d.month, d.day);
+      counts[day] = (counts[day] ?? 0) + 1;
+    }
+    return counts;
+  }
+
   /// Returns the all-time best set for each rep bracket across all exercises.
   /// Map key = bracket label, value = {exerciseName, weight, reps} or null.
   Future<Map<String, Map<String, dynamic>?>> getAllTimePRsByRepBracket() async {
@@ -1595,5 +1916,190 @@ class WorkoutDatabaseHelper {
     }
 
     return result;
+  }
+
+  /// Returns top all-time PR entries across exercises, sorted by weight desc.
+  /// Each entry: {exerciseName: String, weight: double, reps: int}
+  Future<List<Map<String, dynamic>>> getAllTimeGlobalPRs(
+      {int limit = 10}) async {
+    final dbInstance = await database;
+
+    final rows = await dbInstance.customSelect(
+      '''
+      SELECT
+        s1.exercise_name_snapshot AS exerciseName,
+        s1.weight                 AS weight,
+        s1.reps                   AS reps
+      FROM set_logs s1
+      JOIN workout_logs wl ON wl.id = s1.workout_log_id
+      WHERE s1.is_completed = 1
+        AND s1.set_type != 'warmup'
+        AND s1.weight > 0
+        AND s1.reps  > 0
+        AND wl.status = 'completed'
+        AND s1.weight = (
+          SELECT MAX(s2.weight)
+          FROM set_logs s2
+          WHERE s2.exercise_name_snapshot = s1.exercise_name_snapshot
+            AND s2.is_completed = 1
+            AND s2.set_type != 'warmup'
+            AND s2.weight > 0
+        )
+      GROUP BY s1.exercise_name_snapshot
+      ORDER BY s1.weight DESC
+      LIMIT ?
+      ''',
+      variables: [drift.Variable.withInt(limit)],
+    ).get();
+
+    return rows
+        .map((row) => {
+              'exerciseName': row.read<String>('exerciseName'),
+              'weight': row.read<double>('weight'),
+              'reps': row.read<int>('reps'),
+            })
+        .toList();
+  }
+
+  /// Monthly volume buckets for the last [monthsBack] months.
+  /// Each entry: {monthStart: DateTime, monthLabel: String, tonnage: double, setCount: int}
+  Future<List<Map<String, dynamic>>> getMonthlyVolumeData(
+      {int monthsBack = 6}) async {
+    final now = DateTime.now();
+    final firstOfThisMonth = DateTime(now.year, now.month, 1);
+    final since = DateTime(
+      firstOfThisMonth.year,
+      firstOfThisMonth.month - (monthsBack - 1),
+      1,
+    );
+    final dbInstance = await database;
+
+    final query = dbInstance.select(dbInstance.setLogs).join([
+      drift.innerJoin(dbInstance.workoutLogs,
+          dbInstance.workoutLogs.id.equalsExp(dbInstance.setLogs.workoutLogId))
+    ])
+      ..where(dbInstance.setLogs.isCompleted.equals(true) &
+          dbInstance.setLogs.setType.isNotIn(['warmup']) &
+          dbInstance.setLogs.weight.isBiggerThanValue(0) &
+          dbInstance.setLogs.reps.isBiggerThanValue(0) &
+          dbInstance.workoutLogs.status.equals('completed') &
+          dbInstance.workoutLogs.startTime
+              .isBetweenValues(since, now.add(const Duration(days: 1))))
+      ..orderBy(
+          [drift.OrderingTerm(expression: dbInstance.workoutLogs.startTime)]);
+
+    final rows = await query.get();
+
+    final Map<String, Map<String, dynamic>> monthMap = {};
+
+    void ensureMonth(DateTime date) {
+      final start = DateTime(date.year, date.month, 1);
+      final key = '${start.year}-${start.month.toString().padLeft(2, '0')}';
+      monthMap.putIfAbsent(
+          key,
+          () => {
+                'monthStart': start,
+                'monthLabel':
+                    '${start.month}/${start.year.toString().substring(2)}',
+                'tonnage': 0.0,
+                'setCount': 0,
+              });
+    }
+
+    for (int i = monthsBack - 1; i >= 0; i--) {
+      ensureMonth(
+          DateTime(firstOfThisMonth.year, firstOfThisMonth.month - i, 1));
+    }
+
+    for (final r in rows) {
+      final setRow = r.readTable(dbInstance.setLogs);
+      final logRow = r.readTable(dbInstance.workoutLogs);
+      final monthStart =
+          DateTime(logRow.startTime.year, logRow.startTime.month, 1);
+      final key =
+          '${monthStart.year}-${monthStart.month.toString().padLeft(2, '0')}';
+
+      ensureMonth(logRow.startTime);
+
+      final weight = setRow.weight ?? 0.0;
+      final reps = setRow.reps ?? 0;
+      monthMap[key]!['tonnage'] =
+          (monthMap[key]!['tonnage'] as double) + weight * reps;
+      monthMap[key]!['setCount'] = (monthMap[key]!['setCount'] as int) + 1;
+    }
+
+    final result = monthMap.values.toList()
+      ..sort((a, b) =>
+          (a['monthStart'] as DateTime).compareTo(b['monthStart'] as DateTime));
+    return result;
+  }
+
+  /// Finds exercises with the strongest PR momentum over the last [daysWindow] days.
+  /// Compares best estimated 1RM in the recent window vs. the prior same-length window.
+  /// Each entry: {exerciseName, previousBestE1rm, recentBestE1rm, improvementPct}
+  Future<List<Map<String, dynamic>>> getNotablePrImprovements({
+    int daysWindow = 30,
+    int limit = 5,
+  }) async {
+    final now = DateTime.now();
+    final recentStart = now.subtract(Duration(days: daysWindow));
+    final previousStart = recentStart.subtract(Duration(days: daysWindow));
+    final dbInstance = await database;
+
+    final query = dbInstance.select(dbInstance.setLogs).join([
+      drift.innerJoin(dbInstance.workoutLogs,
+          dbInstance.workoutLogs.id.equalsExp(dbInstance.setLogs.workoutLogId))
+    ])
+      ..where(dbInstance.setLogs.isCompleted.equals(true) &
+          dbInstance.setLogs.setType.isNotIn(['warmup']) &
+          dbInstance.setLogs.weight.isBiggerThanValue(0) &
+          dbInstance.setLogs.reps.isBiggerThanValue(0) &
+          dbInstance.workoutLogs.status.equals('completed') &
+          dbInstance.workoutLogs.startTime.isBetweenValues(
+              previousStart, now.add(const Duration(days: 1))));
+
+    final rows = await query.get();
+
+    final Map<String, double> previousBest = {};
+    final Map<String, double> recentBest = {};
+
+    double e1rm(double weight, int reps) => weight * (1 + (reps / 30.0));
+
+    for (final r in rows) {
+      final setRow = r.readTable(dbInstance.setLogs);
+      final logRow = r.readTable(dbInstance.workoutLogs);
+      final name = (setRow.exerciseNameSnapshot ?? '').trim();
+      if (name.isEmpty) continue;
+
+      final value = e1rm(setRow.weight ?? 0.0, setRow.reps ?? 0);
+      if (value <= 0) continue;
+
+      final isRecent = !logRow.startTime.isBefore(recentStart);
+      if (isRecent) {
+        if (value > (recentBest[name] ?? 0.0)) recentBest[name] = value;
+      } else {
+        if (value > (previousBest[name] ?? 0.0)) previousBest[name] = value;
+      }
+    }
+
+    final result = <Map<String, dynamic>>[];
+    for (final entry in recentBest.entries) {
+      final name = entry.key;
+      final recent = entry.value;
+      final previous = previousBest[name] ?? 0.0;
+      if (previous <= 0 || recent <= previous) continue;
+
+      final improvementPct = ((recent - previous) / previous) * 100;
+      result.add({
+        'exerciseName': name,
+        'previousBestE1rm': previous,
+        'recentBestE1rm': recent,
+        'improvementPct': improvementPct,
+      });
+    }
+
+    result.sort((a, b) => (b['improvementPct'] as double)
+        .compareTo(a['improvementPct'] as double));
+    return result.take(limit).toList();
   }
 }

@@ -9,6 +9,7 @@ import 'generated/app_localizations.dart';
 // FIX: Importiere den ausgelagerten Initializer-Screen
 import 'screens/app_initializer_screen.dart';
 import 'services/profile_service.dart';
+import 'services/local_notification_service.dart';
 import 'services/workout_session_manager.dart';
 import 'package:provider/provider.dart';
 import 'services/theme_service.dart';
@@ -23,6 +24,7 @@ void main() async {
 
   // Das muss passieren, bevor irgendwas anderes lädt.
   await DatabaseHelper.instance.ensureStandardSupplements();
+  await LocalNotificationService.instance.initialize();
 
   // 1. Erstelle die Manager-Instanz
   final workoutSessionManager = WorkoutSessionManager();

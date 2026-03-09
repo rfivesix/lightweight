@@ -57,7 +57,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         (now.month == birthday.month && now.day < birthday.day)) {
       age--;
     }
-    return '$age Jahre'; // TODO: Lokalisieren falls gewünscht
+    return '$age Jahre';
   }
 
   /// Öffnet den Editor für Profildaten
@@ -74,7 +74,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     await showGlassBottomMenu(
       context: context,
-      title: 'Profil bearbeiten', // TODO: Lokalisieren
+      title: 'Profil bearbeiten',
       contentBuilder: (ctx, close) {
         return StatefulBuilder(
           builder: (context, setModalState) {

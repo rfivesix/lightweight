@@ -259,7 +259,7 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
               Text(
                 l10n.drawerMeasurements,
                 style: textTheme.titleMedium,
-              ), // TODO: Lokalisieren
+              ),
               const SizedBox(height: DesignConstants.spacingS),
               ..._measurementTypes.keys.map((key) {
                 return Padding(

@@ -759,7 +759,49 @@
   "sectionRecovery": "Erholung",
   "metricsMuscleReadiness": "Muskel-Bereitschaft",
   "recoveryTrackerTitle": "Erholungs-Tracker",
-  "recoveryTrackerComingSoon": "Muskel-Bereitschaft & Ermüdung (In Kürze)",
+  "recoveryTrackerComingSoon": "Muskel-Bereitschaft & Ermuedung (In Kuerze)",
+  "recoveryOverallMostlyRecovered": "Ueberwiegend erholt",
+  "recoveryOverallMixed": "Gemischter Erholungszustand",
+  "recoveryOverallSeveralRecovering": "Mehrere Muskelgruppen sind noch in Erholung",
+  "recoveryOverallInsufficientData": "Noch nicht genug Daten fuer eine Erholungs-Einschaetzung",
+  "recoveryHubCountsSummary": "In Erholung: {recovering}  Bereit: {ready}  Frisch: {fresh}",
+  "@recoveryHubCountsSummary": {
+    "placeholders": {
+      "recovering": { "type": "int" },
+      "ready": { "type": "int" },
+      "fresh": { "type": "int" }
+    }
+  },
+  "recoveryHubNoDataSummary": "Tracke weitere Workouts, um Erholungs-Einblicke freizuschalten.",
+  "recoveryByMuscleTitle": "Erholung je Muskel",
+  "recoveryStateRecovering": "In Erholung",
+  "recoveryStateReady": "Bereit",
+  "recoveryStateFresh": "Frisch",
+  "recoveryStateUnknown": "Unbekannt",
+  "recoveryLastLoadedHours": "Letzte signifikante Belastung: vor {hours}h",
+  "@recoveryLastLoadedHours": {
+    "placeholders": {
+      "hours": { "type": "int" }
+    }
+  },
+  "recoveryFatigueContextHigh": "Letzter Ermuedungs-Kontext: hohe Session-Ermuedung",
+  "recoveryFatigueContextBaseline": "Letzter Ermuedungs-Kontext: normale Session-Ermuedung",
+  "recoveryExplanationWithHighFatigue": "{muscle}: zuletzt vor {hours}h signifikant belastet, mit hoher Session-Ermuedung.",
+  "@recoveryExplanationWithHighFatigue": {
+    "placeholders": {
+      "muscle": { "type": "String" },
+      "hours": { "type": "int" }
+    }
+  },
+  "recoveryExplanationBasic": "{muscle}: zuletzt vor {hours}h signifikant belastet.",
+  "@recoveryExplanationBasic": {
+    "placeholders": {
+      "muscle": { "type": "String" },
+      "hours": { "type": "int" }
+    }
+  },
+  "recoveryHeuristicDisclaimer": "Dies ist eine konservative Heuristik auf Basis kuerzlich signifikanter Belastung und Session-Anstrengung. Keine medizinische Erholungs-Messung.",
+  "recoveryNoDataBody": "Es wurden noch nicht genug signifikante Trainingsbelastungen erfasst, um die Muskel-Erholung einzuordnen.",
   "sectionBodyNutrition": "Körper & Ernährung",
   "metricsCurrentWeight": "Aktuelles Gewicht",
   "metricsAvgCalories": "Ø Kalorien",
@@ -786,5 +828,128 @@
   "totalWorkoutsLabel": "Gesamt",
   "weeksLabel": "Wochen",
   "tonnageKgLabel": "Tonnage (kg)",
-  "noWorkoutDataLabel": "Noch keine Daten. Starte ein Training, um Statistiken zu sehen."
+  "noWorkoutDataLabel": "Noch keine Daten. Starte ein Training, um Statistiken zu sehen.",
+
+  "analyticsSectionVolumeMuscles": "Volumen & Muskelgruppen",
+  "analyticsSectionPerformanceRecords": "Leistung & Rekorde",
+  "analyticsTopVolume": "Top trainiert",
+  "analyticsLowestVolume": "Niedrigstes Volumen",
+  "analyticsRecentRecords": "Aktuelle Rekorde",
+  "analyticsPerfWithReps": "{weight} kg x {reps}",
+  "@analyticsPerfWithReps": {
+    "placeholders": {
+      "weight": { "type": "String" },
+      "reps": { "type": "int" }
+    }
+  },
+  "analyticsKgThisWeek": "kg (diese Woche)",
+  "analyticsRecoverySummary": "3 in Erholung, 8 belastbar",
+  "analyticsViewDetails": "Details ansehen",
+  "analyticsRepRangeSuffix": " Wdh.",
+  "analyticsNoRecordYet": "Noch kein Rekord",
+  "analyticsNotableImprovements": "Bemerkenswerte Verbesserungen",
+  "analyticsNoPrTrendInWindow": "In diesem Zeitraum gibt es noch keinen klaren Rekordtrend.",
+  "analyticsE1rmProgress": "e1RM {previous} -> {recent} kg",
+  "@analyticsE1rmProgress": {
+    "placeholders": {
+      "previous": { "type": "String" },
+      "recent": { "type": "String" }
+    }
+  },
+  "analyticsUnitKg": "kg",
+  "analyticsUnitSets": "Saetze",
+  "analyticsViewLabel": "Ansicht",
+  "analyticsViewWeek": "Woche",
+  "analyticsViewMonth": "Monat",
+  "analyticsViewByExercise": "Nach Uebung",
+  "analyticsViewByMuscle": "Nach Muskelgruppe",
+  "analyticsMetricLabel": "Messwert",
+  "analyticsMovedWeightKg": "Bewegtes Gewicht (kg)",
+  "analyticsWorkSets": "Arbeitssaetze",
+  "analyticsVolumeContextWithSets": "Bewegtes Gewicht = Gewicht x Wiederholungen. Fuer zaehlbasierte Belastung kannst du auf Arbeitssaetze wechseln.",
+  "analyticsVolumeContextTonnageOnly": "Diese Ansicht zeigt bewegtes Gewicht (Gewicht x Wiederholungen).",
+  "analyticsKpisHeader": "Kennzahlen",
+  "analyticsTrainingDaysPerWeek": "Trainingstage / Woche",
+  "analyticsLast4Weeks": "letzte 4 Wochen",
+  "analyticsRhythm": "Rhythmus",
+  "analyticsVsPrior4Weeks": "gegenueber den 4 Wochen davor",
+  "analyticsRollingConsistency": "Rollierende Konsistenz",
+  "analyticsWeeksAtLeast2Workouts": "Wochen mit mindestens 2 Einheiten",
+  "analyticsCalendarExplainer": "Die Farbdichte zeigt Einheiten pro Tag. Dadurch dient der Kalender als echte Konsistenz-Ansicht.",
+  "analyticsSelectDayPrompt": "Waehle einen Tag aus, um die Anzahl der Einheiten zu sehen.",
+  "analyticsSelectedDayWorkouts": "{date}: {count} Einheiten",
+  "@analyticsSelectedDayWorkouts": {
+    "placeholders": {
+      "date": { "type": "String" },
+      "count": { "type": "int" }
+    }
+  },
+  "analyticsTotalSessions": "Gesamte Einheiten",
+  "analyticsPlaceholderWeightValue": "82,5",
+  "analyticsPlaceholderWeightTrend": "kg (-0,5)",
+  "analyticsPlaceholderCaloriesValue": "2.450",
+  "analyticsPlaceholderCaloriesUnit": "kcal/Tag",
+  "analyticsMuscleWeeklySets": "Woechentliche Saetze",
+  "analyticsMuscleTopFrequency": "Top-Frequenz",
+  "analyticsPerWeekAbbrev": "Woche",
+  "analyticsKeepTrackingUnlockInsights": "Weiter tracken, um Einblicke freizuschalten.",
+  "analyticsGuidanceNoClearWeakPoint": "Hinweis: Kein klarer Schwachpunkt in diesem Zeitraum.",
+  "analyticsGuidanceLowerEmphasis": "Hinweis: Zuletzt geringere Betonung bei {muscles}.",
+  "@analyticsGuidanceLowerEmphasis": {
+    "placeholders": {
+      "muscles": { "type": "String" }
+    }
+  },
+  "analyticsPeriodLabel": "Zeitraum",
+  "analyticsEquivalentSetsExplainer": "Aequiavalente Arbeitssaetze nutzen Primaer x1.0 und Sekundaer x0.5. Frequenz zaehlt nur Tage mit >= 1.0 aequivalenten Saetzen.",
+  "analyticsWeeklySetsByMuscle": "Woechentliche Saetze je Muskel",
+  "analyticsFrequencyByMuscle": "Frequenz je Muskel",
+  "analyticsRecentDistributionHeatmap": "Aktuelle Verteilungs-Heatmap",
+  "analyticsGuidanceTitle": "Hinweise",
+  "analyticsGuidanceDirectionalDisclaimer": "Dies ist ein richtungsweisender Hinweis auf Basis deiner letzten Satzverteilung, keine absolute Diagnose.",
+  "analyticsGuidanceSoftenedDisclaimer": "Hinweise werden bewusst abgeschwaecht, bis genug Daten vorliegen.",
+  "analyticsWeekTotalEquivalentSets": "Wochensumme: {value} aequivalente Saetze",
+  "@analyticsWeekTotalEquivalentSets": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "analyticsFrequencyRuleFooter": "Frequenz zaehlt nur Tage, an denen der Muskel >= 1.0 aequivalente Saetze erreicht."
+  ,"liveWorkoutE1rmCurrentSet": "e1RM {value} kg"
+  ,"@liveWorkoutE1rmCurrentSet": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"liveWorkoutE1rmBestSession": "Beste e1RM in dieser Session: {value} kg"
+  ,"@liveWorkoutE1rmBestSession": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"liveWorkoutE1rmVsLastSession": "vs letzte Session: {delta} kg"
+  ,"@liveWorkoutE1rmVsLastSession": {
+    "placeholders": {
+      "delta": { "type": "String" }
+    }
+  }
+  ,"bodyNutritionCorrelationTitle": "Koerper & Ernaehrung Trends"
+  ,"metricsWeightChange": "Gewichtsaenderung"
+  ,"analyticsKcalPerDay": "kcal/Tag"
+  ,"analyticsDaysWithWeightData": "Tage mit Gewicht"
+  ,"analyticsDayUnitLabel": "Tage"
+  ,"analyticsPerDayLabel": "pro Tag"
+  ,"analyticsBodyNutritionTrendContext": "Gewichts- und Kalorientrends"
+  ,"analyticsWeightTrendLabel": "Koerpergewicht (geglattet)"
+  ,"analyticsCaloriesTrendLabel": "Kalorien (taeglicher Trend)"
+  ,"analyticsInterpretationTitle": "Interpretation"
+  ,"analyticsCorrelationDisclaimer": "Diese Ansicht zeigt zeitliche Trend-Korrelationen. Sie beweist nicht, dass Kalorienveraenderungen direkt Gewichtsveraenderungen verursacht haben."
+  ,"analyticsInsightStableWeightCaloriesUp": "Der Gewichtstrend ist stabil, waehrend die durchschnittlichen Kalorien gestiegen sind."
+  ,"analyticsInsightWeightUpCaloriesUp": "Das Gewicht zeigt einen Aufwaertstrend zusammen mit hoeherer durchschnittlicher Kalorienaufnahme."
+  ,"analyticsInsightCaloriesDownWeightStable": "Die juengste Kalorienreduktion hat den Gewichtstrend noch nicht klar veraendert."
+  ,"analyticsInsightWeightDownCaloriesDown": "Das Gewicht zeigt einen Abwaertstrend zusammen mit niedrigerer durchschnittlicher Kalorienaufnahme."
+  ,"analyticsInsightMixedPattern": "Gewichts- und Kalorientrends bewegen sich gemischt, noch ohne klares Korrelationsmuster."
+  ,"analyticsInsightNotEnoughData": "Noch nicht genug Daten fuer eine aussagekraeftige Korrelations-Einschaetzung."
+  ,"restTimerNotificationTitle": "Pause beendet"
+  ,"restTimerNotificationBody": "Dein Pausentimer ist abgelaufen. Bereit fuer den naechsten Satz."
 }

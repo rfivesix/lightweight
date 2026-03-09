@@ -1839,6 +1839,75 @@ class AppLocalizationsEn extends AppLocalizations {
       'Muscle readiness & fatigue (Coming Soon)';
 
   @override
+  String get recoveryOverallMostlyRecovered => 'Mostly recovered';
+
+  @override
+  String get recoveryOverallMixed => 'Mixed recovery state';
+
+  @override
+  String get recoveryOverallSeveralRecovering =>
+      'Several muscle groups still recovering';
+
+  @override
+  String get recoveryOverallInsufficientData =>
+      'Not enough data for recovery insight yet';
+
+  @override
+  String recoveryHubCountsSummary(int recovering, int ready, int fresh) {
+    return 'Recovering: $recovering  Ready: $ready  Fresh: $fresh';
+  }
+
+  @override
+  String get recoveryHubNoDataSummary =>
+      'Keep logging workouts to unlock recovery insights.';
+
+  @override
+  String get recoveryByMuscleTitle => 'Recovery by Muscle';
+
+  @override
+  String get recoveryStateRecovering => 'Recovering';
+
+  @override
+  String get recoveryStateReady => 'Ready';
+
+  @override
+  String get recoveryStateFresh => 'Fresh';
+
+  @override
+  String get recoveryStateUnknown => 'Unknown';
+
+  @override
+  String recoveryLastLoadedHours(int hours) {
+    return 'Last significant loading: ${hours}h ago';
+  }
+
+  @override
+  String get recoveryFatigueContextHigh =>
+      'Recent fatigue context: high session fatigue';
+
+  @override
+  String get recoveryFatigueContextBaseline =>
+      'Recent fatigue context: baseline session fatigue';
+
+  @override
+  String recoveryExplanationWithHighFatigue(String muscle, int hours) {
+    return '$muscle: last significantly loaded ${hours}h ago, with high session fatigue.';
+  }
+
+  @override
+  String recoveryExplanationBasic(String muscle, int hours) {
+    return '$muscle: last significantly loaded ${hours}h ago.';
+  }
+
+  @override
+  String get recoveryHeuristicDisclaimer =>
+      'This is a conservative heuristic based on recent significant loading and session effort. It is not a medical recovery measurement.';
+
+  @override
+  String get recoveryNoDataBody =>
+      'Not enough significant training load has been logged yet to estimate muscle recovery.';
+
+  @override
   String get sectionBodyNutrition => 'Body & Nutrition';
 
   @override
@@ -1919,4 +1988,278 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noWorkoutDataLabel =>
       'No workout data yet. Start logging to see stats.';
+
+  @override
+  String get analyticsSectionVolumeMuscles => 'Volume & Muscle Groups';
+
+  @override
+  String get analyticsSectionPerformanceRecords => 'Performance & Records';
+
+  @override
+  String get analyticsTopVolume => 'Top Trained';
+
+  @override
+  String get analyticsLowestVolume => 'Lowest Volume';
+
+  @override
+  String get analyticsRecentRecords => 'Recent Records';
+
+  @override
+  String analyticsPerfWithReps(String weight, int reps) {
+    return '$weight kg x $reps';
+  }
+
+  @override
+  String get analyticsKgThisWeek => 'kg (this week)';
+
+  @override
+  String get analyticsRecoverySummary => '3 recovering, 8 ready';
+
+  @override
+  String get analyticsViewDetails => 'View details';
+
+  @override
+  String get analyticsRepRangeSuffix => ' reps';
+
+  @override
+  String get analyticsNoRecordYet => 'No record yet';
+
+  @override
+  String get analyticsNotableImprovements => 'Notable Improvements';
+
+  @override
+  String get analyticsNoPrTrendInWindow =>
+      'There is no clear PR trend in this window yet.';
+
+  @override
+  String analyticsE1rmProgress(String previous, String recent) {
+    return 'e1RM $previous -> $recent kg';
+  }
+
+  @override
+  String get analyticsUnitKg => 'kg';
+
+  @override
+  String get analyticsUnitSets => 'sets';
+
+  @override
+  String get analyticsViewLabel => 'View';
+
+  @override
+  String get analyticsViewWeek => 'Week';
+
+  @override
+  String get analyticsViewMonth => 'Month';
+
+  @override
+  String get analyticsViewByExercise => 'By Exercise';
+
+  @override
+  String get analyticsViewByMuscle => 'By Muscle Group';
+
+  @override
+  String get analyticsMetricLabel => 'Metric';
+
+  @override
+  String get analyticsMovedWeightKg => 'Moved Weight (kg)';
+
+  @override
+  String get analyticsWorkSets => 'Work Sets';
+
+  @override
+  String get analyticsVolumeContextWithSets =>
+      'Moved weight = weight x reps. Switch to work sets for count-based load.';
+
+  @override
+  String get analyticsVolumeContextTonnageOnly =>
+      'This view uses moved weight (weight x reps).';
+
+  @override
+  String get analyticsKpisHeader => 'KPIs';
+
+  @override
+  String get analyticsTrainingDaysPerWeek => 'Training Days / Week';
+
+  @override
+  String get analyticsLast4Weeks => 'last 4 weeks';
+
+  @override
+  String get analyticsRhythm => 'Rhythm';
+
+  @override
+  String get analyticsVsPrior4Weeks => 'vs the previous 4 weeks';
+
+  @override
+  String get analyticsRollingConsistency => 'Rolling Consistency';
+
+  @override
+  String get analyticsWeeksAtLeast2Workouts => 'weeks with at least 2 sessions';
+
+  @override
+  String get analyticsCalendarExplainer =>
+      'Color intensity reflects sessions per day, making this a true consistency map.';
+
+  @override
+  String get analyticsSelectDayPrompt =>
+      'Select a day to inspect session count.';
+
+  @override
+  String analyticsSelectedDayWorkouts(String date, int count) {
+    return '$date: $count sessions';
+  }
+
+  @override
+  String get analyticsTotalSessions => 'Total Sessions';
+
+  @override
+  String get analyticsPlaceholderWeightValue => '82.5';
+
+  @override
+  String get analyticsPlaceholderWeightTrend => 'kg (-0.5)';
+
+  @override
+  String get analyticsPlaceholderCaloriesValue => '2,450';
+
+  @override
+  String get analyticsPlaceholderCaloriesUnit => 'kcal/day';
+
+  @override
+  String get analyticsMuscleWeeklySets => 'Weekly Sets';
+
+  @override
+  String get analyticsMuscleTopFrequency => 'Top Frequency';
+
+  @override
+  String get analyticsPerWeekAbbrev => 'wk';
+
+  @override
+  String get analyticsKeepTrackingUnlockInsights =>
+      'Keep tracking to unlock insights.';
+
+  @override
+  String get analyticsGuidanceNoClearWeakPoint =>
+      'Guidance: No clear weak point in this period.';
+
+  @override
+  String analyticsGuidanceLowerEmphasis(String muscles) {
+    return 'Guidance: Lower recent emphasis on $muscles.';
+  }
+
+  @override
+  String get analyticsPeriodLabel => 'Period';
+
+  @override
+  String get analyticsEquivalentSetsExplainer =>
+      'Equivalent hard sets use primary x1.0 and secondary x0.5 weighting. Frequency counts only days reaching >= 1.0 equivalent sets.';
+
+  @override
+  String get analyticsWeeklySetsByMuscle => 'Weekly Sets by Muscle';
+
+  @override
+  String get analyticsFrequencyByMuscle => 'Frequency by Muscle';
+
+  @override
+  String get analyticsRecentDistributionHeatmap =>
+      'Recent Distribution Heatmap';
+
+  @override
+  String get analyticsGuidanceTitle => 'Guidance';
+
+  @override
+  String get analyticsGuidanceDirectionalDisclaimer =>
+      'This is directional guidance based on your recent set distribution, not an absolute diagnosis.';
+
+  @override
+  String get analyticsGuidanceSoftenedDisclaimer =>
+      'Insights are intentionally softened until enough data is available.';
+
+  @override
+  String analyticsWeekTotalEquivalentSets(String value) {
+    return 'Week total: $value equivalent sets';
+  }
+
+  @override
+  String get analyticsFrequencyRuleFooter =>
+      'Frequency counts only days where the muscle reached >= 1.0 equivalent sets.';
+
+  @override
+  String liveWorkoutE1rmCurrentSet(String value) {
+    return 'e1RM $value kg';
+  }
+
+  @override
+  String liveWorkoutE1rmBestSession(String value) {
+    return 'Best e1RM this session: $value kg';
+  }
+
+  @override
+  String liveWorkoutE1rmVsLastSession(String delta) {
+    return 'vs last session: $delta kg';
+  }
+
+  @override
+  String get bodyNutritionCorrelationTitle => 'Body & Nutrition Trends';
+
+  @override
+  String get metricsWeightChange => 'Weight Change';
+
+  @override
+  String get analyticsKcalPerDay => 'kcal/day';
+
+  @override
+  String get analyticsDaysWithWeightData => 'days with weight';
+
+  @override
+  String get analyticsDayUnitLabel => 'days';
+
+  @override
+  String get analyticsPerDayLabel => 'per day';
+
+  @override
+  String get analyticsBodyNutritionTrendContext =>
+      'Body weight and calorie trends';
+
+  @override
+  String get analyticsWeightTrendLabel => 'Body weight (smoothed)';
+
+  @override
+  String get analyticsCaloriesTrendLabel => 'Calories (daily avg trend)';
+
+  @override
+  String get analyticsInterpretationTitle => 'Interpretation';
+
+  @override
+  String get analyticsCorrelationDisclaimer =>
+      'This view shows trend correlation over time. It does not prove that calorie changes directly caused weight changes.';
+
+  @override
+  String get analyticsInsightStableWeightCaloriesUp =>
+      'Weight trend is stable while average calories increased.';
+
+  @override
+  String get analyticsInsightWeightUpCaloriesUp =>
+      'Weight is trending upward alongside higher average calorie intake.';
+
+  @override
+  String get analyticsInsightCaloriesDownWeightStable =>
+      'Recent calorie reduction has not yet clearly changed the weight trend.';
+
+  @override
+  String get analyticsInsightWeightDownCaloriesDown =>
+      'Weight is trending downward alongside lower average calorie intake.';
+
+  @override
+  String get analyticsInsightMixedPattern =>
+      'Weight and calorie trends move in mixed directions without a clear correlation pattern yet.';
+
+  @override
+  String get analyticsInsightNotEnoughData =>
+      'Not enough data yet for meaningful correlation insight.';
+
+  @override
+  String get restTimerNotificationTitle => 'Rest finished';
+
+  @override
+  String get restTimerNotificationBody =>
+      'Your pause timer is over. Ready for the next set.';
 }

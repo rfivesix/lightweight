@@ -1,28 +1,28 @@
 name: hypertrack
 description: "A modern, privacy-first fitness and nutrition tracking app. Offline-first, no cloud dependency, built with Flutter."
-publish_to: 'none' 
-version: 0.6.1+60100
+publish_to: "none"
+version: 0.7.0-alpha+70000
 
 environment:
-  sdk: '>=3.0.0 <4.0.0' # Angepasst für moderne SDKs
+  sdk: ">=3.0.0 <4.0.0" # Angepasst für moderne SDKs
 
 dependencies:
   flutter:
     sdk: flutter
-  
+
   # DOC: Hinzugefügt für die Lokalisierung (Mehrsprachigkeit)
   flutter_localizations:
     sdk: flutter
   intl: 0.20.2 # Stets die neueste Version prüfen mit `flutter pub outdated`
 
   # DOC: Hinzugefügt für die SQLite-Datenbank
-  sqflite: ^2.3.0 
+  sqflite: ^2.3.0
   path: ^1.8.3
 
   cupertino_icons: ^1.0.8
   flutter_gen: ^5.11.0
   shared_preferences: ^2.2.3
-  dynamic_color: ^1.7.0 
+  dynamic_color: ^1.7.0
   url_launcher: ^6.2.6
   path_provider: ^2.1.5
   file_picker: ^10.3.2
@@ -48,6 +48,9 @@ dependencies:
   http: ^1.2.0
   flutter_secure_storage: ^9.2.4
   speech_to_text: ^7.0.0
+  flutter_local_notifications: ^17.2.3
+  flutter_ringtone_player: ^4.0.0+4
+  timezone: ^0.9.4
 
   drift: ^2.20.0
   sqlite3_flutter_libs: ^0.5.20
@@ -61,8 +64,8 @@ dev_dependencies:
   build_runner: ^2.4.8
   drift_dev: ^2.20.0
 flutter_launcher_icons:
-  android: true       # Icon für Android generieren
-  ios: true           # Icon für iOS generieren
+  android: true # Icon für Android generieren
+  ios: true # Icon für iOS generieren
   image_path: "assets/icon/app_icon.png" # Pfad zu deinem Haupt-Icon
 
 flutter:
@@ -70,7 +73,7 @@ flutter:
   # für die Lokalisierung automatisch zu generieren.
   generate: true
   uses-material-design: true
-  
+
   assets:
     - assets/images/max_mustermann.png
     - assets/db/
@@ -89,7 +92,7 @@ flutter:
         - asset: assets/fonts/Inter-ExtraBold.ttf
           weight: 800 # ExtraBold
         - asset: assets/fonts/Inter-Black.ttf
-          weight: 900 # Black        
+          weight: 900 # Black
         - asset: assets/fonts/Inter-Italic.ttf
           style: italic
         - asset: assets/fonts/Inter-BoldItalic.ttf

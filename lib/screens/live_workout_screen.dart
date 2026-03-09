@@ -479,6 +479,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     List<SetLog> lastPerfSets,
     SetTemplate template,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final manager = Provider.of<WorkoutSessionManager>(context, listen: false);
     final bool isCompleted = setLog.isCompleted ?? false;
 
@@ -626,6 +627,35 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       ],
     );
 
+    final currentSetE1rm = _calculateBrzyckiE1rm(
+      setLog,
+      requireCompleted: false,
+    );
+    final showCurrentSetE1rm = !isCardio && currentSetE1rm != null;
+
+    final rowWithE1rm = Column(
+      children: [
+        rowContent,
+        if (showCurrentSetE1rm)
+          Padding(
+            padding: const EdgeInsets.only(right: 12.0, bottom: 4.0),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                l10n.liveWorkoutE1rmCurrentSet(
+                  _formatKg(currentSetE1rm),
+                ),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+
     return Dismissible(
       key: ValueKey('set_$templateId'),
       direction:
@@ -644,7 +674,53 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
               color: isCompleted ? Colors.green.withOpacity(0.2) : rowColor,
             ),
           ),
-          rowContent,
+          rowWithE1rm,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExerciseE1rmSummary(
+    AppLocalizations l10n,
+    RoutineExercise routineExercise,
+    WorkoutSessionManager manager,
+  ) {
+    final sessionBest = _getSessionBestE1rm(routineExercise, manager);
+    if (sessionBest == null) return const SizedBox.shrink();
+
+    final lastSessionBest =
+        _getLastSessionBestE1rm(routineExercise.exercise.nameEn);
+    final hasDelta = lastSessionBest != null;
+    final delta = hasDelta ? sessionBest - lastSessionBest : null;
+
+    final theme = Theme.of(context);
+    final isPositive = (delta ?? 0) >= 0;
+    final deltaPrefix = isPositive ? '+' : '-';
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 8.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              l10n.liveWorkoutE1rmBestSession(_formatKg(sessionBest)),
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          if (hasDelta)
+            Text(
+              l10n.liveWorkoutE1rmVsLastSession(
+                '$deltaPrefix${_formatKg(delta!.abs())}',
+              ),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: isPositive
+                    ? Colors.green.shade700
+                    : theme.colorScheme.error,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
         ],
       ),
     );
@@ -821,6 +897,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                           itemCount: manager.exercises.length,
                           itemBuilder: (context, index) {
                             final routineExercise = manager.exercises[index];
+                            final showE1rmSummary = !_isCardio(routineExercise);
                             return WorkoutCard(
                               key: ValueKey(routineExercise.id),
                               child: Column(
@@ -899,6 +976,12 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                       ],
                                     ),
                                   ),
+                                  if (showE1rmSummary)
+                                    _buildExerciseE1rmSummary(
+                                      l10n,
+                                      routineExercise,
+                                      manager,
+                                    ),
                                   Padding(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 0.0,
@@ -1100,4 +1183,77 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         return Colors.grey;
     }
   }
+
+  bool _isQualifyingSetForE1rm(SetLog setLog,
+      {required bool requireCompleted}) {
+    final reps = setLog.reps;
+    final weight = setLog.weightKg;
+    final isWarmup = setLog.setType == 'warmup';
+    final isCompleted = setLog.isCompleted == true;
+
+    if (isWarmup) return false;
+    if (requireCompleted && !isCompleted) return false;
+    if (weight == null || weight <= 0) return false;
+    if (reps == null || reps <= 0 || reps > 10) return false;
+
+    return true;
+  }
+
+  double? _calculateBrzyckiE1rm(
+    SetLog setLog, {
+    required bool requireCompleted,
+  }) {
+    if (!_isQualifyingSetForE1rm(setLog, requireCompleted: requireCompleted)) {
+      return null;
+    }
+
+    final reps = setLog.reps!;
+    final weight = setLog.weightKg!;
+    return weight * (36 / (37 - reps));
+  }
+
+  double? _getSessionBestE1rm(
+    RoutineExercise routineExercise,
+    WorkoutSessionManager manager,
+  ) {
+    double? best;
+
+    for (final template in routineExercise.setTemplates) {
+      final setLog = manager.setLogs[template.id];
+      if (setLog == null) continue;
+
+      final value = _calculateBrzyckiE1rm(
+        setLog,
+        requireCompleted: true,
+      );
+      if (value == null) continue;
+
+      if (best == null || value > best) {
+        best = value;
+      }
+    }
+
+    return best;
+  }
+
+  double? _getLastSessionBestE1rm(String exerciseName) {
+    final lastSets = _lastPerformances[exerciseName] ?? const <SetLog>[];
+    double? best;
+
+    for (final setLog in lastSets) {
+      final value = _calculateBrzyckiE1rm(
+        setLog,
+        requireCompleted: true,
+      );
+      if (value == null) continue;
+
+      if (best == null || value > best) {
+        best = value;
+      }
+    }
+
+    return best;
+  }
+
+  String _formatKg(double value) => value.toStringAsFixed(1);
 }

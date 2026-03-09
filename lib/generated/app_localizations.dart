@@ -3536,6 +3536,114 @@ abstract class AppLocalizations {
   /// **'Muscle readiness & fatigue (Coming Soon)'**
   String get recoveryTrackerComingSoon;
 
+  /// No description provided for @recoveryOverallMostlyRecovered.
+  ///
+  /// In en, this message translates to:
+  /// **'Mostly recovered'**
+  String get recoveryOverallMostlyRecovered;
+
+  /// No description provided for @recoveryOverallMixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Mixed recovery state'**
+  String get recoveryOverallMixed;
+
+  /// No description provided for @recoveryOverallSeveralRecovering.
+  ///
+  /// In en, this message translates to:
+  /// **'Several muscle groups still recovering'**
+  String get recoveryOverallSeveralRecovering;
+
+  /// No description provided for @recoveryOverallInsufficientData.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough data for recovery insight yet'**
+  String get recoveryOverallInsufficientData;
+
+  /// No description provided for @recoveryHubCountsSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovering: {recovering}  Ready: {ready}  Fresh: {fresh}'**
+  String recoveryHubCountsSummary(int recovering, int ready, int fresh);
+
+  /// No description provided for @recoveryHubNoDataSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep logging workouts to unlock recovery insights.'**
+  String get recoveryHubNoDataSummary;
+
+  /// No description provided for @recoveryByMuscleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery by Muscle'**
+  String get recoveryByMuscleTitle;
+
+  /// No description provided for @recoveryStateRecovering.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovering'**
+  String get recoveryStateRecovering;
+
+  /// No description provided for @recoveryStateReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get recoveryStateReady;
+
+  /// No description provided for @recoveryStateFresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Fresh'**
+  String get recoveryStateFresh;
+
+  /// No description provided for @recoveryStateUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get recoveryStateUnknown;
+
+  /// No description provided for @recoveryLastLoadedHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Last significant loading: {hours}h ago'**
+  String recoveryLastLoadedHours(int hours);
+
+  /// No description provided for @recoveryFatigueContextHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent fatigue context: high session fatigue'**
+  String get recoveryFatigueContextHigh;
+
+  /// No description provided for @recoveryFatigueContextBaseline.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent fatigue context: baseline session fatigue'**
+  String get recoveryFatigueContextBaseline;
+
+  /// No description provided for @recoveryExplanationWithHighFatigue.
+  ///
+  /// In en, this message translates to:
+  /// **'{muscle}: last significantly loaded {hours}h ago, with high session fatigue.'**
+  String recoveryExplanationWithHighFatigue(String muscle, int hours);
+
+  /// No description provided for @recoveryExplanationBasic.
+  ///
+  /// In en, this message translates to:
+  /// **'{muscle}: last significantly loaded {hours}h ago.'**
+  String recoveryExplanationBasic(String muscle, int hours);
+
+  /// No description provided for @recoveryHeuristicDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'This is a conservative heuristic based on recent significant loading and session effort. It is not a medical recovery measurement.'**
+  String get recoveryHeuristicDisclaimer;
+
+  /// No description provided for @recoveryNoDataBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough significant training load has been logged yet to estimate muscle recovery.'**
+  String get recoveryNoDataBody;
+
   /// No description provided for @sectionBodyNutrition.
   ///
   /// In en, this message translates to:
@@ -3697,6 +3805,480 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No workout data yet. Start logging to see stats.'**
   String get noWorkoutDataLabel;
+
+  /// No description provided for @analyticsSectionVolumeMuscles.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume & Muscle Groups'**
+  String get analyticsSectionVolumeMuscles;
+
+  /// No description provided for @analyticsSectionPerformanceRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance & Records'**
+  String get analyticsSectionPerformanceRecords;
+
+  /// No description provided for @analyticsTopVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Top Trained'**
+  String get analyticsTopVolume;
+
+  /// No description provided for @analyticsLowestVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Lowest Volume'**
+  String get analyticsLowestVolume;
+
+  /// No description provided for @analyticsRecentRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Records'**
+  String get analyticsRecentRecords;
+
+  /// No description provided for @analyticsPerfWithReps.
+  ///
+  /// In en, this message translates to:
+  /// **'{weight} kg x {reps}'**
+  String analyticsPerfWithReps(String weight, int reps);
+
+  /// No description provided for @analyticsKgThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'kg (this week)'**
+  String get analyticsKgThisWeek;
+
+  /// No description provided for @analyticsRecoverySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'3 recovering, 8 ready'**
+  String get analyticsRecoverySummary;
+
+  /// No description provided for @analyticsViewDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'View details'**
+  String get analyticsViewDetails;
+
+  /// No description provided for @analyticsRepRangeSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **' reps'**
+  String get analyticsRepRangeSuffix;
+
+  /// No description provided for @analyticsNoRecordYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No record yet'**
+  String get analyticsNoRecordYet;
+
+  /// No description provided for @analyticsNotableImprovements.
+  ///
+  /// In en, this message translates to:
+  /// **'Notable Improvements'**
+  String get analyticsNotableImprovements;
+
+  /// No description provided for @analyticsNoPrTrendInWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'There is no clear PR trend in this window yet.'**
+  String get analyticsNoPrTrendInWindow;
+
+  /// No description provided for @analyticsE1rmProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'e1RM {previous} -> {recent} kg'**
+  String analyticsE1rmProgress(String previous, String recent);
+
+  /// No description provided for @analyticsUnitKg.
+  ///
+  /// In en, this message translates to:
+  /// **'kg'**
+  String get analyticsUnitKg;
+
+  /// No description provided for @analyticsUnitSets.
+  ///
+  /// In en, this message translates to:
+  /// **'sets'**
+  String get analyticsUnitSets;
+
+  /// No description provided for @analyticsViewLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get analyticsViewLabel;
+
+  /// No description provided for @analyticsViewWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get analyticsViewWeek;
+
+  /// No description provided for @analyticsViewMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get analyticsViewMonth;
+
+  /// No description provided for @analyticsViewByExercise.
+  ///
+  /// In en, this message translates to:
+  /// **'By Exercise'**
+  String get analyticsViewByExercise;
+
+  /// No description provided for @analyticsViewByMuscle.
+  ///
+  /// In en, this message translates to:
+  /// **'By Muscle Group'**
+  String get analyticsViewByMuscle;
+
+  /// No description provided for @analyticsMetricLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Metric'**
+  String get analyticsMetricLabel;
+
+  /// No description provided for @analyticsMovedWeightKg.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved Weight (kg)'**
+  String get analyticsMovedWeightKg;
+
+  /// No description provided for @analyticsWorkSets.
+  ///
+  /// In en, this message translates to:
+  /// **'Work Sets'**
+  String get analyticsWorkSets;
+
+  /// No description provided for @analyticsVolumeContextWithSets.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved weight = weight x reps. Switch to work sets for count-based load.'**
+  String get analyticsVolumeContextWithSets;
+
+  /// No description provided for @analyticsVolumeContextTonnageOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'This view uses moved weight (weight x reps).'**
+  String get analyticsVolumeContextTonnageOnly;
+
+  /// No description provided for @analyticsKpisHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'KPIs'**
+  String get analyticsKpisHeader;
+
+  /// No description provided for @analyticsTrainingDaysPerWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Training Days / Week'**
+  String get analyticsTrainingDaysPerWeek;
+
+  /// No description provided for @analyticsLast4Weeks.
+  ///
+  /// In en, this message translates to:
+  /// **'last 4 weeks'**
+  String get analyticsLast4Weeks;
+
+  /// No description provided for @analyticsRhythm.
+  ///
+  /// In en, this message translates to:
+  /// **'Rhythm'**
+  String get analyticsRhythm;
+
+  /// No description provided for @analyticsVsPrior4Weeks.
+  ///
+  /// In en, this message translates to:
+  /// **'vs the previous 4 weeks'**
+  String get analyticsVsPrior4Weeks;
+
+  /// No description provided for @analyticsRollingConsistency.
+  ///
+  /// In en, this message translates to:
+  /// **'Rolling Consistency'**
+  String get analyticsRollingConsistency;
+
+  /// No description provided for @analyticsWeeksAtLeast2Workouts.
+  ///
+  /// In en, this message translates to:
+  /// **'weeks with at least 2 sessions'**
+  String get analyticsWeeksAtLeast2Workouts;
+
+  /// No description provided for @analyticsCalendarExplainer.
+  ///
+  /// In en, this message translates to:
+  /// **'Color intensity reflects sessions per day, making this a true consistency map.'**
+  String get analyticsCalendarExplainer;
+
+  /// No description provided for @analyticsSelectDayPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a day to inspect session count.'**
+  String get analyticsSelectDayPrompt;
+
+  /// No description provided for @analyticsSelectedDayWorkouts.
+  ///
+  /// In en, this message translates to:
+  /// **'{date}: {count} sessions'**
+  String analyticsSelectedDayWorkouts(String date, int count);
+
+  /// No description provided for @analyticsTotalSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Sessions'**
+  String get analyticsTotalSessions;
+
+  /// No description provided for @analyticsPlaceholderWeightValue.
+  ///
+  /// In en, this message translates to:
+  /// **'82.5'**
+  String get analyticsPlaceholderWeightValue;
+
+  /// No description provided for @analyticsPlaceholderWeightTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'kg (-0.5)'**
+  String get analyticsPlaceholderWeightTrend;
+
+  /// No description provided for @analyticsPlaceholderCaloriesValue.
+  ///
+  /// In en, this message translates to:
+  /// **'2,450'**
+  String get analyticsPlaceholderCaloriesValue;
+
+  /// No description provided for @analyticsPlaceholderCaloriesUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'kcal/day'**
+  String get analyticsPlaceholderCaloriesUnit;
+
+  /// No description provided for @analyticsMuscleWeeklySets.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Sets'**
+  String get analyticsMuscleWeeklySets;
+
+  /// No description provided for @analyticsMuscleTopFrequency.
+  ///
+  /// In en, this message translates to:
+  /// **'Top Frequency'**
+  String get analyticsMuscleTopFrequency;
+
+  /// No description provided for @analyticsPerWeekAbbrev.
+  ///
+  /// In en, this message translates to:
+  /// **'wk'**
+  String get analyticsPerWeekAbbrev;
+
+  /// No description provided for @analyticsKeepTrackingUnlockInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep tracking to unlock insights.'**
+  String get analyticsKeepTrackingUnlockInsights;
+
+  /// No description provided for @analyticsGuidanceNoClearWeakPoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Guidance: No clear weak point in this period.'**
+  String get analyticsGuidanceNoClearWeakPoint;
+
+  /// No description provided for @analyticsGuidanceLowerEmphasis.
+  ///
+  /// In en, this message translates to:
+  /// **'Guidance: Lower recent emphasis on {muscles}.'**
+  String analyticsGuidanceLowerEmphasis(String muscles);
+
+  /// No description provided for @analyticsPeriodLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Period'**
+  String get analyticsPeriodLabel;
+
+  /// No description provided for @analyticsEquivalentSetsExplainer.
+  ///
+  /// In en, this message translates to:
+  /// **'Equivalent hard sets use primary x1.0 and secondary x0.5 weighting. Frequency counts only days reaching >= 1.0 equivalent sets.'**
+  String get analyticsEquivalentSetsExplainer;
+
+  /// No description provided for @analyticsWeeklySetsByMuscle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Sets by Muscle'**
+  String get analyticsWeeklySetsByMuscle;
+
+  /// No description provided for @analyticsFrequencyByMuscle.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency by Muscle'**
+  String get analyticsFrequencyByMuscle;
+
+  /// No description provided for @analyticsRecentDistributionHeatmap.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Distribution Heatmap'**
+  String get analyticsRecentDistributionHeatmap;
+
+  /// No description provided for @analyticsGuidanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Guidance'**
+  String get analyticsGuidanceTitle;
+
+  /// No description provided for @analyticsGuidanceDirectionalDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'This is directional guidance based on your recent set distribution, not an absolute diagnosis.'**
+  String get analyticsGuidanceDirectionalDisclaimer;
+
+  /// No description provided for @analyticsGuidanceSoftenedDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Insights are intentionally softened until enough data is available.'**
+  String get analyticsGuidanceSoftenedDisclaimer;
+
+  /// No description provided for @analyticsWeekTotalEquivalentSets.
+  ///
+  /// In en, this message translates to:
+  /// **'Week total: {value} equivalent sets'**
+  String analyticsWeekTotalEquivalentSets(String value);
+
+  /// No description provided for @analyticsFrequencyRuleFooter.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency counts only days where the muscle reached >= 1.0 equivalent sets.'**
+  String get analyticsFrequencyRuleFooter;
+
+  /// No description provided for @liveWorkoutE1rmCurrentSet.
+  ///
+  /// In en, this message translates to:
+  /// **'e1RM {value} kg'**
+  String liveWorkoutE1rmCurrentSet(String value);
+
+  /// No description provided for @liveWorkoutE1rmBestSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Best e1RM this session: {value} kg'**
+  String liveWorkoutE1rmBestSession(String value);
+
+  /// No description provided for @liveWorkoutE1rmVsLastSession.
+  ///
+  /// In en, this message translates to:
+  /// **'vs last session: {delta} kg'**
+  String liveWorkoutE1rmVsLastSession(String delta);
+
+  /// No description provided for @bodyNutritionCorrelationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Body & Nutrition Trends'**
+  String get bodyNutritionCorrelationTitle;
+
+  /// No description provided for @metricsWeightChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight Change'**
+  String get metricsWeightChange;
+
+  /// No description provided for @analyticsKcalPerDay.
+  ///
+  /// In en, this message translates to:
+  /// **'kcal/day'**
+  String get analyticsKcalPerDay;
+
+  /// No description provided for @analyticsDaysWithWeightData.
+  ///
+  /// In en, this message translates to:
+  /// **'days with weight'**
+  String get analyticsDaysWithWeightData;
+
+  /// No description provided for @analyticsDayUnitLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'days'**
+  String get analyticsDayUnitLabel;
+
+  /// No description provided for @analyticsPerDayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'per day'**
+  String get analyticsPerDayLabel;
+
+  /// No description provided for @analyticsBodyNutritionTrendContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Body weight and calorie trends'**
+  String get analyticsBodyNutritionTrendContext;
+
+  /// No description provided for @analyticsWeightTrendLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Body weight (smoothed)'**
+  String get analyticsWeightTrendLabel;
+
+  /// No description provided for @analyticsCaloriesTrendLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories (daily avg trend)'**
+  String get analyticsCaloriesTrendLabel;
+
+  /// No description provided for @analyticsInterpretationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Interpretation'**
+  String get analyticsInterpretationTitle;
+
+  /// No description provided for @analyticsCorrelationDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'This view shows trend correlation over time. It does not prove that calorie changes directly caused weight changes.'**
+  String get analyticsCorrelationDisclaimer;
+
+  /// No description provided for @analyticsInsightStableWeightCaloriesUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight trend is stable while average calories increased.'**
+  String get analyticsInsightStableWeightCaloriesUp;
+
+  /// No description provided for @analyticsInsightWeightUpCaloriesUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight is trending upward alongside higher average calorie intake.'**
+  String get analyticsInsightWeightUpCaloriesUp;
+
+  /// No description provided for @analyticsInsightCaloriesDownWeightStable.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent calorie reduction has not yet clearly changed the weight trend.'**
+  String get analyticsInsightCaloriesDownWeightStable;
+
+  /// No description provided for @analyticsInsightWeightDownCaloriesDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight is trending downward alongside lower average calorie intake.'**
+  String get analyticsInsightWeightDownCaloriesDown;
+
+  /// No description provided for @analyticsInsightMixedPattern.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight and calorie trends move in mixed directions without a clear correlation pattern yet.'**
+  String get analyticsInsightMixedPattern;
+
+  /// No description provided for @analyticsInsightNotEnoughData.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough data yet for meaningful correlation insight.'**
+  String get analyticsInsightNotEnoughData;
+
+  /// No description provided for @restTimerNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest finished'**
+  String get restTimerNotificationTitle;
+
+  /// No description provided for @restTimerNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your pause timer is over. Ready for the next set.'**
+  String get restTimerNotificationBody;
 }
 
 class _AppLocalizationsDelegate

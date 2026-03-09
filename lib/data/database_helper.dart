@@ -55,7 +55,6 @@ class DatabaseHelper {
         dailyLimit: 400,
         isBuiltin: true,
       ));
-      debugPrint("✅ Standard-Supplement 'Koffein' wurde angelegt.");
     }
   }
 
@@ -356,12 +355,10 @@ class DatabaseHelper {
                   amount: drift.Value(totalCaffeine),
                   takenAt: drift.Value(entry.timestamp),
                 ));
-            debugPrint(
-                "☕️ Automatisch ${totalCaffeine.round()}mg Koffein geloggt.");
           }
         }
       } catch (e) {
-        debugPrint("⚠️ Fehler beim automatischen Koffein-Log: $e");
+        // failed silently
       }
     }
 
@@ -980,6 +977,18 @@ class DatabaseHelper {
     return row?.consumedAt;
   }
 
+  Future<DateTime?> getEarliestFluidEntryDate() async {
+    final dbInstance = await database;
+    final query = dbInstance.select(dbInstance.fluidLogs)
+      ..orderBy([
+        (t) => drift.OrderingTerm(
+            expression: t.consumedAt, mode: drift.OrderingMode.asc)
+      ])
+      ..limit(1);
+    final row = await query.getSingleOrNull();
+    return row?.consumedAt;
+  }
+
   Future<Set<int>> getNutritionLogDaysInMonth(DateTime month) async {
     final dbInstance = await database;
     final start = DateTime(month.year, month.month, 1);
@@ -1178,22 +1187,20 @@ class DatabaseHelper {
       // We need the user ID
       final profile =
           await dbInstance.select(dbInstance.profiles).getSingleOrNull();
-      if (profile != null) {
-        await dbInstance
-            .into(dbInstance.appSettings)
-            .insert(db.AppSettingsCompanion(
-              userId: drift.Value(profile.id),
-              targetCalories: drift.Value(calories),
-              targetProtein: drift.Value(protein),
-              targetCarbs: drift.Value(carbs),
-              targetFat: drift.Value(fat),
-              targetWater: drift.Value(water),
-              themeMode: const drift.Value('system'), // Defaults
-              unitSystem: const drift.Value('metric'),
-            ));
-      } else {
-        debugPrint("⚠️ ERROR: No profile found, cannot save goals!");
-      }
+      if (profile == null) return;
+
+      await dbInstance
+          .into(dbInstance.appSettings)
+          .insert(db.AppSettingsCompanion(
+            userId: drift.Value(profile.id),
+            targetCalories: drift.Value(calories),
+            targetProtein: drift.Value(protein),
+            targetCarbs: drift.Value(carbs),
+            targetFat: drift.Value(fat),
+            targetWater: drift.Value(water),
+            themeMode: const drift.Value('system'), // Defaults
+            unitSystem: const drift.Value('metric'),
+          ));
     }
 
     // 2. Add historical entry

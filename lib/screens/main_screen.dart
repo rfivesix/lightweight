@@ -651,7 +651,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     switch (index) {
       case 1: // Workout
         return GlobalAppBar(
-          title: 'Workout', // TODO: l10n
+          title: l10n.workout,
           actions: [_profileAppBarButton(context)],
         );
       case 2: // Stats

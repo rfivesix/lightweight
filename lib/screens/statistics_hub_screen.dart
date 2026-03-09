@@ -1,16 +1,19 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import '../generated/app_localizations.dart';
+
 import '../data/workout_database_helper.dart';
+import '../generated/app_localizations.dart';
+import '../util/body_nutrition_analytics_utils.dart';
 import '../util/design_constants.dart';
 import '../widgets/bottom_content_spacer.dart';
 import '../widgets/summary_card.dart';
-import 'measurements_screen.dart';
-// Drill-down screens
+import 'analytics/body_nutrition_correlation_screen.dart';
 import 'analytics/consistency_tracker_screen.dart';
 import 'analytics/muscle_group_analytics_screen.dart';
 import 'analytics/pr_dashboard_screen.dart';
-import 'exercise_catalog_screen.dart';
 import 'analytics/recovery_tracker_screen.dart';
+import 'exercise_catalog_screen.dart';
+import 'measurements_screen.dart';
 
 class StatisticsHubScreen extends StatefulWidget {
   const StatisticsHubScreen({super.key});
@@ -22,21 +25,88 @@ class StatisticsHubScreen extends StatefulWidget {
 class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   late final l10n = AppLocalizations.of(context)!;
 
-  // Time range filter state
-  int _selectedTimeRangeIndex = 1; // Default to 30 Days
+  int _selectedTimeRangeIndex = 1;
 
+  bool _isLoadingStats = true;
   List<Map<String, dynamic>> _recentPRs = [];
+  List<Map<String, dynamic>> _weeklyVolume = [];
+  List<Map<String, dynamic>> _workoutsPerWeek = [];
+  Map<String, dynamic> _muscleAnalytics = const {};
+  List<Map<String, dynamic>> _notableImprovements = [];
+  Map<String, dynamic> _trainingStats = const {};
+  Map<String, dynamic> _recoveryAnalytics = const {};
+  BodyNutritionAnalyticsResult? _bodyNutrition;
 
   @override
   void initState() {
     super.initState();
-    _loadPRData();
+    _loadHubAnalytics();
   }
 
-  Future<void> _loadPRData() async {
-    final prs =
-        await WorkoutDatabaseHelper.instance.getRecentGlobalPRs(limit: 3);
-    if (mounted) setState(() => _recentPRs = prs);
+  int get _selectedDays {
+    switch (_selectedTimeRangeIndex) {
+      case 0:
+        return 7;
+      case 1:
+        return 30;
+      case 2:
+        return 90;
+      case 3:
+        return 180;
+      case 4:
+        return 3650;
+      default:
+        return 30;
+    }
+  }
+
+  Future<void> _loadHubAnalytics() async {
+    setState(() => _isLoadingStats = true);
+
+    final prs = WorkoutDatabaseHelper.instance.getRecentGlobalPRs(limit: 3);
+    final weeklyVolume =
+        WorkoutDatabaseHelper.instance.getWeeklyVolumeData(weeksBack: 6);
+    final workoutsPerWeek =
+        WorkoutDatabaseHelper.instance.getWorkoutsPerWeek(weeksBack: 6);
+    final muscleAnalytics =
+        WorkoutDatabaseHelper.instance.getMuscleGroupAnalytics(
+      daysBack: _selectedDays,
+      weeksBack: 8,
+    );
+    final trainingStats = WorkoutDatabaseHelper.instance.getTrainingStats();
+    final recoveryAnalytics =
+        WorkoutDatabaseHelper.instance.getRecoveryAnalytics();
+    final improvements =
+        WorkoutDatabaseHelper.instance.getNotablePrImprovements(
+      daysWindow: _selectedDays > 120 ? 90 : _selectedDays,
+      limit: 3,
+    );
+    final bodyNutrition =
+        BodyNutritionAnalyticsUtils.build(rangeIndex: _selectedTimeRangeIndex);
+
+    final results = await Future.wait([
+      prs,
+      weeklyVolume,
+      workoutsPerWeek,
+      muscleAnalytics,
+      trainingStats,
+      recoveryAnalytics,
+      improvements,
+      bodyNutrition,
+    ]);
+
+    if (!mounted) return;
+    setState(() {
+      _recentPRs = results[0] as List<Map<String, dynamic>>;
+      _weeklyVolume = results[1] as List<Map<String, dynamic>>;
+      _workoutsPerWeek = results[2] as List<Map<String, dynamic>>;
+      _muscleAnalytics = results[3] as Map<String, dynamic>;
+      _trainingStats = results[4] as Map<String, dynamic>;
+      _recoveryAnalytics = results[5] as Map<String, dynamic>;
+      _notableImprovements = results[6] as List<Map<String, dynamic>>;
+      _bodyNutrition = results[7] as BodyNutritionAnalyticsResult;
+      _isLoadingStats = false;
+    });
   }
 
   List<String> get _timeRanges => [
@@ -49,16 +119,13 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final double appBarHeight = MediaQuery.of(context).padding.top;
-    final EdgeInsets finalPadding = DesignConstants.cardPadding.copyWith(
-      top: DesignConstants.cardPadding.top +
-          appBarHeight +
-          16, // Extra padding for top
+    final appBarHeight = MediaQuery.of(context).padding.top;
+    final finalPadding = DesignConstants.cardPadding.copyWith(
+      top: DesignConstants.cardPadding.top + appBarHeight + 16,
     );
 
     return Scaffold(
-      backgroundColor:
-          Colors.transparent, // Inherit background from main_screen
+      backgroundColor: Colors.transparent,
       body: CustomScrollView(
         slivers: [
           SliverPadding(
@@ -67,35 +134,21 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
               delegate: SliverChildListDelegate([
                 _buildTimeRangeFilter(),
                 const SizedBox(height: DesignConstants.spacingL),
-
-                // Section A: Consistency & Training Frequency
-                _buildSectionTitle(
-                    context, l10n.sectionConsistency.toUpperCase()),
+                _buildSectionTitle(context, l10n.sectionConsistency),
                 _buildConsistencySection(),
                 const SizedBox(height: DesignConstants.spacingL),
-
-                // Section B: Muscle Groups & Volume
-                _buildSectionTitle(
-                    context, l10n.sectionMuscleVolume.toUpperCase()),
+                _buildSectionTitle(context, l10n.analyticsSectionVolumeMuscles),
                 _buildMuscleVolumeSection(),
                 const SizedBox(height: DesignConstants.spacingL),
-
-                // Section C: Performance & PRs
                 _buildSectionTitle(
-                    context, l10n.sectionPerformance.toUpperCase()),
+                    context, l10n.analyticsSectionPerformanceRecords),
                 _buildPerformanceSection(),
                 const SizedBox(height: DesignConstants.spacingL),
-
-                // Section D: Recovery Heuristics
-                _buildSectionTitle(context, l10n.sectionRecovery.toUpperCase()),
+                _buildSectionTitle(context, l10n.sectionRecovery),
                 _buildRecoverySection(),
                 const SizedBox(height: DesignConstants.spacingL),
-
-                // Section E: Body Metrics & Nutrition
-                _buildSectionTitle(
-                    context, l10n.sectionBodyNutrition.toUpperCase()),
+                _buildSectionTitle(context, l10n.sectionBodyNutrition),
                 _buildBodyMetricsSection(),
-
                 const BottomContentSpacer(),
               ]),
             ),
@@ -120,6 +173,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
               onSelected: (selected) {
                 if (selected) {
                   setState(() => _selectedTimeRangeIndex = index);
+                  _loadHubAnalytics();
                 }
               },
             ),
@@ -131,18 +185,17 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
 
   Widget _buildSectionTitle(BuildContext context, String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
+      padding: const EdgeInsets.only(bottom: 6.0, left: 4.0),
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
               color: Colors.grey[600],
               fontWeight: FontWeight.bold,
+              letterSpacing: 0.2,
             ),
       ),
     );
   }
-
-  // --- Section Builders ---
 
   Widget _buildConsistencySection() {
     return Column(
@@ -155,11 +208,10 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             );
           },
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(14.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Mini-Chart Placeholder
                 Container(
                   height: 100,
                   width: double.infinity,
@@ -168,16 +220,32 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                         Theme.of(context).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Center(child: Text('Calendar Heatmap Visual')),
+                  child: _isLoadingStats
+                      ? const Center(child: CircularProgressIndicator())
+                      : _buildMiniBars(
+                          _workoutsPerWeek
+                              .map((e) => (e['count'] as num).toDouble())
+                              .toList(),
+                        ),
                 ),
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildMetricCol('Workouts (Week)', '3', '4 hours'),
-                    _buildMetricCol('Current Streak', '4', 'weeks active'),
+                    _buildMetricCol(
+                      l10n.metricsWorkoutsWeek,
+                      '${(_trainingStats['thisWeekCount'] as num?)?.toInt() ?? 0}',
+                      l10n.thisWeekLabel,
+                    ),
+                    _buildMetricCol(
+                      l10n.metricsCurrentStreak,
+                      '${(_trainingStats['streakWeeks'] as num?)?.toInt() ?? 0}',
+                      l10n.metricsActiveWeeks,
+                    ),
                   ],
                 ),
+                const SizedBox(height: 8),
+                _buildDrillDownHint(),
               ],
             ),
           ),
@@ -187,6 +255,20 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }
 
   Widget _buildMuscleVolumeSection() {
+    final muscles = (_muscleAnalytics['muscles'] as List<dynamic>? ?? const [])
+        .cast<Map<String, dynamic>>();
+    final topMuscles = muscles.take(5).toList();
+    final weekly = (_muscleAnalytics['weekly'] as List<dynamic>? ?? const [])
+        .cast<Map<String, dynamic>>();
+    final latestWeek = weekly.isNotEmpty ? weekly.last : null;
+    final latestWeekSets =
+        (latestWeek?['totalEquivalentSets'] as num?)?.toDouble() ?? 0.0;
+    final topMuscle = topMuscles.isNotEmpty ? topMuscles.first : null;
+    final undertrained =
+        (_muscleAnalytics['undertrained'] as List<dynamic>? ?? const [])
+            .cast<String>();
+    final dataQualityOk = (_muscleAnalytics['dataQualityOk'] as bool?) ?? false;
+
     return SummaryCard(
       onTap: () {
         Navigator.of(context).push(
@@ -194,33 +276,48 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         );
       },
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(14.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              height: 120,
+              height: 140,
               width: double.infinity,
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Center(
-                child: Text(
-                  l10n.placeholderMuscleHeatmap,
-                  style:
-                      TextStyle(color: Theme.of(context).colorScheme.outline),
-                ),
-              ),
+              child: _isLoadingStats
+                  ? const Center(child: CircularProgressIndicator())
+                  : _buildMuscleDistributionHeatmap(topMuscles),
             ),
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildMetricCol(l10n.metricsTopTrained, 'Chest', '12 sets'),
                 _buildMetricCol(
-                    l10n.metricsMostNeglected, 'Hamstrings', '0 sets'),
+                  l10n.analyticsMuscleWeeklySets,
+                  latestWeekSets.toStringAsFixed(1),
+                  latestWeek?['weekLabel'] as String? ?? l10n.thisWeekLabel,
+                ),
+                _buildMetricCol(
+                  l10n.analyticsMuscleTopFrequency,
+                  topMuscle?['muscleGroup'] as String? ?? '-',
+                  topMuscle != null
+                      ? '${(topMuscle['frequencyPerWeek'] as num).toDouble().toStringAsFixed(1)}/${l10n.analyticsPerWeekAbbrev}'
+                      : l10n.exerciseAnalyticsNoData,
+                ),
               ],
             ),
+            const SizedBox(height: 10),
+            Text(
+              _muscleGuidanceLabel(dataQualityOk, undertrained),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            _buildDrillDownHint(),
           ],
         ),
       ),
@@ -237,11 +334,11 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             );
           },
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(14.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l10n.metricsRecentPrs,
+                Text(l10n.analyticsRecentRecords,
                     style: Theme.of(context).textTheme.titleSmall),
                 const SizedBox(height: 8),
                 if (_recentPRs.isEmpty)
@@ -274,7 +371,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                           ),
                         ),
                         Text(
-                          '$weightStr kg × $reps',
+                          l10n.analyticsPerfWithReps(weightStr, reps),
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ],
@@ -284,10 +381,29 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildMetricCol(l10n.metricsVolumeLifted, '12.4k', 'kg'),
-                    _buildMetricCol(l10n.metricsMostImproved, 'Squat', '+5%'),
+                    _buildMetricCol(
+                      l10n.metricsVolumeLifted,
+                      _weeklyVolume.isNotEmpty
+                          ? (_weeklyVolume.last['tonnage'] as num) >= 1000
+                              ? '${((_weeklyVolume.last['tonnage'] as num) / 1000).toStringAsFixed(1)}k'
+                              : (_weeklyVolume.last['tonnage'] as num)
+                                  .toStringAsFixed(0)
+                          : '0',
+                      l10n.analyticsKgThisWeek,
+                    ),
+                    _buildMetricCol(
+                      l10n.metricsMostImproved,
+                      _notableImprovements.isNotEmpty
+                          ? _notableImprovements.first['exerciseName'] as String
+                          : '-',
+                      _notableImprovements.isNotEmpty
+                          ? '+${((_notableImprovements.first['improvementPct'] as num).toDouble()).toStringAsFixed(1)}%'
+                          : l10n.exerciseAnalyticsNoData,
+                    ),
                   ],
                 ),
+                const SizedBox(height: 8),
+                _buildDrillDownHint(),
               ],
             ),
           ),
@@ -305,7 +421,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             title: Text(l10n.exerciseAnalyticsTitle,
                 style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Text(l10n.exerciseAnalyticsSubtitle),
-            trailing: const Icon(Icons.chevron_right),
+            trailing: Icon(Icons.chevron_right,
+                color: Theme.of(context).colorScheme.outline),
             shape: RoundedRectangleBorder(
               borderRadius:
                   BorderRadius.circular(DesignConstants.borderRadiusM),
@@ -317,6 +434,32 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }
 
   Widget _buildRecoverySection() {
+    final totals =
+        (_recoveryAnalytics['totals'] as Map<String, dynamic>?) ?? const {};
+    final recovering = (totals['recovering'] as num?)?.toInt() ?? 0;
+    final ready = (totals['ready'] as num?)?.toInt() ?? 0;
+    final fresh = (totals['fresh'] as num?)?.toInt() ?? 0;
+    final hasData = (_recoveryAnalytics['hasData'] as bool?) ?? false;
+
+    final overallState = _recoveryAnalytics['overallState'] as String?;
+    final overallLabel = switch (overallState) {
+      'mostlyRecovered' => l10n.recoveryOverallMostlyRecovered,
+      'mixedRecovery' => l10n.recoveryOverallMixed,
+      'severalRecovering' => l10n.recoveryOverallSeveralRecovering,
+      _ => l10n.recoveryOverallInsufficientData,
+    };
+
+    final subtitle = hasData
+        ? l10n.recoveryHubCountsSummary(recovering, ready, fresh)
+        : l10n.recoveryHubNoDataSummary;
+
+    final iconColor = switch (overallState) {
+      'severalRecovering' => Colors.orange,
+      'mixedRecovery' => Colors.blue,
+      'mostlyRecovered' => Colors.green,
+      _ => Theme.of(context).colorScheme.outline,
+    };
+
     return SummaryCard(
       onTap: () {
         Navigator.of(context).push(
@@ -330,10 +473,10 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.2),
+                color: iconColor.withValues(alpha: 0.18),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.check_circle, color: Colors.green),
+              child: Icon(Icons.self_improvement, color: iconColor),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -342,11 +485,30 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 children: [
                   Text(l10n.metricsMuscleReadiness,
                       style: const TextStyle(fontWeight: FontWeight.bold)),
-                  const Text('3 Recovering, 8 Fresh'),
+                  if (_isLoadingStats)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 4.0),
+                      child: SizedBox(
+                        height: 14,
+                        width: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  else ...[
+                    Text(subtitle),
+                    const SizedBox(height: 2),
+                    Text(
+                      overallLabel,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.outline,
+                          ),
+                    ),
+                  ],
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right),
+            Icon(Icons.chevron_right,
+                color: Theme.of(context).colorScheme.outline),
           ],
         ),
       ),
@@ -354,13 +516,30 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }
 
   Widget _buildBodyMetricsSection() {
+    final body = _bodyNutrition;
+    final currentWeight = body?.currentWeightKg;
+    final weightChange = body?.weightChangeKg;
+    final avgCalories = body?.avgDailyCalories;
+
+    final weightValue = currentWeight == null
+        ? '-'
+        : '${currentWeight.toStringAsFixed(1)} ${l10n.analyticsUnitKg}';
+    final weightChangeValue = weightChange == null
+        ? '-'
+        : '${weightChange >= 0 ? '+' : ''}${weightChange.toStringAsFixed(1)} ${l10n.analyticsUnitKg}';
+    final caloriesValue =
+        avgCalories == null ? '-' : avgCalories.round().toString();
+
     return Column(
       children: [
         SummaryCard(
           onTap: () {
             Navigator.of(context).push(
               MaterialPageRoute(
-                  builder: (context) => const MeasurementsScreen()),
+                builder: (_) => BodyNutritionCorrelationScreen(
+                  initialRangeIndex: _selectedTimeRangeIndex,
+                ),
+              ),
             );
           },
           child: Padding(
@@ -368,30 +547,56 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             child: Column(
               children: [
                 Container(
-                  height: 100,
+                  height: 110,
                   width: double.infinity,
                   decoration: BoxDecoration(
                     color:
                         Theme.of(context).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Center(
-                    child: Text(
-                      l10n.placeholderWeightTrend,
-                      style: TextStyle(
-                          color: Theme.of(context).colorScheme.outline),
-                    ),
-                  ),
+                  child: _isLoadingStats || body == null
+                      ? const Center(child: CircularProgressIndicator())
+                      : _buildBodyNutritionMiniChart(body),
                 ),
                 const SizedBox(height: 16),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     _buildMetricCol(
-                        l10n.metricsCurrentWeight, '82.5', 'kg (-0.5)'),
-                    _buildMetricCol(l10n.metricsAvgCalories, '2,450', 'kcal/d'),
+                      l10n.metricsCurrentWeight,
+                      weightValue,
+                      body == null
+                          ? l10n.exerciseAnalyticsNoData
+                          : '${body.weightDays} ${l10n.analyticsDaysWithWeightData}',
+                      width: 104,
+                    ),
+                    _buildMetricCol(
+                      l10n.metricsWeightChange,
+                      weightChangeValue,
+                      _timeRanges[_selectedTimeRangeIndex],
+                      width: 104,
+                    ),
+                    _buildMetricCol(
+                      l10n.metricsAvgCalories,
+                      caloriesValue,
+                      l10n.analyticsKcalPerDay,
+                      width: 104,
+                    ),
                   ],
                 ),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    body == null
+                        ? l10n.analyticsInsightNotEnoughData
+                        : _bodyNutritionInsightLabel(body),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _buildDrillDownHint(),
               ],
             ),
           ),
@@ -400,8 +605,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         SummaryCard(
           onTap: () {
             Navigator.of(context).push(
-              MaterialPageRoute(
-                  builder: (context) => const MeasurementsScreen()),
+              MaterialPageRoute(builder: (_) => const MeasurementsScreen()),
             );
           },
           child: ListTile(
@@ -410,7 +614,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             title: Text(l10n.body_measurements,
                 style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Text(l10n.measurements_description),
-            trailing: const Icon(Icons.chevron_right),
+            trailing: Icon(Icons.chevron_right,
+                color: Theme.of(context).colorScheme.outline),
             shape: RoundedRectangleBorder(
               borderRadius:
                   BorderRadius.circular(DesignConstants.borderRadiusM),
@@ -421,22 +626,272 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     );
   }
 
-  Widget _buildMetricCol(String label, String value, String subLabel) {
+  Widget _buildBodyNutritionMiniChart(BodyNutritionAnalyticsResult data) {
+    final normalizedWeight =
+        BodyNutritionAnalyticsUtils.normalizedSeries(data.smoothedWeight);
+    final normalizedCalories =
+        BodyNutritionAnalyticsUtils.normalizedSeries(data.smoothedCalories);
+
+    if (normalizedWeight.isEmpty && normalizedCalories.isEmpty) {
+      return Center(
+        child: Text(
+          l10n.chart_no_data_for_period,
+          style: TextStyle(color: Theme.of(context).colorScheme.outline),
+        ),
+      );
+    }
+
+    final start = data.range.start;
+    final maxX =
+        (data.totalDays - 1).toDouble().clamp(1.0, 100000.0).toDouble();
+
+    List<FlSpot> toSpots(List<DailyValuePoint> points) {
+      return points.map((p) {
+        final x = DateTime(p.day.year, p.day.month, p.day.day)
+            .difference(DateTime(start.year, start.month, start.day))
+            .inDays
+            .toDouble();
+        return FlSpot(x, p.value);
+      }).toList(growable: false);
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      child: LineChart(
+        LineChartData(
+          minX: 0,
+          maxX: maxX,
+          minY: 0,
+          maxY: 1,
+          gridData: const FlGridData(show: false),
+          borderData: FlBorderData(show: false),
+          lineTouchData: const LineTouchData(enabled: false),
+          titlesData: const FlTitlesData(
+            leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          ),
+          lineBarsData: [
+            if (normalizedCalories.isNotEmpty)
+              LineChartBarData(
+                spots: toSpots(normalizedCalories),
+                isCurved: true,
+                barWidth: 2,
+                color: Theme.of(context).colorScheme.secondary,
+                dotData: const FlDotData(show: false),
+              ),
+            if (normalizedWeight.isNotEmpty)
+              LineChartBarData(
+                spots: toSpots(normalizedWeight),
+                isCurved: true,
+                barWidth: 2.5,
+                color: Theme.of(context).colorScheme.primary,
+                dotData: const FlDotData(show: false),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _bodyNutritionInsightLabel(BodyNutritionAnalyticsResult data) {
+    switch (data.insightType) {
+      case BodyNutritionInsightType.stableWeightCaloriesUp:
+        return l10n.analyticsInsightStableWeightCaloriesUp;
+      case BodyNutritionInsightType.weightUpCaloriesUp:
+        return l10n.analyticsInsightWeightUpCaloriesUp;
+      case BodyNutritionInsightType.caloriesDownWeightNotYetChanged:
+        return l10n.analyticsInsightCaloriesDownWeightStable;
+      case BodyNutritionInsightType.weightDownCaloriesDown:
+        return l10n.analyticsInsightWeightDownCaloriesDown;
+      case BodyNutritionInsightType.mixed:
+        return l10n.analyticsInsightMixedPattern;
+      case BodyNutritionInsightType.notEnoughData:
+        return l10n.analyticsInsightNotEnoughData;
+    }
+  }
+
+  Widget _buildMetricCol(String label, String value, String subLabel,
+      {double width = 132}) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(label, style: Theme.of(context).textTheme.bodySmall),
+        SizedBox(
+          width: width,
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ),
         const SizedBox(height: 4),
-        Text(value,
-            style: Theme.of(context)
-                .textTheme
-                .headlineSmall
-                ?.copyWith(fontWeight: FontWeight.bold)),
-        Text(subLabel,
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: Colors.grey)),
+        SizedBox(
+          width: width,
+          child: Text(value,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineSmall
+                  ?.copyWith(fontWeight: FontWeight.bold)),
+        ),
+        SizedBox(
+          width: width,
+          child: Text(subLabel,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: Colors.grey)),
+        ),
       ],
     );
+  }
+
+  Widget _buildDrillDownHint() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Text(
+          l10n.analyticsViewDetails,
+          style: Theme.of(context)
+              .textTheme
+              .labelMedium
+              ?.copyWith(color: Theme.of(context).colorScheme.outline),
+        ),
+        const SizedBox(width: 2),
+        Icon(
+          Icons.chevron_right,
+          size: 18,
+          color: Theme.of(context).colorScheme.outline,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMiniBars(List<double> values) {
+    if (values.isEmpty || values.every((v) => v <= 0)) {
+      return Center(
+        child: Text(
+          l10n.exerciseAnalyticsNoData,
+          style: TextStyle(color: Theme.of(context).colorScheme.outline),
+        ),
+      );
+    }
+
+    final maxValue = values.reduce((a, b) => a > b ? a : b);
+    return Padding(
+      padding: const EdgeInsets.all(10.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: values.map((value) {
+          final ratio = maxValue <= 0 ? 0.0 : value / maxValue;
+          return Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2.0),
+              child: Container(
+                height: (ratio * 72).clamp(6, 72),
+                decoration: BoxDecoration(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.8),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildMuscleDistributionHeatmap(List<Map<String, dynamic>> muscles) {
+    if (muscles.isEmpty) {
+      return Center(
+        child: Text(
+          l10n.noWorkoutDataLabel,
+          style: TextStyle(color: Theme.of(context).colorScheme.outline),
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+
+    final maxShare = muscles
+        .map((m) => (m['distributionShare'] as num).toDouble())
+        .fold<double>(0.0, (a, b) => a > b ? a : b)
+        .clamp(0.0001, 1.0);
+
+    return Padding(
+      padding: const EdgeInsets.all(10.0),
+      child: Column(
+        children: muscles.map((m) {
+          final share = (m['distributionShare'] as num).toDouble();
+          final ratio = (share / maxShare).clamp(0.08, 1.0);
+          final label = m['muscleGroup'] as String;
+          final pct = (share * 100).toStringAsFixed(0);
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 3.0),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 78,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                ),
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: LinearProgressIndicator(
+                      value: ratio,
+                      minHeight: 12,
+                      backgroundColor:
+                          Theme.of(context).colorScheme.surfaceContainerLow,
+                      valueColor: AlwaysStoppedAnimation(
+                        Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.45 + (ratio * 0.45)),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 34,
+                  child: Text(
+                    '$pct%',
+                    textAlign: TextAlign.right,
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  String _muscleGuidanceLabel(bool dataQualityOk, List<String> undertrained) {
+    if (!dataQualityOk) {
+      return l10n.analyticsKeepTrackingUnlockInsights;
+    }
+    if (undertrained.isEmpty) {
+      return l10n.analyticsGuidanceNoClearWeakPoint;
+    }
+
+    final focus = undertrained.take(2).join(', ');
+    return l10n.analyticsGuidanceLowerEmphasis(focus);
   }
 }
