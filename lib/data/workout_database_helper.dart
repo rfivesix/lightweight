@@ -1374,11 +1374,11 @@ class WorkoutDatabaseHelper {
     final firstWorkoutWeek = allWeeks.first;
     final totalWeeks = currentWeekStart.difference(firstWorkoutWeek).inDays / 7;
     final avgPerWeek = totalWeeks > 0
-        ? workoutDays.length / (totalWeeks + 1)
-        : workoutDays.length.toDouble();
+        ? rows.length / (totalWeeks + 1)
+        : rows.length.toDouble();
 
     return ConsistencyStats(
-      totalWorkouts: workoutDays.length,
+      totalWorkouts: rows.length,
       currentStreakWeeks: currentStreak,
       longestStreakWeeks: longestStreak,
       avgWorkoutsPerWeek: double.parse(avgPerWeek.toStringAsFixed(1)),

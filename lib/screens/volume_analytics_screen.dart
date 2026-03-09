@@ -486,7 +486,9 @@ class _VolumeAnalyticsScreenState extends State<VolumeAnalyticsScreen> {
           children: [
             _StatColumn(
               label: l10n.totalTonnageLabel,
-              value: '${(totalTonnage / 1000).toStringAsFixed(1)}t',
+              value: totalTonnage >= 1000
+                  ? '${(totalTonnage / 1000).toStringAsFixed(1)}k kg'
+                  : '${totalTonnage.toStringAsFixed(0)} kg',
             ),
             _StatColumn(
               label: l10n.avgPerWeekLabel,

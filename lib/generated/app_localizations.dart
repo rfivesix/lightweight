@@ -3619,6 +3619,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'% of weeks with at least 1 workout'**
   String get consistencyScoreDesc;
+
+  /// No description provided for @weekAbbr.
+  ///
+  /// In en, this message translates to:
+  /// **'wk'**
+  String get weekAbbr;
+
+  /// No description provided for @weeksAbbr.
+  ///
+  /// In en, this message translates to:
+  /// **'wks'**
+  String get weeksAbbr;
 }
 
 class _AppLocalizationsDelegate

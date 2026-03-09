@@ -142,14 +142,14 @@ class _ConsistencyAnalyticsScreenState
               icon: Icons.local_fire_department_rounded,
               iconColor: Colors.orange,
               value: stats.currentStreakWeeks.toString(),
-              unit: _weeksLabel(stats.currentStreakWeeks),
+              unit: _weeksLabel(l10n, stats.currentStreakWeeks),
               label: l10n.currentStreak,
             ),
             _StatTile(
               icon: Icons.emoji_events_rounded,
               iconColor: Colors.amber,
               value: stats.longestStreakWeeks.toString(),
-              unit: _weeksLabel(stats.longestStreakWeeks),
+              unit: _weeksLabel(l10n, stats.longestStreakWeeks),
               label: l10n.longestStreak,
             ),
             _StatTile(
@@ -165,7 +165,8 @@ class _ConsistencyAnalyticsScreenState
     );
   }
 
-  String _weeksLabel(int count) => count == 1 ? 'wk' : 'wks';
+  String _weeksLabel(AppLocalizations l10n, int count) =>
+      count == 1 ? l10n.weekAbbr : l10n.weeksAbbr;
 
   Widget _buildWeeklyBarChart(
       AppLocalizations l10n, ConsistencyStats stats) {

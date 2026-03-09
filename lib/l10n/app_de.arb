@@ -782,5 +782,7 @@
   "last8Weeks": "Letzte 8 Wochen",
   "last16Weeks": "Letzte 16 Wochen",
   "consistencyScore": "Konsistenz-Score",
-  "consistencyScoreDesc": "% Wochen mit mindestens 1 Workout"
+  "consistencyScoreDesc": "% Wochen mit mindestens 1 Workout",
+  "weekAbbr": "Wo.",
+  "weeksAbbr": "Wo."
 }

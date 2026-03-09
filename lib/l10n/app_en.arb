@@ -777,5 +777,7 @@
   "last8Weeks": "Last 8 Weeks",
   "last16Weeks": "Last 16 Weeks",
   "consistencyScore": "Consistency Score",
-  "consistencyScoreDesc": "% of weeks with at least 1 workout"
+  "consistencyScoreDesc": "% of weeks with at least 1 workout",
+  "weekAbbr": "wk",
+  "weeksAbbr": "wks"
 }

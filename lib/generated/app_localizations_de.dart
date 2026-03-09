@@ -1886,4 +1886,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get consistencyScoreDesc => '% Wochen mit mindestens 1 Workout';
+
+  @override
+  String get weekAbbr => 'Wo.';
+
+  @override
+  String get weeksAbbr => 'Wo.';
 }
