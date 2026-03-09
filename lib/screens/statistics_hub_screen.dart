@@ -1,18 +1,19 @@
 // lib/screens/statistics_hub_screen.dart
 import 'package:flutter/material.dart';
-import '../data/database_helper.dart';
 import '../data/workout_database_helper.dart';
 import '../generated/app_localizations.dart';
+import 'consistency_analytics_screen.dart';
 import 'measurements_screen.dart';
+import 'pr_dashboard_screen.dart';
+import 'volume_analytics_screen.dart';
 import '../util/design_constants.dart';
 import '../widgets/bottom_content_spacer.dart';
 import '../widgets/summary_card.dart';
-import 'package:table_calendar/table_calendar.dart';
 
-/// A screen providing a calendar-based overview of user consistency.
+/// A hub screen that gives users a quick overview of their fitness progress.
 ///
-/// Visualizes workout, nutrition, and supplement logging frequency
-/// through interactive markers on a monthly calendar scaffold.
+/// Contains inline summary modules for PR dashboard, volume analytics, and
+/// consistency, plus gateways to dedicated in-depth analysis screens.
 class StatisticsHubScreen extends StatefulWidget {
   const StatisticsHubScreen({super.key});
 
@@ -22,18 +23,22 @@ class StatisticsHubScreen extends StatefulWidget {
 
 class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   late final l10n = AppLocalizations.of(context)!;
-  DateTime _focusedDay = DateTime.now();
-  DateTime? _selectedDay;
   bool _isLoading = true;
 
-  Set<int> _workoutDays = {};
-  Set<int> _nutritionLogDays = {};
-  Set<int> _supplementDays = {};
+  // Consistency summary data
+  int _currentStreak = 0;
+  double _avgPerWeek = 0;
+  int _workoutsThisWeek = 0;
+
+  // PR summary (top 3 recent PRs)
+  List<Map<String, dynamic>> _recentPRs = [];
+
+  // Volume summary (last 4 weeks)
+  List<Map<String, dynamic>> _weeklyVolume = [];
 
   @override
   void initState() {
     super.initState();
-    _selectedDay = _focusedDay;
     _loadAllData();
   }
 
@@ -41,46 +46,35 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     if (!mounted) return;
     setState(() => _isLoading = true);
 
-    await _loadMonthData(_focusedDay);
+    final results = await Future.wait([
+      WorkoutDatabaseHelper.instance.getCurrentWorkoutStreak(),
+      WorkoutDatabaseHelper.instance.getAverageWorkoutsPerWeek(weeks: 8),
+      WorkoutDatabaseHelper.instance.getWorkoutsThisWeek(),
+      WorkoutDatabaseHelper.instance.getRecentPRs(
+          DateTime.now().subtract(const Duration(days: 30))),
+      WorkoutDatabaseHelper.instance.getWeeklyVolume(weeks: 4),
+    ]);
 
     if (mounted) {
       setState(() {
+        _currentStreak = results[0] as int;
+        _avgPerWeek = results[1] as double;
+        _workoutsThisWeek = results[2] as int;
+        _recentPRs = (results[3] as List<Map<String, dynamic>>).take(3).toList();
+        _weeklyVolume = results[4] as List<Map<String, dynamic>>;
         _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _loadMonthData(DateTime month) async {
-    final workoutDays =
-        await WorkoutDatabaseHelper.instance.getWorkoutDaysInMonth(month);
-    final nutritionDays =
-        await DatabaseHelper.instance.getNutritionLogDaysInMonth(month);
-    final supplementDays =
-        await DatabaseHelper.instance.getSupplementLogDaysInMonth(month);
-
-    if (mounted) {
-      setState(() {
-        _workoutDays = workoutDays;
-        _nutritionLogDays = nutritionDays;
-        _supplementDays = supplementDays;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final double appBarHeight =
-        MediaQuery.of(context).padding.top; // + kToolbarHeight;
-
-    // 2. Get your base padding from your design constants
-    const EdgeInsets basePadding =
-        DesignConstants.cardPadding; // This is EdgeInsets.all(16.0)
-
-    // 3. Create the final combined padding
+    final double appBarHeight = MediaQuery.of(context).padding.top;
+    const EdgeInsets basePadding = DesignConstants.cardPadding;
     final EdgeInsets finalPadding = basePadding.copyWith(
-      // Take the original top value (16.0) and add the app bar height
       top: basePadding.top + appBarHeight,
     );
+
     return _isLoading
         ? const Center(child: CircularProgressIndicator())
         : RefreshIndicator(
@@ -88,157 +82,345 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             child: ListView(
               padding: finalPadding,
               children: [
-                _buildSectionTitle(context, l10n.my_consistency),
-                SummaryCard(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: TableCalendar(
-                      locale: Localizations.localeOf(context).toString(),
-                      firstDay: DateTime.utc(2020, 1, 1),
-                      lastDay: DateTime.now().add(const Duration(days: 365)),
-                      focusedDay: _focusedDay,
-                      selectedDayPredicate: (day) =>
-                          isSameDay(_selectedDay, day),
-                      calendarFormat: CalendarFormat.month,
-                      headerStyle: HeaderStyle(
-                        formatButtonVisible: false,
-                        titleCentered: true,
-                        titleTextStyle: Theme.of(
-                          context,
-                        ).textTheme.titleMedium!,
-                      ),
-                      onDaySelected: (selectedDay, focusedDay) {
-                        setState(() {
-                          _selectedDay = selectedDay;
-                          _focusedDay = focusedDay;
-                        });
-                      },
-                      onPageChanged: (focusedDay) {
-                        setState(() {
-                          _focusedDay = focusedDay;
-                        });
-                        _loadMonthData(focusedDay);
-                      },
-                      calendarBuilders: CalendarBuilders(
-                        markerBuilder: (context, day, events) {
-                          final isNutritionDay = _nutritionLogDays.contains(
-                            day.day,
-                          );
-                          final isSupplementDay = _supplementDays.contains(
-                            day.day,
-                          );
-
-                          return Positioned(
-                            bottom: 4,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (isNutritionDay)
-                                  Container(
-                                    width: 6,
-                                    height: 6,
-                                    decoration: const BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.blueAccent,
-                                    ),
-                                  ),
-                                if (isNutritionDay && isSupplementDay)
-                                  const SizedBox(width: 2),
-                                if (isSupplementDay)
-                                  Container(
-                                    width: 6,
-                                    height: 6,
-                                    decoration: const BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.amber,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          );
-                        },
-                        defaultBuilder: (context, day, focusedDay) {
-                          final isWorkoutDay = _workoutDays.contains(day.day);
-                          if (isWorkoutDay) {
-                            return Center(
-                              child: Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.primary,
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    '${day.day}',
-                                    style: TextStyle(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onPrimary,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-                //const SizedBox(height: DesignConstants.spacingS),
-                //_buildBannerCard(l10n),
+                // ── PR DASHBOARD ─────────────────────────────────────────
+                _buildSectionTitle(context, l10n.prDashboardTitle),
+                _buildPRSummaryCard(context),
                 const SizedBox(height: DesignConstants.spacingXL),
+
+                // ── VOLUME ANALYTICS ─────────────────────────────────────
+                _buildSectionTitle(context, l10n.volumeAnalyticsTitle),
+                _buildVolumeSummaryCard(context),
+                const SizedBox(height: DesignConstants.spacingXL),
+
+                // ── CONSISTENCY ──────────────────────────────────────────
+                _buildSectionTitle(context, l10n.consistencyTitle),
+                _buildConsistencySummaryCard(context),
+                const SizedBox(height: DesignConstants.spacingXL),
+
+                // ── IN-DEPTH ANALYSIS ────────────────────────────────────
                 _buildSectionTitle(context, l10n.in_depth_analysis),
+                _buildAnalysisGateway(
+                  context: context,
+                  icon: Icons.emoji_events_rounded,
+                  title: l10n.prDashboardTitle,
+                  subtitle: l10n.prDashboardSubtitle,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const PrDashboardScreen(),
+                    ),
+                  ).then((_) => _loadAllData()),
+                ),
+                _buildAnalysisGateway(
+                  context: context,
+                  icon: Icons.bar_chart_rounded,
+                  title: l10n.volumeAnalyticsTitle,
+                  subtitle: l10n.volumeAnalyticsSubtitle,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const VolumeAnalyticsScreen(),
+                    ),
+                  ).then((_) => _loadAllData()),
+                ),
+                _buildAnalysisGateway(
+                  context: context,
+                  icon: Icons.calendar_today_rounded,
+                  title: l10n.consistencyTitle,
+                  subtitle: l10n.consistencySubtitle,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          const ConsistencyAnalyticsScreen(),
+                    ),
+                  ).then((_) => _loadAllData()),
+                ),
                 _buildAnalysisGateway(
                   context: context,
                   icon: Icons.monitor_weight_outlined,
                   title: l10n.body_measurements,
                   subtitle: l10n.measurements_description,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const MeasurementsScreen(),
-                      ),
-                    );
-                  },
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const MeasurementsScreen(),
+                    ),
+                  ),
                 ),
-                //const SizedBox(height: DesignConstants.spacingM),
-                /*
-                  _buildAnalysisGateway(
-                    context: context,
-                    icon: Icons.pie_chart_outline_rounded,
-                    title: l10n.nutritionScreenTitle,
-                    subtitle: l10n.nutrition_description,
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const NutritionScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  //const SizedBox(height: DesignConstants.spacingM),
-                  _buildAnalysisGateway(
-                    context: context,
-                    icon: Icons.bar_chart_rounded,
-                    title: l10n.training_analysis,
-                    subtitle: l10n.training_analysis_description,
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.soon_available_snackbar)),
-                      );
-                    },
-                  ),
-                  */
                 const BottomContentSpacer(),
               ],
             ),
           );
   }
+
+  // ── PR Summary Card ────────────────────────────────────────────────────────
+
+  Widget _buildPRSummaryCard(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    if (_recentPRs.isEmpty) {
+      return SummaryCard(
+        child: Padding(
+          padding: DesignConstants.cardPadding,
+          child: Row(
+            children: [
+              Icon(Icons.emoji_events_outlined,
+                  color: Colors.grey[400], size: 32),
+              const SizedBox(width: DesignConstants.spacingM),
+              Expanded(
+                child: Text(
+                  l10n.prDashboardNoData,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: Colors.grey),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return SummaryCard(
+      child: Padding(
+        padding: DesignConstants.cardPadding,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.emoji_events_rounded,
+                    color: colorScheme.primary, size: 20),
+                const SizedBox(width: DesignConstants.spacingS),
+                Text(
+                  l10n.prDashboardRecent,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: DesignConstants.spacingS),
+            ..._recentPRs.map((pr) {
+              final exercise = pr['exercise'] as String;
+              final weight = (pr['weight'] as num).toDouble();
+              final reps = pr['reps'] as int;
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                    vertical: DesignConstants.spacingXS),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: colorScheme.primary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: DesignConstants.spacingS),
+                    Expanded(
+                      child: Text(
+                        exercise,
+                        style: const TextStyle(fontSize: 13),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Text(
+                      '$weight kg × $reps',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Volume Summary Card ────────────────────────────────────────────────────
+
+  Widget _buildVolumeSummaryCard(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    if (_weeklyVolume.isEmpty) {
+      return SummaryCard(
+        child: Padding(
+          padding: DesignConstants.cardPadding,
+          child: Row(
+            children: [
+              Icon(Icons.bar_chart_rounded, color: Colors.grey[400], size: 32),
+              const SizedBox(width: DesignConstants.spacingM),
+              Expanded(
+                child: Text(
+                  l10n.volumeNoData,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: Colors.grey),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final maxTonnage = _weeklyVolume.fold<double>(
+        0,
+        (p, w) =>
+            ((w['tonnage'] as double?) ?? 0.0) > p
+                ? (w['tonnage'] as double)
+                : p);
+
+    return SummaryCard(
+      child: Padding(
+        padding: DesignConstants.cardPadding,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.bar_chart_rounded,
+                    color: colorScheme.primary, size: 20),
+                const SizedBox(width: DesignConstants.spacingS),
+                Text(
+                  l10n.volumeByWeek,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const Spacer(),
+                Text(
+                  l10n.volumeToggleTonnage,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Colors.grey[500],
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: DesignConstants.spacingM),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: _weeklyVolume.map((w) {
+                final tonnage = (w['tonnage'] as double?) ?? 0.0;
+                final ratio = maxTonnage > 0 ? tonnage / maxTonnage : 0.0;
+                const barHeight = 48.0;
+                return Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '${(tonnage / 1000).toStringAsFixed(1)}k',
+                          style: const TextStyle(
+                              fontSize: 8, color: Colors.grey),
+                        ),
+                        const SizedBox(height: 2),
+                        Container(
+                          height: barHeight * ratio.clamp(0.05, 1.0),
+                          decoration: BoxDecoration(
+                            color: colorScheme.primary
+                                .withValues(alpha: 0.75),
+                            borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(3)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Consistency Summary Card ──────────────────────────────────────────────
+
+  Widget _buildConsistencySummaryCard(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return SummaryCard(
+      child: Padding(
+        padding: DesignConstants.cardPadding,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildStatColumn(
+              context: context,
+              icon: Icons.local_fire_department_rounded,
+              iconColor: Colors.orange,
+              value: '$_currentStreak',
+              label: l10n.consistencyCurrentStreak,
+            ),
+            _buildDivider(),
+            _buildStatColumn(
+              context: context,
+              icon: Icons.fitness_center_rounded,
+              iconColor: Colors.green,
+              value: '$_workoutsThisWeek',
+              label: l10n.consistencyWorkoutsThisWeek,
+            ),
+            _buildDivider(),
+            _buildStatColumn(
+              context: context,
+              icon: Icons.show_chart_rounded,
+              iconColor: colorScheme.primary,
+              value: _avgPerWeek.toStringAsFixed(1),
+              label: l10n.consistencyAvgPerWeek,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Container(width: 1, height: 40, color: Colors.grey[300]);
+  }
+
+  Widget _buildStatColumn({
+    required BuildContext context,
+    required IconData icon,
+    required Color iconColor,
+    required String value,
+    required String label,
+  }) {
+    return Column(
+      children: [
+        Icon(icon, color: iconColor, size: 22),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.grey[600],
+                fontSize: 10,
+              ),
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
+
+  // ── Shared helpers ─────────────────────────────────────────────────────────
 
   Widget _buildSectionTitle(BuildContext context, String title) {
     return Padding(
@@ -279,3 +461,4 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     );
   }
 }
+

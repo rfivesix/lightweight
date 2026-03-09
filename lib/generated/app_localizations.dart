@@ -3367,6 +3367,282 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show in daily tracker hub'**
   String get currentlyTrackingDesc;
+
+  /// No description provided for @prDashboardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'PR Dashboard'**
+  String get prDashboardTitle;
+
+  /// No description provided for @prDashboardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal records & strength progress'**
+  String get prDashboardSubtitle;
+
+  /// No description provided for @prDashboardAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'ALL-TIME PRs'**
+  String get prDashboardAllTime;
+
+  /// No description provided for @prDashboardRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'RECENT PRs'**
+  String get prDashboardRecent;
+
+  /// No description provided for @prDashboardByRepRange.
+  ///
+  /// In en, this message translates to:
+  /// **'BY REP RANGE'**
+  String get prDashboardByRepRange;
+
+  /// No description provided for @prDashboardNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No personal records yet. Start training to set some PRs!'**
+  String get prDashboardNoData;
+
+  /// No description provided for @prDashboardExercise.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise'**
+  String get prDashboardExercise;
+
+  /// No description provided for @prDashboardWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get prDashboardWeight;
+
+  /// No description provided for @prDashboardReps.
+  ///
+  /// In en, this message translates to:
+  /// **'Reps'**
+  String get prDashboardReps;
+
+  /// No description provided for @prDashboardDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get prDashboardDate;
+
+  /// No description provided for @prDashboardLast30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 days'**
+  String get prDashboardLast30Days;
+
+  /// No description provided for @prDashboardLast90Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 90 days'**
+  String get prDashboardLast90Days;
+
+  /// No description provided for @prDashboardAllTime2.
+  ///
+  /// In en, this message translates to:
+  /// **'All time'**
+  String get prDashboardAllTime2;
+
+  /// No description provided for @prDashboardRepRange1.
+  ///
+  /// In en, this message translates to:
+  /// **'1 RM'**
+  String get prDashboardRepRange1;
+
+  /// No description provided for @prDashboardRepRange3.
+  ///
+  /// In en, this message translates to:
+  /// **'3 RM'**
+  String get prDashboardRepRange3;
+
+  /// No description provided for @prDashboardRepRange5.
+  ///
+  /// In en, this message translates to:
+  /// **'5 RM'**
+  String get prDashboardRepRange5;
+
+  /// No description provided for @prDashboardRepRange8.
+  ///
+  /// In en, this message translates to:
+  /// **'8 RM'**
+  String get prDashboardRepRange8;
+
+  /// No description provided for @prDashboardRepRange10.
+  ///
+  /// In en, this message translates to:
+  /// **'10+ RM'**
+  String get prDashboardRepRange10;
+
+  /// No description provided for @prDashboardEstimated1RM.
+  ///
+  /// In en, this message translates to:
+  /// **'Est. 1RM'**
+  String get prDashboardEstimated1RM;
+
+  /// No description provided for @prDashboardNewPR.
+  ///
+  /// In en, this message translates to:
+  /// **'NEW PR'**
+  String get prDashboardNewPR;
+
+  /// No description provided for @volumeAnalyticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume Analytics'**
+  String get volumeAnalyticsTitle;
+
+  /// No description provided for @volumeAnalyticsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Training volume over time'**
+  String get volumeAnalyticsSubtitle;
+
+  /// No description provided for @volumeByWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'BY WEEK'**
+  String get volumeByWeek;
+
+  /// No description provided for @volumeByMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'BY MONTH'**
+  String get volumeByMonth;
+
+  /// No description provided for @volumeByExercise.
+  ///
+  /// In en, this message translates to:
+  /// **'BY EXERCISE'**
+  String get volumeByExercise;
+
+  /// No description provided for @volumeByMuscle.
+  ///
+  /// In en, this message translates to:
+  /// **'BY MUSCLE'**
+  String get volumeByMuscle;
+
+  /// No description provided for @volumeTonnage.
+  ///
+  /// In en, this message translates to:
+  /// **'Tonnage (kg)'**
+  String get volumeTonnage;
+
+  /// No description provided for @volumeSets.
+  ///
+  /// In en, this message translates to:
+  /// **'Work Sets'**
+  String get volumeSets;
+
+  /// No description provided for @volumeNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No workout data yet. Start training to see your volume trends!'**
+  String get volumeNoData;
+
+  /// No description provided for @volumeWeekLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get volumeWeekLabel;
+
+  /// No description provided for @volumeMonthLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get volumeMonthLabel;
+
+  /// No description provided for @volumeToggleTonnage.
+  ///
+  /// In en, this message translates to:
+  /// **'Tonnage'**
+  String get volumeToggleTonnage;
+
+  /// No description provided for @volumeToggleSets.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets'**
+  String get volumeToggleSets;
+
+  /// No description provided for @consistencyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency'**
+  String get consistencyTitle;
+
+  /// No description provided for @consistencySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Training frequency & habit tracking'**
+  String get consistencySubtitle;
+
+  /// No description provided for @consistencyCurrentStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Streak'**
+  String get consistencyCurrentStreak;
+
+  /// No description provided for @consistencyLongestStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Longest Streak'**
+  String get consistencyLongestStreak;
+
+  /// No description provided for @consistencyAvgPerWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg / Week'**
+  String get consistencyAvgPerWeek;
+
+  /// No description provided for @consistencyDays.
+  ///
+  /// In en, this message translates to:
+  /// **'days'**
+  String get consistencyDays;
+
+  /// No description provided for @consistencyWorkoutsThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get consistencyWorkoutsThisWeek;
+
+  /// No description provided for @consistencyWorkoutsThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get consistencyWorkoutsThisMonth;
+
+  /// No description provided for @consistencyCalendarHint.
+  ///
+  /// In en, this message translates to:
+  /// **'● Workout  ● Nutrition  ● Supplements'**
+  String get consistencyCalendarHint;
+
+  /// No description provided for @consistencyNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No workouts logged yet. Start training to track your consistency!'**
+  String get consistencyNoData;
+
+  /// No description provided for @consistencyStreaks.
+  ///
+  /// In en, this message translates to:
+  /// **'STREAKS'**
+  String get consistencyStreaks;
+
+  /// No description provided for @consistencyOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'OVERVIEW'**
+  String get consistencyOverview;
+
+  /// No description provided for @consistencyWeeklyActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'WEEKLY ACTIVITY'**
+  String get consistencyWeeklyActivity;
 }
 
 class _AppLocalizationsDelegate

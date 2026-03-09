@@ -999,4 +999,457 @@ class WorkoutDatabaseHelper {
     }
     return null;
   }
+
+  // ===========================================================================
+  // ANALYTICS: PERSONAL RECORDS
+  // ===========================================================================
+
+  /// Returns all-time personal records (heaviest weight per rep count) per exercise.
+  ///
+  /// For each exercise name returns the best set grouped by rep count.
+  /// Only considers 'normal' set types with both weight and reps filled in.
+  Future<Map<String, List<Map<String, dynamic>>>> getAllTimePRs() async {
+    final dbInstance = await database;
+    final result = await dbInstance.customSelect('''
+      SELECT
+        sl.exercise_name_snapshot AS exercise,
+        sl.reps,
+        MAX(sl.weight) AS max_weight,
+        wl.start_time AS achieved_at
+      FROM set_logs sl
+      JOIN workout_logs wl ON sl.workout_log_id = wl.id
+      WHERE sl.set_type NOT IN ('warmup')
+        AND sl.weight IS NOT NULL
+        AND sl.reps IS NOT NULL
+        AND sl.is_completed = 1
+        AND wl.status = 'completed'
+      GROUP BY sl.exercise_name_snapshot, sl.reps
+      ORDER BY sl.exercise_name_snapshot, sl.reps ASC
+    ''').get();
+
+    final Map<String, List<Map<String, dynamic>>> prs = {};
+    for (final row in result) {
+      final exercise = row.read<String?>('exercise') ?? 'Unknown';
+      final reps = row.read<int>('reps');
+      final weight = row.read<double>('max_weight');
+      final achievedAt = row.read<String?>('achieved_at');
+      prs.putIfAbsent(exercise, () => []).add({
+        'reps': reps,
+        'weight': weight,
+        'achieved_at': achievedAt,
+      });
+    }
+    return prs;
+  }
+
+  /// Returns recent PRs set within the given [since] date.
+  Future<List<Map<String, dynamic>>> getRecentPRs(DateTime since) async {
+    final dbInstance = await database;
+    // Find all-time PRs that were set after [since]
+    final allPRs = await getAllTimePRs();
+    final List<Map<String, dynamic>> recent = [];
+
+    for (final entry in allPRs.entries) {
+      for (final pr in entry.value) {
+        final achievedAtStr = pr['achieved_at'] as String?;
+        if (achievedAtStr != null) {
+          try {
+            final achievedAt = DateTime.parse(achievedAtStr);
+            if (achievedAt.isAfter(since)) {
+              recent.add({
+                'exercise': entry.key,
+                'reps': pr['reps'],
+                'weight': pr['weight'],
+                'achieved_at': achievedAtStr,
+              });
+            }
+          } catch (_) {}
+        }
+      }
+    }
+
+    recent.sort((a, b) {
+      final aDate = a['achieved_at'] as String? ?? '';
+      final bDate = b['achieved_at'] as String? ?? '';
+      return bDate.compareTo(aDate);
+    });
+    return recent;
+  }
+
+  // ===========================================================================
+  // ANALYTICS: VOLUME
+  // ===========================================================================
+
+  /// Returns weekly tonnage (kg) and set count for completed workouts.
+  ///
+  /// Returns a list of maps with keys: 'week_start', 'tonnage', 'set_count'.
+  Future<List<Map<String, dynamic>>> getWeeklyVolume({int weeks = 12}) async {
+    final dbInstance = await database;
+    final now = DateTime.now();
+    final cutoff = now.subtract(Duration(days: weeks * 7));
+
+    final result = await dbInstance.customSelect('''
+      SELECT
+        wl.start_time,
+        sl.weight,
+        sl.reps
+      FROM set_logs sl
+      JOIN workout_logs wl ON sl.workout_log_id = wl.id
+      WHERE wl.status = 'completed'
+        AND sl.is_completed = 1
+        AND sl.set_type NOT IN ('warmup')
+        AND sl.weight IS NOT NULL
+        AND sl.reps IS NOT NULL
+        AND wl.start_time >= ?
+      ORDER BY wl.start_time ASC
+    ''', variables: [drift.Variable.withDateTime(cutoff)]).get();
+
+    final Map<String, Map<String, dynamic>> weeklyData = {};
+    for (final row in result) {
+      final startTimeStr = row.read<String?>('start_time');
+      if (startTimeStr == null) continue;
+      final startTime = DateTime.parse(startTimeStr);
+      // Find the Monday of this week (DateTime.weekday: Mon=1 … Sun=7).
+      final monday = startTime
+          .subtract(Duration(days: startTime.weekday - 1));
+      final weekKey =
+          '${monday.year}-${monday.month.toString().padLeft(2, '0')}-${monday.day.toString().padLeft(2, '0')}';
+
+      final weight = row.read<double?>('weight') ?? 0.0;
+      final reps = row.read<int?>('reps') ?? 0;
+
+      weeklyData.putIfAbsent(
+          weekKey, () => {'week_start': weekKey, 'tonnage': 0.0, 'set_count': 0});
+      weeklyData[weekKey]!['tonnage'] =
+          (weeklyData[weekKey]!['tonnage'] as double) + (weight * reps);
+      weeklyData[weekKey]!['set_count'] =
+          (weeklyData[weekKey]!['set_count'] as int) + 1;
+    }
+
+    final sorted = weeklyData.values.toList()
+      ..sort((a, b) =>
+          (a['week_start'] as String).compareTo(b['week_start'] as String));
+    return sorted;
+  }
+
+  /// Returns monthly tonnage (kg) and set count for completed workouts.
+  Future<List<Map<String, dynamic>>> getMonthlyVolume({int months = 12}) async {
+    final dbInstance = await database;
+    final now = DateTime.now();
+    final cutoff = DateTime(now.year, now.month - months, 1);
+
+    final result = await dbInstance.customSelect('''
+      SELECT
+        wl.start_time,
+        sl.weight,
+        sl.reps
+      FROM set_logs sl
+      JOIN workout_logs wl ON sl.workout_log_id = wl.id
+      WHERE wl.status = 'completed'
+        AND sl.is_completed = 1
+        AND sl.set_type NOT IN ('warmup')
+        AND sl.weight IS NOT NULL
+        AND sl.reps IS NOT NULL
+        AND wl.start_time >= ?
+      ORDER BY wl.start_time ASC
+    ''', variables: [drift.Variable.withDateTime(cutoff)]).get();
+
+    final Map<String, Map<String, dynamic>> monthlyData = {};
+    for (final row in result) {
+      final startTimeStr = row.read<String?>('start_time');
+      if (startTimeStr == null) continue;
+      final startTime = DateTime.parse(startTimeStr);
+      final monthKey =
+          '${startTime.year}-${startTime.month.toString().padLeft(2, '0')}';
+
+      final weight = row.read<double?>('weight') ?? 0.0;
+      final reps = row.read<int?>('reps') ?? 0;
+
+      monthlyData.putIfAbsent(monthKey,
+          () => {'month': monthKey, 'tonnage': 0.0, 'set_count': 0});
+      monthlyData[monthKey]!['tonnage'] =
+          (monthlyData[monthKey]!['tonnage'] as double) + (weight * reps);
+      monthlyData[monthKey]!['set_count'] =
+          (monthlyData[monthKey]!['set_count'] as int) + 1;
+    }
+
+    final sorted = monthlyData.values.toList()
+      ..sort((a, b) => (a['month'] as String).compareTo(b['month'] as String));
+    return sorted;
+  }
+
+  /// Returns volume per exercise (tonnage and set count) across all time.
+  Future<List<Map<String, dynamic>>> getVolumeByExercise() async {
+    final dbInstance = await database;
+    final result = await dbInstance.customSelect('''
+      SELECT
+        sl.exercise_name_snapshot AS exercise,
+        SUM(sl.weight * sl.reps) AS tonnage,
+        COUNT(*) AS set_count
+      FROM set_logs sl
+      JOIN workout_logs wl ON sl.workout_log_id = wl.id
+      WHERE wl.status = 'completed'
+        AND sl.is_completed = 1
+        AND sl.set_type NOT IN ('warmup')
+        AND sl.weight IS NOT NULL
+        AND sl.reps IS NOT NULL
+      GROUP BY sl.exercise_name_snapshot
+      ORDER BY tonnage DESC
+      LIMIT 15
+    ''').get();
+
+    return result.map((row) => {
+          'exercise': row.read<String?>('exercise') ?? 'Unknown',
+          'tonnage': row.read<double?>('tonnage') ?? 0.0,
+          'set_count': row.read<int>('set_count'),
+        }).toList();
+  }
+
+  /// Returns volume per muscle group (set count) across all time.
+  Future<List<Map<String, dynamic>>> getVolumeByMuscleGroup() async {
+    // Get all set logs with exercise info
+    final dbInstance = await database;
+    final result = await dbInstance.customSelect('''
+      SELECT
+        sl.exercise_name_snapshot AS exercise,
+        sl.weight,
+        sl.reps,
+        e.muscles_primary
+      FROM set_logs sl
+      JOIN workout_logs wl ON sl.workout_log_id = wl.id
+      LEFT JOIN exercises e ON sl.exercise_id = e.id
+      WHERE wl.status = 'completed'
+        AND sl.is_completed = 1
+        AND sl.set_type NOT IN ('warmup')
+        AND sl.weight IS NOT NULL
+        AND sl.reps IS NOT NULL
+    ''').get();
+
+    final Map<String, Map<String, dynamic>> muscleData = {};
+    for (final row in result) {
+      final musclesPrimaryStr = row.read<String?>('muscles_primary');
+      final muscles = _parseMuscleList(musclesPrimaryStr);
+      if (muscles.isEmpty) muscles.add('Other');
+
+      final weight = row.read<double?>('weight') ?? 0.0;
+      final reps = row.read<int?>('reps') ?? 0;
+
+      for (final muscle in muscles) {
+        muscleData.putIfAbsent(
+            muscle, () => {'muscle': muscle, 'tonnage': 0.0, 'set_count': 0});
+        muscleData[muscle]!['tonnage'] =
+            (muscleData[muscle]!['tonnage'] as double) + (weight * reps);
+        muscleData[muscle]!['set_count'] =
+            (muscleData[muscle]!['set_count'] as int) + 1;
+      }
+    }
+
+    final sorted = muscleData.values.toList()
+      ..sort((a, b) =>
+          (b['set_count'] as int).compareTo(a['set_count'] as int));
+    return sorted;
+  }
+
+  // ===========================================================================
+  // ANALYTICS: CONSISTENCY
+  // ===========================================================================
+
+  /// Returns the current workout streak (consecutive days with a workout).
+  Future<int> getCurrentWorkoutStreak() async {
+    final dbInstance = await database;
+    final rows = await (dbInstance.selectOnly(dbInstance.workoutLogs)
+          ..addColumns([dbInstance.workoutLogs.startTime])
+          ..where(dbInstance.workoutLogs.status.equals('completed'))
+          ..orderBy([
+            drift.OrderingTerm(
+                expression: dbInstance.workoutLogs.startTime,
+                mode: drift.OrderingMode.desc)
+          ]))
+        .get();
+
+    if (rows.isEmpty) return 0;
+
+    // Collect unique workout dates
+    final Set<String> workoutDateStrings = {};
+    for (final r in rows) {
+      final dt = r.read(dbInstance.workoutLogs.startTime);
+      if (dt != null) {
+        final dateKey =
+            '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+        workoutDateStrings.add(dateKey);
+      }
+    }
+
+    if (workoutDateStrings.isEmpty) return 0;
+
+    final now = DateTime.now();
+    int streak = 0;
+    DateTime checkDay = DateTime(now.year, now.month, now.day);
+
+    while (true) {
+      final key =
+          '${checkDay.year}-${checkDay.month.toString().padLeft(2, '0')}-${checkDay.day.toString().padLeft(2, '0')}';
+      if (workoutDateStrings.contains(key)) {
+        streak++;
+        checkDay = checkDay.subtract(const Duration(days: 1));
+      } else {
+        // Allow missing today: the streak is still active if the user hasn't
+        // trained yet today but trained yesterday. This gives users until the
+        // end of day to maintain their streak.
+        if (streak == 0) {
+          checkDay = checkDay.subtract(const Duration(days: 1));
+          final yesterdayKey =
+              '${checkDay.year}-${checkDay.month.toString().padLeft(2, '0')}-${checkDay.day.toString().padLeft(2, '0')}';
+          if (workoutDateStrings.contains(yesterdayKey)) {
+            streak++;
+            checkDay = checkDay.subtract(const Duration(days: 1));
+            continue;
+          }
+        }
+        break;
+      }
+    }
+    return streak;
+  }
+
+  /// Returns the longest ever workout streak in days.
+  Future<int> getLongestWorkoutStreak() async {
+    final dbInstance = await database;
+    final rows = await (dbInstance.selectOnly(dbInstance.workoutLogs)
+          ..addColumns([dbInstance.workoutLogs.startTime])
+          ..where(dbInstance.workoutLogs.status.equals('completed'))
+          ..orderBy([
+            drift.OrderingTerm(
+                expression: dbInstance.workoutLogs.startTime,
+                mode: drift.OrderingMode.asc)
+          ]))
+        .get();
+
+    if (rows.isEmpty) return 0;
+
+    final Set<String> workoutDateStrings = {};
+    for (final r in rows) {
+      final dt = r.read(dbInstance.workoutLogs.startTime);
+      if (dt != null) {
+        final dateKey =
+            '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+        workoutDateStrings.add(dateKey);
+      }
+    }
+
+    final sortedDates = workoutDateStrings.toList()..sort();
+    if (sortedDates.isEmpty) return 0;
+
+    int longest = 1;
+    int current = 1;
+
+    for (int i = 1; i < sortedDates.length; i++) {
+      final prev = DateTime.parse(sortedDates[i - 1]);
+      final curr = DateTime.parse(sortedDates[i]);
+      final diff = curr.difference(prev).inDays;
+      if (diff == 1) {
+        current++;
+        if (current > longest) longest = current;
+      } else {
+        current = 1;
+      }
+    }
+    return longest;
+  }
+
+  /// Returns the average number of workouts per week over the last [weeks] weeks.
+  Future<double> getAverageWorkoutsPerWeek({int weeks = 8}) async {
+    final dbInstance = await database;
+    final cutoff = DateTime.now().subtract(Duration(days: weeks * 7));
+    final rows = await (dbInstance.selectOnly(dbInstance.workoutLogs)
+          ..addColumns([dbInstance.workoutLogs.startTime])
+          ..where(dbInstance.workoutLogs.status.equals('completed') &
+              dbInstance.workoutLogs.startTime
+                  .isBiggerOrEqualValue(cutoff)))
+        .get();
+
+    // Count unique workout days
+    final Set<String> workoutDates = {};
+    for (final r in rows) {
+      final dt = r.read(dbInstance.workoutLogs.startTime);
+      if (dt != null) {
+        final key =
+            '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+        workoutDates.add(key);
+      }
+    }
+    return workoutDates.length / weeks;
+  }
+
+  /// Returns a map of ISO date strings to workout count for the last [days] days.
+  Future<Map<String, int>> getWorkoutFrequencyByDay({int days = 84}) async {
+    final dbInstance = await database;
+    final cutoff = DateTime.now().subtract(Duration(days: days));
+    final rows = await (dbInstance.selectOnly(dbInstance.workoutLogs)
+          ..addColumns([dbInstance.workoutLogs.startTime])
+          ..where(dbInstance.workoutLogs.status.equals('completed') &
+              dbInstance.workoutLogs.startTime
+                  .isBiggerOrEqualValue(cutoff)))
+        .get();
+
+    final Map<String, int> freq = {};
+    for (final r in rows) {
+      final dt = r.read(dbInstance.workoutLogs.startTime);
+      if (dt != null) {
+        final key =
+            '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+        freq[key] = (freq[key] ?? 0) + 1;
+      }
+    }
+    return freq;
+  }
+
+  /// Returns count of workouts in the current week (Mon-Sun).
+  Future<int> getWorkoutsThisWeek() async {
+    final now = DateTime.now();
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    final start = DateTime(monday.year, monday.month, monday.day);
+    final end = DateTime(now.year, now.month, now.day, 23, 59, 59);
+
+    final dbInstance = await database;
+    final rows = await (dbInstance.selectOnly(dbInstance.workoutLogs)
+          ..addColumns([dbInstance.workoutLogs.startTime])
+          ..where(dbInstance.workoutLogs.status.equals('completed') &
+              dbInstance.workoutLogs.startTime.isBetweenValues(start, end)))
+        .get();
+
+    final Set<String> days = {};
+    for (final r in rows) {
+      final dt = r.read(dbInstance.workoutLogs.startTime);
+      if (dt != null) {
+        days.add(
+            '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}');
+      }
+    }
+    return days.length;
+  }
+
+  /// Returns count of workouts in the current calendar month.
+  Future<int> getWorkoutsThisMonth() async {
+    final now = DateTime.now();
+    final start = DateTime(now.year, now.month, 1);
+    final end = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+
+    final dbInstance = await database;
+    final rows = await (dbInstance.selectOnly(dbInstance.workoutLogs)
+          ..addColumns([dbInstance.workoutLogs.startTime])
+          ..where(dbInstance.workoutLogs.status.equals('completed') &
+              dbInstance.workoutLogs.startTime.isBetweenValues(start, end)))
+        .get();
+
+    final Set<String> days = {};
+    for (final r in rows) {
+      final dt = r.read(dbInstance.workoutLogs.startTime);
+      if (dt != null) {
+        days.add(
+            '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}');
+      }
+    }
+    return days.length;
+  }
 }

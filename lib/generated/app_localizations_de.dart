@@ -1760,4 +1760,146 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get currentlyTrackingDesc => 'In der täglichen Übersicht anzeigen';
+
+  @override
+  String get prDashboardTitle => 'PR-Dashboard';
+
+  @override
+  String get prDashboardSubtitle => 'Persönliche Rekorde & Kraftfortschritt';
+
+  @override
+  String get prDashboardAllTime => 'ALLE ZEITEN';
+
+  @override
+  String get prDashboardRecent => 'NEUESTE PRs';
+
+  @override
+  String get prDashboardByRepRange => 'NACH WIEDERHOLUNGSBEREICH';
+
+  @override
+  String get prDashboardNoData =>
+      'Noch keine persönlichen Rekorde. Fange an zu trainieren!';
+
+  @override
+  String get prDashboardExercise => 'Übung';
+
+  @override
+  String get prDashboardWeight => 'Gewicht';
+
+  @override
+  String get prDashboardReps => 'Wdh.';
+
+  @override
+  String get prDashboardDate => 'Datum';
+
+  @override
+  String get prDashboardLast30Days => 'Letzte 30 Tage';
+
+  @override
+  String get prDashboardLast90Days => 'Letzte 90 Tage';
+
+  @override
+  String get prDashboardAllTime2 => 'Alle Zeiten';
+
+  @override
+  String get prDashboardRepRange1 => '1 WH';
+
+  @override
+  String get prDashboardRepRange3 => '3 WH';
+
+  @override
+  String get prDashboardRepRange5 => '5 WH';
+
+  @override
+  String get prDashboardRepRange8 => '8 WH';
+
+  @override
+  String get prDashboardRepRange10 => '10+ WH';
+
+  @override
+  String get prDashboardEstimated1RM => 'Gesch. 1WH';
+
+  @override
+  String get prDashboardNewPR => 'NEUER PR';
+
+  @override
+  String get volumeAnalyticsTitle => 'Volumen-Analyse';
+
+  @override
+  String get volumeAnalyticsSubtitle => 'Trainingsvolumen im Zeitverlauf';
+
+  @override
+  String get volumeByWeek => 'PRO WOCHE';
+
+  @override
+  String get volumeByMonth => 'PRO MONAT';
+
+  @override
+  String get volumeByExercise => 'PRO ÜBUNG';
+
+  @override
+  String get volumeByMuscle => 'PRO MUSKEL';
+
+  @override
+  String get volumeTonnage => 'Tonnage (kg)';
+
+  @override
+  String get volumeSets => 'Arbeitssätze';
+
+  @override
+  String get volumeNoData =>
+      'Noch keine Trainingsdaten. Fange an zu trainieren!';
+
+  @override
+  String get volumeWeekLabel => 'Woche';
+
+  @override
+  String get volumeMonthLabel => 'Monat';
+
+  @override
+  String get volumeToggleTonnage => 'Tonnage';
+
+  @override
+  String get volumeToggleSets => 'Sätze';
+
+  @override
+  String get consistencyTitle => 'Konstanz';
+
+  @override
+  String get consistencySubtitle => 'Trainingshäufigkeit & Gewohnheiten';
+
+  @override
+  String get consistencyCurrentStreak => 'Aktuelle Serie';
+
+  @override
+  String get consistencyLongestStreak => 'Längste Serie';
+
+  @override
+  String get consistencyAvgPerWeek => 'Ø / Woche';
+
+  @override
+  String get consistencyDays => 'Tage';
+
+  @override
+  String get consistencyWorkoutsThisWeek => 'Diese Woche';
+
+  @override
+  String get consistencyWorkoutsThisMonth => 'Diesen Monat';
+
+  @override
+  String get consistencyCalendarHint =>
+      '● Training  ● Ernährung  ● Supplemente';
+
+  @override
+  String get consistencyNoData =>
+      'Noch keine Trainingseinheiten. Fange an zu trainieren!';
+
+  @override
+  String get consistencyStreaks => 'SERIEN';
+
+  @override
+  String get consistencyOverview => 'ÜBERSICHT';
+
+  @override
+  String get consistencyWeeklyActivity => 'WÖCHENTLICHE AKTIVITÄT';
 }
