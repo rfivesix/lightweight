@@ -74,17 +74,24 @@ class _NutritionScreenState extends State<NutritionScreen> {
     });
 
     final dbHelper = DatabaseHelper.instance;
-    final settings = await dbHelper.getAppSettings();
+    // Calculate exact sum of historical daily goals
+    int targetCalories = 0;
+    int targetProtein = 0;
+    int targetCarbs = 0;
+    int targetFat = 0;
+    int targetWater = 0;
 
-    // Nur für die Extras noch Prefs
+    for (int i = 0; i <= range.duration.inDays; i++) {
+      final d = range.start.add(Duration(days: i));
+      final goals = await dbHelper.getGoalsForDate(d);
+      targetCalories += goals?.targetCalories ?? 2500;
+      targetProtein += goals?.targetProtein ?? 180;
+      targetCarbs += goals?.targetCarbs ?? 250;
+      targetFat += goals?.targetFat ?? 80;
+      targetWater += goals?.targetWater ?? 3000;
+    }
+
     final prefs = await SharedPreferences.getInstance();
-
-    final targetCalories = settings?.targetCalories ?? 2500;
-    final targetProtein = settings?.targetProtein ?? 180;
-    final targetCarbs = settings?.targetCarbs ?? 250;
-    final targetFat = settings?.targetFat ?? 80;
-    final targetWater = settings?.targetWater ?? 3000;
-
     final targetSugar = prefs.getInt('targetSugar') ?? 50;
     final targetFiber = prefs.getInt('targetFiber') ?? 30;
     final targetSalt = prefs.getInt('targetSalt') ?? 6;
@@ -103,11 +110,11 @@ class _NutritionScreenState extends State<NutritionScreen> {
 
     final numberOfDays = range.duration.inDays + 1;
     final newNutritionSummary = DailyNutrition(
-      targetCalories: targetCalories * numberOfDays,
-      targetProtein: targetProtein * numberOfDays,
-      targetCarbs: targetCarbs * numberOfDays,
-      targetFat: targetFat * numberOfDays,
-      targetWater: targetWater * numberOfDays,
+      targetCalories: targetCalories,
+      targetProtein: targetProtein,
+      targetCarbs: targetCarbs,
+      targetFat: targetFat,
+      targetWater: targetWater,
       targetSugar: targetSugar * numberOfDays,
       targetFiber: targetFiber * numberOfDays,
       targetSalt: targetSalt * numberOfDays,

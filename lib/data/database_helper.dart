@@ -602,11 +602,14 @@ class DatabaseHelper {
       dailyLimit: drift.Value(s.dailyLimit),
       notes: drift.Value(s.notes),
       isBuiltin: drift.Value(s.isBuiltin),
+      isTracked: drift.Value(s.isTracked),
     );
 
     final row = await dbInstance
         .into(dbInstance.supplements)
         .insertReturning(companion);
+
+    await insertSupplementSettingsHistory(row.id, s);
 
     return Supplement(
       id: row.localId,
@@ -618,6 +621,7 @@ class DatabaseHelper {
       dailyLimit: row.dailyLimit,
       notes: row.notes,
       isBuiltin: row.isBuiltin,
+      isTracked: row.isTracked,
     );
   }
 
@@ -638,6 +642,7 @@ class DatabaseHelper {
               dailyLimit: row.dailyLimit,
               notes: row.notes,
               isBuiltin: row.isBuiltin,
+              isTracked: row.isTracked,
             ))
         .toList();
   }
@@ -645,6 +650,10 @@ class DatabaseHelper {
   Future<void> updateSupplement(Supplement s) async {
     if (s.id == null) return;
     final dbInstance = await database;
+
+    final original = await (dbInstance.select(dbInstance.supplements)
+          ..where((tbl) => tbl.localId.equals(s.id!)))
+        .getSingleOrNull();
 
     final companion = db.SupplementsCompanion(
       code: drift.Value(s.code),
@@ -655,11 +664,88 @@ class DatabaseHelper {
       dailyLimit: drift.Value(s.dailyLimit),
       notes: drift.Value(s.notes),
       isBuiltin: drift.Value(s.isBuiltin),
+      isTracked: drift.Value(s.isTracked),
     );
 
     await (dbInstance.update(dbInstance.supplements)
           ..where((tbl) => tbl.localId.equals(s.id!)))
         .write(companion);
+
+    if (original != null &&
+        (original.isTracked != s.isTracked ||
+            original.dose != s.defaultDose ||
+            original.dailyGoal != s.dailyGoal ||
+            original.dailyLimit != s.dailyLimit)) {
+      await insertSupplementSettingsHistory(original.id, s);
+    }
+  }
+
+  Future<void> insertSupplementSettingsHistory(
+      String supplementUuid, Supplement s) async {
+    final dbInstance = await database;
+    await dbInstance
+        .into(dbInstance.supplementSettingsHistory)
+        .insert(db.SupplementSettingsHistoryCompanion(
+          supplementId: drift.Value(supplementUuid),
+          isTracked: drift.Value(s.isTracked),
+          dose: drift.Value(s.defaultDose),
+          dailyGoal: drift.Value(s.dailyGoal),
+          dailyLimit: drift.Value(s.dailyLimit),
+        ));
+  }
+
+  Future<List<Supplement>> getSupplementsForDate(DateTime date) async {
+    final dbInstance = await database;
+    final allSupplements = await (dbInstance.select(dbInstance.supplements)
+          ..orderBy([(t) => drift.OrderingTerm(expression: t.name)]))
+        .get();
+
+    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
+    final List<Supplement> result = [];
+
+    for (final row in allSupplements) {
+      final historyRow =
+          await (dbInstance.select(dbInstance.supplementSettingsHistory)
+                ..where((tbl) => tbl.supplementId.equals(row.id))
+                ..where((tbl) => tbl.createdAt.isSmallerOrEqualValue(endOfDay))
+                ..orderBy([
+                  (t) => drift.OrderingTerm(
+                      expression: t.createdAt, mode: drift.OrderingMode.desc)
+                ])
+                ..limit(1))
+              .getSingleOrNull();
+
+      if (historyRow != null) {
+        result.add(Supplement(
+          id: row.localId,
+          code: row.code,
+          name: row.name,
+          defaultDose: historyRow.dose,
+          unit: row.unit,
+          dailyGoal: historyRow.dailyGoal,
+          dailyLimit: historyRow.dailyLimit,
+          notes: row.notes,
+          isBuiltin: row.isBuiltin,
+          isTracked: historyRow.isTracked,
+        ));
+      } else if (row.createdAt.isBefore(endOfDay) ||
+          row.createdAt.isAtSameMomentAs(endOfDay)) {
+        result.add(Supplement(
+          id: row.localId,
+          code: row.code,
+          name: row.name,
+          defaultDose: row.dose,
+          unit: row.unit,
+          dailyGoal: row.dailyGoal,
+          dailyLimit: row.dailyLimit,
+          notes: row.notes,
+          isBuiltin: row.isBuiltin,
+          isTracked: row.isTracked,
+        ));
+      }
+    }
+
+    return result;
   }
 
   Future<void> deleteSupplement(int id) async {
@@ -1039,7 +1125,7 @@ class DatabaseHelper {
     }
   }
 
-  /// Speichert die Ziele (AppSettings) - ROBUSTERE VERSION
+  /// Saves the user goals (AppSettings) and records a historical snapshot
   Future<void> saveUserGoals({
     required int calories,
     required int protein,
@@ -1049,9 +1135,32 @@ class DatabaseHelper {
   }) async {
     final dbInstance = await database;
 
-    // 1. Prüfen, ob schon Settings da sind
+    // 1. Check if settings already exist
     final existingSettings =
         await dbInstance.select(dbInstance.appSettings).getSingleOrNull();
+
+    // IMPORTANT: Ensure a historical baseline exists before the old goals are overwritten.
+    if (existingSettings != null) {
+      final baseline = await (dbInstance.select(dbInstance.dailyGoalsHistory)
+            ..where(
+                (t) => t.createdAt.isSmallerOrEqualValue(DateTime(2010, 1, 1)))
+            ..limit(1))
+          .getSingleOrNull();
+
+      if (baseline == null) {
+        await dbInstance.into(dbInstance.dailyGoalsHistory).insert(
+              db.DailyGoalsHistoryCompanion(
+                targetCalories: drift.Value(existingSettings.targetCalories),
+                targetProtein: drift.Value(existingSettings.targetProtein),
+                targetCarbs: drift.Value(existingSettings.targetCarbs),
+                targetFat: drift.Value(existingSettings.targetFat),
+                targetWater: drift.Value(existingSettings.targetWater),
+                createdAt:
+                    drift.Value(DateTime(2000, 1, 1)), // Covers all older data
+              ),
+            );
+      }
+    }
 
     if (existingSettings != null) {
       // UPDATE
@@ -1065,8 +1174,8 @@ class DatabaseHelper {
         targetWater: drift.Value(water),
       ));
     } else {
-      // INSERT (Falls saveUserProfile die Settings noch nicht angelegt hat)
-      // Wir brauchen die User-ID
+      // INSERT (In case saveUserProfile hasn't created settings yet)
+      // We need the user ID
       final profile =
           await dbInstance.select(dbInstance.profiles).getSingleOrNull();
       if (profile != null) {
@@ -1083,10 +1192,72 @@ class DatabaseHelper {
               unitSystem: const drift.Value('metric'),
             ));
       } else {
-        debugPrint(
-            "⚠️ FEHLER: Kein Profil gefunden, kann Ziele nicht speichern!");
+        debugPrint("⚠️ ERROR: No profile found, cannot save goals!");
       }
     }
+
+    // 2. Add historical entry
+    await dbInstance.into(dbInstance.dailyGoalsHistory).insert(
+          db.DailyGoalsHistoryCompanion(
+            targetCalories: drift.Value(calories),
+            targetProtein: drift.Value(protein),
+            targetCarbs: drift.Value(carbs),
+            targetFat: drift.Value(fat),
+            targetWater: drift.Value(water),
+            createdAt: drift.Value(DateTime.now()), // as valid-from timestamp
+          ),
+        );
+  }
+
+  /// Returns the active goals for a given date.
+  /// Searches the history for the newest entry created before or at the end of the day.
+  /// If nothing is found, it falls back to AppSettings.
+  Future<db.DailyGoalsHistoryData?> getGoalsForDate(DateTime date) async {
+    final dbInstance = await database;
+
+    // End of the requested day
+    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
+
+    final query = dbInstance.select(dbInstance.dailyGoalsHistory)
+      ..where((t) => t.createdAt.isSmallerOrEqualValue(endOfDay))
+      ..orderBy([
+        (t) => drift.OrderingTerm(
+            expression: t.createdAt, mode: drift.OrderingMode.desc)
+      ])
+      ..limit(1);
+
+    final historyGoal = await query.getSingleOrNull();
+    if (historyGoal != null) return historyGoal;
+
+    // If no history entry exists *before* or *on* this date,
+    // meaning the date is BEFORE the first record, we take the oldest known history entry.
+    final oldestHistory = await (dbInstance.select(dbInstance.dailyGoalsHistory)
+          ..orderBy([
+            (t) => drift.OrderingTerm(
+                expression: t.createdAt, mode: drift.OrderingMode.asc)
+          ])
+          ..limit(1))
+        .getSingleOrNull();
+
+    if (oldestHistory != null) return oldestHistory;
+
+    // Absolute fallback: Current AppSettings (if history is completely empty)
+    final settings = await getAppSettings();
+    if (settings != null) {
+      return db.DailyGoalsHistoryData(
+        id: 'fallback', // dummy id
+        localId: 0,
+        createdAt: settings.createdAt,
+        updatedAt: settings.updatedAt,
+        deletedAt: settings.deletedAt,
+        targetCalories: settings.targetCalories,
+        targetProtein: settings.targetProtein,
+        targetCarbs: settings.targetCarbs,
+        targetFat: settings.targetFat,
+        targetWater: settings.targetWater,
+      );
+    }
+    return null;
   }
 
   /// Speichert das Startgewicht als Messung
@@ -1113,11 +1284,11 @@ class DatabaseHelper {
   ///
   /// Returns `{kcal, protein, carbs, fat}`.
   Future<Map<String, int>> getRemainingMacrosForDate(DateTime date) async {
-    final settings = await getAppSettings();
-    final targetKcal = settings?.targetCalories ?? 2500;
-    final targetProtein = settings?.targetProtein ?? 180;
-    final targetCarbs = settings?.targetCarbs ?? 250;
-    final targetFat = settings?.targetFat ?? 80;
+    final goals = await getGoalsForDate(date);
+    final targetKcal = goals?.targetCalories ?? 2500;
+    final targetProtein = goals?.targetProtein ?? 180;
+    final targetCarbs = goals?.targetCarbs ?? 250;
+    final targetFat = goals?.targetFat ?? 80;
 
     int consumedKcal = 0;
     int consumedProtein = 0;

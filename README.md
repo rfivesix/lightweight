@@ -51,10 +51,11 @@ Hypertrack is already a fully functional daily driver for fitness enthusiasts.
 ### 📈 Body Metrics & Health
 * **Measurements:** Track weight, body fat percentage, and tape measurements (biceps, waist, etc.).
 * **Charts:** Visualize your progress over time.
-* **Supplements:** Manage your inventory and track daily intake of supplements like Creatine or Hypertrackmins.
+* **Supplements:** Manage your inventory and track daily intake of supplements (like Creatine or Vitamins) with full historical tracking of goals and limits.
 
 ### 🛡️ Privacy & Tech
 * **Offline-First:** All data stays on your device by default. No account required.
+* **Data at Rest Security:** Hypertrack natively inherits your device's OS-level encryption (iOS Data Protection / Android FBE). We strongly advise enabling a secure screen lock on your device.
 * **No Ads, No Bloat:** Just the tools you need.
 * **Export:** Full JSON export and encrypted backup options.
 

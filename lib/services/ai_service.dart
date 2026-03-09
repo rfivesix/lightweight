@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
@@ -192,7 +193,7 @@ Example response:
     final imageDataList = <String>[];
     for (final img in images) {
       final bytes = await img.readAsBytes();
-      imageDataList.add(base64Encode(bytes));
+      imageDataList.add(await compute(base64Encode, bytes));
     }
 
     final userContent =
@@ -255,7 +256,7 @@ Please provide an updated analysis incorporating the user's feedback. Return the
     if (images != null) {
       for (final img in images) {
         final bytes = await img.readAsBytes();
-        imageDataList.add(base64Encode(bytes));
+        imageDataList.add(await compute(base64Encode, bytes));
       }
     }
     final prompt = _buildSystemPrompt(languageCode: languageCode);
@@ -480,10 +481,13 @@ Please provide an updated analysis incorporating the user's feedback. Return the
   // Meal Recommendation
   // ---------------------------------------------------------------------------
 
-  /// Generates a personalised meal recommendation based on remaining macros,
-  /// dietary preferences, and recent eating history.
+  /// Generates a personalised meal recommendation based on dietary preferences,
+  /// and recent eating history.
+  ///
+  ///   - [targetMacros] The calculated macros the AI should aggressively aim to fill for *this* meal.
+  ///   - [preferences] User dietary/situational preferences.
   Future<AiMealRecommendation> generateMealRecommendation({
-    required Map<String, int> remainingMacros,
+    required Map<String, int> targetMacros,
     required List<String> preferences,
     required String recentHistory,
     required String mealTypeLabel,
@@ -496,22 +500,34 @@ Please provide an updated analysis incorporating the user's feedback. Return the
 
     final systemPrompt = _buildRecommendationPrompt(languageCode: languageCode);
 
+    // Map UI preferences to strict prompt constraints
+    final refinedPreferences = preferences.map((p) {
+      if (p == 'On the go') {
+        return 'ON THE GO: The meal MUST be instantly edible from a supermarket (e.g., protein bar, pre-made sandwich, fruit, skyr). NO cooking, NO microwave, NO utensils required. DO NOT suggest raw meat, lentils, rice, or anything needing prep.';
+      } else if (p == 'No cooking') {
+        return 'NO COOKING: The meal MUST be cold and require NO stove/microwave (e.g., salad, cottage cheese with nuts, sandwich). DO NOT suggest raw meat, pasta, or foods needing heat.';
+      } else if (p == 'Cooking allowed') {
+        return 'WITH COOKING: Full kitchen available. Feel free to suggest meals requiring a stove/oven (e.g., cooked meat, rice, cooked veggies).';
+      }
+      return p;
+    }).toList();
+
     final userContent = '''
 Target Meal: $mealTypeLabel
 
-Remaining macros for today (across ALL remaining meals):
-- Calories: ${remainingMacros['kcal']} kcal
-- Protein: ${remainingMacros['protein']}g
-- Carbs: ${remainingMacros['carbs']}g
-- Fat: ${remainingMacros['fat']}g
+Target macros for THIS meal:
+- Calories: ${targetMacros['kcal']} kcal
+- Protein: ${targetMacros['protein']}g
+- Carbs: ${targetMacros['carbs']}g
+- Fat: ${targetMacros['fat']}g
 
-User constraints (Dietary/Situation): ${preferences.isEmpty ? 'None' : preferences.join(', ')}
+User constraints (Dietary/Situation): ${refinedPreferences.isEmpty ? 'None' : refinedPreferences.join('\n- ')}
 
 Custom user request: ${customRequest != null && customRequest.trim().isNotEmpty ? customRequest.trim() : 'None'}
 
 Recent meals (last 7 days): ${recentHistory.isEmpty ? 'No history available' : recentHistory}
 
-Suggest ONE meal for $mealTypeLabel that fits the user constraints and fills the remaining macros as accurately as possible.''';
+Suggest ONE meal for $mealTypeLabel that fits the user constraints and fills the target macros for THIS meal as accurately as possible.''';
 
     String rawContent;
     switch (provider) {
@@ -538,8 +554,8 @@ Suggest ONE meal for $mealTypeLabel that fits the user constraints and fills the
 You are a personal nutrition coach. The user wants a meal suggestion for a specific meal (Breakfast, Lunch, Dinner, or Snack).
 
 CRITICAL RULES:
-1. PORTION SCALING: The provided macros are exactly what you should aim to fill. Do NOT leave 'space' or hold back calories/macros for future meals or snacks. The user wants a meal that uses up the provided remaining macros as optimally as possible.
-2. USER CONSTRAINTS: You must STRICTLY respect the user's constraints (Dietary/Situation). For example, if they specify "Quick", the meal should take <10 mins. If "No kitchen", suggest cold/pre-made foods. If "Vegan/Vegetarian/Pescetarian", adhere strictly to those diets.
+1. PORTION SCALING: The provided macros are exactly what you should aim to fill for THIS SINGLE MEAL. Do NOT leave 'space' or hold back calories/macros for future meals. The user wants a meal recommendation whose nutrition matches the provided targets as optimally as possible.
+2. USER CONSTRAINTS: You must STRICTLY respect the user's constraints (Dietary/Situation). The user might give very strict situational limits (like "NO COOKING" or "ON THE GO"). Adhere to them exactly! Dietary limits (e.g. Vegan) must also be strictly followed.
 3. Suggest ONE highly appropriate meal.
 4. Avoid repeating exact meals from the user's recent history.
 5. Use SIMPLE, SHORT base food names for ingredients (e.g. "Reis" not "Langkorn-Basmatireis"), to maximize database matching.

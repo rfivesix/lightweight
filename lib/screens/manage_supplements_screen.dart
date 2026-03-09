@@ -68,7 +68,7 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8.0),
                     child: Text(
-                      l10n.deleteConfirmContent, // oder spezieller Text für Supplements
+                      l10n.deleteSupplementConfirm,
                       textAlign: TextAlign.center,
                     ),
                   ),

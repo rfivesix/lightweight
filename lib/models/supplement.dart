@@ -29,7 +29,10 @@ class Supplement {
   final String? notes;
 
   /// Whether the supplement is a built-in default or created by the user.
-  final bool isBuiltin; // <— NEU
+  final bool isBuiltin;
+
+  /// Whether the supplement is currently actively tracked by the user.
+  final bool isTracked;
 
   /// Creates a new [Supplement] instance.
   Supplement({
@@ -42,6 +45,7 @@ class Supplement {
     this.dailyLimit,
     this.notes,
     this.isBuiltin = false,
+    this.isTracked = true,
   });
 
   /// Creates a [Supplement] instance from a Map, typically from a database row.
@@ -55,7 +59,8 @@ class Supplement {
       dailyGoal: (map['daily_goal'] as num?)?.toDouble(),
       dailyLimit: (map['daily_limit'] as num?)?.toDouble(),
       notes: map['notes'] as String?,
-      isBuiltin: (map['is_builtin'] as int? ?? 0) == 1, // NEU
+      isBuiltin: (map['is_builtin'] as int? ?? 0) == 1,
+      isTracked: (map['is_tracked'] as int? ?? 1) == 1,
     );
   }
 
@@ -70,7 +75,8 @@ class Supplement {
       'daily_goal': dailyGoal,
       'daily_limit': dailyLimit,
       'notes': notes,
-      'is_builtin': isBuiltin ? 1 : 0, // NEU
+      'is_builtin': isBuiltin ? 1 : 0,
+      'is_tracked': isTracked ? 1 : 0,
     };
   }
 }

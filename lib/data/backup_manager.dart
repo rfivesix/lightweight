@@ -173,7 +173,8 @@ class BackupManager {
       Map<String, dynamic> payload;
 
       if (jsonMapRaw is Map &&
-          jsonMapRaw['enc'] == EncryptionUtil.wrapperVersion) {
+          (jsonMapRaw['enc'] == EncryptionUtil.wrapperVersionV1 ||
+              jsonMapRaw['enc'] == EncryptionUtil.wrapperVersionV2)) {
         final effectivePw = passphrase ?? "";
         try {
           final clearText = await EncryptionUtil.decryptToString(
