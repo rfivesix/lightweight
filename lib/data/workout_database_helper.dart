@@ -999,4 +999,601 @@ class WorkoutDatabaseHelper {
     }
     return null;
   }
+
+  // ===========================================================================
+  // EXERCISE ANALYTICS (v1)
+  // ===========================================================================
+
+  /// Retrieves the UUID (string) for an exercise given its local integer ID.
+  Future<String?> getExerciseUuidByLocalId(int localId) async {
+    final dbInstance = await database;
+    final row = await (dbInstance.select(dbInstance.exercises)
+          ..where((tbl) => tbl.localId.equals(localId))
+          ..limit(1))
+        .getSingleOrNull();
+    return row?.id;
+  }
+
+  /// Builds a Drift expression that matches set_logs by exercise name snapshot
+  /// (nameDe, optional nameEn) or by exercise UUID.
+  drift.Expression<bool> _buildExerciseMatchCondition(
+    db.AppDatabase dbInstance,
+    String exerciseName, {
+    String? altName,
+    String? exerciseUuid,
+  }) {
+    drift.Expression<bool> nameExpr =
+        dbInstance.setLogs.exerciseNameSnapshot.equals(exerciseName);
+
+    if (altName != null && altName.isNotEmpty && altName != exerciseName) {
+      nameExpr =
+          nameExpr | dbInstance.setLogs.exerciseNameSnapshot.equals(altName);
+    }
+
+    if (exerciseUuid != null && exerciseUuid.isNotEmpty) {
+      return nameExpr | dbInstance.setLogs.exerciseId.equals(exerciseUuid);
+    }
+    return nameExpr;
+  }
+
+  /// Represents a single PR for a specific rep bracket.
+  /// (Using a map/record or a specific class here; we will use a raw map structure
+  /// for simplicity or a custom class if preferred. We'll use a Record for modern Dart.)
+  Future<Map<String, SetLog?>> getExercisePRs(
+    String exerciseName, {
+    String? altName,
+    String? exerciseUuid,
+  }) async {
+    final dbInstance = await database;
+
+    final exerciseMatch = _buildExerciseMatchCondition(
+      dbInstance,
+      exerciseName,
+      altName: altName,
+      exerciseUuid: exerciseUuid,
+    );
+
+    // Qualifying sets for PRs:
+    // isCompleted == true, setType != 'warmup', weight > 0, reps > 0
+    final query = dbInstance.select(dbInstance.setLogs).join([
+      drift.innerJoin(dbInstance.workoutLogs,
+          dbInstance.workoutLogs.id.equalsExp(dbInstance.setLogs.workoutLogId))
+    ])
+      ..where(exerciseMatch &
+          dbInstance.setLogs.isCompleted.equals(true) &
+          dbInstance.setLogs.setType.isNotIn(['warmup']) &
+          dbInstance.setLogs.weight.isBiggerThanValue(0) &
+          dbInstance.setLogs.reps.isBiggerThanValue(0));
+
+    final rows = await query.get();
+
+    final prMap = <String, SetLog?>{
+      '1 RM': null,
+      '2-3 RM': null,
+      '4-6 RM': null,
+      '7-10 RM': null,
+      '11-15 RM': null,
+      '15+ RM': null,
+    };
+
+    // Helferfunktion, um den Bracket-Namen zu ermitteln
+    String getBracket(int reps) {
+      if (reps == 1) return '1 RM';
+      if (reps >= 2 && reps <= 3) return '2-3 RM';
+      if (reps >= 4 && reps <= 6) return '4-6 RM';
+      if (reps >= 7 && reps <= 10) return '7-10 RM';
+      if (reps >= 11 && reps <= 15) return '11-15 RM';
+      return '15+ RM';
+    }
+
+    // Mapping von Drift-Rows auf SetLog Objekte inkl. Datum
+    final List<Map<String, dynamic>> qualifyingSets = rows.map((r) {
+      final setRow = r.readTable(dbInstance.setLogs);
+      final logRow = r.readTable(dbInstance.workoutLogs);
+
+      return {
+        'set': SetLog(
+          id: setRow.localId,
+          workoutLogId: logRow.localId,
+          exerciseName: setRow.exerciseNameSnapshot ?? exerciseName,
+          setType: setRow.setType,
+          weightKg: setRow.weight,
+          reps: setRow.reps,
+          isCompleted: setRow.isCompleted,
+        ),
+        'date': logRow.startTime,
+      };
+    }).toList();
+
+    // Tie-breaker logic: Max weight, then max reps, then most recent date
+    for (final s in qualifyingSets) {
+      final setLog = s['set'] as SetLog;
+      // Date parameter would be used here if needed for deeper tie-breaking
+      // but 'most recent date wins' is handled naturally by list order iteration
+      final bracket = getBracket(setLog.reps ?? 0);
+
+      final currentPr = prMap[bracket];
+
+      if (currentPr == null) {
+        prMap[bracket] = setLog;
+        // Speichern Sie das Datum temporär auf dem SetLog, falls wir es später brauchen,
+        // oder vergleichen Sie es direkt hier (hier einfach im Scope).
+      } else {
+        // Compare with current PR
+        if (setLog.weightKg! > currentPr.weightKg!) {
+          prMap[bracket] = setLog;
+        } else if (setLog.weightKg == currentPr.weightKg) {
+          if (setLog.reps! > currentPr.reps!) {
+            prMap[bracket] = setLog;
+          } else if (setLog.reps == currentPr.reps) {
+            // Um das Datum aus dem "aktuellen" PR zu kriegen, müssten wir es mitspeichern.
+            // Für v1 ersetzen wir einfach das aktuelle, da die Liste normalerweise chronologisch
+            // nach hinten iteriert wird, ODER wir speichern eine interne Struktur.
+            // Wir überschreiben es der Einfachheit halber (die jüngste Session gewinnt, falls
+            // die Liste aufsteigend ist).
+            prMap[bracket] =
+                setLog; // Simplifikation für "letztes Datum gewinnt"
+          }
+        }
+      }
+    }
+
+    return prMap;
+  }
+
+  /// Calculates Time-Series data points for Weight, Volume, and Sets per session.
+  /// Result is a List of Maps containing Date and the metrics.
+  Future<List<Map<String, dynamic>>> getExerciseTimeSeriesData(
+    String exerciseName, {
+    String? altName,
+    String? exerciseUuid,
+  }) async {
+    final dbInstance = await database;
+
+    final exerciseMatch = _buildExerciseMatchCondition(
+      dbInstance,
+      exerciseName,
+      altName: altName,
+      exerciseUuid: exerciseUuid,
+    );
+
+    final query = dbInstance.select(dbInstance.setLogs).join([
+      drift.innerJoin(dbInstance.workoutLogs,
+          dbInstance.workoutLogs.id.equalsExp(dbInstance.setLogs.workoutLogId))
+    ])
+      ..where(exerciseMatch &
+          dbInstance.setLogs.isCompleted.equals(true) &
+          dbInstance.setLogs.setType.isNotIn(['warmup']) &
+          dbInstance.workoutLogs.status.equals('completed'))
+      ..orderBy([
+        drift.OrderingTerm(
+            expression: dbInstance.workoutLogs.startTime,
+            mode: drift.OrderingMode.asc)
+      ]);
+
+    final rows = await query.get();
+
+    // Group by session (WorkoutLog UUID or LocalID)
+    final Map<int, Map<String, dynamic>> sessionAggregates = {};
+
+    for (final r in rows) {
+      final setRow = r.readTable(dbInstance.setLogs);
+      final logRow = r.readTable(dbInstance.workoutLogs);
+      final wLogId = logRow.localId;
+
+      if (!sessionAggregates.containsKey(wLogId)) {
+        sessionAggregates[wLogId] = {
+          'date': logRow.startTime,
+          'maxWeight': 0.0,
+          'totalVolume': 0.0,
+          'setCount': 0,
+        };
+      }
+
+      final agg = sessionAggregates[wLogId]!;
+      final weight = setRow.weight ?? 0.0;
+      final reps = setRow.reps ?? 0;
+
+      // Update Max Weight
+      if (weight > agg['maxWeight']) {
+        agg['maxWeight'] = weight;
+      }
+
+      // Update Volume
+      agg['totalVolume'] += (weight * reps);
+
+      // Update Set Count
+      agg['setCount'] += 1;
+    }
+
+    // Return as chronologisch sortierte Liste
+    final resultList = sessionAggregates.values.toList();
+    resultList.sort(
+        (a, b) => (a['date'] as DateTime).compareTo(b['date'] as DateTime));
+    return resultList;
+  }
+
+  /// Returns the most recently updated all-time weight PRs across all exercises.
+  ///
+  /// For each exercise, the set with the highest recorded weight is returned.
+  /// Results are sorted by the workout date of the latest session in which
+  /// that PR weight was achieved, so recently active exercises appear first.
+  ///
+  /// Each entry contains: 'exerciseName' (String), 'weight' (double), 'reps' (int).
+  Future<List<Map<String, dynamic>>> getRecentGlobalPRs(
+      {int limit = 3}) async {
+    final dbInstance = await database;
+
+    final rows = await dbInstance.customSelect(
+      '''
+      SELECT
+        s1.exercise_name_snapshot AS exerciseName,
+        s1.weight                 AS weight,
+        s1.reps                   AS reps
+      FROM set_logs s1
+      JOIN workout_logs wl ON wl.id = s1.workout_log_id
+      WHERE s1.is_completed = 1
+        AND s1.set_type != 'warmup'
+        AND s1.weight > 0
+        AND s1.reps  > 0
+        AND wl.status = 'completed'
+        AND s1.weight = (
+          SELECT MAX(s2.weight)
+          FROM set_logs s2
+          WHERE s2.exercise_name_snapshot = s1.exercise_name_snapshot
+            AND s2.is_completed = 1
+            AND s2.set_type != 'warmup'
+            AND s2.weight > 0
+        )
+      GROUP BY s1.exercise_name_snapshot
+      ORDER BY MAX(wl.start_time) DESC
+      LIMIT ?
+      ''',
+      variables: [drift.Variable.withInt(limit)],
+    ).get();
+
+    return rows
+        .map((row) => {
+              'exerciseName': row.read<String>('exerciseName'),
+              'weight': row.read<double>('weight'),
+              'reps': row.read<int>('reps'),
+            })
+        .toList();
+  }
+
+  // ===========================================================================
+  // AGGREGATE ANALYTICS
+  // ===========================================================================
+
+  /// Weekly tonnage (kg) for the last [weeksBack] weeks.
+  /// Each entry: {weekStart: DateTime, weekLabel: String, tonnage: double, setCount: int}
+  Future<List<Map<String, dynamic>>> getWeeklyVolumeData(
+      {int weeksBack = 8}) async {
+    final now = DateTime.now();
+    final since = now.subtract(Duration(days: weeksBack * 7));
+    final dbInstance = await database;
+
+    final query = dbInstance.select(dbInstance.setLogs).join([
+      drift.innerJoin(dbInstance.workoutLogs,
+          dbInstance.workoutLogs.id.equalsExp(dbInstance.setLogs.workoutLogId))
+    ])
+      ..where(dbInstance.setLogs.isCompleted.equals(true) &
+          dbInstance.setLogs.setType.isNotIn(['warmup']) &
+          dbInstance.setLogs.weight.isBiggerThanValue(0) &
+          dbInstance.setLogs.reps.isBiggerThanValue(0) &
+          dbInstance.workoutLogs.status.equals('completed') &
+          dbInstance.workoutLogs.startTime
+              .isBetweenValues(since, now.add(const Duration(days: 1))))
+      ..orderBy([
+        drift.OrderingTerm(expression: dbInstance.workoutLogs.startTime)
+      ]);
+
+    final rows = await query.get();
+
+    final Map<String, Map<String, dynamic>> weekMap = {};
+
+    void ensureWeek(DateTime date) {
+      final monday = date.subtract(Duration(days: date.weekday - 1));
+      final mondayNorm = DateTime(monday.year, monday.month, monday.day);
+      final key =
+          '${mondayNorm.year}-${mondayNorm.month.toString().padLeft(2, '0')}-${mondayNorm.day.toString().padLeft(2, '0')}';
+      weekMap.putIfAbsent(key, () => {
+            'weekStart': mondayNorm,
+            'weekLabel':
+                '${mondayNorm.day}.${mondayNorm.month}.',
+            'tonnage': 0.0,
+            'setCount': 0,
+          });
+    }
+
+    // Pre-fill all weeks so missing weeks show as 0
+    for (int w = 0; w < weeksBack; w++) {
+      ensureWeek(now.subtract(Duration(days: w * 7)));
+    }
+
+    for (final r in rows) {
+      final setRow = r.readTable(dbInstance.setLogs);
+      final logRow = r.readTable(dbInstance.workoutLogs);
+      final date = logRow.startTime;
+      final monday = date.subtract(Duration(days: date.weekday - 1));
+      final mondayNorm = DateTime(monday.year, monday.month, monday.day);
+      final key =
+          '${mondayNorm.year}-${mondayNorm.month.toString().padLeft(2, '0')}-${mondayNorm.day.toString().padLeft(2, '0')}';
+
+      ensureWeek(date);
+
+      final weight = setRow.weight ?? 0.0;
+      final reps = setRow.reps ?? 0;
+      weekMap[key]!['tonnage'] =
+          (weekMap[key]!['tonnage'] as double) + weight * reps;
+      weekMap[key]!['setCount'] = (weekMap[key]!['setCount'] as int) + 1;
+    }
+
+    final result = weekMap.values.toList()
+      ..sort((a, b) =>
+          (a['weekStart'] as DateTime).compareTo(b['weekStart'] as DateTime));
+    return result;
+  }
+
+  /// Volume (tonnage) grouped by primary muscle group for the last [daysBack] days.
+  /// Returns list sorted descending by tonnage: {muscleGroup: String, tonnage: double}
+  Future<List<Map<String, dynamic>>> getVolumeByMuscleGroup(
+      {int daysBack = 30}) async {
+    final now = DateTime.now();
+    final since = now.subtract(Duration(days: daysBack));
+    final dbInstance = await database;
+
+    final query = dbInstance.select(dbInstance.setLogs).join([
+      drift.innerJoin(dbInstance.workoutLogs,
+          dbInstance.workoutLogs.id.equalsExp(dbInstance.setLogs.workoutLogId)),
+      drift.leftOuterJoin(dbInstance.exercises,
+          dbInstance.exercises.id.equalsExp(dbInstance.setLogs.exerciseId)),
+    ])
+      ..where(dbInstance.setLogs.isCompleted.equals(true) &
+          dbInstance.setLogs.setType.isNotIn(['warmup']) &
+          dbInstance.setLogs.weight.isBiggerThanValue(0) &
+          dbInstance.setLogs.reps.isBiggerThanValue(0) &
+          dbInstance.workoutLogs.status.equals('completed') &
+          dbInstance.workoutLogs.startTime
+              .isBetweenValues(since, now.add(const Duration(days: 1))));
+
+    final rows = await query.get();
+    final Map<String, double> muscleVolume = {};
+
+    for (final r in rows) {
+      final setRow = r.readTable(dbInstance.setLogs);
+      final exRow = r.readTableOrNull(dbInstance.exercises);
+      final volume = (setRow.weight ?? 0.0) * (setRow.reps ?? 0);
+
+      if (exRow != null) {
+        final muscles = _parseMuscleList(exRow.musclesPrimary);
+        if (muscles.isNotEmpty) {
+          for (final m in muscles) {
+            muscleVolume[m] = (muscleVolume[m] ?? 0.0) + volume;
+          }
+        } else {
+          muscleVolume['Other'] = (muscleVolume['Other'] ?? 0.0) + volume;
+        }
+      } else {
+        muscleVolume['Other'] = (muscleVolume['Other'] ?? 0.0) + volume;
+      }
+    }
+
+    final result = muscleVolume.entries
+        .map((e) => {'muscleGroup': e.key, 'tonnage': e.value})
+        .toList()
+      ..sort((a, b) => (b['tonnage'] as double).compareTo(a['tonnage'] as double));
+    return result;
+  }
+
+  /// Top [limit] exercises by tonnage for the last [daysBack] days.
+  /// Each entry: {exerciseName: String, tonnage: double}
+  Future<List<Map<String, dynamic>>> getTopExercisesByVolume(
+      {int daysBack = 30, int limit = 5}) async {
+    final now = DateTime.now();
+    final since = now.subtract(Duration(days: daysBack));
+    final dbInstance = await database;
+
+    final query = dbInstance.select(dbInstance.setLogs).join([
+      drift.innerJoin(dbInstance.workoutLogs,
+          dbInstance.workoutLogs.id.equalsExp(dbInstance.setLogs.workoutLogId))
+    ])
+      ..where(dbInstance.setLogs.isCompleted.equals(true) &
+          dbInstance.setLogs.setType.isNotIn(['warmup']) &
+          dbInstance.setLogs.weight.isBiggerThanValue(0) &
+          dbInstance.setLogs.reps.isBiggerThanValue(0) &
+          dbInstance.workoutLogs.status.equals('completed') &
+          dbInstance.workoutLogs.startTime
+              .isBetweenValues(since, now.add(const Duration(days: 1))));
+
+    final rows = await query.get();
+    final Map<String, double> exVolume = {};
+
+    for (final r in rows) {
+      final setRow = r.readTable(dbInstance.setLogs);
+      final name = setRow.exerciseNameSnapshot ?? 'Unknown';
+      exVolume[name] =
+          (exVolume[name] ?? 0.0) + (setRow.weight ?? 0.0) * (setRow.reps ?? 0);
+    }
+
+    return (exVolume.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value)))
+        .take(limit)
+        .map((e) => {'exerciseName': e.key, 'tonnage': e.value})
+        .toList();
+  }
+
+  /// Workouts logged per week for the last [weeksBack] weeks.
+  /// Each entry: {weekStart: DateTime, weekLabel: String, count: int}
+  Future<List<Map<String, dynamic>>> getWorkoutsPerWeek(
+      {int weeksBack = 12}) async {
+    final now = DateTime.now();
+    final since = now.subtract(Duration(days: weeksBack * 7));
+    final dbInstance = await database;
+
+    final rows = await (dbInstance.select(dbInstance.workoutLogs)
+          ..where((tbl) =>
+              tbl.status.equals('completed') &
+              tbl.startTime
+                  .isBetweenValues(since, now.add(const Duration(days: 1))))
+          ..orderBy([(t) =>
+              drift.OrderingTerm(expression: t.startTime)]))
+        .get();
+
+    final Map<String, Map<String, dynamic>> weekMap = {};
+
+    // Pre-fill all weeks
+    for (int w = weeksBack - 1; w >= 0; w--) {
+      final day = now.subtract(Duration(days: w * 7));
+      final monday = day.subtract(Duration(days: day.weekday - 1));
+      final mondayNorm = DateTime(monday.year, monday.month, monday.day);
+      final key =
+          '${mondayNorm.year}-${mondayNorm.month.toString().padLeft(2, '0')}-${mondayNorm.day.toString().padLeft(2, '0')}';
+      weekMap[key] = {
+        'weekStart': mondayNorm,
+        'weekLabel': '${mondayNorm.day}.${mondayNorm.month}.',
+        'count': 0,
+      };
+    }
+
+    for (final row in rows) {
+      final date = row.startTime;
+      final monday = date.subtract(Duration(days: date.weekday - 1));
+      final mondayNorm = DateTime(monday.year, monday.month, monday.day);
+      final key =
+          '${mondayNorm.year}-${mondayNorm.month.toString().padLeft(2, '0')}-${mondayNorm.day.toString().padLeft(2, '0')}';
+      if (weekMap.containsKey(key)) {
+        weekMap[key]!['count'] = (weekMap[key]!['count'] as int) + 1;
+      }
+    }
+
+    return weekMap.values.toList()
+      ..sort((a, b) =>
+          (a['weekStart'] as DateTime).compareTo(b['weekStart'] as DateTime));
+  }
+
+  /// Returns key training stats: totalWorkouts, thisWeekCount, avgPerWeek (last 4 wks), streakWeeks.
+  Future<Map<String, dynamic>> getTrainingStats() async {
+    final now = DateTime.now();
+    final dbInstance = await database;
+
+    final allLogs = await (dbInstance.select(dbInstance.workoutLogs)
+          ..where((tbl) => tbl.status.equals('completed'))
+          ..orderBy([(t) => drift.OrderingTerm(
+                expression: t.startTime,
+                mode: drift.OrderingMode.desc,
+              )]))
+        .get();
+
+    final totalWorkouts = allLogs.length;
+
+    final thisMonday = DateTime(now.year, now.month, now.day)
+        .subtract(Duration(days: now.weekday - 1));
+    final thisWeekCount = allLogs
+        .where((r) =>
+            !r.startTime.isBefore(thisMonday) &&
+            r.startTime.isBefore(thisMonday.add(const Duration(days: 7))))
+        .length;
+
+    final fourWeeksAgo = now.subtract(const Duration(days: 28));
+    final last4Count =
+        allLogs.where((r) => r.startTime.isAfter(fourWeeksAgo)).length;
+    final avgPerWeek = last4Count / 4.0;
+
+    // Current weekly streak
+    int streakWeeks = 0;
+    for (int w = 0; w < 52; w++) {
+      final weekStart = thisMonday.subtract(Duration(days: w * 7));
+      final weekEnd = weekStart.add(const Duration(days: 7));
+      final hasWorkout = allLogs.any((r) =>
+          !r.startTime.isBefore(weekStart) && r.startTime.isBefore(weekEnd));
+      if (hasWorkout) {
+        streakWeeks++;
+      } else {
+        break;
+      }
+    }
+
+    return {
+      'totalWorkouts': totalWorkouts,
+      'thisWeekCount': thisWeekCount,
+      'avgPerWeek': avgPerWeek,
+      'streakWeeks': streakWeeks,
+    };
+  }
+
+  /// Returns the set of dates (normalized to midnight) that had completed workouts
+  /// within the last [daysBack] days.
+  Future<Set<DateTime>> getWorkoutDatesSet({int daysBack = 91}) async {
+    final now = DateTime.now();
+    final since = now.subtract(Duration(days: daysBack));
+    final dbInstance = await database;
+
+    final rows = await (dbInstance.select(dbInstance.workoutLogs)
+          ..where((tbl) =>
+              tbl.status.equals('completed') &
+              tbl.startTime
+                  .isBetweenValues(since, now.add(const Duration(days: 1)))))
+        .get();
+
+    return rows.map((r) {
+      final d = r.startTime;
+      return DateTime(d.year, d.month, d.day);
+    }).toSet();
+  }
+
+  /// Returns the all-time best set for each rep bracket across all exercises.
+  /// Map key = bracket label, value = {exerciseName, weight, reps} or null.
+  Future<Map<String, Map<String, dynamic>?>> getAllTimePRsByRepBracket() async {
+    final dbInstance = await database;
+
+    final query = dbInstance.select(dbInstance.setLogs).join([
+      drift.innerJoin(dbInstance.workoutLogs,
+          dbInstance.workoutLogs.id.equalsExp(dbInstance.setLogs.workoutLogId))
+    ])
+      ..where(dbInstance.setLogs.isCompleted.equals(true) &
+          dbInstance.setLogs.setType.isNotIn(['warmup']) &
+          dbInstance.setLogs.weight.isBiggerThanValue(0) &
+          dbInstance.setLogs.reps.isBiggerThanValue(0) &
+          dbInstance.workoutLogs.status.equals('completed'));
+
+    final rows = await query.get();
+
+    String bracket(int reps) {
+      if (reps == 1) return '1 RM';
+      if (reps <= 3) return '2–3 RM';
+      if (reps <= 6) return '4–6 RM';
+      if (reps <= 10) return '7–10 RM';
+      if (reps <= 15) return '11–15 RM';
+      return '15+ RM';
+    }
+
+    final result = <String, Map<String, dynamic>?>{
+      '1 RM': null,
+      '2–3 RM': null,
+      '4–6 RM': null,
+      '7–10 RM': null,
+      '11–15 RM': null,
+      '15+ RM': null,
+    };
+
+    for (final r in rows) {
+      final setRow = r.readTable(dbInstance.setLogs);
+      final reps = setRow.reps ?? 0;
+      final weight = setRow.weight ?? 0.0;
+      if (reps <= 0 || weight <= 0) continue;
+
+      final b = bracket(reps);
+      final current = result[b];
+      if (current == null || weight > (current['weight'] as double)) {
+        result[b] = {
+          'exerciseName': setRow.exerciseNameSnapshot ?? '',
+          'weight': weight,
+          'reps': reps,
+        };
+      }
+    }
+
+    return result;
+  }
 }

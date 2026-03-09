@@ -20,7 +20,15 @@ import '../widgets/glass_fab.dart';
 class ExerciseCatalogScreen extends StatefulWidget {
   /// Whether the screen is used to select an exercise to return to a caller.
   final bool isSelectionMode;
-  const ExerciseCatalogScreen({super.key, this.isSelectionMode = false});
+
+  /// Optional callback for handling the selection manually instead of popping.
+  final void Function(Exercise)? onExerciseSelected;
+
+  const ExerciseCatalogScreen({
+    super.key,
+    this.isSelectionMode = false,
+    this.onExerciseSelected,
+  });
 
   @override
   State<ExerciseCatalogScreen> createState() => _ExerciseCatalogScreenState();
@@ -251,7 +259,9 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
                                       Icons.chevron_right,
                                     ), // Anzeige-Modus: Pfeil
                               onTap: () {
-                                if (widget.isSelectionMode) {
+                                if (widget.onExerciseSelected != null) {
+                                  widget.onExerciseSelected!(exercise);
+                                } else if (widget.isSelectionMode) {
                                   // Im Auswahl-Modus: Bei Klick auch auswählen
                                   Navigator.of(context).pop(exercise);
                                 } else {

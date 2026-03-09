@@ -1748,4 +1748,175 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get currentlyTrackingDesc => 'Show in daily tracker hub';
+
+  @override
+  String get filter3Months => '3 Months';
+
+  @override
+  String get filter6Months => '6 Months';
+
+  @override
+  String get sectionConsistency => 'Consistency & Frequency';
+
+  @override
+  String get metricsWorkoutsWeek => 'Workouts (Week)';
+
+  @override
+  String get metricsCurrentStreak => 'Current Streak';
+
+  @override
+  String get metricsActiveWeeks => 'weeks active';
+
+  @override
+  String get placeholderCalendarHeatmap => 'Calendar Heatmap Visual';
+
+  @override
+  String get consistencyTrackerTitle => 'Consistency Tracker';
+
+  @override
+  String get consistencyTrackerComingSoon =>
+      'Consistency & Habit Tracker (Coming Soon)';
+
+  @override
+  String get sectionMuscleVolume => 'Muscle Groups & Volume';
+
+  @override
+  String get metricsTopTrained => 'Top Trained';
+
+  @override
+  String get metricsMostNeglected => 'Most Neglected';
+
+  @override
+  String get placeholderMuscleHeatmap => 'Muscle Heatmap Visual';
+
+  @override
+  String get muscleAnalyticsTitle => 'Muscle Group Analytics';
+
+  @override
+  String get muscleAnalyticsComingSoon =>
+      'Muscle Volume & Heatmaps (Coming Soon)';
+
+  @override
+  String get sectionPerformance => 'Performance & PRs';
+
+  @override
+  String get metricsRecentPrs => 'Recent PRs';
+
+  @override
+  String get metricsVolumeLifted => 'Volume Lifted';
+
+  @override
+  String get metricsMostImproved => 'Most Improved';
+
+  @override
+  String get exerciseAnalyticsTitle => 'Exercise Analytics';
+
+  @override
+  String get exerciseAnalyticsSubtitle =>
+      'Search and analyze specific exercises';
+
+  @override
+  String get prDashboardTitle => 'PR Dashboard';
+
+  @override
+  String get prDashboardComingSoon => 'Records & Progress (Coming Soon)';
+
+  @override
+  String get exerciseAnalyticsComingSoon =>
+      'Exercise search & specific trends (Coming Soon)';
+
+  @override
+  String get sectionRecovery => 'Recovery';
+
+  @override
+  String get metricsMuscleReadiness => 'Muscle Readiness';
+
+  @override
+  String get recoveryTrackerTitle => 'Recovery Tracker';
+
+  @override
+  String get recoveryTrackerComingSoon =>
+      'Muscle readiness & fatigue (Coming Soon)';
+
+  @override
+  String get sectionBodyNutrition => 'Body & Nutrition';
+
+  @override
+  String get metricsCurrentWeight => 'Current Weight';
+
+  @override
+  String get metricsAvgCalories => 'Avg. Calories';
+
+  @override
+  String get placeholderWeightTrend => 'Weight Trend Line Chart';
+
+  @override
+  String get exerciseAnalyticsPrsLabel => 'PERSONAL RECORDS';
+
+  @override
+  String get exerciseAnalyticsTrendsLabel => 'TRENDS';
+
+  @override
+  String get exerciseAnalyticsNoData => 'No tracking data for this exercise.';
+
+  @override
+  String get exerciseAnalyticsNotEnoughData => 'Not enough data';
+
+  @override
+  String get exerciseAnalyticsChartWeight => 'Weight Over Time (kg)';
+
+  @override
+  String get exerciseAnalyticsChartVolume => 'Volume Over Time (kg)';
+
+  @override
+  String get exerciseAnalyticsChartSets => 'Sets Over Time';
+
+  @override
+  String get allTimeRecordsLabel => 'All-Time Records';
+
+  @override
+  String get recentActivityLabel => 'Recent Activity';
+
+  @override
+  String get prsByRepRangeLabel => 'Best Set by Rep Range';
+
+  @override
+  String get volumeAnalyticsTitle => 'Volume Analytics';
+
+  @override
+  String get weeklyTonnageLabel => 'Weekly Tonnage';
+
+  @override
+  String get volumeByMuscleLabel => 'By Muscle Group';
+
+  @override
+  String get topExercisesLabel => 'Top Exercises';
+
+  @override
+  String get thisWeekLabel => 'This Week';
+
+  @override
+  String get avgPerWeekLabel => 'Avg / Week';
+
+  @override
+  String get streakLabel => 'Streak';
+
+  @override
+  String get trainingCalendarLabel => 'Training Calendar';
+
+  @override
+  String get workoutsPerWeekLabel => 'Workouts per Week';
+
+  @override
+  String get totalWorkoutsLabel => 'Total';
+
+  @override
+  String get weeksLabel => 'Weeks';
+
+  @override
+  String get tonnageKgLabel => 'Tonnage (kg)';
+
+  @override
+  String get noWorkoutDataLabel =>
+      'No workout data yet. Start logging to see stats.';
 }

@@ -1760,4 +1760,174 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get currentlyTrackingDesc => 'In der täglichen Übersicht anzeigen';
+
+  @override
+  String get filter3Months => '3 Monate';
+
+  @override
+  String get filter6Months => '6 Monate';
+
+  @override
+  String get sectionConsistency => 'Konsistenz & Frequenz';
+
+  @override
+  String get metricsWorkoutsWeek => 'Workouts (Woche)';
+
+  @override
+  String get metricsCurrentStreak => 'Aktueller Streak';
+
+  @override
+  String get metricsActiveWeeks => 'Wochen aktiv';
+
+  @override
+  String get placeholderCalendarHeatmap => 'Kalender Heatmap';
+
+  @override
+  String get consistencyTrackerTitle => 'Konsistenz Tracker';
+
+  @override
+  String get consistencyTrackerComingSoon =>
+      'Konsistenz & Habit Tracker (In Kürze)';
+
+  @override
+  String get sectionMuscleVolume => 'Muskelgruppen & Volumen';
+
+  @override
+  String get metricsTopTrained => 'Oft trainiert';
+
+  @override
+  String get metricsMostNeglected => 'Vernachlässigt';
+
+  @override
+  String get placeholderMuscleHeatmap => 'Muskelgruppen Heatmap';
+
+  @override
+  String get muscleAnalyticsTitle => 'Muskelgruppen Analyse';
+
+  @override
+  String get muscleAnalyticsComingSoon => 'Muskelvolumen & Heatmaps (In Kürze)';
+
+  @override
+  String get sectionPerformance => 'Leistung & PRs';
+
+  @override
+  String get metricsRecentPrs => 'Aktuelle PRs';
+
+  @override
+  String get metricsVolumeLifted => 'Bewegtes Gewicht';
+
+  @override
+  String get metricsMostImproved => 'Größte Steigerung';
+
+  @override
+  String get exerciseAnalyticsTitle => 'Übungs-Analyse';
+
+  @override
+  String get exerciseAnalyticsSubtitle =>
+      'Spezifische Übungen suchen & analysieren';
+
+  @override
+  String get prDashboardTitle => 'PR Dashboard';
+
+  @override
+  String get prDashboardComingSoon => 'Rekorde & Fortschritte (In Kürze)';
+
+  @override
+  String get exerciseAnalyticsComingSoon => 'Übungssuche & Trends (In Kürze)';
+
+  @override
+  String get sectionRecovery => 'Erholung';
+
+  @override
+  String get metricsMuscleReadiness => 'Muskel-Bereitschaft';
+
+  @override
+  String get recoveryTrackerTitle => 'Erholungs-Tracker';
+
+  @override
+  String get recoveryTrackerComingSoon =>
+      'Muskel-Bereitschaft & Ermüdung (In Kürze)';
+
+  @override
+  String get sectionBodyNutrition => 'Körper & Ernährung';
+
+  @override
+  String get metricsCurrentWeight => 'Aktuelles Gewicht';
+
+  @override
+  String get metricsAvgCalories => 'Ø Kalorien';
+
+  @override
+  String get placeholderWeightTrend => 'Gewichts-Trend Diagramm';
+
+  @override
+  String get exerciseAnalyticsPrsLabel => 'PERSÖNLICHE REKORDE';
+
+  @override
+  String get exerciseAnalyticsTrendsLabel => 'TRENDS';
+
+  @override
+  String get exerciseAnalyticsNoData =>
+      'Keine aufgezeichneten Daten für diese Übung.';
+
+  @override
+  String get exerciseAnalyticsNotEnoughData => 'Nicht genug Daten';
+
+  @override
+  String get exerciseAnalyticsChartWeight => 'Gewicht im Zeitverlauf (kg)';
+
+  @override
+  String get exerciseAnalyticsChartVolume => 'Volumen im Zeitverlauf (kg)';
+
+  @override
+  String get exerciseAnalyticsChartSets => 'Sätze im Zeitverlauf';
+
+  @override
+  String get allTimeRecordsLabel => 'Alle-Zeiten-Rekorde';
+
+  @override
+  String get recentActivityLabel => 'Letzte Aktivität';
+
+  @override
+  String get prsByRepRangeLabel => 'Bestes Set nach Wiederholungsbereich';
+
+  @override
+  String get volumeAnalyticsTitle => 'Volumen-Analyse';
+
+  @override
+  String get weeklyTonnageLabel => 'Wöchentliches Tonnage';
+
+  @override
+  String get volumeByMuscleLabel => 'Nach Muskelgruppe';
+
+  @override
+  String get topExercisesLabel => 'Top-Übungen';
+
+  @override
+  String get thisWeekLabel => 'Diese Woche';
+
+  @override
+  String get avgPerWeekLabel => 'Ø / Woche';
+
+  @override
+  String get streakLabel => 'Serie';
+
+  @override
+  String get trainingCalendarLabel => 'Trainingskalender';
+
+  @override
+  String get workoutsPerWeekLabel => 'Trainings pro Woche';
+
+  @override
+  String get totalWorkoutsLabel => 'Gesamt';
+
+  @override
+  String get weeksLabel => 'Wochen';
+
+  @override
+  String get tonnageKgLabel => 'Tonnage (kg)';
+
+  @override
+  String get noWorkoutDataLabel =>
+      'Noch keine Daten. Starte ein Training, um Statistiken zu sehen.';
 }

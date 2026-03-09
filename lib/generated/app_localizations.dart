@@ -3367,6 +3367,336 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show in daily tracker hub'**
   String get currentlyTrackingDesc;
+
+  /// No description provided for @filter3Months.
+  ///
+  /// In en, this message translates to:
+  /// **'3 Months'**
+  String get filter3Months;
+
+  /// No description provided for @filter6Months.
+  ///
+  /// In en, this message translates to:
+  /// **'6 Months'**
+  String get filter6Months;
+
+  /// No description provided for @sectionConsistency.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency & Frequency'**
+  String get sectionConsistency;
+
+  /// No description provided for @metricsWorkoutsWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts (Week)'**
+  String get metricsWorkoutsWeek;
+
+  /// No description provided for @metricsCurrentStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Streak'**
+  String get metricsCurrentStreak;
+
+  /// No description provided for @metricsActiveWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'weeks active'**
+  String get metricsActiveWeeks;
+
+  /// No description provided for @placeholderCalendarHeatmap.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar Heatmap Visual'**
+  String get placeholderCalendarHeatmap;
+
+  /// No description provided for @consistencyTrackerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency Tracker'**
+  String get consistencyTrackerTitle;
+
+  /// No description provided for @consistencyTrackerComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency & Habit Tracker (Coming Soon)'**
+  String get consistencyTrackerComingSoon;
+
+  /// No description provided for @sectionMuscleVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscle Groups & Volume'**
+  String get sectionMuscleVolume;
+
+  /// No description provided for @metricsTopTrained.
+  ///
+  /// In en, this message translates to:
+  /// **'Top Trained'**
+  String get metricsTopTrained;
+
+  /// No description provided for @metricsMostNeglected.
+  ///
+  /// In en, this message translates to:
+  /// **'Most Neglected'**
+  String get metricsMostNeglected;
+
+  /// No description provided for @placeholderMuscleHeatmap.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscle Heatmap Visual'**
+  String get placeholderMuscleHeatmap;
+
+  /// No description provided for @muscleAnalyticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscle Group Analytics'**
+  String get muscleAnalyticsTitle;
+
+  /// No description provided for @muscleAnalyticsComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscle Volume & Heatmaps (Coming Soon)'**
+  String get muscleAnalyticsComingSoon;
+
+  /// No description provided for @sectionPerformance.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance & PRs'**
+  String get sectionPerformance;
+
+  /// No description provided for @metricsRecentPrs.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent PRs'**
+  String get metricsRecentPrs;
+
+  /// No description provided for @metricsVolumeLifted.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume Lifted'**
+  String get metricsVolumeLifted;
+
+  /// No description provided for @metricsMostImproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Most Improved'**
+  String get metricsMostImproved;
+
+  /// No description provided for @exerciseAnalyticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise Analytics'**
+  String get exerciseAnalyticsTitle;
+
+  /// No description provided for @exerciseAnalyticsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Search and analyze specific exercises'**
+  String get exerciseAnalyticsSubtitle;
+
+  /// No description provided for @prDashboardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'PR Dashboard'**
+  String get prDashboardTitle;
+
+  /// No description provided for @prDashboardComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Records & Progress (Coming Soon)'**
+  String get prDashboardComingSoon;
+
+  /// No description provided for @exerciseAnalyticsComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise search & specific trends (Coming Soon)'**
+  String get exerciseAnalyticsComingSoon;
+
+  /// No description provided for @sectionRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery'**
+  String get sectionRecovery;
+
+  /// No description provided for @metricsMuscleReadiness.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscle Readiness'**
+  String get metricsMuscleReadiness;
+
+  /// No description provided for @recoveryTrackerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery Tracker'**
+  String get recoveryTrackerTitle;
+
+  /// No description provided for @recoveryTrackerComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscle readiness & fatigue (Coming Soon)'**
+  String get recoveryTrackerComingSoon;
+
+  /// No description provided for @sectionBodyNutrition.
+  ///
+  /// In en, this message translates to:
+  /// **'Body & Nutrition'**
+  String get sectionBodyNutrition;
+
+  /// No description provided for @metricsCurrentWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Weight'**
+  String get metricsCurrentWeight;
+
+  /// No description provided for @metricsAvgCalories.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg. Calories'**
+  String get metricsAvgCalories;
+
+  /// No description provided for @placeholderWeightTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight Trend Line Chart'**
+  String get placeholderWeightTrend;
+
+  /// No description provided for @exerciseAnalyticsPrsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'PERSONAL RECORDS'**
+  String get exerciseAnalyticsPrsLabel;
+
+  /// No description provided for @exerciseAnalyticsTrendsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'TRENDS'**
+  String get exerciseAnalyticsTrendsLabel;
+
+  /// No description provided for @exerciseAnalyticsNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No tracking data for this exercise.'**
+  String get exerciseAnalyticsNoData;
+
+  /// No description provided for @exerciseAnalyticsNotEnoughData.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough data'**
+  String get exerciseAnalyticsNotEnoughData;
+
+  /// No description provided for @exerciseAnalyticsChartWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight Over Time (kg)'**
+  String get exerciseAnalyticsChartWeight;
+
+  /// No description provided for @exerciseAnalyticsChartVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume Over Time (kg)'**
+  String get exerciseAnalyticsChartVolume;
+
+  /// No description provided for @exerciseAnalyticsChartSets.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets Over Time'**
+  String get exerciseAnalyticsChartSets;
+
+  /// No description provided for @allTimeRecordsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'All-Time Records'**
+  String get allTimeRecordsLabel;
+
+  /// No description provided for @recentActivityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Activity'**
+  String get recentActivityLabel;
+
+  /// No description provided for @prsByRepRangeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Best Set by Rep Range'**
+  String get prsByRepRangeLabel;
+
+  /// No description provided for @volumeAnalyticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume Analytics'**
+  String get volumeAnalyticsTitle;
+
+  /// No description provided for @weeklyTonnageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Tonnage'**
+  String get weeklyTonnageLabel;
+
+  /// No description provided for @volumeByMuscleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'By Muscle Group'**
+  String get volumeByMuscleLabel;
+
+  /// No description provided for @topExercisesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Top Exercises'**
+  String get topExercisesLabel;
+
+  /// No description provided for @thisWeekLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'This Week'**
+  String get thisWeekLabel;
+
+  /// No description provided for @avgPerWeekLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg / Week'**
+  String get avgPerWeekLabel;
+
+  /// No description provided for @streakLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak'**
+  String get streakLabel;
+
+  /// No description provided for @trainingCalendarLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Training Calendar'**
+  String get trainingCalendarLabel;
+
+  /// No description provided for @workoutsPerWeekLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts per Week'**
+  String get workoutsPerWeekLabel;
+
+  /// No description provided for @totalWorkoutsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get totalWorkoutsLabel;
+
+  /// No description provided for @weeksLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Weeks'**
+  String get weeksLabel;
+
+  /// No description provided for @tonnageKgLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tonnage (kg)'**
+  String get tonnageKgLabel;
+
+  /// No description provided for @noWorkoutDataLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'No workout data yet. Start logging to see stats.'**
+  String get noWorkoutDataLabel;
 }
 
 class _AppLocalizationsDelegate

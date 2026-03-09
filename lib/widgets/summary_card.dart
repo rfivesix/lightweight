@@ -11,10 +11,14 @@ class SummaryCard extends StatelessWidget {
   /// Internal padding for the [child].
   final EdgeInsetsGeometry padding;
 
+  /// Optional tap handler for the card.
+  final VoidCallback? onTap;
+
   const SummaryCard({
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(12.0),
+    this.onTap,
   });
 
   ///*
@@ -26,7 +30,7 @@ class SummaryCard extends StatelessWidget {
         ? summary_card_dark_mode
         : summary_card_white_mode;
 
-    return Container(
+    final card = Container(
       margin: const EdgeInsets.symmetric(vertical: 6.0),
       padding: padding,
       decoration: BoxDecoration(
@@ -45,6 +49,15 @@ class SummaryCard extends StatelessWidget {
       ),
       child: child,
     );
+
+    if (onTap != null) {
+      return GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: card,
+      );
+    }
+    return card;
   }
 }
 
