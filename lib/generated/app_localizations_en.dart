@@ -1904,6 +1904,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'This is a conservative heuristic based on recent significant loading and session effort. It is not a medical recovery measurement.';
 
   @override
+  String recoveryRecentLoad(String sets) {
+    return 'Recent load amount: $sets equivalent sets';
+  }
+
+  @override
+  String recoveryWindowHeuristic(int from, int to) {
+    return 'Heuristic window: often around $from to $to hours, depending on context.';
+  }
+
+  @override
+  String get recoveryRadarHeuristicCaption =>
+      'Radar overview of recent recovery pressure by muscle. It is directional and heuristic.';
+
+  @override
   String get recoveryNoDataBody =>
       'Not enough significant training load has been logged yet to estimate muscle recovery.';
 
@@ -2161,6 +2175,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get analyticsRecentDistributionHeatmap =>
       'Recent Distribution Heatmap';
+
+  @override
+  String get analyticsRadarOverviewTitle => 'Radar Overview';
+
+  @override
+  String get analyticsRadarVolumeCaption =>
+      'Shows relative volume distribution across muscles for a quick at-a-glance summary.';
 
   @override
   String get analyticsGuidanceTitle => 'Guidance';

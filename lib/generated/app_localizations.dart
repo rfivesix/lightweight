@@ -3638,6 +3638,24 @@ abstract class AppLocalizations {
   /// **'This is a conservative heuristic based on recent significant loading and session effort. It is not a medical recovery measurement.'**
   String get recoveryHeuristicDisclaimer;
 
+  /// No description provided for @recoveryRecentLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent load amount: {sets} equivalent sets'**
+  String recoveryRecentLoad(String sets);
+
+  /// No description provided for @recoveryWindowHeuristic.
+  ///
+  /// In en, this message translates to:
+  /// **'Heuristic window: often around {from} to {to} hours, depending on context.'**
+  String recoveryWindowHeuristic(int from, int to);
+
+  /// No description provided for @recoveryRadarHeuristicCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Radar overview of recent recovery pressure by muscle. It is directional and heuristic.'**
+  String get recoveryRadarHeuristicCaption;
+
   /// No description provided for @recoveryNoDataBody.
   ///
   /// In en, this message translates to:
@@ -4117,6 +4135,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Recent Distribution Heatmap'**
   String get analyticsRecentDistributionHeatmap;
+
+  /// No description provided for @analyticsRadarOverviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Radar Overview'**
+  String get analyticsRadarOverviewTitle;
+
+  /// No description provided for @analyticsRadarVolumeCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows relative volume distribution across muscles for a quick at-a-glance summary.'**
+  String get analyticsRadarVolumeCaption;
 
   /// No description provided for @analyticsGuidanceTitle.
   ///

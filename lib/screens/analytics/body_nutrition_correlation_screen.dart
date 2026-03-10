@@ -6,6 +6,8 @@ import '../../generated/app_localizations.dart';
 import '../../screens/measurements_screen.dart';
 import '../../util/body_nutrition_analytics_utils.dart';
 import '../../util/design_constants.dart';
+import '../../widgets/analytics_chart_defaults.dart';
+import '../../widgets/analytics_section_header.dart';
 import '../../widgets/global_app_bar.dart';
 import '../../widgets/summary_card.dart';
 
@@ -76,8 +78,14 @@ class _BodyNutritionCorrelationScreenState
                       const SizedBox(height: DesignConstants.spacingM),
                       _buildSummaryKpis(l10n, _analytics!),
                       const SizedBox(height: DesignConstants.spacingM),
+                      AnalyticsSectionHeader(
+                        title: l10n.analyticsBodyNutritionTrendContext,
+                      ),
                       _buildStackedCharts(l10n, _analytics!),
                       const SizedBox(height: DesignConstants.spacingM),
+                      AnalyticsSectionHeader(
+                        title: l10n.analyticsInterpretationTitle,
+                      ),
                       _buildInterpretationCard(l10n, _analytics!),
                       const SizedBox(height: 8),
                       SummaryCard(
@@ -220,18 +228,20 @@ class _BodyNutritionCorrelationScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              l10n.analyticsBodyNutritionTrendContext,
-              style: Theme.of(context)
-                  .textTheme
-                  .labelLarge
-                  ?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
             _buildChartTitle(l10n.analyticsWeightTrendLabel),
+            Text(
+              'Y: ${l10n.analyticsUnitKg}   X: ${l10n.analyticsDayUnitLabel.toLowerCase()}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 4),
             SizedBox(height: 170, child: _buildWeightChart(data)),
             const SizedBox(height: 10),
             _buildChartTitle(l10n.analyticsCaloriesTrendLabel),
+            Text(
+              'Y: kcal   X: ${l10n.analyticsDayUnitLabel.toLowerCase()}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 4),
             SizedBox(height: 170, child: _buildCaloriesChart(data)),
           ],
         ),
@@ -307,12 +317,10 @@ class _BodyNutritionCorrelationScreenState
           ),
         ),
         lineBarsData: [
-          LineChartBarData(
+          AnalyticsChartDefaults.straightLine(
             spots: points,
-            isCurved: true,
             barWidth: 2.5,
             color: Theme.of(context).colorScheme.primary,
-            dotData: const FlDotData(show: false),
           ),
         ],
       ),
@@ -375,12 +383,10 @@ class _BodyNutritionCorrelationScreenState
           ),
         ),
         lineBarsData: [
-          LineChartBarData(
+          AnalyticsChartDefaults.straightLine(
             spots: points,
-            isCurved: true,
             barWidth: 2.5,
             color: Theme.of(context).colorScheme.secondary,
-            dotData: const FlDotData(show: false),
           ),
         ],
       ),
@@ -397,14 +403,6 @@ class _BodyNutritionCorrelationScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              l10n.analyticsInterpretationTitle,
-              style: Theme.of(context)
-                  .textTheme
-                  .labelLarge
-                  ?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
             Text(
               _insightText(l10n, data),
               style: Theme.of(context).textTheme.bodyMedium,

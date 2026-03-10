@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import '../../data/workout_database_helper.dart';
 import '../../generated/app_localizations.dart';
 import '../../util/design_constants.dart';
+import '../../widgets/analytics_section_header.dart';
 import '../../widgets/global_app_bar.dart';
+import '../../widgets/muscle_radar_chart.dart';
 import '../../widgets/summary_card.dart';
 
 class MuscleGroupAnalyticsScreen extends StatefulWidget {
@@ -57,6 +59,37 @@ class _MuscleGroupAnalyticsScreenState
     return value.toStringAsFixed(value % 1 == 0 ? 0 : 1);
   }
 
+  List<MuscleRadarDatum> _buildRadarData(List<Map<String, dynamic>> muscles) {
+    final sorted = [...muscles]..sort((a, b) =>
+        ((b['equivalentSets'] as num?)?.toDouble() ?? 0.0)
+            .compareTo((a['equivalentSets'] as num?)?.toDouble() ?? 0.0));
+
+    if (sorted.length <= 9) {
+      return sorted
+          .map((m) => MuscleRadarDatum(
+                label: m['muscleGroup'] as String,
+                value: (m['equivalentSets'] as num?)?.toDouble() ?? 0.0,
+              ))
+          .toList();
+    }
+
+    final top = sorted.take(8).toList();
+    final rest = sorted.skip(8).toList();
+    final radar = top
+        .map((m) => MuscleRadarDatum(
+              label: m['muscleGroup'] as String,
+              value: (m['equivalentSets'] as num?)?.toDouble() ?? 0.0,
+            ))
+        .toList();
+
+    final restAvg = rest
+            .map((m) => (m['equivalentSets'] as num?)?.toDouble() ?? 0.0)
+            .reduce((a, b) => a + b) /
+        rest.length;
+    radar.add(MuscleRadarDatum(label: 'Other', value: restAvg));
+    return radar;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -69,6 +102,14 @@ class _MuscleGroupAnalyticsScreenState
         (_analytics['undertrained'] as List<dynamic>? ?? const [])
             .cast<String>();
     final dataQualityOk = (_analytics['dataQualityOk'] as bool?) ?? false;
+    final radarData = _buildRadarData(muscles);
+    final radarMax = radarData.isEmpty
+        ? 0.0
+        : radarData
+            .map((e) => e.value)
+            .reduce((a, b) => a > b ? a : b)
+            .clamp(1.0, 1000000.0)
+            .toDouble();
 
     final selectedWeek =
         (_selectedWeekIndex >= 0 && _selectedWeekIndex < weekly.length)
@@ -117,6 +158,38 @@ class _MuscleGroupAnalyticsScreenState
                       child: Text(
                         l10n.analyticsEquivalentSetsExplainer,
                         style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: DesignConstants.spacingM),
+                  _sectionLabel(l10n.analyticsRadarOverviewTitle),
+                  SummaryCard(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (radarData.length < 3)
+                            Text(l10n.noWorkoutDataLabel)
+                          else
+                            Center(
+                              child: MuscleRadarChart(
+                                data: radarData,
+                                maxValue: radarMax,
+                                centerLabel: l10n.metricsVolumeLifted,
+                              ),
+                            ),
+                          const SizedBox(height: 8),
+                          Text(
+                            l10n.analyticsRadarVolumeCaption,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.outline,
+                                ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -211,6 +284,8 @@ class _MuscleGroupAnalyticsScreenState
       items: items.take(8).toList(),
       unit: l10n.analyticsUnitSets,
       emptyLabel: l10n.noWorkoutDataLabel,
+      yAxisLabel:
+          '${l10n.analyticsWeeklySetsByMuscle} (${l10n.analyticsUnitSets})',
       footer: l10n.analyticsWeekTotalEquivalentSets(
         (selectedWeek['totalEquivalentSets'] as num).toStringAsFixed(1),
       ),
@@ -232,6 +307,8 @@ class _MuscleGroupAnalyticsScreenState
       items: items.take(8).toList(),
       unit: '/${l10n.analyticsPerWeekAbbrev}',
       emptyLabel: l10n.noWorkoutDataLabel,
+      yAxisLabel:
+          '${l10n.analyticsFrequencyByMuscle} (/${l10n.analyticsPerWeekAbbrev})',
       footer: l10n.analyticsFrequencyRuleFooter,
     );
   }
@@ -316,6 +393,7 @@ class _MuscleGroupAnalyticsScreenState
     required String unit,
     required String emptyLabel,
     required String footer,
+    required String yAxisLabel,
   }) {
     if (items.isEmpty) {
       return SummaryCard(
@@ -334,6 +412,14 @@ class _MuscleGroupAnalyticsScreenState
         padding: const EdgeInsets.all(10.0),
         child: Column(
           children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Y: $yAxisLabel',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+            const SizedBox(height: 4),
             SizedBox(
               height: 220,
               child: BarChart(
@@ -421,6 +507,14 @@ class _MuscleGroupAnalyticsScreenState
               ),
             ),
             const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'X: ${AppLocalizations.of(context)!.analyticsViewByMuscle}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+            const SizedBox(height: 6),
             Text(
               footer,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -446,16 +540,6 @@ class _MuscleGroupAnalyticsScreenState
   }
 
   Widget _sectionLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 6),
-      child: Text(
-        text,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[600],
-              letterSpacing: 0.2,
-            ),
-      ),
-    );
+    return AnalyticsSectionHeader(title: text);
   }
 }

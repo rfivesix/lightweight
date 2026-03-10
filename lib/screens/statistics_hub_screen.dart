@@ -5,6 +5,8 @@ import '../data/workout_database_helper.dart';
 import '../generated/app_localizations.dart';
 import '../util/body_nutrition_analytics_utils.dart';
 import '../util/design_constants.dart';
+import '../widgets/analytics_chart_defaults.dart';
+import '../widgets/analytics_section_header.dart';
 import '../widgets/bottom_content_spacer.dart';
 import '../widgets/summary_card.dart';
 import 'analytics/body_nutrition_correlation_screen.dart';
@@ -31,11 +33,13 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   List<Map<String, dynamic>> _recentPRs = [];
   List<Map<String, dynamic>> _weeklyVolume = [];
   List<Map<String, dynamic>> _workoutsPerWeek = [];
+  List<Map<String, dynamic>> _weeklyConsistencyMetrics = [];
   Map<String, dynamic> _muscleAnalytics = const {};
   List<Map<String, dynamic>> _notableImprovements = [];
   Map<String, dynamic> _trainingStats = const {};
   Map<String, dynamic> _recoveryAnalytics = const {};
   BodyNutritionAnalyticsResult? _bodyNutrition;
+  _HubConsistencyMetric _hubConsistencyMetric = _HubConsistencyMetric.volume;
 
   @override
   void initState() {
@@ -68,6 +72,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         WorkoutDatabaseHelper.instance.getWeeklyVolumeData(weeksBack: 6);
     final workoutsPerWeek =
         WorkoutDatabaseHelper.instance.getWorkoutsPerWeek(weeksBack: 6);
+    final consistencyMetrics = WorkoutDatabaseHelper.instance
+        .getWeeklyConsistencyMetrics(weeksBack: 6);
     final muscleAnalytics =
         WorkoutDatabaseHelper.instance.getMuscleGroupAnalytics(
       daysBack: _selectedDays,
@@ -88,6 +94,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       prs,
       weeklyVolume,
       workoutsPerWeek,
+      consistencyMetrics,
       muscleAnalytics,
       trainingStats,
       recoveryAnalytics,
@@ -100,11 +107,12 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       _recentPRs = results[0] as List<Map<String, dynamic>>;
       _weeklyVolume = results[1] as List<Map<String, dynamic>>;
       _workoutsPerWeek = results[2] as List<Map<String, dynamic>>;
-      _muscleAnalytics = results[3] as Map<String, dynamic>;
-      _trainingStats = results[4] as Map<String, dynamic>;
-      _recoveryAnalytics = results[5] as Map<String, dynamic>;
-      _notableImprovements = results[6] as List<Map<String, dynamic>>;
-      _bodyNutrition = results[7] as BodyNutritionAnalyticsResult;
+      _weeklyConsistencyMetrics = results[3] as List<Map<String, dynamic>>;
+      _muscleAnalytics = results[4] as Map<String, dynamic>;
+      _trainingStats = results[5] as Map<String, dynamic>;
+      _recoveryAnalytics = results[6] as Map<String, dynamic>;
+      _notableImprovements = results[7] as List<Map<String, dynamic>>;
+      _bodyNutrition = results[8] as BodyNutritionAnalyticsResult;
       _isLoadingStats = false;
     });
   }
@@ -184,17 +192,41 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }
 
   Widget _buildSectionTitle(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6.0, left: 4.0),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.2,
-            ),
-      ),
-    );
+    return AnalyticsSectionHeader(title: title);
+  }
+
+  String _hubMetricName() {
+    return switch (_hubConsistencyMetric) {
+      _HubConsistencyMetric.volume => l10n.metricsVolumeLifted,
+      _HubConsistencyMetric.duration => l10n.durationLabel,
+      _HubConsistencyMetric.frequency => l10n.workoutsPerWeekLabel,
+    };
+  }
+
+  String _hubMetricUnit() {
+    return switch (_hubConsistencyMetric) {
+      _HubConsistencyMetric.volume => l10n.analyticsUnitKg,
+      _HubConsistencyMetric.duration => 'min',
+      _HubConsistencyMetric.frequency => l10n.analyticsPerWeekAbbrev,
+    };
+  }
+
+  List<double> _hubMetricValues() {
+    if (_weeklyConsistencyMetrics.isEmpty) {
+      return _workoutsPerWeek
+          .map((e) => (e['count'] as num?)?.toDouble() ?? 0.0)
+          .toList();
+    }
+    return _weeklyConsistencyMetrics.map((row) {
+      return switch (_hubConsistencyMetric) {
+        _HubConsistencyMetric.volume =>
+          (row['tonnage'] as num?)?.toDouble() ?? 0.0,
+        _HubConsistencyMetric.duration =>
+          (row['durationMinutes'] as num?)?.toDouble() ?? 0.0,
+        _HubConsistencyMetric.frequency =>
+          (row['count'] as num?)?.toDouble() ?? 0.0,
+      };
+    }).toList();
   }
 
   Widget _buildConsistencySection() {
@@ -222,11 +254,48 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                   ),
                   child: _isLoadingStats
                       ? const Center(child: CircularProgressIndicator())
-                      : _buildMiniBars(
-                          _workoutsPerWeek
-                              .map((e) => (e['count'] as num).toDouble())
-                              .toList(),
-                        ),
+                      : _buildMiniBars(_hubMetricValues()),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    ChoiceChip(
+                      label: Text(l10n.metricsVolumeLifted),
+                      selected:
+                          _hubConsistencyMetric == _HubConsistencyMetric.volume,
+                      onSelected: (_) {
+                        setState(() => _hubConsistencyMetric =
+                            _HubConsistencyMetric.volume);
+                      },
+                    ),
+                    ChoiceChip(
+                      label: Text(l10n.durationLabel),
+                      selected: _hubConsistencyMetric ==
+                          _HubConsistencyMetric.duration,
+                      onSelected: (_) {
+                        setState(() => _hubConsistencyMetric =
+                            _HubConsistencyMetric.duration);
+                      },
+                    ),
+                    ChoiceChip(
+                      label: Text(l10n.workoutsPerWeekLabel),
+                      selected: _hubConsistencyMetric ==
+                          _HubConsistencyMetric.frequency,
+                      onSelected: (_) {
+                        setState(() => _hubConsistencyMetric =
+                            _HubConsistencyMetric.frequency);
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${_hubMetricName()} (${_hubMetricUnit()}) / ${l10n.analyticsViewWeek}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -666,28 +735,19 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
           gridData: const FlGridData(show: false),
           borderData: FlBorderData(show: false),
           lineTouchData: const LineTouchData(enabled: false),
-          titlesData: const FlTitlesData(
-            leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          ),
+          titlesData: AnalyticsChartDefaults.hiddenTitles,
           lineBarsData: [
             if (normalizedCalories.isNotEmpty)
-              LineChartBarData(
+              AnalyticsChartDefaults.straightLine(
                 spots: toSpots(normalizedCalories),
-                isCurved: true,
                 barWidth: 2,
                 color: Theme.of(context).colorScheme.secondary,
-                dotData: const FlDotData(show: false),
               ),
             if (normalizedWeight.isNotEmpty)
-              LineChartBarData(
+              AnalyticsChartDefaults.straightLine(
                 spots: toSpots(normalizedWeight),
-                isCurved: true,
                 barWidth: 2.5,
                 color: Theme.of(context).colorScheme.primary,
-                dotData: const FlDotData(show: false),
               ),
           ],
         ),
@@ -895,3 +955,5 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     return l10n.analyticsGuidanceLowerEmphasis(focus);
   }
 }
+
+enum _HubConsistencyMetric { volume, duration, frequency }

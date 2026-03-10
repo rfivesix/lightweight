@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../../data/workout_database_helper.dart';
 import '../../generated/app_localizations.dart';
 import '../../util/design_constants.dart';
+import '../../widgets/analytics_section_header.dart';
 import '../../widgets/global_app_bar.dart';
+import '../../widgets/muscle_radar_chart.dart';
 import '../../widgets/summary_card.dart';
 
 class RecoveryTrackerScreen extends StatefulWidget {
@@ -81,6 +83,47 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
     return l10n.recoveryExplanationBasic(muscleName, hours);
   }
 
+  bool _shouldHideMuscle(String name) {
+    final normalized = name.trim().toLowerCase();
+    return normalized == 'brachialis';
+  }
+
+  double _recoveryPressureScore(Map<String, dynamic> muscle) {
+    final eqSets = (muscle['lastEquivalentSets'] as num?)?.toDouble() ?? 0.0;
+    final hours =
+        (muscle['hoursSinceLastSignificantLoad'] as num?)?.toDouble() ?? 999.0;
+    final highFatigue = (muscle['highSessionFatigue'] as bool?) ?? false;
+
+    final loadComponent = (eqSets * 24).clamp(0, 45);
+    final freshnessPenalty = ((96 - hours).clamp(0, 96) / 96) * 45;
+    final fatiguePenalty = highFatigue ? 10.0 : 0.0;
+    return (loadComponent + freshnessPenalty + fatiguePenalty)
+        .clamp(0.0, 100.0);
+  }
+
+  List<MuscleRadarDatum> _buildRadarData(List<Map<String, dynamic>> muscles) {
+    final sorted = [...muscles]
+      ..sort((a, b) => _recoveryPressureScore(b).compareTo(
+            _recoveryPressureScore(a),
+          ));
+
+    final top = sorted.take(8).toList();
+    final rest = sorted.skip(8).toList();
+    final data = top
+        .map((m) => MuscleRadarDatum(
+              label: m['muscleGroup'] as String,
+              value: _recoveryPressureScore(m),
+            ))
+        .toList();
+
+    if (rest.isNotEmpty) {
+      final avg = rest.map(_recoveryPressureScore).reduce((a, b) => a + b) /
+          rest.length;
+      data.add(MuscleRadarDatum(label: 'Other', value: avg));
+    }
+    return data;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -93,6 +136,10 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
 
     final muscles = (_recovery['muscles'] as List<dynamic>? ?? const [])
         .cast<Map<String, dynamic>>();
+    final visibleMuscles = muscles
+        .where((m) => !_shouldHideMuscle(m['muscleGroup'] as String? ?? ''))
+        .toList(growable: false);
+    final radarData = _buildRadarData(visibleMuscles);
 
     return Scaffold(
       appBar: GlobalAppBar(title: l10n.recoveryTrackerTitle),
@@ -105,6 +152,10 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  AnalyticsSectionHeader(
+                    title: l10n.metricsMuscleReadiness,
+                    padding: const EdgeInsets.only(left: 4, bottom: 6),
+                  ),
                   SummaryCard(
                     child: Padding(
                       padding: const EdgeInsets.all(14.0),
@@ -144,12 +195,44 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                     ),
                   ),
                   const SizedBox(height: DesignConstants.spacingM),
-                  Text(
-                    l10n.recoveryByMuscleTitle,
-                    style: Theme.of(context)
-                        .textTheme
-                        .labelLarge
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                  AnalyticsSectionHeader(
+                    title: l10n.analyticsRecentDistributionHeatmap,
+                    padding: const EdgeInsets.only(left: 4, bottom: 6),
+                  ),
+                  SummaryCard(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (radarData.isEmpty)
+                            Text(l10n.recoveryNoDataBody)
+                          else
+                            Center(
+                              child: MuscleRadarChart(
+                                data: radarData,
+                                maxValue: 100,
+                                centerLabel: l10n.metricsMuscleReadiness,
+                              ),
+                            ),
+                          const SizedBox(height: 8),
+                          Text(
+                            l10n.recoveryRadarHeuristicCaption,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.outline,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: DesignConstants.spacingM),
+                  AnalyticsSectionHeader(
+                    title: l10n.recoveryByMuscleTitle,
+                    padding: const EdgeInsets.only(left: 4, bottom: 6),
                   ),
                   const SizedBox(height: DesignConstants.spacingS),
                   if (!hasData)
@@ -160,7 +243,7 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                       ),
                     )
                   else
-                    ...muscles.map((muscle) {
+                    ...visibleMuscles.map((muscle) {
                       final state = muscle['state'] as String;
                       final stateColor = _stateColor(context, state);
                       final hours =
@@ -169,6 +252,14 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                               .round();
                       final highFatigue =
                           (muscle['highSessionFatigue'] as bool?) ?? false;
+                      final eqSets =
+                          (muscle['lastEquivalentSets'] as num?)?.toDouble() ??
+                              0.0;
+                      final recoveringUpper =
+                          (muscle['recoveringUpperHours'] as num?)?.toInt() ??
+                              48;
+                      final readyUpper =
+                          (muscle['readyUpperHours'] as num?)?.toInt() ?? 72;
 
                       return Padding(
                         padding: const EdgeInsets.only(
@@ -215,9 +306,29 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                                   ],
                                 ),
                                 const SizedBox(height: 6),
+                                Text(
+                                  l10n.recoveryRecentLoad(
+                                      eqSets.toStringAsFixed(1)),
+                                ),
+                                const SizedBox(height: 2),
                                 Text(l10n.recoveryLastLoadedHours(hours)),
                                 const SizedBox(height: 2),
                                 Text(_fatigueContextLabel(l10n, highFatigue)),
+                                const SizedBox(height: 2),
+                                Text(
+                                  l10n.recoveryWindowHeuristic(
+                                    recoveringUpper,
+                                    readyUpper,
+                                  ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .outline,
+                                      ),
+                                ),
                                 const SizedBox(height: 6),
                                 Text(
                                   _explanationForMuscle(l10n, muscle),

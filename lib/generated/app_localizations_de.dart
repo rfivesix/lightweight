@@ -1846,10 +1846,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get recoveryTrackerComingSoon =>
-      'Muskel-Bereitschaft & Ermuedung (In Kuerze)';
+      'Muskel-Bereitschaft & Ermüdung (In Kürze)';
 
   @override
-  String get recoveryOverallMostlyRecovered => 'Ueberwiegend erholt';
+  String get recoveryOverallMostlyRecovered => 'Überwiegend erholt';
 
   @override
   String get recoveryOverallMixed => 'Gemischter Erholungszustand';
@@ -1860,7 +1860,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get recoveryOverallInsufficientData =>
-      'Noch nicht genug Daten fuer eine Erholungs-Einschaetzung';
+      'Noch nicht genug Daten für eine Erholungs-Einschätzung';
 
   @override
   String recoveryHubCountsSummary(int recovering, int ready, int fresh) {
@@ -1893,15 +1893,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get recoveryFatigueContextHigh =>
-      'Letzter Ermuedungs-Kontext: hohe Session-Ermuedung';
+      'Letzter Ermüdungs-Kontext: hohe Session-Ermüdung';
 
   @override
   String get recoveryFatigueContextBaseline =>
-      'Letzter Ermuedungs-Kontext: normale Session-Ermuedung';
+      'Letzter Ermüdungs-Kontext: normale Session-Ermüdung';
 
   @override
   String recoveryExplanationWithHighFatigue(String muscle, int hours) {
-    return '$muscle: zuletzt vor ${hours}h signifikant belastet, mit hoher Session-Ermuedung.';
+    return '$muscle: zuletzt vor ${hours}h signifikant belastet, mit hoher Session-Ermüdung.';
   }
 
   @override
@@ -1911,7 +1911,21 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get recoveryHeuristicDisclaimer =>
-      'Dies ist eine konservative Heuristik auf Basis kuerzlich signifikanter Belastung und Session-Anstrengung. Keine medizinische Erholungs-Messung.';
+      'Dies ist eine konservative Heuristik auf Basis kürzlich signifikanter Belastung und Session-Anstrengung. Keine medizinische Erholungs-Messung.';
+
+  @override
+  String recoveryRecentLoad(String sets) {
+    return 'Letzte Belastungsmenge: $sets äquivalente Sätze';
+  }
+
+  @override
+  String recoveryWindowHeuristic(int from, int to) {
+    return 'Heuristisches Zeitfenster: häufig etwa $from bis $to Stunden, abhängig vom Kontext.';
+  }
+
+  @override
+  String get recoveryRadarHeuristicCaption =>
+      'Radar-Überblick zum jüngsten Erholungsdruck je Muskel. Richtungsweisend und heuristisch.';
 
   @override
   String get recoveryNoDataBody =>
@@ -2051,7 +2065,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get analyticsUnitKg => 'kg';
 
   @override
-  String get analyticsUnitSets => 'Saetze';
+  String get analyticsUnitSets => 'Sätze';
 
   @override
   String get analyticsViewLabel => 'Ansicht';
@@ -2063,7 +2077,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get analyticsViewMonth => 'Monat';
 
   @override
-  String get analyticsViewByExercise => 'Nach Uebung';
+  String get analyticsViewByExercise => 'Nach Übung';
 
   @override
   String get analyticsViewByMuscle => 'Nach Muskelgruppe';
@@ -2075,11 +2089,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get analyticsMovedWeightKg => 'Bewegtes Gewicht (kg)';
 
   @override
-  String get analyticsWorkSets => 'Arbeitssaetze';
+  String get analyticsWorkSets => 'Arbeitssätze';
 
   @override
   String get analyticsVolumeContextWithSets =>
-      'Bewegtes Gewicht = Gewicht x Wiederholungen. Fuer zaehlbasierte Belastung kannst du auf Arbeitssaetze wechseln.';
+      'Bewegtes Gewicht = Gewicht x Wiederholungen. Für zählbasierte Belastung kannst du auf Arbeitssätze wechseln.';
 
   @override
   String get analyticsVolumeContextTonnageOnly =>
@@ -2098,7 +2112,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get analyticsRhythm => 'Rhythmus';
 
   @override
-  String get analyticsVsPrior4Weeks => 'gegenueber den 4 Wochen davor';
+  String get analyticsVsPrior4Weeks => 'gegenüber den 4 Wochen davor';
 
   @override
   String get analyticsRollingConsistency => 'Rollierende Konsistenz';
@@ -2113,7 +2127,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get analyticsSelectDayPrompt =>
-      'Waehle einen Tag aus, um die Anzahl der Einheiten zu sehen.';
+      'Wähle einen Tag aus, um die Anzahl der Einheiten zu sehen.';
 
   @override
   String analyticsSelectedDayWorkouts(String date, int count) {
@@ -2136,7 +2150,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get analyticsPlaceholderCaloriesUnit => 'kcal/Tag';
 
   @override
-  String get analyticsMuscleWeeklySets => 'Woechentliche Saetze';
+  String get analyticsMuscleWeeklySets => 'Wöchentliche Sätze';
 
   @override
   String get analyticsMuscleTopFrequency => 'Top-Frequenz';
@@ -2162,10 +2176,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get analyticsEquivalentSetsExplainer =>
-      'Aequiavalente Arbeitssaetze nutzen Primaer x1.0 und Sekundaer x0.5. Frequenz zaehlt nur Tage mit >= 1.0 aequivalenten Saetzen.';
+      'Äquivalente Arbeitssätze nutzen Primär x1.0 und Sekundär x0.5. Frequenz zählt nur Tage mit >= 1.0 äquivalenten Sätzen.';
 
   @override
-  String get analyticsWeeklySetsByMuscle => 'Woechentliche Saetze je Muskel';
+  String get analyticsWeeklySetsByMuscle => 'Wöchentliche Sätze je Muskel';
 
   @override
   String get analyticsFrequencyByMuscle => 'Frequenz je Muskel';
@@ -2173,6 +2187,13 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get analyticsRecentDistributionHeatmap =>
       'Aktuelle Verteilungs-Heatmap';
+
+  @override
+  String get analyticsRadarOverviewTitle => 'Radar-Überblick';
+
+  @override
+  String get analyticsRadarVolumeCaption =>
+      'Zeigt die relative Volumenverteilung über Muskelgruppen für eine schnelle Übersicht.';
 
   @override
   String get analyticsGuidanceTitle => 'Hinweise';
@@ -2183,16 +2204,16 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get analyticsGuidanceSoftenedDisclaimer =>
-      'Hinweise werden bewusst abgeschwaecht, bis genug Daten vorliegen.';
+      'Hinweise werden bewusst abgeschwächt, bis genug Daten vorliegen.';
 
   @override
   String analyticsWeekTotalEquivalentSets(String value) {
-    return 'Wochensumme: $value aequivalente Saetze';
+    return 'Wochensumme: $value äquivalente Sätze';
   }
 
   @override
   String get analyticsFrequencyRuleFooter =>
-      'Frequenz zaehlt nur Tage, an denen der Muskel >= 1.0 aequivalente Saetze erreicht.';
+      'Frequenz zählt nur Tage, an denen der Muskel >= 1.0 äquivalente Sätze erreicht.';
 
   @override
   String liveWorkoutE1rmCurrentSet(String value) {
@@ -2210,10 +2231,10 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get bodyNutritionCorrelationTitle => 'Koerper & Ernaehrung Trends';
+  String get bodyNutritionCorrelationTitle => 'Körper & Ernährung Trends';
 
   @override
-  String get metricsWeightChange => 'Gewichtsaenderung';
+  String get metricsWeightChange => 'Gewichtsänderung';
 
   @override
   String get analyticsKcalPerDay => 'kcal/Tag';
@@ -2232,33 +2253,33 @@ class AppLocalizationsDe extends AppLocalizations {
       'Gewichts- und Kalorientrends';
 
   @override
-  String get analyticsWeightTrendLabel => 'Koerpergewicht (geglattet)';
+  String get analyticsWeightTrendLabel => 'Körpergewicht (geglattet)';
 
   @override
-  String get analyticsCaloriesTrendLabel => 'Kalorien (taeglicher Trend)';
+  String get analyticsCaloriesTrendLabel => 'Kalorien (täglicher Trend)';
 
   @override
   String get analyticsInterpretationTitle => 'Interpretation';
 
   @override
   String get analyticsCorrelationDisclaimer =>
-      'Diese Ansicht zeigt zeitliche Trend-Korrelationen. Sie beweist nicht, dass Kalorienveraenderungen direkt Gewichtsveraenderungen verursacht haben.';
+      'Diese Ansicht zeigt zeitliche Trend-Korrelationen. Sie beweist nicht, dass Kalorienveränderungen direkt Gewichtsveränderungen verursacht haben.';
 
   @override
   String get analyticsInsightStableWeightCaloriesUp =>
-      'Der Gewichtstrend ist stabil, waehrend die durchschnittlichen Kalorien gestiegen sind.';
+      'Der Gewichtstrend ist stabil, während die durchschnittlichen Kalorien gestiegen sind.';
 
   @override
   String get analyticsInsightWeightUpCaloriesUp =>
-      'Das Gewicht zeigt einen Aufwaertstrend zusammen mit hoeherer durchschnittlicher Kalorienaufnahme.';
+      'Das Gewicht zeigt einen Aufwärtstrend zusammen mit höherer durchschnittlicher Kalorienaufnahme.';
 
   @override
   String get analyticsInsightCaloriesDownWeightStable =>
-      'Die juengste Kalorienreduktion hat den Gewichtstrend noch nicht klar veraendert.';
+      'Die jüngste Kalorienreduktion hat den Gewichtstrend noch nicht klar verändert.';
 
   @override
   String get analyticsInsightWeightDownCaloriesDown =>
-      'Das Gewicht zeigt einen Abwaertstrend zusammen mit niedrigerer durchschnittlicher Kalorienaufnahme.';
+      'Das Gewicht zeigt einen Abwärtstrend zusammen mit niedrigerer durchschnittlicher Kalorienaufnahme.';
 
   @override
   String get analyticsInsightMixedPattern =>
@@ -2266,12 +2287,12 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get analyticsInsightNotEnoughData =>
-      'Noch nicht genug Daten fuer eine aussagekraeftige Korrelations-Einschaetzung.';
+      'Noch nicht genug Daten für eine aussagekräftige Korrelations-Einschätzung.';
 
   @override
   String get restTimerNotificationTitle => 'Pause beendet';
 
   @override
   String get restTimerNotificationBody =>
-      'Dein Pausentimer ist abgelaufen. Bereit fuer den naechsten Satz.';
+      'Dein Pausentimer ist abgelaufen. Bereit für den nächsten Satz.';
 }

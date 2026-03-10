@@ -514,7 +514,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
               lineBarsData: [
                 LineChartBarData(
                   spots: spots,
-                  isCurved: true,
+                  isCurved: false,
                   color: color,
                   barWidth: 3,
                   isStrokeCapRound: true,

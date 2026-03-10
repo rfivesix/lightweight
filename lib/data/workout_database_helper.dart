@@ -1769,6 +1769,110 @@ class WorkoutDatabaseHelper {
           (a['weekStart'] as DateTime).compareTo(b['weekStart'] as DateTime));
   }
 
+  /// Returns per-week consistency metrics for the last [weeksBack] weeks.
+  ///
+  /// Each entry contains:
+  /// - weekStart: DateTime
+  /// - weekLabel: String
+  /// - count: int (workout frequency)
+  /// - durationMinutes: double
+  /// - tonnage: double (moved weight from work sets)
+  Future<List<Map<String, dynamic>>> getWeeklyConsistencyMetrics({
+    int weeksBack = 12,
+  }) async {
+    final now = DateTime.now();
+    final since = now.subtract(Duration(days: weeksBack * 7));
+    final dbInstance = await database;
+
+    final weekMap = <String, Map<String, dynamic>>{};
+
+    void ensureWeek(DateTime date) {
+      final monday = date.subtract(Duration(days: date.weekday - 1));
+      final mondayNorm = DateTime(monday.year, monday.month, monday.day);
+      final key =
+          '${mondayNorm.year}-${mondayNorm.month.toString().padLeft(2, '0')}-${mondayNorm.day.toString().padLeft(2, '0')}';
+      weekMap.putIfAbsent(
+        key,
+        () => {
+          'weekStart': mondayNorm,
+          'weekLabel': '${mondayNorm.day}.${mondayNorm.month}.',
+          'count': 0,
+          'durationMinutes': 0.0,
+          'tonnage': 0.0,
+        },
+      );
+    }
+
+    for (int w = weeksBack - 1; w >= 0; w--) {
+      ensureWeek(now.subtract(Duration(days: w * 7)));
+    }
+
+    final workoutRows = await (dbInstance.select(dbInstance.workoutLogs)
+          ..where((tbl) =>
+              tbl.status.equals('completed') &
+              tbl.startTime
+                  .isBetweenValues(since, now.add(const Duration(days: 1))))
+          ..orderBy([(t) => drift.OrderingTerm(expression: t.startTime)]))
+        .get();
+
+    for (final row in workoutRows) {
+      final start = row.startTime;
+      ensureWeek(start);
+
+      final monday = start.subtract(Duration(days: start.weekday - 1));
+      final mondayNorm = DateTime(monday.year, monday.month, monday.day);
+      final key =
+          '${mondayNorm.year}-${mondayNorm.month.toString().padLeft(2, '0')}-${mondayNorm.day.toString().padLeft(2, '0')}';
+
+      final durationMinutes = row.endTime == null
+          ? 0.0
+          : row.endTime!
+                  .difference(start)
+                  .inSeconds
+                  .clamp(0, 24 * 60 * 60)
+                  .toDouble() /
+              60.0;
+
+      weekMap[key]!['count'] = (weekMap[key]!['count'] as int) + 1;
+      weekMap[key]!['durationMinutes'] =
+          (weekMap[key]!['durationMinutes'] as double) + durationMinutes;
+    }
+
+    final tonnageRows = await (dbInstance.select(dbInstance.setLogs).join([
+      drift.innerJoin(
+        dbInstance.workoutLogs,
+        dbInstance.workoutLogs.id.equalsExp(dbInstance.setLogs.workoutLogId),
+      ),
+    ])
+          ..where(dbInstance.setLogs.isCompleted.equals(true) &
+              dbInstance.setLogs.setType.isNotIn(['warmup']) &
+              dbInstance.setLogs.weight.isBiggerThanValue(0) &
+              dbInstance.setLogs.reps.isBiggerThanValue(0) &
+              dbInstance.workoutLogs.status.equals('completed') &
+              dbInstance.workoutLogs.startTime
+                  .isBetweenValues(since, now.add(const Duration(days: 1)))))
+        .get();
+
+    for (final row in tonnageRows) {
+      final setRow = row.readTable(dbInstance.setLogs);
+      final logRow = row.readTable(dbInstance.workoutLogs);
+      final start = logRow.startTime;
+      ensureWeek(start);
+
+      final monday = start.subtract(Duration(days: start.weekday - 1));
+      final mondayNorm = DateTime(monday.year, monday.month, monday.day);
+      final key =
+          '${mondayNorm.year}-${mondayNorm.month.toString().padLeft(2, '0')}-${mondayNorm.day.toString().padLeft(2, '0')}';
+
+      final tonnage = (setRow.weight ?? 0.0) * (setRow.reps ?? 0);
+      weekMap[key]!['tonnage'] = (weekMap[key]!['tonnage'] as double) + tonnage;
+    }
+
+    return weekMap.values.toList()
+      ..sort((a, b) =>
+          (a['weekStart'] as DateTime).compareTo(b['weekStart'] as DateTime));
+  }
+
   /// Returns key training stats: totalWorkouts, thisWeekCount, avgPerWeek (last 4 wks), streakWeeks.
   Future<Map<String, dynamic>> getTrainingStats() async {
     final now = DateTime.now();

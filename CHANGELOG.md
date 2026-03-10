@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.0-alpha.2] - 2026-03-10
+
+### 📊 Analytics Polish
+- **Consistency metrics expansion**: Added `getWeeklyConsistencyMetrics()` in `WorkoutDatabaseHelper` to provide weekly frequency, duration, and tonnage in one dataset.
+- **Consistency Tracker upgrades**: Introduced metric toggle (Volume, Duration, Frequency), improved axis labeling, and switched charts to use richer weekly metric data.
+- **Statistics Hub improvements**: Added the same consistency metric toggle to the hub cards for a faster top-level overview.
+- **Muscle Group Analytics radar**: Added a new radar visualization for relative muscle volume distribution, including compact top-group aggregation.
+- **Recovery Tracker radar + context**: Added heuristic radar pressure view and expanded per-muscle context (recent load amount and heuristic window hints).
+- **Body/Nutrition analytics readability**: Improved section hierarchy and chart labeling for trend interpretation.
+
+### 🧩 UI Consistency
+- Added shared analytics UI primitives:
+    - `AnalyticsSectionHeader` for consistent section titling.
+    - `AnalyticsChartDefaults` for standardized chart setup (titles, line behavior).
+- Standardized selected line charts to straight-line rendering for clearer trend reading.
+
+### 🌍 Localization
+- Added new localization keys for radar/caption and recovery heuristic details (EN/DE).
+- Refined German copy quality by replacing legacy ASCII spellings (e.g. `ae/oe/ue`) with proper umlauts where applicable.
+
+### 🧪 Notes
+- This release focuses on post-alpha analytics UX clarity and interpretation support, without changing the core training log workflow.
+
 ## [0.7.0-alpha] - 2026-03-09
 
 _Note: This is an alpha release, heavily focusing on the new deep-dive Analytics engine. Some areas, UI patterns, and data visualizations may still evolve based on feedback._
